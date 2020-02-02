@@ -6,7 +6,7 @@
 #   define VERSION_NUMBER  PACKAGE_VERSION
 #elif !defined (XCODE_VERSION) /* some defaults that would otherwise be guessed by configure */
 #   define PACKAGE_NAME "MrBayes"
-#   define PACKAGE_VERSION "3.2.7"
+#   define PACKAGE_VERSION "3.2.8"
 #   define HOST_CPU "x86_64"
 #   define VERSION_NUMBER  PACKAGE_VERSION
 #   undef  HAVE_LIBREADLINE
@@ -352,10 +352,10 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define CPPLAMBDA_MAX           100.0f
 #define TK02VAR_MIN             0.000001f
 #define TK02VAR_MAX             10000.0f
-#define IGRVAR_MIN              0.000001f
-#define IGRVAR_MAX              10000.0f
-#define MIXEDVAR_MIN            0.000001f
-#define MIXEDVAR_MAX            10000.0f
+#define WNVAR_MIN               0.000001f
+#define WNVAR_MAX               10000.0f
+#define INDRVAR_MIN             0.000001f
+#define INDRVAR_MAX             10000.0f
 #define OMEGA_MIN               0.001f
 #define OMEGA_MAX               1000.0f
 
@@ -439,7 +439,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define UNLINKED                1
 
 /*paramType*/
-#define NUM_LINKED              32
+#define NUM_LINKED              36
 #define P_TRATIO                0
 #define P_REVMAT                1
 #define P_OMEGA                 2
@@ -466,21 +466,25 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define P_TK02BRANCHRATES       23
 #define P_IGRVAR                24
 #define P_IGRBRANCHRATES        25
-#define P_CLOCKRATE             26
-#define P_SPECIESTREE           27
-#define P_GENETREERATE          28
-#define P_MIXEDVAR              29
-#define P_MIXEDBRCHRATES        30
+#define P_ILNVAR                26
+#define P_ILNBRANCHRATES        27
+#define P_CLOCKRATE             28
+#define P_SPECIESTREE           29
+#define P_GENETREERATE          30
 #define P_MIXTURE_RATES         31
+#define P_MIXEDVAR              32
+#define P_MIXEDBRCHRATES        33
+#define P_WNVAR                 34
+#define P_WNBRANCHRATES         35
 /* NOTE: If you add another parameter, change NUM_LINKED */
 
 // #define CPPm                 0       /* CPP rate multipliers */
 // #define CPPi                 1       /* CPP independent rates */
-#define RCL_TK02                0
-#define RCL_IGR                 1       /* type of mixed relaxed clock model */
+#define RCL_IGR                 0
+#define RCL_ILN                 1       /* type of mixed relaxed clock model */
 
 #define MAX_NUM_USERTREES       200     /* maximum number of user trees MrBayes will read */
-#define MAX_CHAINS              256     /* maximum numbder of chains you can run actually only half of it becouse of m->lnLike[MAX_CHAINS] */
+#define MAX_CHAINS              256     /* maximum number of chains you can run actually only half of it because of m->lnLike[MAX_CHAINS] */
 
 // #define PARAM_NAME_SIZE      400
 
@@ -620,7 +624,7 @@ typedef struct
     TreeNode        *nodes;             /*!< array containing the nodes                   */
     BitsLong        *bitsets;           /*!< pointer to bitsets describing splits         */
     BitsLong        *flags;             /*!< pointer to cond like flags                   */
-    int             fromUserTree;       /*!< YES is set for the trees whoes branch lengths are set from user tree(as start tree or fix branch length prior), NO otherwise */       
+    int             fromUserTree;       /*!< YES is set for the trees whose branch lengths are set from user tree(as start tree or fix branch length prior), NO otherwise */       
     }
     Tree;
 
@@ -837,45 +841,53 @@ typedef struct param
 #define OMEGA_10FEF                     111
 #define OMEGA_10FFB                     112
 #define OMEGA_10FFF                     113
-#define CPPRATE_FIX                     114
-#define CPPRATE_EXP                     115
-#define CPPMULTDEV_FIX                  116
-#define TK02VAR_FIX                     117
-#define TK02VAR_EXP                     118
-#define TK02VAR_UNI                     119
-#define TOPOLOGY_RCL_UNIFORM            120
-#define TOPOLOGY_RCL_CONSTRAINED        121
-#define TOPOLOGY_RCL_FIXED              122
-#define TOPOLOGY_RCCL_UNIFORM           123
-#define TOPOLOGY_RCCL_CONSTRAINED       124
-#define TOPOLOGY_RCCL_FIXED             125
-#define TOPOLOGY_SPECIESTREE            126
-#define CPPEVENTS                       127
-#define TK02BRANCHRATES                 128
-#define TOPOLOGY_FIXED                  129
-#define IGRVAR_FIX                      130
-#define IGRVAR_EXP                      131
-#define IGRVAR_UNI                      132
-#define IGRBRANCHRATES                  133
-#define CLOCKRATE_FIX                   134
-#define CLOCKRATE_NORMAL                135
-#define CLOCKRATE_LOGNORMAL             136
-#define CLOCKRATE_GAMMA                 137
-#define CLOCKRATE_EXP                   138
-#define SPECIESTREE_UNIFORM             139
-#define GENETREERATEMULT_DIR            140
-#define GENETREERATEMULT_FIX            141
-#define REVMAT_MIX                      142
-#define MIXEDVAR_FIX                    143
-#define MIXEDVAR_EXP                    144
-#define MIXEDVAR_UNI                    145
-#define MIXEDBRCHRATES                  146
-#define MIXTURE_RATES                   147
-#define DIRPI_DIRxDIR                   148
-#define DIRPI_DIRxFIXED                 149
-#define DIRPI_FIXEDxDIR                 150
-#define DIRPI_FIXEDxFIXED               151
-#define DIRPI_MIX                       152
+#define TOPOLOGY_RCL_UNIFORM            114
+#define TOPOLOGY_RCL_CONSTRAINED        115
+#define TOPOLOGY_RCL_FIXED              116
+#define TOPOLOGY_RCCL_UNIFORM           117
+#define TOPOLOGY_RCCL_CONSTRAINED       118
+#define TOPOLOGY_RCCL_FIXED             119
+#define TOPOLOGY_SPECIESTREE            120
+#define TOPOLOGY_FIXED                  121
+#define CPPRATE_FIX                     122
+#define CPPRATE_EXP                     123
+#define CPPMULTDEV_FIX                  124
+#define CPPEVENTS                       125
+#define TK02VAR_FIX                     126
+#define TK02VAR_EXP                     127
+#define TK02VAR_UNI                     128
+#define TK02BRANCHRATES                 129
+#define WNVAR_FIX                       130
+#define WNVAR_EXP                       131
+#define WNVAR_UNI                       132
+#define WNBRANCHRATES                   133
+#define IGRVAR_FIX                      134
+#define IGRVAR_EXP                      135
+#define IGRVAR_UNI                      136
+#define IGRBRANCHRATES                  137
+#define ILNVAR_FIX                      138
+#define ILNVAR_EXP                      139
+#define ILNVAR_UNI                      140
+#define ILNBRANCHRATES                  141
+#define MIXEDVAR_FIX                    142
+#define MIXEDVAR_EXP                    143
+#define MIXEDVAR_UNI                    144
+#define MIXEDBRCHRATES                  145
+#define CLOCKRATE_FIX                   146
+#define CLOCKRATE_NORMAL                147
+#define CLOCKRATE_LOGNORMAL             148
+#define CLOCKRATE_GAMMA                 149
+#define CLOCKRATE_EXP                   150
+#define SPECIESTREE_UNIFORM             151
+#define GENETREERATEMULT_DIR            152
+#define GENETREERATEMULT_FIX            153
+#define REVMAT_MIX                      154
+#define MIXTURE_RATES                   155
+#define DIRPI_DIRxDIR                   156
+#define DIRPI_DIRxFIXED                 157
+#define DIRPI_FIXEDxDIR                 158
+#define DIRPI_FIXEDxFIXED               159
+#define DIRPI_MIX                       160
 
 #if defined (BEAGLE_ENABLED)
 #define MB_BEAGLE_SCALE_ALWAYS          0
@@ -1099,7 +1111,7 @@ typedef struct model
     char        speciesTreeBrlensPr[100];  /* prior on branch lengths of species tree       */
     char        unconstrainedPr[100];  /* prior on branch lengths if unconstrained          */
     char        clockPr[100];          /* prior on branch if clock enforced                 */
-    char        clockVarPr[100];       /* prior on clock rate variation (strict, cpp, tk02, igr, ...) */
+    char        clockVarPr[100];       /* prior on clock rate variation (strict, cpp, tk02, wn, igr, iln, ...) */
     char        nodeAgePr[100];        /* prior on node depths (unconstrained, constraints) */
     char        speciationPr[100];     /* prior on speciation rate (net diversification)    */
     MrBFlt      speciationFix;
@@ -1142,16 +1154,24 @@ typedef struct model
     char        cppRatePr[100];        /* prior on CPP rate                             */
     MrBFlt      cppRateFix;
     MrBFlt      cppRateExp;
-    char        cppMultDevPr[100];     /* prior on CPP rate multiplier Lognormal variance */
+    char        cppMultDevPr[100];     /* prior on CPP rate multiplier lognormal variance */
     MrBFlt      cppMultDevFix;
     char        tk02varPr[100];        /* prior on TK02 lognormal rate variance         */
     MrBFlt      tk02varFix;
     MrBFlt      tk02varUni[2];
     MrBFlt      tk02varExp;
+    char        wnvarPr[100];          /* prior on WN gamma distribution variance       */
+    MrBFlt      wnvarFix;
+    MrBFlt      wnvarUni[2];
+    MrBFlt      wnvarExp;
     char        igrvarPr[100];         /* prior on IGR gamma distribution variance      */
     MrBFlt      igrvarFix;
     MrBFlt      igrvarUni[2];
     MrBFlt      igrvarExp;
+    char        ilnvarPr[100];         /* prior on independent lognormal rate variance  */
+    MrBFlt      ilnvarFix;
+    MrBFlt      ilnvarUni[2];
+    MrBFlt      ilnvarExp;
     char        mixedvarPr[100];       /* prior on mixed relaxed clock rate variance    */
     MrBFlt      mixedvarFix;
     MrBFlt      mixedvarUni[2];
@@ -1194,7 +1214,7 @@ typedef struct chain
     int         calcPbf;               /* should we calculate the pseudo Bayes factor   */
     int         pbfInitBurnin;         /* initial burnin when calculating pseudo BF     */
     int         pbfSampleFreq;         /* sample frequency for pseudo BF                */
-    int         pbfSampleTime;         /* how many cycles to calcualate site prob.      */
+    int         pbfSampleTime;         /* how many cycles to calculate site prob.       */
     int         pbfSampleBurnin;       /* burnin period for each site for pseudo BF     */
     int         swapAdjacentOnly;      /* whether we only swap adjacent temperatures    */
     int         redirect;              /* should output go to stdout                    */
@@ -1236,7 +1256,7 @@ typedef struct modelinfo
     int         parsModelId;                /* is parsimony model used YES/NO           */
 
     /* Specific model information */
-    int         numRateCats;                /* number of rate cats (1 if inapplic.)    */
+    int         numRateCats;                /* number of rate cats (1 if inapplic.)     */
     int         numBetaCats;                /* number of beta cats (1 if inapplic.)     */
     int         numOmegaCats;               /* number of omega cats (1 if inapplic.)    */
     int         numTiCats;                  /* number of cats needing different tis     */
@@ -1271,8 +1291,12 @@ typedef struct modelinfo
     Param       *cppEvents;                 /* ptr to CPP events                        */
     Param       *tk02var;                   /* ptr to variance for TK02 relaxed clock   */
     Param       *tk02BranchRates;           /* ptr to branch rates for TK02 relaxed clock */
+    Param       *wnvar;                     /* ptr to gamma var for WN relaxed clock    */
+    Param       *wnBranchRates;             /* ptr to branch rates for WN relaxed clock */
     Param       *igrvar;                    /* ptr to gamma var for IGR relaxed clock   */
-    Param       *igrBranchRates;            /* ptr to branch rates for IGR relaxed clock*/
+    Param       *igrBranchRates;            /* ptr to branch rates for IGR relaxed clock */
+    Param       *ilnvar;                    /* ptr to variance for ILN relaxed clock    */
+    Param       *ilnBranchRates;            /* ptr to branch rates for ILN relaxed clock */
     Param       *mixedvar;                  /* ptr to var for mixed relaxed clock       */
     Param       *mixedBrchRates;            /* ptr to branch rates for mixed relaxed clock */
     Param       *clockRate;                 /* ptr to clock rate parameter              */
@@ -1286,7 +1310,7 @@ typedef struct modelinfo
     int         compCharStart;              /* start char among compressed chars        */
     int         compCharStop;               /* stop char among compressed chars         */
     int         parsMatrixStart;            /* start column in parsimony matrix         */
-    int         parsMatrixStop;             /* stop collumn in parsimony matrix         */
+    int         parsMatrixStop;             /* stop column in parsimony matrix          */
     int         nParsIntsPerSite;           /* # parsimony ints per character           */  
     int         nCharsPerSite;              /* number chars per site (eg 3 for codon)   */
     int         rateProbStart;              /* start of rate probs (for adgamma)        */
@@ -1371,7 +1395,7 @@ typedef struct modelinfo
     LikeUpFxn           CondLikeUp;         /* final-pass calculation of cond likes         */
     PrintAncStFxn       PrintAncStates;     /* function for sampling ancestral states       */
     StateCodeFxn        StateCode;          /* function for getting states from codes       */
-    PrintSiteRateFxn    PrintSiteRates;     /* function for samling site rates              */
+    PrintSiteRateFxn    PrintSiteRates;     /* function for sampling site rates             */
     PosSelProbsFxn      PosSelProbs;        /* function for sampling pos. selection probs   */
     SiteOmegasFxn       SiteOmegas;         /* function for sampling site omega values      */
 
@@ -1404,7 +1428,7 @@ typedef struct modelinfo
     int         rescaleBeagleAll;           /* set to rescale all nodes                     */
     int         rescaleFreqOld;             /* holds rescale frequency of current state     */
     int         rescaleFreqNew;             /* holds temporary new rescale frequency        */
-    int         recalculateScalers;         /* shoud we recalculate scalers for current state YES/NO */
+    int         recalculateScalers;         /* should we recalculate scalers for current state YES/NO */
     int*        successCount;               /* count of successful computations since last reset of scalers */
     int**       isScalerNode;               /* for each node and chain set to YES if scaled node */
     int*        isScalerNodeScratch;        /* scratch space to hold isScalerNode of proposed state*/
@@ -1448,7 +1472,7 @@ typedef struct sumt
     int        *order;                 /* for storing topology read from file           */
     int         orderLen;              /* length of order array                         */
     int         numTreesInLastBlock;   /* number of trees in last block                 */
-    int         numTreesEncountered;   /* number of trees encounted in total            */
+    int         numTreesEncountered;   /* number of trees encountered in total          */
     int         numTreesSampled;       /* number of sampled trees in total              */
     int         isRooted;              /* is sumt tree rooted ?                         */
     int         isRelaxed;             /* is sumt tree a relaxed clock tree ?           */
@@ -1504,8 +1528,8 @@ typedef struct sumss
     int         allRuns;               /* should data for all runs be printed (yes/no)? */
     int         stepToPlot;            /* Which step to plot in the step plot           */
     int         askForMorePlots;       /* Should user be asked to plot for different discardfraction (y/n)?  */
-    int         smoothing;             /* An integer indicating number of neighbors to average over when dooing smoothing of curvs on plots */
-    MrBFlt      discardFraction;       /* Proportion of samples discarded when ploting step plot.*/
+    int         smoothing;             /* An integer indicating number of neighbors to average over when doing smoothing of curves on plots */
+    MrBFlt      discardFraction;       /* Proportion of samples discarded when plotting step plot.*/
     } Sumss;
 
 typedef struct plot
@@ -1609,13 +1633,13 @@ extern Comptree         comptreeParams;                         /* holds paramet
 extern char             **constraintNames;                      /* holds names of constraints                    */
 extern BitsLong         **definedConstraint;                    /* holds information about defined constraints   */
 extern BitsLong         **definedConstraintTwo;                 /* bitfields representing second taxa sets of defined constraints (for PARTIAL constraints) */
-extern BitsLong         **definedConstraintPruned;              /* bitfields representing taxa sets of defined constraints after delited taxa are removed */
-extern BitsLong         **definedConstraintTwoPruned;           /* bitfields representing second taxa sets of defined constraints after delited taxa are removed (for PARTIAL constraints) */
+extern BitsLong         **definedConstraintPruned;              /* bitfields representing taxa sets of defined constraints after deleted taxa are removed */
+extern BitsLong         **definedConstraintTwoPruned;           /* bitfields representing second taxa sets of defined constraints after deleted taxa are removed (for PARTIAL constraints) */
 extern int              dataType;                               /* type of data                                  */
 extern Calibration      defaultCalibration;                     /* default model settings                        */
 extern ModelParams      defaultModel;                           /* default model settings                        */
 extern int              defChars;                               /* flag for whether number of characters is known*/
-extern int              defMatrix;                              /* flag for whether matrix is successfull read   */
+extern int              defMatrix;                              /* flag for whether matrix is successful read    */
 extern int              defPairs;                               /* flag for whether constraints on tree are read */
 extern int              defPartition;                           /* flag for whether character partition is read  */
 extern int              defTaxa;                                /* are taxon labels defined ?                    */
@@ -1761,10 +1785,10 @@ extern int              beagleResourceCount;                    /* BEAGLE resour
 extern int              beagleInstanceCount;                    /* total number of BEAGLE instances              */
 extern int              beagleScalingScheme;                    /* BEAGLE dynamic scaling                        */
 extern int              beagleScalingFrequency;                 /* BEAGLE rescaling frequency                    */
-extern int              recalcScalers;                      /* shoud we recalculate scalers for one of divisions for current state YES/NO */
+extern int              recalcScalers;                          /* should we recalculate scalers for one of divisions for current state YES/NO */
 #if defined (BEAGLE_V3_ENABLED)
 extern int              beagleThreadCount;                      /* max number of BEAGLE CPU threads  */
-extern int              beagleAllFloatTips;                     /* use floating-point represantion for all tips  */
+extern int              beagleAllFloatTips;                     /* use floating-point representation for all tips  */
 #endif
 #endif
 

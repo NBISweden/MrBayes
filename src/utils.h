@@ -30,7 +30,7 @@ typedef struct
     Stat;
 
 
-/* For explanantion why the following two macros exists, see
+/* For explanation why the following two macros exists, see
  * http://stackoverflow.com/questions/38569628/calling-a-free-wrapper-dereferencing-type-punned-pointer-will-break-strict-al
  */
 
@@ -267,8 +267,8 @@ MrBFlt    LnProbGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x);
 MrBFlt    LnProbTruncGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x, MrBFlt min, MrBFlt max);
 MrBFlt    LnProbLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt x);
 MrBFlt    LnRatioLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt xNew, MrBFlt xOld);
-MrBFlt    LnProbTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt x);
-MrBFlt    LnRatioTK02LogNormal (MrBFlt exp, MrBFlt sd, MrBFlt xNew, MrBFlt xOld);
+MrBFlt    LnProbLogNormal_Mean_Var (MrBFlt mean, MrBFlt var, MrBFlt x);
+MrBFlt    LnRatioLogNormal_Mean_Var (MrBFlt mean, MrBFlt var, MrBFlt xNew, MrBFlt xOld);
 MrBFlt    LogNormalRandomVariable (MrBFlt mean, MrBFlt var, RandLong *seed);
 MrBFlt    MaximumValue (MrBFlt x, MrBFlt y);
 MrBFlt    MinimumValue (MrBFlt x, MrBFlt y);

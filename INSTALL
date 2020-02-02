@@ -20,10 +20,10 @@ following two commands in a terminal:
     brew tap brewsci/bio
     brew install mrbayes
 
-The first command adds the "brewsci/bio" "tap" to your Homebrew system.
-This is a Homebrew repository that contains various software related to
-bioinformatics.  Once the repository is available, you install MrBayes
-with the second command above.
+The first command adds the "brewsci/bio" repository to your Homebrew
+system. This is a Homebrew repository that contains various software
+related to bioinformatics. Once the repository is available, you install
+MrBayes with the second command above.
 
 This will install MrBayes with support for the Beagle library.  If you
 need additional MPI support, use
@@ -66,8 +66,8 @@ Make a shallow clone of the MrBayes repository:
 
     git clone --depth=1 https://github.com/NBISweden/MrBayes.git
 
-(a shallow clone requires less than 30 Mb of disk space, a full clone
-requires about 205 Mb)
+(a shallow clone requires about 27 MB of disk space, a full clone
+requires about 77 MB)
 
 
 Building MrBayes using the supplied "configure" script:

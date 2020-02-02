@@ -69,11 +69,21 @@ AC_ARG_ENABLE([fma],
     [enable_fma=$enableval],
     [enable_fma=yes])
 
+# Optional feature: Enable/disable building of documentation under doc/
+# (enabled by default)
+
+AC_ARG_ENABLE([doc],
+    [AS_HELP_STRING([--enable-doc],
+        [Enable building supplied documentation from sources in doc/
+         @<:@default=yes@:>@])],
+    [enable_doc=$enableval],
+    [enable_doc=yes])
+
 # Optional external libraries:  MPI, Readline, Beagle
 
 AC_ARG_WITH([mpi],
     [AS_HELP_STRING([--with-mpi],
-        [Build with MPI parallelization support @<:@default=check@:>@])],
+        [Build with MPI parallelization support @<:@default=no@:>@])],
     [],
     [with_mpi=no])
 
@@ -97,16 +107,22 @@ AC_ARG_WITH([beagle],
 AC_PROG_INSTALL
 PKG_PROG_PKG_CONFIG
 
-# Test whether we can rebuild the documentation.
-# This does not affect the pre-built PDF documents unless these are deleted.
-AC_PATH_PROG(PDFLATEX, [pdflatex])
-AC_PATH_PROG(BIBTEX, [bibtex])
-AC_PATH_PROG(LATEXMK, [latexmk])
+AM_CONDITIONAL([BUILD_DOC], [test "$enable_doc" = "yes"])
+AM_COND_IF([BUILD_DOC], [
+
+    # Test whether we can rebuild the documentation.
+    # This does not affect the pre-built PDF documents unless these are deleted.
+    AC_PATH_PROG(PDFLATEX, [pdflatex])
+    AC_PATH_PROG(BIBTEX, [bibtex])
+    AC_PATH_PROG(LATEXMK, [latexmk])
+
+]) dnl AM_COND_IF([BUILD_DOC])
 
 AM_CONDITIONAL([HAVE_LATEX], [test -n "$PDFLATEX" && test -n "$BIBTEX"])
-AM_COND_IF([HAVE_LATEX], [],
-           [AC_MSG_WARN([pdflatex or bibtex is missing, documentation will not be rebuilt])])
-
+AM_COND_IF([BUILD_DOC], [
+    AM_COND_IF([HAVE_LATEX], [],
+               [AC_MSG_WARN([pdflatex and/or bibtex is missing, documentation will not be rebuilt])])
+])
 AM_CONDITIONAL([HAVE_LATEXMK], [test -n "$LATEXMK"])
 
 # Determine if we can (and want) to use an MPI C compiler.
@@ -260,6 +276,7 @@ AC_CHECK_FUNCS([floor memset pow sqrt strchr])
 AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  doc/manual/Makefile
+                 doc/SMME_paper/Makefile
                  doc/tutorial/Makefile
                  examples/Makefile
                  src/Makefile

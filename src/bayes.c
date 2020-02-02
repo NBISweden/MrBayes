@@ -79,7 +79,7 @@ BitsLong    bitsLongWithAllBitsSet;      /* BitsLong with all bits set, for bit 
 ModelParams defaultModel;                /* Default model; vals set in InitializeMrBayes  */
 int         defTaxa;                     /* flag for whether number of taxa is known      */
 int         defChars;                    /* flag for whether number of chars is known     */
-int         defMatrix;                   /* flag for whether matrix is successfull read   */
+int         defMatrix;                   /* flag for whether matrix is successful read    */
 int         defPartition;                /* flag for whether character partition is read  */
 int         defPairs;                    /* flag for whether pairs are read               */
 Doublet     doublet[16];                 /* holds information on states for doublets      */
@@ -142,7 +142,7 @@ int main (int argc, char *argv[])
         {
         lastError = GetLastError();
         GetConsoleScreenBufferInfo(scbh, &csbi);
-        sprintf(poltmp, "\nlastError = %d", lastError);
+        sprintf(poltmp, "\nlastError = %ld", lastError);
         // printf (poltmp);
         }
 #   endif
@@ -187,6 +187,7 @@ int main (int argc, char *argv[])
     
 #   ifdef HAVE_LIBREADLINE
     rl_attempted_completion_function = readline_completion;
+    using_history();
 #   endif
     /* Set up parameter table. */
     SetUpParms ();
@@ -261,7 +262,7 @@ int CommandLine (int argc, char **argv)
             break;
         case 'v': /* version */
                   /* Display the same information that is displayed by the
-                   * "Version" interactive command and terminate succesfully */
+                   * "Version" interactive command and terminate successfully */
             puts("MrBayes, Bayesian Analysis of Phylogeny\n");
             printf("Version:   %s\n", VERSION_NUMBER);
             fputs("Features: ", stdout);
@@ -603,7 +604,7 @@ int InitializeMrBayes (void)
  *
  * */
 
-    tryToUseBEAGLE = YES;                             /* try to use the BEAGLE library if not Win (NO untill SSE single prec. works) */
+    tryToUseBEAGLE = YES;                             /* try to use the BEAGLE library if not Win (NO until SSE single prec. works) */
 
 #       endif
     beagleScalingScheme = MB_BEAGLE_SCALE_DYNAMIC;   /* use BEAGLE dynamic scaling                     */
@@ -867,21 +868,31 @@ int InitializeMrBayes (void)
     defaultModel.cppRateFix = 1.0;
     strcpy(defaultModel.cppMultDevPr, "Fixed");         /* prior on standard dev. of lognormal of rate multipliers of CPP rel clock */
     defaultModel.cppMultDevFix = 0.4;
-    strcpy(defaultModel.tk02varPr, "Exponential");      /* prior on nu parameter for BM rel clock     */
+    strcpy(defaultModel.tk02varPr, "Exponential");      /* prior on variance parameter for TK02 rel clock */
     defaultModel.tk02varExp = 1.0;
     defaultModel.tk02varFix = 1.0;
     defaultModel.tk02varUni[0] = 0.0;
-    defaultModel.tk02varUni[1] = 5.0;
-    strcpy(defaultModel.igrvarPr, "Exponential");       /* prior on variance increase parameter for IGR rel clock */
-    defaultModel.igrvarExp = 10.0;
-    defaultModel.igrvarFix = 0.1;
+    defaultModel.tk02varUni[1] = 10.0;
+    strcpy(defaultModel.wnvarPr, "Exponential");        /* prior on variance parameter for WN rel clock */
+    defaultModel.wnvarExp = 10.0;
+    defaultModel.wnvarFix = 0.1;
+    defaultModel.wnvarUni[0] = 0.0;
+    defaultModel.wnvarUni[1] = 10.0;
+    strcpy(defaultModel.igrvarPr, "Exponential");       /* prior on variance parameter for IGR rel clock */
+    defaultModel.igrvarExp = 1.0;
+    defaultModel.igrvarFix = 1.0;
     defaultModel.igrvarUni[0] = 0.0;
-    defaultModel.igrvarUni[1] = 0.5;
-    strcpy(defaultModel.mixedvarPr, "Exponential");     /* prior on var parameter for mixed rel clock */
-    defaultModel.mixedvarExp = 10.0;
-    defaultModel.mixedvarFix = 0.1;
+    defaultModel.igrvarUni[1] = 10.0;
+    strcpy(defaultModel.ilnvarPr, "Exponential");       /* prior on variance parameter for ILN rel clock */
+    defaultModel.ilnvarExp = 1.0;
+    defaultModel.ilnvarFix = 1.0;
+    defaultModel.ilnvarUni[0] = 0.0;
+    defaultModel.ilnvarUni[1] = 10.0;
+    strcpy(defaultModel.mixedvarPr, "Exponential");     /* prior on var parameter for IGR & ILN mixed clock */
+    defaultModel.mixedvarExp = 1.0;
+    defaultModel.mixedvarFix = 1.0;
     defaultModel.mixedvarUni[0] = 0.0;
-    defaultModel.mixedvarUni[1] = 5.0;
+    defaultModel.mixedvarUni[1] = 10.0;
     strcpy(defaultModel.ratePr, "Fixed");               /* prior on rate for a partition              */
     defaultModel.ratePrDir = 1.0;
     strcpy(defaultModel.generatePr, "Fixed");           /* prior on rate for a gene (multispecies coalescent) */
@@ -1020,7 +1031,7 @@ int ReinitializeMrBayes (void)
     chainParams.calcPbf = NO;                        /* should we calculate the pseudo-BF?            */
     chainParams.pbfInitBurnin = 100000;              /* initial burnin for pseudo BF                  */
     chainParams.pbfSampleFreq = 10;                  /* sample frequency for pseudo BF                */
-    chainParams.pbfSampleTime = 2000;                /* how many cycles to calcualate site prob.      */
+    chainParams.pbfSampleTime = 2000;                /* how many cycles to calculate site prob.       */
     chainParams.pbfSampleBurnin = 2000;              /* burnin period for each site for pseudo BF     */
     chainParams.userDefinedTemps = NO;               /* should we use the users temperatures?         */
     for (i=0; i<MAX_CHAINS; i++)
@@ -1070,9 +1081,9 @@ int ReinitializeMrBayes (void)
     sumssParams.allRuns = YES;                       /* should data for all runs be printed (yes/no)? */
     sumssParams.stepToPlot = 0;                      /* Which step to plot in the step plot, 0 means burnin */
     sumssParams.askForMorePlots = YES;               /* Should user be asked to plot for different discardfraction (y/n)?  */
-    sumssParams.discardFraction = 0.8;               /* Proportion of samples discarded when ploting step plot.*/
+    sumssParams.discardFraction = 0.8;               /* Proportion of samples discarded when plotting step plot.*/
     sumssParams.smoothing = 0;                       /* An integer indicating number of neighbors to average over
-                                                        when dooing smoothing of curvs on plots */
+                                                        when doing smoothing of curves on plots */
     /* comparetree parameters */
     strcpy(comptreeParams.comptFileName1, "temp.t"); /* input name for comparetree command            */
     strcpy(comptreeParams.comptFileName2, "temp.t"); /* input name for comparetree command            */

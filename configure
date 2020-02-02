@@ -656,6 +656,8 @@ HAVE_LATEX_TRUE
 LATEXMK
 BIBTEX
 PDFLATEX
+BUILD_DOC_FALSE
+BUILD_DOC_TRUE
 PKG_CONFIG_LIBDIR
 PKG_CONFIG_PATH
 PKG_CONFIG
@@ -744,6 +746,7 @@ enable_debug
 enable_sse
 enable_avx
 enable_fma
+enable_doc
 with_mpi
 with_readline
 with_beagle
@@ -1395,6 +1398,8 @@ Optional Features:
   --enable-fma            Enable use of code written using FMA (Fused
                           multiply-add SIMD Extensions) [default=yes] (if
                           supported)
+  --enable-doc            Enable building supplied documentation from sources
+                          in doc/ [default=yes]
   --enable-dependency-tracking
                           do not reject slow dependency extractors
   --disable-dependency-tracking
@@ -1403,8 +1408,7 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-mpi              Build with MPI parallelization support
-                          [default=check]
+  --with-mpi              Build with MPI parallelization support [default=no]
   --with-readline         Build with the Readline library [default=check]
   --with-beagle[=PATH]    Build with the Beagle library [default=check]. The
                           PATH argument should be the prefix path where Beagle
@@ -3227,6 +3231,17 @@ else
 fi
 
 
+# Optional feature: Enable/disable building of documentation under doc/
+# (enabled by default)
+
+# Check whether --enable-doc was given.
+if test "${enable_doc+set}" = set; then :
+  enableval=$enable_doc; enable_doc=$enableval
+else
+  enable_doc=yes
+fi
+
+
 # Optional external libraries:  MPI, Readline, Beagle
 
 
@@ -3380,9 +3395,20 @@ $as_echo "no" >&6; }
 	fi
 fi
 
-# Test whether we can rebuild the documentation.
-# This does not affect the pre-built PDF documents unless these are deleted.
-# Extract the first word of "pdflatex", so it can be a program name with args.
+ if test "$enable_doc" = "yes"; then
+  BUILD_DOC_TRUE=
+  BUILD_DOC_FALSE='#'
+else
+  BUILD_DOC_TRUE='#'
+  BUILD_DOC_FALSE=
+fi
+
+if test -z "$BUILD_DOC_TRUE"; then :
+
+
+    # Test whether we can rebuild the documentation.
+    # This does not affect the pre-built PDF documents unless these are deleted.
+    # Extract the first word of "pdflatex", so it can be a program name with args.
 set dummy pdflatex; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 $as_echo_n "checking for $ac_word... " >&6; }
@@ -3422,7 +3448,7 @@ $as_echo "no" >&6; }
 fi
 
 
-# Extract the first word of "bibtex", so it can be a program name with args.
+    # Extract the first word of "bibtex", so it can be a program name with args.
 set dummy bibtex; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 $as_echo_n "checking for $ac_word... " >&6; }
@@ -3462,7 +3488,7 @@ $as_echo "no" >&6; }
 fi
 
 
-# Extract the first word of "latexmk", so it can be a program name with args.
+    # Extract the first word of "latexmk", so it can be a program name with args.
 set dummy latexmk; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 $as_echo_n "checking for $ac_word... " >&6; }
@@ -3503,6 +3529,8 @@ fi
 
 
 
+
+fi
  if test -n "$PDFLATEX" && test -n "$BIBTEX"; then
   HAVE_LATEX_TRUE=
   HAVE_LATEX_FALSE='#'
@@ -3511,12 +3539,15 @@ else
   HAVE_LATEX_FALSE=
 fi
 
-if test -z "$HAVE_LATEX_TRUE"; then :
+if test -z "$BUILD_DOC_TRUE"; then :
+
+    if test -z "$HAVE_LATEX_TRUE"; then :
   else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: pdflatex or bibtex is missing, documentation will not be rebuilt" >&5
-$as_echo "$as_me: WARNING: pdflatex or bibtex is missing, documentation will not be rebuilt" >&2;}
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: pdflatex and/or bibtex is missing, documentation will not be rebuilt" >&5
+$as_echo "$as_me: WARNING: pdflatex and/or bibtex is missing, documentation will not be rebuilt" >&2;}
 fi
 
+fi
  if test -n "$LATEXMK"; then
   HAVE_LATEXMK_TRUE=
   HAVE_LATEXMK_FALSE='#'
@@ -7945,7 +7976,7 @@ fi
 done
 
 
-ac_config_files="$ac_config_files Makefile doc/Makefile doc/manual/Makefile doc/tutorial/Makefile examples/Makefile src/Makefile"
+ac_config_files="$ac_config_files Makefile doc/Makefile doc/manual/Makefile doc/SMME_paper/Makefile doc/tutorial/Makefile examples/Makefile src/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -8074,6 +8105,10 @@ fi
 
 if test -z "${MAINTAINER_MODE_TRUE}" && test -z "${MAINTAINER_MODE_FALSE}"; then
   as_fn_error $? "conditional \"MAINTAINER_MODE\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_DOC_TRUE}" && test -z "${BUILD_DOC_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_DOC\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${HAVE_LATEX_TRUE}" && test -z "${HAVE_LATEX_FALSE}"; then
@@ -8689,6 +8724,7 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
     "doc/manual/Makefile") CONFIG_FILES="$CONFIG_FILES doc/manual/Makefile" ;;
+    "doc/SMME_paper/Makefile") CONFIG_FILES="$CONFIG_FILES doc/SMME_paper/Makefile" ;;
     "doc/tutorial/Makefile") CONFIG_FILES="$CONFIG_FILES doc/tutorial/Makefile" ;;
     "examples/Makefile") CONFIG_FILES="$CONFIG_FILES examples/Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;

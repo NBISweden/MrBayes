@@ -1424,8 +1424,8 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
     int         i, *nEvents;
     MrBFlt      window, minDepth, maxDepth, oldDepth, newDepth,
                 oldLeftLength=0.0, oldRightLength=0.0, clockRate,
-                oldPLength=0.0, lambda=0.0, nu=0.0, igrvar=0.0,
-                *brlens=NULL, *tk02Rate=NULL, *igrRate=NULL, *popSizePtr;
+                oldPLength=0.0, lambda=0.0, nu=0.0, var=0.0,
+                *brlens=NULL, *rate=NULL, *popSizePtr;
     TreeNode    *p, *q;
     ModelInfo   *m;
     Tree        *geneTree, *speciesTree;
@@ -1586,14 +1586,13 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
                 return (NO_ERROR);
                 }
             }
-        else if ( subParm->paramType == P_TK02BRANCHRATES ||
-                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_TK02))
+        else if (subParm->paramType == P_TK02BRANCHRATES)
             {
             if (subParm->paramType == P_TK02BRANCHRATES)
                 nu = *GetParamVals (modelSettings[subParm->relParts[0]].tk02var, chain, state[chain]);
             else
                 nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
-            tk02Rate = GetParamVals (subParm, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
 
             /* no proposal ratio effect */
@@ -1601,59 +1600,98 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
             /* prior ratio */
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->index], nu*oldLeftLength, tk02Rate[p->left->index]);
-                (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->index], nu*oldRightLength, tk02Rate[p->right->index]);
-                (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->index], nu*p->left->length, tk02Rate[p->left->index]);
-                (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->index], nu*p->right->length, tk02Rate[p->right->index]);
+                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (rate[p->index], nu*oldLeftLength, rate[p->left->index]);
+                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (rate[p->index], nu*oldRightLength, rate[p->right->index]);
+                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (rate[p->index], nu*p->left->length, rate[p->left->index]);
+                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (rate[p->index], nu*p->right->length, rate[p->right->index]);
                 }
             if (p->anc->anc != NULL)
                 {
-                (*lnPriorRatio) -= LnProbTK02LogNormal (tk02Rate[p->anc->index], nu*oldPLength, tk02Rate[p->index]);
-                (*lnPriorRatio) += LnProbTK02LogNormal (tk02Rate[p->anc->index], nu*p->length, tk02Rate[p->index]);
+                (*lnPriorRatio) -= LnProbLogNormal_Mean_Var (rate[p->anc->index], nu*oldPLength, rate[p->index]);
+                (*lnPriorRatio) += LnProbLogNormal_Mean_Var (rate[p->anc->index], nu*p->length, rate[p->index]);
                 }
 
             /* update effective evolutionary lengths */
             if (p->left != NULL)
                 {
-                brlens[p->left->index] = p->left->length * (tk02Rate[p->left->index]+tk02Rate[p->index])/2.0;
-                brlens[p->right->index] = p->right->length * (tk02Rate[p->right->index]+tk02Rate[p->index])/2.0;
+                brlens[p->left->index] = p->left->length * (rate[p->left->index]+rate[p->index])/2.0;
+                brlens[p->right->index] = p->right->length * (rate[p->right->index]+rate[p->index])/2.0;
                 }
             if (p->anc->anc != NULL)
                 {
-                brlens[p->index] = p->length * (tk02Rate[p->index]+tk02Rate[p->anc->index])/2.0;
+                brlens[p->index] = p->length * (rate[p->index]+rate[p->anc->index])/2.0;
+                }
+            }
+        else if (subParm->paramType == P_WNBRANCHRATES)
+            {
+            if (subParm->paramType == P_WNBRANCHRATES)
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].wnvar, chain, state[chain]);
+            else
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            
+            if (p->left != NULL)
+                {
+                (*lnPriorRatio) -= LnProbGamma (oldLeftLength/var, oldLeftLength/var, rate[p->left->index ]);
+                (*lnPriorRatio) -= LnProbGamma (oldRightLength/var, oldRightLength/var, rate[p->right->index]);
+                (*lnPriorRatio) += LnProbGamma (p->left->length/var, p->left->length/var, rate[p->left->index ]);
+                (*lnPriorRatio) += LnProbGamma (p->right->length/var, p->right->length/var, rate[p->right->index]);
+                }
+            if (p->anc->anc != NULL)
+                {
+                (*lnPriorRatio) -= LnProbGamma (oldPLength/var, oldPLength/var, rate[p->index]);
+                (*lnPriorRatio) += LnProbGamma (p->length /var, p->length /var, rate[p->index]);
+                }
+
+            if (p->left != NULL)
+                {
+                brlens[p->left->index ] = rate[p->left->index ] * p->left->length;
+                brlens[p->right->index] = rate[p->right->index] * p->right->length;
+                }
+            if (p->anc->anc != NULL)
+                {
+                brlens[p->index] = rate[p->index] * p->length;
+                }
+            }
+        else if ( subParm->paramType == P_ILNBRANCHRATES ||
+                 (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_ILN))
+            {
+            if (subParm->paramType == P_ILNBRANCHRATES)
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].ilnvar, chain, state[chain]);
+            else
+                nu = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
+            brlens = GetParamSubVals (subParm, chain, state[chain]);
+            
+            if (p->left != NULL)
+                {
+                brlens[p->left->index ] = rate[p->left->index ] * p->left->length;
+                brlens[p->right->index] = rate[p->right->index] * p->right->length;
+                }
+            if (p->anc->anc != NULL)
+                {
+                brlens[p->index] = rate[p->index] * p->length;
                 }
             }
         else if ( subParm->paramType == P_IGRBRANCHRATES ||
                  (subParm->paramType == P_MIXEDBRCHRATES && *GetParamIntVals(subParm, chain, state[chain]) == RCL_IGR))
             {
             if (subParm->paramType == P_IGRBRANCHRATES)
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].igrvar, chain, state[chain]);
             else
-                igrvar = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
-            igrRate = GetParamVals (subParm, chain, state[chain]);
+                var = *GetParamVals (modelSettings[subParm->relParts[0]].mixedvar, chain, state[chain]);
+            rate = GetParamVals (subParm, chain, state[chain]);
             brlens = GetParamSubVals (subParm, chain, state[chain]);
             
             if (p->left != NULL)
                 {
-                (*lnPriorRatio) -= LnProbGamma (oldLeftLength/igrvar, oldLeftLength/igrvar, igrRate[p->left->index ]);
-                (*lnPriorRatio) -= LnProbGamma (oldRightLength/igrvar, oldRightLength/igrvar, igrRate[p->right->index]);
-                (*lnPriorRatio) += LnProbGamma (p->left->length/igrvar, p->left->length/igrvar, igrRate[p->left->index ]);
-                (*lnPriorRatio) += LnProbGamma (p->right->length/igrvar, p->right->length/igrvar, igrRate[p->right->index]);
+                brlens[p->left->index ] = rate[p->left->index ] * p->left->length;
+                brlens[p->right->index] = rate[p->right->index] * p->right->length;
                 }
             if (p->anc->anc != NULL)
                 {
-                (*lnPriorRatio) -= LnProbGamma (oldPLength/igrvar, oldPLength/igrvar, igrRate[p->index]);
-                (*lnPriorRatio) += LnProbGamma (p->length /igrvar, p->length /igrvar, igrRate[p->index]);
-                }
-
-            if (p->left != NULL)
-                {
-                brlens[p->left->index ] = igrRate[p->left->index ] * p->left->length;
-                brlens[p->right->index] = igrRate[p->right->index] * p->right->length;
-                }
-            if (p->anc->anc != NULL)
-                {
-                brlens[p->index] = igrRate[p->index] * p->length;
+                brlens[p->index] = rate[p->index] * p->length;
                 }
             }
         }

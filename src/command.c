@@ -167,8 +167,8 @@ int             dataType;              /* type of data                          
 Calibration     defaultCalibration;    /* default calibration                           */
 BitsLong        **definedConstraint;          /* bitfields representing taxa sets of defined constraints                                             */
 BitsLong        **definedConstraintTwo;       /* bitfields representing second taxa sets of defined constraints (used for PARTIAL constraints)       */
-BitsLong        **definedConstraintPruned;    /* bitfields representing taxa sets of defined constraints after delited taxa are removed              */
-BitsLong        **definedConstraintTwoPruned; /* bitfields representing second taxa sets of defined constraints for PARTIAL constraints after delited*/
+BitsLong        **definedConstraintPruned;    /* bitfields representing taxa sets of defined constraints after deleted taxa are removed              */
+BitsLong        **definedConstraintTwoPruned; /* bitfields representing second taxa sets of defined constraints for PARTIAL constraints after deleted*/
                                               /* taxa are removed and for NEGATIVE constraint it contains complements of definedConstraintPruned     */
 int             echoMB;                /* flag used by Manual to prevent echoing        */
 BitsLong        expecting;             /* variable denoting expected token type         */
@@ -231,7 +231,7 @@ TaxaInformation *taxaInfo;             /* holds critical information about taxa 
 char            **taxaNames;           /* holds name of taxa                            */
 BitsLong        **taxaSet;             /* holds information about defined taxasets      */
 char            **taxaSetNames;        /* holds names of taxa sets                      */
-int             *tempActiveConstraints;/* temporarily holds active constraints size allcated        */
+int             *tempActiveConstraints;/* temporarily holds active constraints size allocated        */
 enum ConstraintType  *definedConstraintsType;  /* Store type of constraint              */
 int             *tempSet;              /* temporarily holds defined set                 */
 int             *tempSetNeg;           /* holds bitset of negative set of taxa for partial constraint*/
@@ -252,7 +252,7 @@ int             beagleResourceCount;   /* BEAGLE resource choice list length    
 int             beagleInstanceCount;   /* total number of BEAGLE instances              */
 #if defined (BEAGLE_V3_ENABLED)
 int             beagleThreadCount;     /* max number of BEAGLE CPU threads              */
-int             beagleAllFloatTips;    /* use floating-point represantion for all tips  */
+int             beagleAllFloatTips;    /* use floating-point representation for all tips  */
 #endif
 #endif
 
@@ -324,7 +324,7 @@ CmdType     commands[] =
             { 30,           "Pairs", YES,           DoPairs,  1,                                                                                             {92},    32768,        "Defines nucleotide pairs (doublets) for stem models",  IN_CMD, SHOW },
             { 31,       "Partition",  NO,       DoPartition,  1,                                                                                             {16},        4,                              "Assigns a character partition",  IN_CMD, SHOW },
             { 32,            "Plot",  NO,            DoPlot,  6,                                                                        {106,107,108,109,224,225},       36,                        "Plots parameters from MCMC analysis",  IN_CMD, SHOW },
-            { 33,           "Prset",  NO,           DoPrset, 43,  {35,36,37,38,39,41,42,43,44,54,64,67,68,69,70,71,77,100,101,102,103,104,110,111,117,120,121,133,
+            { 33,           "Prset",  NO,           DoPrset, 44,  {35,36,37,38,39,41,42,43,44,54,64,67,68,69,70,71,77,100,101,102,103,104,110,111,117,120,121,133,
                                                                                                  168,172,173,174,183,184,185,218,241,246,247,251,254,269,271,272},        4,                         "Sets the priors for the parameters",  IN_CMD, SHOW },
             { 34,         "Propset",  NO,         DoPropset,  1,                                                                                            {186},        4,          "Sets proposal probabilities and tuning parameters",  IN_CMD, SHOW },
             { 35,            "Quit",  NO,            DoQuit,  0,                                                                                             {-1},       32,                                          "Quits the program",  IN_CMD, SHOW },
@@ -333,7 +333,7 @@ CmdType     commands[] =
             { 38,             "Set",  NO,             DoSet, 23,   {13,14,94,145,170,171,179,181,182,216,229,233,234,235,236,238,239,240,245,268,275,278,279},        4,      "Sets run conditions and defines active data partition",  IN_CMD, SHOW },
             { 39,      "Showbeagle",  NO,      DoShowBeagle,  0,                                                                                             {-1},       32,                            "Show available BEAGLE resources",  IN_CMD, SHOW },
             { 40,      "Showmatrix",  NO,      DoShowMatrix,  0,                                                                                             {-1},       32,                             "Shows current character matrix",  IN_CMD, SHOW },
-            { 41,   "Showmcmctrees",  NO,   DoShowMcmcTrees,  0,                                                                                             {-1},       32,                          "Shows trees used in mcmc analysis",  IN_CMD, SHOW },
+            { 41,   "Showmcmctrees",  NO,   DoShowMcmcTrees,  0,                                                                                             {-1},       32,                          "Shows trees used in MCMC analysis",  IN_CMD, SHOW },
             { 42,       "Showmodel",  NO,       DoShowModel,  0,                                                                                             {-1},       32,                                       "Shows model settings",  IN_CMD, SHOW },
             { 43,       "Showmoves",  NO,       DoShowMoves,  1,                                                                                            {180},       36,                              "Shows moves for current model",  IN_CMD, SHOW },
             { 44,      "Showparams",  NO,      DoShowParams,  0,                                                                                             {-1},       32,                          "Shows parameters in current model",  IN_CMD, SHOW },
@@ -344,7 +344,7 @@ CmdType     commands[] =
             { 48,             "Ssp",  NO,             DoSsp, 50,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
                                                                      153,154,155,156,157,158,159,160,166,169,190,191,198,199,200,202,213,214,215,248,249,250,257},       36,"Sets parameters of stepping-stone analysis (without starting)",IN_CMD, SHOW },
             { 49,       "Startvals",  NO,       DoStartvals,  1,                                                                                            {187},        4,                         "Sets starting values of parameters",  IN_CMD, SHOW },
-            { 50,            "Sump",  NO,            DoSump, 13,                                              {96,97,137,138,139,140,141,161,162,178,211,212,231},       36,                   "Summarizes parameters from MCMC analysis",  IN_CMD, SHOW },
+            { 50,            "Sump",  NO,            DoSump, 14,                                          {96,97,137,138,139,140,141,161,162,176,178,211,212,231},       36,                   "Summarizes parameters from MCMC analysis",  IN_CMD, SHOW },
             { 51,           "Sumss",  NO,           DoSumSs, 10,                                                        {258,259,260,261,262,263,264,265,266,267},       36,         "Summarizes parameters from stepping-stone analysis",  IN_CMD, SHOW },
             { 52,            "Sumt",  NO,            DoSumt, 21,                {80,81,82,95,146,147,163,164,165,167,175,177,204,205,206,207,208,209,210,230,232},       36,                        "Summarizes trees from MCMC analysis",  IN_CMD, SHOW },
             { 53,        "Taxastat",  NO,        DoTaxaStat,  0,                                                                                             {-1},       32,                                       "Shows status of taxa",  IN_CMD, SHOW },
@@ -921,7 +921,7 @@ int DoAbout (void)
     MrBayesPrint ("   denominator of Bayes\'s formula (\"Pr[X]\") is a normalizing constant that    \n");
     MrBayesPrint ("   involves a summation over all possible trees. The likelihood, as described    \n");
     MrBayesPrint ("   above, cannot be calculated with knowledge of only the tree\'s topology. You  \n");
-    MrBayesPrint ("   also need to have information on the lenths of the branches and on the        \n");
+    MrBayesPrint ("   also need to have information on the lengths of the branches and on the       \n");
     MrBayesPrint ("   mechanism of character change. Hence, the likelihood (\"Pr[X | Ti]\")         \n");
     MrBayesPrint ("   involves a multidimensional integral over all possible combinations of        \n");
     MrBayesPrint ("   branch lengths and substitution model parameters.                             \n");
@@ -978,7 +978,7 @@ int DoAcknowledgments (void)
     MrBayesPrint ("   mental in getting the parallel version of the program working. Important bug- \n");
     MrBayesPrint ("   fixes and additional functionality was contributed by Clemens Lakner, Sebas-  \n");
     MrBayesPrint ("   tian Hoehna, Paul Lewis, Mark Holder, Julian Catchen and Bret Larget. Marc    \n");
-    MrBayesPrint ("   Suchard, Daniel Ayres and Aaron Darling got mrbayes working with beagle and   \n");
+    MrBayesPrint ("   Suchard, Daniel Ayres and Aaron Darling got MrBayes working with beagle and   \n");
     MrBayesPrint ("   contributed a lot of related functionality and bug fixes. Aaron Darling was   \n");
     MrBayesPrint ("   instrumental in getting the Windows installer set up. Liu Liang and Dennis    \n");
     MrBayesPrint ("   Pearl helped integrate MrBayes with BEST.                                     \n");
@@ -2021,7 +2021,7 @@ int DoCitations (void)
     MrBayesPrint ("         inference. J. Mol. Evol. 43:304-311.                                    \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("      Yang, Z., and B. Rannala. 1997. Bayesian phylogenetic inference            \n");
-    MrBayesPrint ("         using DNA sequences: a Markov chain Monte carlo method. Molecular       \n");
+    MrBayesPrint ("         using DNA sequences: a Markov chain Monte Carlo method. Molecular       \n");
     MrBayesPrint ("         Biology and Evolution. 14:717-724.                                      \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("                                                                                 \n");
@@ -2065,9 +2065,9 @@ int DoCitations (void)
     MrBayesPrint ("         to the chloroplast genome. Molecular Biology and Evolution.             \n");
     MrBayesPrint ("         11:715-724.                                                             \n");
     MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("   The program can be used to detect positively slected amino-acid sites using a \n");
-    MrBayesPrint ("   full hierarchical Bayes analysis.  The method is based on the excellent paper \n");
-    MrBayesPrint ("   by Nielsen and Yang:                                                          \n");
+    MrBayesPrint ("   The program can be used to detect positively selected amino-acid sites using  \n");
+    MrBayesPrint ("   a full hierarchical Bayes analysis.  The method is based on the excellent     \n");
+    MrBayesPrint ("   paper by Nielsen and Yang:                                                    \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("      Nielsen, R., and Z. Yang. 1998. Likelihood models for detecting            \n");
     MrBayesPrint ("         positively selected amino acid sites and applications to the HIV-1      \n");
@@ -2103,7 +2103,7 @@ int DoCitations (void)
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   and the the nst=6 models:                                                     \n");
     MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("      Tavare, S. 1986. Some probabilistic and statisical problems on the         \n");
+    MrBayesPrint ("      Tavare, S. 1986. Some probabilistic and statistical problems on the        \n");
     MrBayesPrint ("         analysis of DNA sequences. Lect. Math. Life Sci. 17:57-86.              \n");
     MrBayesPrint ("         17:368-376.                                                             \n");
     MrBayesPrint ("                                                                                 \n");
@@ -2112,7 +2112,7 @@ int DoCitations (void)
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("      Poisson --                                                                 \n");
     MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("      Bishop, M.J., and A.E. Friday. 1987. Tetropad relationships: the           \n");
+    MrBayesPrint ("      Bishop, M.J., and A.E. Friday. 1987. Tetrapod relationships: the           \n");
     MrBayesPrint ("         molecular evidence. Pp. 123-139 in Molecules and morphology in          \n");
     MrBayesPrint ("         evolution: conflict or compromise? (C. Patterson, ed.). Cambridge       \n");
     MrBayesPrint ("         University Press, Cambridge, England.                                   \n");
@@ -2279,10 +2279,11 @@ int DoCitations (void)
     MrBayesPrint ("         Bull. Math. Bio. 59:581-607.                                            \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("   MrBayes implements three relaxed clock models: the Compound Poisson Process   \n");
-    MrBayesPrint ("   (CPP), the Thorne-Kishino 2002 (TK02), and the Independent Gamma Rates (IGR)  \n");
-    MrBayesPrint ("   models.  The CPP model was first described by Huelsenbeck et al. (2000).  It  \n");
-    MrBayesPrint ("   is an autocorrelated discrete model of rate variation over time.  Instead of  \n");
+    MrBayesPrint ("   MrBayes implements four relaxed clock models: the Compound Poisson Process    \n");
+    MrBayesPrint ("   (CPP), the Autocorrelated Lognormal (TK02), the Independent Gamma Rates (IGR),\n");
+    MrBayesPrint ("   and the Independent Lognormal (ILN) models.                                   \n");
+    MrBayesPrint ("   The CPP model was first described by Huelsenbeck et al. (2000).  It is an     \n");
+    MrBayesPrint ("   autocorrelated discrete model of rate variation over time.  Instead of        \n");
     MrBayesPrint ("   the modified gamma distribution originally proposed for the rate multipliers, \n");
     MrBayesPrint ("   MrBayes uses a lognormal distribution.  The extensions necessary to sample    \n");
     MrBayesPrint ("   over tree space under this model are original to MrBayes; the original paper  \n");
@@ -2359,7 +2360,7 @@ int DoCitations (void)
     MrBayesPrint ("   shortcomings of the harmonic mean estimator and describes thermodynamic       \n");
     MrBayesPrint ("   integration, a technique that is similar to the stepping-stone algorithm.     \n");
     MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("      Newton, M. A., and A. E. Raftery. 1994. Approcimate Bayesian inference     \n");
+    MrBayesPrint ("      Newton, M. A., and A. E. Raftery. 1994. Approximate Bayesian inference     \n");
     MrBayesPrint ("         with the weighted likelihood bootstrap. J. R. Stat. Soc. B. 56. 3-48.   \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("      Lartillot, N., and H. Philippe. 2006. Computing Bayes factors using        \n");
@@ -4111,7 +4112,11 @@ int DoFormatParm (char *parmName, char *tkn)
                         else if (!strcmp(tempStr, "Standard"))
                             dataType = STANDARD;
                         else if (!strcmp(tempStr, "Continuous"))
-                            dataType = CONTINUOUS;
+                            {
+                            MrBayesPrint ("%s   MrBayes currently does not support the use of the 'Continuous' datatype\n", spacer);
+                            return ERROR;
+                            /* dataType = CONTINUOUS; */
+                            }
                         else if (!strcmp(tempStr, "Mixed"))
                             {
                             dataType = MIXED;
@@ -4141,7 +4146,11 @@ int DoFormatParm (char *parmName, char *tkn)
                         else if (!strcmp(tempStr, "Standard"))
                             dataType = STANDARD;
                         else if (!strcmp(tempStr, "Continuous"))
-                            dataType = CONTINUOUS;
+                            {
+                            MrBayesPrint ("%s   MrBayes currently does not support the use of the 'Continuous' datatype\n", spacer);
+                            return ERROR;
+                            /* dataType = CONTINUOUS;*/
+                            }
                         else if (!strcmp(tempStr, "Mixed"))
                             {
                             MrBayesPrint ("%s   Cannot have mixed datatype within a mixed datatype\n", spacer);
@@ -5070,7 +5079,7 @@ int DoManual (void)
             }
         }
 
-    /* return logging to previous setings and switch echoing on */
+    /* return logging to previous settings and switch echoing on */
     SafeFclose (&fp);
     logToFile = logSetting;
     logFileFp = logfp;
@@ -5327,7 +5336,7 @@ int DoMatrixParm (char *parmName, char *tkn)
                to the set of taxon names unless there is already a defined taxon set. */
             if (strlen(tkn)>99)
                 {
-                MrBayesPrint ("%s   Taxon name %s is too long. Maximun 99 characters is allowed.\n", spacer, tkn);
+                MrBayesPrint ("%s   Taxon name %s is too long. Maximum 99 characters is allowed.\n", spacer, tkn);
                 goto errorExit;
                 }
             if (isTaxsetDef == NO && AddString (&taxaNames, taxonCount, tkn) == ERROR)
@@ -7253,7 +7262,7 @@ int DoTaxlabelsParm (char *parmName, char *tkn)
             {
             if (strlen(tkn)>99)
                 {
-                MrBayesPrint ("%s   Taxon name %s is too long. Maximun 99 characters is allowed.\n", spacer, tkn);
+                MrBayesPrint ("%s   Taxon name %s is too long. Maximum 99 characters is allowed.\n", spacer, tkn);
                 return (ERROR);
                 }
             if (AddString (&taxaNames, numNamedTaxa, tkn) == ERROR)
@@ -8013,8 +8022,8 @@ int DoTaxaStat (void)
     MrBayesPrint ("\n");
     MrBayesPrint ("%s   '.' indicate that the taxon is not present in the constraint. \n", spacer);
     MrBayesPrint ("%s   '*' indicate that the taxon is present in the 'hard' constraint. \n", spacer);
-    MrBayesPrint ("%s   '+' indicate that the taxon is present in the first groupe of 'partial' constraint. \n", spacer);
-    MrBayesPrint ("%s   '-' indicate that the taxon is present in the second groupe of 'partial' constraint. \n", spacer);
+    MrBayesPrint ("%s   '+' indicate that the taxon is present in the first group of 'partial' constraint. \n", spacer);
+    MrBayesPrint ("%s   '-' indicate that the taxon is present in the second group of 'partial' constraint. \n", spacer);
     MrBayesPrint ("%s   '#' indicate that the taxon is present in the 'negative' constraint. \n", spacer);
     MrBayesPrint ("%s   Arrow indicates current outgroup. \n", spacer);
 
@@ -8154,10 +8163,10 @@ int DoTreeParm (char *parmName, char *tkn)
     static BitsLong     lastExpecting; /* keep track of what we expected before a comment, in case we want to skip a comment */
     static char         *tempNameString=NULL; /* Contains multiple tokens which form name string of param set*/
     static int          foundAmpersand, foundColon, foundComment, foundE, foundB, foundN, foundFirst,
-                        foundCurly, /* is set to YES when we are between two curly bracets ONLY while processing CppEvent name */
+                        foundCurly, /* is set to YES when we are between two curly braces ONLY while processing CppEvent name */
                         foundClockrate, 
                         foundName, /*is set to YES when param set name token is found and set to NO once full param set name is processed*/
-                        eSetIndex, /* is set in the begining of reading CppEvent for a node/branch to the index of currently processed CppEvent set */
+                        eSetIndex, /* is set in the beginning of reading CppEvent for a node/branch to the index of currently processed CppEvent set */
                         bSetIndex, eventIndex, treeIndex, nextIntNodeIndex;
     static PolyNode     *pp, *qq;
     static PolyTree     *t;
@@ -8207,6 +8216,11 @@ int DoTreeParm (char *parmName, char *tkn)
                 {
                 MrBayesPrint ("%s   Overwriting tree '%s'.\n", spacer, userTree[treeIndex]);
                 FreePolyTree (userTree[treeIndex]);
+                }
+            if (treeIndex > MAX_NUM_USERTREES)
+                {
+                MrBayesPrint ("%s   MrBayes can only store %d user trees.\n", spacer, MAX_NUM_USERTREES);
+                return (ERROR);
                 }
             if ((userTree[treeIndex] = AllocatePolyTree (numTaxa)) == NULL)
                 return (ERROR);
@@ -8332,7 +8346,7 @@ int DoTreeParm (char *parmName, char *tkn)
                 }
             else
                 {
-                MrBayesPrint ("%s   Urecognized argument '%s'\n", spacer, tkn);
+                MrBayesPrint ("%s   Unrecognized argument '%s'\n", spacer, tkn);
                 return (ERROR);
                 }
             }
@@ -9411,7 +9425,7 @@ int GetToken (char *token, int *tokenType, char **sourceH)
                     {
                     *tokenType = NOTHING;
                     token[20]='\0';
-                    MrBayesPrint ("%s   Error while parsing a string. Token \"%s...[followed by at least %d  more charectors]\" is too long.\n", spacer,token,tempMax-token-20);
+                    MrBayesPrint ("%s   Error while parsing a string. Token \"%s...[followed by at least %d  more characters]\" is too long.\n", spacer,token,tempMax-token-20);
                     MrBayesPrint ("%s   Maximum allowed length of a token is %d\n", spacer,tempMax-token);
                     return (ERROR);
                     }
@@ -9504,7 +9518,7 @@ int GetToken (char *token, int *tokenType, char **sourceH)
                 {
                 *tokenType = NOTHING;
                 token[20]='\0';
-                MrBayesPrint ("%s   Error while parsing a string. Token \"%s...[followed by at least %d  more charectors]\" is too long.\n", spacer,token,tempMax-token-20);
+                MrBayesPrint ("%s   Error while parsing a string. Token \"%s...[followed by at least %d  more characters]\" is too long.\n", spacer,token,tempMax-token-20);
                 MrBayesPrint ("%s   Maximum allowed length of a token is %d\n", spacer,tempMax-token);
                 return (ERROR);
                 }
@@ -9529,7 +9543,7 @@ int GetToken (char *token, int *tokenType, char **sourceH)
                 {
                 *tokenType = NOTHING;
                 token[20]='\0';
-                MrBayesPrint ("%s   Error while parsing a string. Token \"%s...[followed by at least %d  more charectors]\" is too long.\n", spacer,token,tempMax-token-20);
+                MrBayesPrint ("%s   Error while parsing a string. Token \"%s...[followed by at least %d  more characters]\" is too long.\n", spacer,token,tempMax-token-20);
                 MrBayesPrint ("%s   Maximum allowed length of a token is %d\n", spacer,tempMax-token);
                 return (ERROR);
                 }
@@ -9700,7 +9714,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   Note that the \"Sump\" command provides a different set of convergence diag-  \n");
         MrBayesPrint ("   nostics tools that you may also want to explore. Unlike \"Plot\", \"Sump\" can\n");
         MrBayesPrint ("   compare two or more parameter samples and will calculate convergence diagnos- \n");
-        MrBayesPrint ("   tics as wel as parameter summaries for the pooled sample.                     \n");
+        MrBayesPrint ("   tics as well as parameter summaries for the pooled sample.                    \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Options:                                                                      \n");
         MrBayesPrint ("                                                                                 \n");
@@ -9809,7 +9823,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                               G,H,I,L,K,M,F,P,S,T,W,Y,V)                        \n");
         MrBayesPrint ("                    Datatype = Restriction: Restriction site (0,1) states        \n");
         MrBayesPrint ("                    Datatype = Standard: Morphological (0,1) states              \n");
-        MrBayesPrint ("                    Datatype = Continuous: Real number valued states             \n");
+      /*MrBayesPrint ("                    Datatype = Continuous: Real number valued states             \n");*/
         MrBayesPrint ("                    Datatype = Mixed(<type>:<range>,...,<type>:<range>): A       \n");
         MrBayesPrint ("                               mixture of the above datatypes. For example,      \n");
         MrBayesPrint ("                               \"datatype=mixed(dna:1-100,protein:101-200)\"     \n");
@@ -9872,10 +9886,9 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    ;                                                            \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   The only non-standard NEXUS format option is the use of the \"mixed\",        \n");
-        MrBayesPrint ("   \"restriction\", \"standard\" and \"continuous\" datatypes. Hence, if         \n");
-        MrBayesPrint ("   you use any of these datatype specifiers, a program like PAUP* or             \n");
-        MrBayesPrint ("   MacClade will report an error (as they should because MrBayes is not          \n");
-        MrBayesPrint ("   strictly NEXUS compliant).                                                    \n");
+        MrBayesPrint ("   \"restriction\", and \"standard\" datatypes. Hence, if you use any of these   \n");
+        MrBayesPrint ("   datatype specifiers, a program like PAUP* or MacClade will report an error    \n");
+        MrBayesPrint ("   (as they should because MrBayes is not strictly NEXUS compliant).             \n");
         MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
         }
     else if (!strcmp(helpTkn, "Matrix"))
@@ -10076,7 +10089,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   of a sequence ('taxon'). Ranges are specified using a dash, and a period can  \n");
         MrBayesPrint ("   be used as a synonym of the last sequence in the matrix.                      \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   For exammple: speciespartition species = SpeciesA: 1, SpeciesB: 2-.           \n");
+        MrBayesPrint ("   For example: speciespartition species = SpeciesA: 1, SpeciesB: 2-.            \n");
         MrBayesPrint ("   Here, we name two species. SpeciesA is represented by a single sequence while \n");
         MrBayesPrint ("   SpeciesB is represented by all remaining sequences in the matrix.             \n");
         MrBayesPrint ("   Each sequence is specified by its row index in the data matrix.               \n");
@@ -10141,9 +10154,9 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   in a monophyletic group depending on the rooting of the tree.                 \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   A list of taxa can be specified using a taxset, taxon names, taxon numbers, or\n");
-        MrBayesPrint ("   any combination of the above, sepatated by spaces. The constraint is treated  \n");
+        MrBayesPrint ("   any combination of the above, separated by spaces. The constraint is treated  \n");
         MrBayesPrint ("   as an absolute requirement of trees, that is, trees that are not compatible   \n");
-        MrBayesPrint ("   with the constraint have zero prior (and hence zero posterior) probabilty.    \n");
+        MrBayesPrint ("   with the constraint have zero prior (and hence zero posterior) probability.   \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   If you are interested in inferring ancestral states for a particular node,    \n");
         MrBayesPrint ("   you need to 'hard' constrain that node first using the 'constraint' command.  \n");
@@ -10166,7 +10179,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("      constraint forbiddenclade negative = Homo Pan Gorilla                      \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   Defines a negative constraint that associates all trees where Homon, Pan, and \n");
+        MrBayesPrint ("   Defines a negative constraint that associates all trees where Homo, Pan, and  \n");
         MrBayesPrint ("   Gorilla form a monophyletic group with zero posterior probability. In other   \n");
         MrBayesPrint ("   words, such trees will not be sampled during MCMC.                            \n");
         MrBayesPrint ("                                                                                 \n");
@@ -10252,11 +10265,11 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   distribution used by MrBayes are shape (alpha) and rate (beta). If you want   \n");
         MrBayesPrint ("   to use the standard parameterization, the conversions are as follows:         \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("      exponential distributon: mean    = 1 / rate                                \n");
-        MrBayesPrint ("      gamma distributon:       mean    = alpha / beta                            \n");
-        MrBayesPrint ("                               st.dev. = square_root (alpha / beta^2)            \n");
-        MrBayesPrint ("      lognormal distributon:   mean    = exp (mean_log + st.dev._log^2/2)        \n");
-        MrBayesPrint ("                               st.dev. = square_root ((exp (st.dev._log^2) - 1)  \n");
+        MrBayesPrint ("      exponential distribution: mean    = 1 / rate                               \n");
+        MrBayesPrint ("      gamma distribution:       mean    = alpha / beta                           \n");
+        MrBayesPrint ("                                st.dev. = square_root (alpha / beta^2)           \n");
+        MrBayesPrint ("      lognormal distribution:   mean    = exp (mean_log + st.dev._log^2/2)       \n");
+        MrBayesPrint ("                                st.dev. = square_root ((exp (st.dev._log^2) - 1) \n");
         MrBayesPrint ("                                         * (exp (2*mean_log + st.dev._log^2))    \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   The truncated normal distribution is an exception in that the mean_age and    \n");
@@ -10376,7 +10389,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("      lset <parameter>=<option> ... <parameter>=<option>                         \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   For example, \"lset nst=6 rates=gamma\" would set the model to a general      \n");
-        MrBayesPrint ("   model of DNA substition (the GTR) with gamma-distributed rate variation       \n");
+        MrBayesPrint ("   model of DNA substitution (the GTR) with gamma-distributed rate variation     \n");
         MrBayesPrint ("   across sites.                                                                 \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Options:                                                                      \n");
@@ -10429,7 +10442,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                above and a large number of others, with or without name.        \n");
         MrBayesPrint ("   Code      -- Enforces the use of a particular genetic code. The default       \n");
         MrBayesPrint ("                is the universal code. Other options include \"vertmt\" for      \n");
-        MrBayesPrint ("                vertebrate mitocondrial, \"invermt\", \"mycoplasma\", \"yeast\", \n");
+        MrBayesPrint ("                vertebrate mitochondrial, \"invermt\", \"mycoplasma\", \"yeast\", \n");
         MrBayesPrint ("                \"ciliate\", \"echinoderm\", \"euplotid\", and \"metmt\" (for    \n");
         MrBayesPrint ("                metazoan mitochondrial except vertebrates).                      \n");
         MrBayesPrint ("   Ploidy    -- Specifies the ploidy of the organism. Options are \"Haploid\",   \n");
@@ -10445,7 +10458,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                              that describes how much rates vary.                \n");
         MrBayesPrint ("                * lnorm    -- Lognormal-distributed rates across sites. The      \n");
         MrBayesPrint ("                              rate at a site is drawn from a lognormal           \n");
-        MrBayesPrint ("                              distribution. the lognormal distribiton has a      \n");
+        MrBayesPrint ("                              distribution. the lognormal distribution has a     \n");
         MrBayesPrint ("                              single parameter, sigma (SD) that describes how    \n");
         MrBayesPrint ("                              much rates vary (mean fixed to log(1.0) == 0.0.    \n");
         MrBayesPrint ("                * adgamma  -- Autocorrelated rates across sites. The marg-       \n");
@@ -10469,7 +10482,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                distribution. Hence, an approximation to the continuous gamma    \n");
         MrBayesPrint ("                is used; the gamma distribution is broken into ncat categories   \n");
         MrBayesPrint ("                of equal weight (1/ncat). The mean rate for each category rep-   \n");
-        MrBayesPrint ("                resents the rate for the entire cateogry. This option allows     \n");
+        MrBayesPrint ("                resents the rate for the entire category. This option allows     \n");
         MrBayesPrint ("                you to specify how many rate categories to use when approx-      \n");
         MrBayesPrint ("                imating the gamma. The approximation is better as ncat is inc-   \n");
         MrBayesPrint ("                reased. In practice, \"ncat=4\" does a reasonable job of         \n");
@@ -11225,23 +11238,26 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    are assuming. The default is 'strict', which corresponds to  \n");
         MrBayesPrint ("                    the standard clock model where the evolutionary rate is      \n");
         MrBayesPrint ("                    constant throughout the tree. For relaxed clock models, you  \n");
-        MrBayesPrint ("                    can use 'cpp', 'tk02', 'igr'. ('mixed' is not working)       \n");
+        MrBayesPrint ("                    can use 'cpp', 'tk02', 'wn', 'igr', or 'iln'.                \n");
         MrBayesPrint ("                    'cpp' invokes a relaxed clock model where the rate evolves   \n");
         MrBayesPrint ("                    according to a Compound Poisson Process (CPP) (Huelsenbeck   \n");
         MrBayesPrint ("                    et al., 2000).                                               \n");
-        MrBayesPrint ("                    'tk02' invokes the Brownian Motion model described by Thorne \n");
-        MrBayesPrint ("                    and Kishino (2002). [autocorrelated lognormal distributions] \n");
-        MrBayesPrint ("                    'igr' invokes the Independent Gamma Rate (IGR) model where   \n");
-        MrBayesPrint ("                    each branch has an independent rate drawn from a gamma       \n");
-        MrBayesPrint ("                    distribution (LePage et al., 2007).                          \n");
+        MrBayesPrint ("                    'tk02' invokes the geometric Brownian Motion model described \n");
+        MrBayesPrint ("                    by Thorne and Kishino (2002). [autocorrelated lognormal]     \n");
+        MrBayesPrint ("                    'wn' invokes the white noise model (LePage et al., 2007)     \n");
+        MrBayesPrint ("                    where each branch has an independent rate drawn from a gamma \n");
+        MrBayesPrint ("                    distribution with variance proportional to the branch length.\n");
+        MrBayesPrint ("                    'igr' invokes the Independent Gamma Rate model. The differ-  \n");
+        MrBayesPrint ("                    ence from 'wn' is that these gamma distributions are i.i.d.  \n");
+        MrBayesPrint ("                    Thus, the variances do not depend on the branch lengths.     \n");
+        MrBayesPrint ("                    'iln' invokes the Independent Lognormal model. It is similar \n");
+        MrBayesPrint ("                    to 'igr' but the rates are i.i.d. lognormal distributions.   \n");
         MrBayesPrint ("                    Each of the relaxed clock models has additional parameters   \n");
         MrBayesPrint ("                    with priors. For the CPP model, it is 'cppratepr' and        \n");
         MrBayesPrint ("                    'cppmultdevpr'; for the TK02 model, it is 'tk02varpr'; for   \n");
-        MrBayesPrint ("                    the IGR  model, it is 'igrvarpr'.                            \n");
+        MrBayesPrint ("                    the WN model, it is 'wnvarpr'; for the IGR model, it is      \n");
+        MrBayesPrint ("                    'igrvarpr'; for the ILN model, it is 'ilnvarpr'.             \n");
         MrBayesPrint ("                    The 'clockvarpr' parameter is only relevant for clock trees. \n");
-        MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("                    For backward compatibility, 'bm' is allowed as a synonym of  \n");
-        MrBayesPrint ("                    'tk02', and 'ibr' as a synonym of 'igr'.                     \n");
         MrBayesPrint ("   Cppratepr     -- This parameter allows you to specify a prior probability     \n");
         MrBayesPrint ("                    distribution on the rate of the Poisson process generating   \n");
         MrBayesPrint ("                    changes in the evolutionary rate in the CPP relaxed clock    \n");
@@ -11252,7 +11268,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                       prset cppratepr = exponential(<number>)                   \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                    For instance, if you fix the rate to 2, then on a branch     \n");
-        MrBayesPrint ("                    with the length equual to one expresed in terms of average   \n");
+        MrBayesPrint ("                    with the length equal to one expressed in terms of average   \n");
         MrBayesPrint ("                    expected number of substitution per site, you expect to see, \n"); 
         MrBayesPrint ("                    on average, two rate-modifying events.                       \n");
         MrBayesPrint ("                    If you put an exponential(0.1) on the rate, you will be      \n");
@@ -11284,7 +11300,6 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    linear, not the logarithm scale). The mean is the same as the\n");
         MrBayesPrint ("                    rate multiplier at the start of the branch (again on the     \n");
         MrBayesPrint ("                    linear scale).                                               \n");
-        MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("                    You can set the parameter to a fixed value, or specify that  \n");
         MrBayesPrint ("                    it is drawn from an exponential or uniform distribution:     \n");
         MrBayesPrint ("                                                                                 \n");
@@ -11292,19 +11307,31 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                       prset tk02varpr = exponential(<number>)                   \n");
         MrBayesPrint ("                       prset tk02varpr = uniform(<number>,<number>)              \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("                    For backward compatibility, 'bmvarpr' is allowed as a synonym\n");
-        MrBayesPrint ("                    of 'tko2varpr'.                                              \n");
-        MrBayesPrint ("   Igrvarpr      -- This parameter allows you to specify a prior on the variance \n");
-        MrBayesPrint ("                    of the gamma distribution from which the branch lengths are  \n");
-        MrBayesPrint ("                    drawn in the independent branch rate (IGR) relaxed clock     \n");
-        MrBayesPrint ("                    model. Specifically, the parameter specifies the rate at     \n");
-        MrBayesPrint ("                    which the variance increases with respect to the base rate of\n");
-        MrBayesPrint ("                    the clock. If you have a branch of a length corresponding to \n");
-        MrBayesPrint ("                    0.4 expected changes per site according to the base rate of  \n");
-        MrBayesPrint ("                    the clock, and the igrvar parameter has a value of 2.0, then \n");
-        MrBayesPrint ("                    the effective branch length will be drawn from a distribution\n");
-        MrBayesPrint ("                    with a variance of 0.4*2.0.                                  \n");
+        MrBayesPrint ("   WNvarpr       -- This parameter allows you to specify the prior distribution  \n");
+        MrBayesPrint ("                    for the variance of the independent branch rate (white noise)\n");
+        MrBayesPrint ("                    relaxed clock model. Specifically, the parameter specifies   \n");
+        MrBayesPrint ("                    the rate at which the variance increases with respect to the \n");
+        MrBayesPrint ("                    base rate of the clock. If you have a branch of a length     \n");
+        MrBayesPrint ("                    corresponding to 0.4 expected changes per site according to  \n");
+        MrBayesPrint ("                    the base rate of the clock, and the wnvar parameter has a   \n");
+        MrBayesPrint ("                    value of 2.0 , then the effective branch length will be drawn\n");
+        MrBayesPrint ("                    from a distribution with a variance of 0.4*2.0.              \n");
+        MrBayesPrint ("                    You can set the parameter to a fixed value, or specify that  \n");
+        MrBayesPrint ("                    it is drawn from an exponential or uniform distribution:     \n");
         MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("                       prset wnvarpr = fixed(<number>)                           \n");
+        MrBayesPrint ("                       prset wnvarpr = exponential(<number>)                     \n");
+        MrBayesPrint ("                       prset wnvarpr = uniform(<number>,<number>)                \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("   IGRvarpr      -- This parameter allows you to specify the prior distribution  \n");
+        MrBayesPrint ("                    for the variance of the independent gamma rate (IGR) relaxed \n");
+        MrBayesPrint ("                    clock model. Specifically, the parameter specifies the rate  \n");
+        MrBayesPrint ("                    at which the variance increases with respect to the base rate\n");
+        MrBayesPrint ("                    of the clock. The difference from the white noise (WN) model \n");
+        MrBayesPrint ("                    is that the variance is the same for all branch rates and    \n");
+        MrBayesPrint ("                    does not depend on the branch length.  If igrvar parameter   \n");
+        MrBayesPrint ("                    has a value of 0.8 , then the rate multiplier will be drawn  \n");
+        MrBayesPrint ("                    from a gamma distribution with mean 1.0 and variance 0.8.    \n");
         MrBayesPrint ("                    You can set the parameter to a fixed value, or specify that  \n");
         MrBayesPrint ("                    it is drawn from an exponential or uniform distribution:     \n");
         MrBayesPrint ("                                                                                 \n");
@@ -11312,8 +11339,19 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                       prset igrvarpr = exponential(<number>)                    \n");
         MrBayesPrint ("                       prset igrvarpr = uniform(<number>,<number>)               \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("                    For backward compatibility, 'ibrvarpr' is allowed as a syn-  \n");
-        MrBayesPrint ("                    onym of 'igrvarpr'.                                          \n");
+        MrBayesPrint ("   ILNvarpr      -- This parameter allows you to specify the prior distribution  \n");
+        MrBayesPrint ("                    for the variance of the independent lognormal (ILN) relaxed  \n");
+        MrBayesPrint ("                    clock model. It is similar with IGR but each rate multiplier \n");
+        MrBayesPrint ("                    has a lognormal instead of a gamma distribution. If ilnvar   \n");
+        MrBayesPrint ("                    has a value of 0.8 , then the rate multiplier will be drawn  \n");
+        MrBayesPrint ("                    from a lognormal distribution with mean 1.0 and variance 0.8.\n");
+        MrBayesPrint ("                    You can set the parameter to a fixed value, or specify that  \n");
+        MrBayesPrint ("                    it is drawn from an exponential or uniform distribution:     \n");
+        MrBayesPrint ("                                                                                 \n");
+        MrBayesPrint ("                       prset ilnvarpr = fixed(<number>)                          \n");
+        MrBayesPrint ("                       prset ilnvarpr = exponential(<number>)                    \n");
+        MrBayesPrint ("                       prset ilnvarpr = uniform(<number>,<number>)               \n");
+        MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Ratepr        -- This parameter allows you to specify the site specific rates \n");
         MrBayesPrint ("                    model or any other model that allows different partitions to \n");
         MrBayesPrint ("                    evolve at different rates. First, you must have defined a    \n");
@@ -11659,7 +11697,7 @@ int GetUserHelp (char *helpTkn)
                 }
             MrBayesPrint ("                    Exponential/Gamma            \n");
 
-            MrBayesPrint ("   Clockvarpr       Strict/Cpp/TK02/Igr/Mixed    %s\n", mp->clockVarPr);
+            MrBayesPrint ("   Clockvarpr       Strict/Cpp/TK02/WN/IGR/ILN   %s\n", mp->clockVarPr);
 
             MrBayesPrint ("   Cppratepr        Fixed/Exponential            %s", mp->cppRatePr);
             if (!strcmp(mp->cppRatePr, "Fixed"))
@@ -11681,7 +11719,18 @@ int GetUserHelp (char *helpTkn)
                 MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->tk02varUni[0], mp->tk02varUni[1]);
                 }
 
-            MrBayesPrint ("   Igrvarpr         Fixed/Exponential/Uniform    %s", mp->igrvarPr);
+            MrBayesPrint ("   WNvarpr          Fixed/Exponential/Uniform    %s", mp->wnvarPr);
+            if (!strcmp(mp->wnvarPr, "Fixed"))
+                MrBayesPrint ("(%1.2lf)\n", mp->wnvarFix);
+            else if (!strcmp(mp->wnvarPr,"Exponential"))
+                MrBayesPrint ("(%1.2lf)\n", mp->wnvarExp);
+            else
+                {
+                assert (!strcmp(mp->wnvarPr,"Uniform"));
+                MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->wnvarUni[0], mp->wnvarUni[1]);
+                }
+
+            MrBayesPrint ("   IGRvarpr         Fixed/Exponential/Uniform    %s", mp->igrvarPr);
             if (!strcmp(mp->igrvarPr, "Fixed"))
                 MrBayesPrint ("(%1.2lf)\n", mp->igrvarFix);
             else if (!strcmp(mp->igrvarPr,"Exponential"))
@@ -11692,7 +11741,18 @@ int GetUserHelp (char *helpTkn)
                 MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->igrvarUni[0], mp->igrvarUni[1]);
                 }
             
-            /*  MrBayesPrint ("   Mixedvarpr       Fixed/Exponential/Uniform    %s", mp->mixedvarPr);
+            MrBayesPrint ("   ILNvarpr         Fixed/Exponential/Uniform    %s", mp->ilnvarPr);
+            if (!strcmp(mp->ilnvarPr, "Fixed"))
+                MrBayesPrint ("(%1.2lf)\n", mp->ilnvarFix);
+            else if (!strcmp(mp->ilnvarPr,"Exponential"))
+                MrBayesPrint ("(%1.2lf)\n", mp->ilnvarExp);
+            else
+                {
+                assert (!strcmp(mp->ilnvarPr,"Uniform"));
+                MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->ilnvarUni[0], mp->ilnvarUni[1]);
+                }
+            
+            MrBayesPrint ("   Mixedvarpr       Fixed/Exponential/Uniform    %s", mp->mixedvarPr);
             if (!strcmp(mp->mixedvarPr, "Fixed"))
                 MrBayesPrint ("(%1.2lf)\n", mp->mixedvarFix);
             else if (!strcmp(mp->mixedvarPr,"Exponential"))
@@ -11701,7 +11761,7 @@ int GetUserHelp (char *helpTkn)
                 {
                 assert (!strcmp(mp->mixedvarPr,"Uniform"));
                 MrBayesPrint ("(%1.2lf,%1.2lf)\n", mp->mixedvarUni[0], mp->mixedvarUni[1]);
-                }  */
+                }
 
             MrBayesPrint ("   Ratepr           Fixed/Variable=Dirichlet     %s", mp->ratePr);
             if (!strcmp(mp->ratePr, "Dirichlet"))
@@ -11744,7 +11804,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("      ctype ordered: 10 23 45                                                    \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   defines charactes 10, 23, and 45 to be of type ordered. Similarly,            \n");
+        MrBayesPrint ("   defines characters 10, 23, and 45 to be of type ordered. Similarly,           \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("      ctype irreversible: 54-67  71-92                                           \n");
         MrBayesPrint ("                                                                                 \n");
@@ -11776,20 +11836,20 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   Propset                                                                       \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   This command allows the user to change the details of the MCMC samplers       \n");
-        MrBayesPrint ("   (moves) that update the state of the chain. The useage is:                    \n");
+        MrBayesPrint ("   (moves) that update the state of the chain. The usage is:                     \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("      propset  <move_name>$<tuning-parameter>=<value>                            \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   Assume we have a topology parameter called 'Tau{all}', which is sampled by    \n");
-        MrBayesPrint ("   the move 'ExtTBR(Tau{all})' (note that the parameter name is included in the  \n");
-        MrBayesPrint ("   move name). This move has three tuning parameters: (1) 'prob', the relative   \n");
+        MrBayesPrint ("   Assume we have a branch-length parameter called 'V{all}', which is sampled by \n");
+        MrBayesPrint ("   the move 'Nodeslider(V{all})' (note that the parameter name is included in    \n");
+        MrBayesPrint ("   the move name). This move has two tuning parameters: (1) 'prob', the relative \n");
         MrBayesPrint ("   proposal probability (a weight defining its probability relative to other     \n");
-        MrBayesPrint ("   moves); (2) 'p_ext', the extension probability; and (3) 'lambda', the tuning  \n");
-        MrBayesPrint ("   parameter of the branch length multiplier. A list of the tuning parameters is \n");
-        MrBayesPrint ("   available by using 'Showmoves' (see below). To change the relative proposal   \n");
-        MrBayesPrint ("   probability to 20 and the extension probability to 0.7, use:                  \n");
+        MrBayesPrint ("   moves); and (2) 'lambda', the tuning  parameter of the branch length          \n");
+        MrBayesPrint ("   multiplier. A list of the tuning parameters is available by using 'Showmoves' \n");
+        MrBayesPrint ("   (see below). To change the relative proposal probability to 20 and the tuning \n");
+        MrBayesPrint ("   parameter to 0.7, use:                                                        \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("      propset etbr(tau{all})$prob=20 etbr(tau{all})$p_ext=0.7                    \n");
+        MrBayesPrint ("      propset Nodeslider(V{all})$prob=20 Nodeslider(V{all})$lambda=0.7           \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   This change would apply to all chains in all runs. It is also possible to set \n");
         MrBayesPrint ("   the tuning parameters of individual runs and chains using the format:         \n");
@@ -11799,10 +11859,10 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   where <run> and <chain> are the index numbers of the run and chain for which  \n");
         MrBayesPrint ("   you want to change the value. If you leave out the index of the run, the      \n");
         MrBayesPrint ("   change will apply to all runs; if you leave out the index of the chain, the   \n");
-        MrBayesPrint ("   change will similarly apply to all chains. To switch off the exttbr(tau{all}) \n");
-        MrBayesPrint ("   move in chain 2 of all runs, use:                                             \n");
+        MrBayesPrint ("   change will similarly apply to all chains. To switch off the                  \n");
+        MrBayesPrint ("   Nodeslider(V{all}) move in chain 2 of all runs, use:                          \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("      propset  etbr(tau{all})$prob(,2)=0                                         \n");
+        MrBayesPrint ("      propset  Nodeslider(V{all})$prob(,2)=0                                     \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   It is important to note that all moves are not available until the model has  \n");
         MrBayesPrint ("   been completely defined. Any change to the model will cause all proposal      \n");
@@ -11824,7 +11884,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   very efficiently. The acceptance rates for all moves in the cold chain(s) are \n");
         MrBayesPrint ("   summarized at the end of each run in the screen output. The acceptance rates  \n");
         MrBayesPrint ("   (potentially for all chains, cold and heated) are also printed to the .mcmc   \n");
-        MrBayesPrint ("   file if Mcmc convergence diagnostics are turned on (using 'Mcmc' or 'Mcmcp'). \n");
+        MrBayesPrint ("   file if MCMC convergence diagnostics are turned on (using 'Mcmc' or 'Mcmcp'). \n");
         MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
         }
     else if (!strcmp(helpTkn, "Log"))
@@ -11833,7 +11893,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   Log                                                                           \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   This command allows output to the screen to also be output to a file.         \n");
-        MrBayesPrint ("   The useage is:                                                                \n");
+        MrBayesPrint ("   The usage is:                                                                 \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("      log start/stop filename=<name> append/replace                              \n");
         MrBayesPrint ("                                                                                 \n");
@@ -12134,7 +12194,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("   last quantile, i.e., it is close to 1.0. For each successive step, the beta   \n");
         MrBayesPrint ("   value takes on the value of the next quantile, in decreasing order, until it  \n");
         MrBayesPrint ("   reaches the value of 0.0. If you change value of 'FromPrior' from default 'No'\n");
-        MrBayesPrint ("   to 'Yes' then the direction of power posterior change during SS analizes is   \n");
+        MrBayesPrint ("   to 'Yes' then the direction of power posterior change during SS analysis is   \n");
         MrBayesPrint ("   opposite to the one described above, i.e. we start from sampling prior and    \n");
         MrBayesPrint ("   finish close to posterior.                                                    \n");
         MrBayesPrint ("                                                                                 \n");
@@ -12182,7 +12242,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Available options:                                                            \n");
         MrBayesPrint ("   (NB: Only exclusive ss parameters listed here. For additional parameters, see \n");
-        MrBayesPrint ("        help on 'mcmc' or 'mcmcp'.                                               \n");
+        MrBayesPrint ("        help on 'Mcmc' or 'Mcmcp'.                                               \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Alpha        -- The beta values used in the stepping-stone sampling procedure \n");
         MrBayesPrint ("                   correspond to evenly spaced quantiles from a Beta('Alpha',1.0)\n");
@@ -12295,7 +12355,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   Nowarnings   -- If nowarnings is set to yes, then the program will not prompt \n");
         MrBayesPrint ("                   you when overwriting or appending an output file that is al-  \n");
         MrBayesPrint ("                   ready present. If 'nowarnings=no' (the default setting), then \n");
-        MrBayesPrint ("                   the program propts the user before overwriting output files.  \n");
+        MrBayesPrint ("                   the program prompts the user before overwriting output files. \n");
         MrBayesPrint ("   Autoreplace  -- When nowarnings is set to yes, then MrBayes will by default   \n");
         MrBayesPrint ("                   overwrite output files that already exists. This may cause    \n");
         MrBayesPrint ("                   irrecoverable loss of previous results if you have not removed\n");
@@ -12406,7 +12466,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("      outgroup <number>/<taxon name>                                             \n"); 
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   For example, \"outgroup 3\" assigns the third taxon in the matrix to be       \n");
-        MrBayesPrint ("   the outgroup. Similarly, \"outgroup Homo_sapiens\" assings the taxon          \n");
+        MrBayesPrint ("   the outgroup. Similarly, \"outgroup Homo_sapiens\" assigns the taxon          \n");
         MrBayesPrint ("   \"Homo_sapiens\" to be the outgroup (assuming that there is a taxon named     \n");
         MrBayesPrint ("   \"Homo_sapiens\" in the matrix). Only a single taxon can be assigned to       \n");
         MrBayesPrint ("   be the outgroup.                                                              \n");
@@ -12612,7 +12672,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("      delete <name and/or number and/or taxset> ...                              \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   A list of the taxon names or taxon numbers (labelled 1 to ntax in the order   \n");
+        MrBayesPrint ("   A list of the taxon names or taxon numbers (labelled 1 to Ntax in the order   \n");
         MrBayesPrint ("   in the matrix) or taxset(s) can be used.  For example, the following:         \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("      delete 1 2 Homo_sapiens                                                    \n");
@@ -12635,7 +12695,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("      restore <name and/or number and/or taxset> ...                             \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   A list of the taxon names or taxon numbers (labelled 1 to ntax in the order   \n");
+        MrBayesPrint ("   A list of the taxon names or taxon numbers (labelled 1 to Ntax in the order   \n");
         MrBayesPrint ("   in the matrix) or taxset(s) can be used.  For example, the following:         \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("      restore 1 2 Homo_sapiens                                                   \n");
@@ -12667,7 +12727,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   This command shows the disclaimer for the program. In short, the disclaimer   \n");
         MrBayesPrint ("   states that the authors are not responsible for any silly things you may do   \n");
-        MrBayesPrint ("   to your computer or any unforseen but possibly nasty things the computer      \n");
+        MrBayesPrint ("   to your computer or any unforeseen but possibly nasty things the computer     \n");
         MrBayesPrint ("   program may inadvertently do to you.                                          \n");
         MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
         }
@@ -12725,11 +12785,13 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("      Cppmultdev      -- Standard dev. of CPP rate multipliers (log scale)       \n"); 
         MrBayesPrint ("      Cppevents       -- CPP events                                              \n"); 
         MrBayesPrint ("      TK02var         -- Variance increase in TK02 relaxed clock model           \n"); 
-        MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n");
-        MrBayesPrint ("      Mixedvar        -- Variance increase in Mixed relaxed clock model          \n");
+        MrBayesPrint ("      WNvar           -- Variance increase in WN relaxed clock model             \n");
+        MrBayesPrint ("      IGRvar          -- Variance in IGR relaxed clock model                     \n");
+        MrBayesPrint ("      ILNvar          -- Variance in ILN relaxed clock model                     \n");
     //  MrBayesPrint ("      TK02branchrates -- Branch rates of TK02  relaxed clock model               \n");
-    //  MrBayesPrint ("      Igrbranchrates  -- Branch rates of IGR   relaxed clock model               \n");
-    //  MrBayesPrint ("      Mixedbrchrates  -- Branch rates of Mixed relaxed clock model               \n");
+    //  MrBayesPrint ("      WNbranchrates   -- Branch rates of WN    relaxed clock model               \n");
+    //  MrBayesPrint ("      IGRbranchrates  -- Branch rates of IGR   relaxed clock model               \n");
+    //  MrBayesPrint ("      ILNbranchrates  -- Branch rates of ILN   relaxed clock model               \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   For example,                                                                  \n");
         MrBayesPrint ("                                                                                 \n");
@@ -12773,11 +12835,13 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("      Cppmultdev      -- Standard dev. of CPP rate multipliers (log scale)       \n");
         MrBayesPrint ("      Cppevents       -- CPP events                                              \n");
         MrBayesPrint ("      TK02var         -- Variance increase in TK02 relaxed clock model           \n");
-        MrBayesPrint ("      Igrvar          -- Variance increase in IGR relaxed clock model            \n");
-        MrBayesPrint ("      Mixedvar        -- Variance increase in Mixed relaxed clock model          \n");
+        MrBayesPrint ("      WNvar           -- Variance increase in WN relaxed clock model             \n");
+        MrBayesPrint ("      IGRvar          -- Variance in IGR relaxed clock model                     \n");
+        MrBayesPrint ("      ILNvar          -- Variance in ILN relaxed clock model                     \n");
     //  MrBayesPrint ("      TK02branchrates -- Branch rates of TK02  relaxed clock model               \n");
-    //  MrBayesPrint ("      Igrbranchrates  -- Branch rates of IGR   relaxed clock model               \n");
-    //  MrBayesPrint ("      Mixedbrchrates  -- Branch rates of Mixed relaxed clock model               \n");
+    //  MrBayesPrint ("      WNbranchrates   -- Branch rates of WN    relaxed clock model               \n");
+    //  MrBayesPrint ("      IGRbranchrates  -- Branch rates of IGR   relaxed clock model               \n");
+    //  MrBayesPrint ("      ILNbranchrates  -- Branch rates of ILN   relaxed clock model               \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   For example,                                                                  \n");
         MrBayesPrint ("                                                                                 \n");
@@ -12834,15 +12898,15 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   When running 'Sump' you typically want to discard a specified number or       \n");
         MrBayesPrint ("   fraction of samples from the beginning of the chain as the burn in. This is   \n");
-        MrBayesPrint ("   done using the same mechanism used by the 'mcmc' command. That is, if you     \n");
-        MrBayesPrint ("   run an mcmc analysis with a relative burn in of 25 %% of samples for con-     \n");
+        MrBayesPrint ("   done using the same mechanism used by the 'Mcmc' command. That is, if you     \n");
+        MrBayesPrint ("   run an MCMC analysis with a relative burn in of 25 %% of samples for con-     \n");
         MrBayesPrint ("   vergence diagnostics, then the same burn in will be used for a subsequent     \n");
         MrBayesPrint ("   sump command, unless a different burn in is specified. That is, issuing       \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   sump                                                                          \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   immediately after 'mcmc', will result in using the same burn in settings as   \n");
-        MrBayesPrint ("   for the 'mcmc' command. All burnin settings are reset to default values every \n");
+        MrBayesPrint ("   immediately after 'Mcmc', will result in using the same burn in settings as   \n");
+        MrBayesPrint ("   for the 'Mcmc' command. All burnin settings are reset to default values every \n");
         MrBayesPrint ("   time a new matrix is read in, namely relative burnin ('relburnin=yes') with   \n");
         MrBayesPrint ("   25 %% of samples discarded ('burninfrac = 0.25').                             \n");
         MrBayesPrint ("                                                                                 \n");
@@ -12854,8 +12918,8 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("                   'Burninfrac' (see below). When the 'Relburnin' option is set  \n");
         MrBayesPrint ("                   to 'No', then a specific number of samples is discarded       \n");
         MrBayesPrint ("                   instead. This number is set by 'Burnin' (see below). Note that\n");
-        MrBayesPrint ("                   the burnin setting is shared across the 'sumt', 'sump', and   \n");
-        MrBayesPrint ("                   'mcmc' commands.                                              \n");
+        MrBayesPrint ("                   the burnin setting is shared across the 'Sumt', 'Sump', and   \n");
+        MrBayesPrint ("                   'Mcmc' commands.                                              \n");
         MrBayesPrint ("   Burnin       -- Determines the number of samples (not generations) that will  \n");
         MrBayesPrint ("                   be discarded when summary statistics are calculated. The      \n");
         MrBayesPrint ("                   value of this option is only applicable when 'Relburnin' is   \n");
@@ -12985,14 +13049,14 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Allruns      -- If set to 'Yes', it forces all runs to be printed on the same \n");
         MrBayesPrint ("                   graph when drawing joined and step plots. If set to 'No', each\n");
-        MrBayesPrint ("                   run is printed on a separat plot.                             \n");
+        MrBayesPrint ("                   run is printed on a separate plot.                            \n");
         MrBayesPrint ("   Askmore      -- Long analyses may produce huge .p files. Reading in them may  \n");
         MrBayesPrint ("                   take several minutes. If you want to investigate different    \n");
         MrBayesPrint ("                   aspects of your analyses, it could be very inconvenient to    \n");
         MrBayesPrint ("                   wait for several minutes each time you want to get a new sum- \n");
         MrBayesPrint ("                   mary for different settings. If you set 'Askmore' to 'YES',   \n");
         MrBayesPrint ("                   sumss will read .p files only once. After responding to the   \n");
-        MrBayesPrint ("                   original query, it will interactivaly ask you if you wish to  \n");
+        MrBayesPrint ("                   original query, it will interactively ask you if you wish to  \n");
         MrBayesPrint ("                   produce more tables and plots for different settings of       \n");
         MrBayesPrint ("                   'Burnin' or 'Smoothing' (see below).                          \n");
         MrBayesPrint ("   Relburnin    -- If this option is set to 'Yes', then a proportion of the      \n");
@@ -13002,7 +13066,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("                   is set to 'No', then a specific number of samples is discarded\n");
         MrBayesPrint ("                   instead. This number is set by 'Burnin'. Note that the burnin \n");
         MrBayesPrint ("                   settings --- 'Relburnin', 'Burnin', and 'Burninfrac' --- are  \n");
-        MrBayesPrint ("                   shared across the 'sumt', 'sump', 'sumss' and 'mcmc' commands.\n");
+        MrBayesPrint ("                   shared across the 'Sumt', 'Sump', 'Sumss' and 'Mcmc' commands.\n");
         MrBayesPrint ("   Burnin       -- Determines the number of samples (not generations) that will  \n");
         MrBayesPrint ("                   be discarded from each step when summary statistics are calcu-\n");
         MrBayesPrint ("                   lated. The value of this option is only applicable when       \n");
@@ -13079,8 +13143,8 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("                    Burninfrac (see below). When the Relburnin option is set to  \n");
         MrBayesPrint ("                    'No', then a specific number of samples is discarded instead.\n");
         MrBayesPrint ("                    This number is set by Burnin (see below). Note that the      \n");
-        MrBayesPrint ("                    burnin setting is shared with the 'mcmc', 'sumt', 'sump' and \n");
-        MrBayesPrint ("                    'plot' commands.                                             \n");
+        MrBayesPrint ("                    burnin setting is shared with the 'Mcmc', 'Sumt', 'Sump' and \n");
+        MrBayesPrint ("                    'Plot' commands.                                             \n");
         MrBayesPrint ("   Burnin        -- Determines the number of samples (not generations) that will \n");
         MrBayesPrint ("                    be discarded when summary statistics are calculated. The     \n");
         MrBayesPrint ("                    value of this option is only relevant when Relburnin is set  \n");
@@ -13147,7 +13211,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   stood by other tree-drawing programs, such as 'TreeView', set 'Conformat' to  \n");
         MrBayesPrint ("   'Simple'.                                                                     \n");
         MrBayesPrint ("                                                                                 \n");
-        MrBayesPrint ("   MrBayes alo produces a file with the ending \".trprobs\" that contains a list \n");
+        MrBayesPrint ("   MrBayes also produces a file with the ending \".trprobs\" that contains a list\n");
         MrBayesPrint ("   of all the trees that were found during the MCMC analysis, sorted by their    \n");
         MrBayesPrint ("   probabilities. This list of trees can be used to construct a credible set of  \n");
         MrBayesPrint ("   trees. For example, if you want to construct a 95 percent credible set of     \n");
@@ -13193,8 +13257,8 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("                    Burninfrac (see below). When the Relburnin option is set to  \n");
         MrBayesPrint ("                    NO, then a specific number of samples is discarded instead.  \n");
         MrBayesPrint ("                    This number is set by Burnin (see below). Note that the      \n");
-        MrBayesPrint ("                    burnin setting is shared across the 'sumt', 'sump', and      \n");
-        MrBayesPrint ("                    'mcmc' commands.                                             \n");
+        MrBayesPrint ("                    burnin setting is shared across the 'Sumt', 'Sump', and      \n");
+        MrBayesPrint ("                    'Mcmc' commands.                                             \n");
         MrBayesPrint ("   Burnin        -- Determines the number of samples (not generations) that will \n");
         MrBayesPrint ("                    be discarded when summary statistics are calculated. The     \n");
         MrBayesPrint ("                    value of this option is only relevant when Relburnin is set  \n");
@@ -13470,7 +13534,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   The parameters are listed together with their priors, the available moves,    \n");
         MrBayesPrint ("   and the current value(s), which will be used as the starting values in the    \n");
-        MrBayesPrint ("   next mcmc analysis.                                                           \n");
+        MrBayesPrint ("   next MCMC analysis.                                                           \n");
         MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
         }
     else if (!strcmp(helpTkn, "Startvals"))
@@ -13479,7 +13543,7 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   Startvals                                                                     \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   Use this command to change the current values for parameters in your model.   \n");
-        MrBayesPrint ("   These values will be used as the starting values in the next mcmc analysis.   \n");
+        MrBayesPrint ("   These values will be used as the starting values in the next MCMC analysis.   \n");
         MrBayesPrint ("   The basic format is:                                                          \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("      startvals <param>=(<value_1>,<value_2>,...,<value_n>)                      \n");
@@ -13493,8 +13557,8 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("   among the trees read in previously when parsing a tree block. The information \n");
         MrBayesPrint ("   stored in that tree will be used to set the starting value of the parameter.  \n");
         MrBayesPrint ("   The parameters that are set using this mechanism include topology and branch  \n");
-        MrBayesPrint ("   length parameters, as well as relaxed clock branch rates, cpp events and      \n");
-        MrBayesPrint ("   cpp branch rate multipliers.                                                  \n");
+        MrBayesPrint ("   length parameters, as well as relaxed clock branch rates, CPP events and      \n");
+        MrBayesPrint ("   CPP branch rate multipliers.                                                  \n");
         MrBayesPrint ("                                                                                 \n");
         MrBayesPrint ("   The above versions of the command will set the value for all runs and chains. \n");
         MrBayesPrint ("   You can also set the value for an individual run and chain by using the format\n");
@@ -14022,7 +14086,7 @@ void PrintSettings (char *command)
         MrBayesPrint ("   Nruns           <number>              %d                                      \n", chainParams.numRuns);
         MrBayesPrint ("   Nchains         <number>              %d                                      \n", chainParams.numChains);
         MrBayesPrint ("   Temp            <number>              %lf                                     \n", chainParams.chainTemp);
-        MrBayesPrint ("   Reweight        <number>,<number>     %1.2lf v %1.2lf ^                       \n", chainParams.weightScheme[0], chainParams.weightScheme[1]);
+        MrBayesPrint ("   Reweight        <number>,<number>     %1.2lf,%1.2lf                           \n", chainParams.weightScheme[0], chainParams.weightScheme[1]);
         MrBayesPrint ("   Swapfreq        <number>              %d                                      \n", chainParams.swapFreq);
         MrBayesPrint ("   Nswaps          <number>              %d                                      \n", chainParams.numSwaps);
         MrBayesPrint ("   Samplefreq      <number>              %d                                      \n", chainParams.sampleFreq);
@@ -14250,12 +14314,12 @@ void ResetCharacterFlags (void)
     /* reset all characters flags */
     numChar              = 0;                        /* number of defined characters                  */
     defChars             = NO;                       /* flag for whether number of characters is known*/
-    defMatrix            = NO;                       /* flag for whether matrix is successfull read   */
+    defMatrix            = NO;                       /* flag for whether matrix is successful read    */
     matrixHasPoly        = NO;                       /* flag for whether matrix has polymorphisms     */
     isInAmbig            = NO;                       /* flag for whether the parser is within ()      */
     isInPoly             = NO;                       /* flag for whether the parser is within {}      */
     defPartition         = NO;                       /* flag for whether character partition is read  */
-    defPairs             = NO;                       /* flag indicating whether pairs have been defnd */
+    defPairs             = NO;                       /* flag indicating whether pairs have been defined */
     numDefinedPartitions = 0;                        /* number of defined partitions                  */
     partitionNum         = 0;                        /* partition number currently enforced           */
     numCurrentDivisions  = 0;                        /* number of partitions of data                  */
@@ -14386,7 +14450,7 @@ int SetTaxaFromTranslateTable (void)
         {
         if (strlen(transFrom[i])>99)
             {
-            MrBayesPrint ("%s   Taxon name %s is too long. Maximun 99 characters is allowed.\n", spacer, transFrom[i]);
+            MrBayesPrint ("%s   Taxon name %s is too long. Maximum 99 characters is allowed.\n", spacer, transFrom[i]);
             return (ERROR);
             }
         AddString(&taxaNames, numTaxa, transFrom[i]);
@@ -14576,8 +14640,8 @@ void SetUpParms (void)
     PARAM (172, "Cppratepr",      DoPrsetParm,       "Fixed|Exponential|\0");
     PARAM (173, "Cppmultdevpr",   DoPrsetParm,       "Fixed|\0");
     PARAM (174, "TK02varpr",      DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
-    PARAM (175, "Pfile",          DoSumtParm,        "\0");
-    PARAM (176, "Pfile",          DoSumtParm,        "\0");
+    PARAM (175, "Tfile",          DoSumtParm,        "\0");
+    PARAM (176, "Pfile",          DoSumpParm,        "\0");
     PARAM (177, "Autocomplete",   DoSumtParm,        "Yes|No|\0");
     PARAM (178, "Autocomplete",   DoSumpParm,        "Yes|No|\0");
     PARAM (179, "Userlevel",      DoSetParm,         "Standard|Developer|\0");
@@ -14586,7 +14650,7 @@ void SetUpParms (void)
     PARAM (182, "Swapseed",       DoSetParm,         "\0");
     PARAM (183, "Clockratepr",    DoPrsetParm,       "Fixed|Normal|Lognormal|Exponential|Gamma|\0");
     PARAM (184, "Nodeagepr",      DoPrsetParm,       "Unconstrained|Calibrated|\0");
-    PARAM (185, "Clockvarpr",     DoPrsetParm,       "Strict|Cpp|TK02|Igr|Bm|Ibr|Mixed|\0");
+    PARAM (185, "Clockvarpr",     DoPrsetParm,       "Strict|Cpp|TK02|WN|IGR|ILN|Mixed|\0");
     PARAM (186, "Xxxxxxxxxx",     DoPropsetParm,     "\0");
     PARAM (187, "Xxxxxxxxxx",     DoStartvalsParm,   "\0");
     PARAM (188, "Usegibbs",       DoLsetParm,        "Yes|No|\0");
@@ -14619,7 +14683,7 @@ void SetUpParms (void)
     PARAM (215, "Tunefreq",       DoMcmcParm,        "\0");
     PARAM (216, "Scientific",     DoSetParm,         "Yes|No|\0");
     PARAM (217, "Siteomega",      DoReportParm,      "Yes|No|\0");
-    PARAM (218, "Igrvarpr",       DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
+    PARAM (218, "IGRvarpr",       DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
     PARAM (219, "Symbols",        DoFormatParm,      "\0");
     PARAM (220, "Equate",         DoFormatParm,      "\0");
     PARAM (221, "Relburnin",      DoCompareTreeParm, "Yes|No|\0");
@@ -14643,8 +14707,8 @@ void SetUpParms (void)
     PARAM (239, "Beaglescaling",  DoSetParm,         "Always|Dynamic|\0");
     PARAM (240, "Beaglefreq",     DoSetParm,         "\0");
     PARAM (241, "Popvarpr",       DoPrsetParm,       "Equal|Variable|\0");
-    PARAM (242, "Igrvar",         DoLinkParm,        "\0");
-    PARAM (243, "Igrbranchrates", DoLinkParm,        "\0");
+    PARAM (242, "IGRvar",         DoLinkParm,        "\0");
+    PARAM (243, "IGRbranchrates", DoLinkParm,        "\0");
     PARAM (244, "Xxxxxxxxxx",     DoSpeciespartitionParm,   "\0");
     PARAM (245, "Speciespartition",  DoSetParm,      "\0");
     PARAM (246, "Revratepr",      DoPrsetParm,       "Symdir|\0");
@@ -14652,12 +14716,12 @@ void SetUpParms (void)
     PARAM (248, "Burninss",       DoSsParm,          "\0");
     PARAM (249, "Nsteps",         DoSsParm,          "\0");
     PARAM (250, "Alpha",          DoSsParm,          "\0");
-    PARAM (251, "Bmvarpr",        DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
-    PARAM (252, "Bmvar",          DoLinkParm,        "\0");
-    PARAM (253, "Bmbranchrates",  DoLinkParm,        "\0");
-    PARAM (254, "Ibrvarpr",       DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
-    PARAM (255, "Ibrvar",         DoLinkParm,        "\0");
-    PARAM (256, "Ibrbranchlens",  DoLinkParm,        "\0");
+    PARAM (251, "WNvarpr",        DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
+    PARAM (252, "WNvar",          DoLinkParm,        "\0");
+    PARAM (253, "WNbranchrates",  DoLinkParm,        "\0");
+    PARAM (254, "ILNvarpr",       DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
+    PARAM (255, "ILNvar",         DoLinkParm,        "\0");
+    PARAM (256, "ILNbranchlens",  DoLinkParm,        "\0");
     PARAM (257, "FromPrior",      DoSsParm,          "Yes|No|\0");
     PARAM (258, "Filename",       DoSumSsParm,       "\0");
     PARAM (259, "Burnin",         DoSumSsParm,       "\0");

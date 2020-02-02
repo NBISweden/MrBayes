@@ -694,7 +694,7 @@ int DoSumSs (void)
             plotArrayX[i][j]=j+1;
         }
 
-    MrBayesPrint ("%s   In total %d sampls are red from .p files.\n", spacer, numRows);
+    MrBayesPrint ("%s   In total %d samples are read from .p files.\n", spacer, numRows);
     MrBayesPrint ("\n");
     MrBayesPrint ("%s   Marginal likelihood (in natural log units) is estimated using stepping-stone sampling\n", spacer);
     MrBayesPrint ("%s   based on %d steps with %d samples within each step. \n", spacer, chainParams.numStepsSS, numSamplesInStepSS);
@@ -790,7 +790,7 @@ sumssTable:
             MrBayesPrint ("%s   Below are rough plots of the generations (x-axis) during burn in  \n", spacer);
             MrBayesPrint ("%s   phase versus the log probability of observing the data (y-axis).  \n", spacer);
             MrBayesPrint ("%s   You can use these graphs to determine if the burn in for your SS  \n", spacer);
-            MrBayesPrint ("%s   analysis was sufficiant. The log probability suppose to plateau   \n", spacer);
+            MrBayesPrint ("%s   analysis was sufficient. The log probability suppose to plateau   \n", spacer);
             MrBayesPrint ("%s   indicating that you may be at stationarity by the time you finish \n", spacer);
             MrBayesPrint ("%s   burn in phase. This burn in, unlike burn in within each step, is  \n", spacer);
             MrBayesPrint ("%s   fixed and can not be changed.                                     \n", spacer);
@@ -800,7 +800,7 @@ sumssTable:
             MrBayesPrint ("%s   Below is a rough plot of the generations (x-axis) during burn in  \n", spacer);
             MrBayesPrint ("%s   phase versus the log probability of observing the data (y-axis).  \n", spacer);
             MrBayesPrint ("%s   You can use these graph to determine if the burn in for your SS   \n", spacer);
-            MrBayesPrint ("%s   analysis was sufficiant. The log probability suppose to plateau   \n", spacer);
+            MrBayesPrint ("%s   analysis was sufficient. The log probability suppose to plateau   \n", spacer);
             MrBayesPrint ("%s   indicating that you may be at stationarity by the time you finish \n", spacer);
             MrBayesPrint ("%s   burn in phase. This burn in, unlike burn in within each step, is  \n", spacer);
             MrBayesPrint ("%s   fixed and can not be changed.                                     \n", spacer);
@@ -821,7 +821,7 @@ sumssTable:
             beginPrint=(int)(sumssParams.discardFraction*stepBeginSS);
             countPrint=stepBeginSS-beginPrint;
             MrBayesPrint ("%s   Plotting step 0, i.e initial burn-in phase consisting of %d samples.\n", spacer,stepBeginSS);
-            MrBayesPrint ("%s   According to 'Discardfrac=%.2f', first %d samples are not ploted.\n", spacer,sumssParams.discardFraction,beginPrint);
+            MrBayesPrint ("%s   According to 'Discardfrac=%.2f', first %d samples are not plotted.\n", spacer,sumssParams.discardFraction,beginPrint);
             }
         else
             {
@@ -833,7 +833,7 @@ sumssTable:
             beginPrint=stepBeginSS+(sumssParams.stepToPlot-1)*numSamplesInStepSS + (int)(sumssParams.discardFraction*numSamplesInStepSS);
             countPrint=numSamplesInStepSS-(int)(sumssParams.discardFraction*numSamplesInStepSS);
             MrBayesPrint ("%s   Plotting step %d consisting of %d samples.\n", spacer,sumssParams.stepToPlot,numSamplesInStepSS);
-            MrBayesPrint ("%s   According to 'Discardfrac=%.2f', first %d samples are not ploted.\n", spacer,sumssParams.discardFraction,(int)(sumssParams.discardFraction*numSamplesInStepSS));
+            MrBayesPrint ("%s   According to 'Discardfrac=%.2f', first %d samples are not plotted.\n", spacer,sumssParams.discardFraction,(int)(sumssParams.discardFraction*numSamplesInStepSS));
             }
 
         if (sumssParams.numRuns > 1)
@@ -895,7 +895,7 @@ sumssTable:
         {
         MrBayesPrint ("\n");
         MrBayesPrint ("%s   Joined plot of %d samples of all steps together. 'smoothing' is set to:%d\n", spacer,numSamplesInStepSS,sumssParams.smoothing);
-        MrBayesPrint ("%s   According to step burn-in, first %d samples are not ploted.\n", spacer,stepBurnin);
+        MrBayesPrint ("%s   According to step burn-in, first %d samples are not plotted.\n", spacer,stepBurnin);
 
         for (i=0; i<sumssParams.numRuns; i++)
             {
@@ -1580,7 +1580,7 @@ int DoSumSsParm (char *parmName, char *tkn)
                     return (ERROR);
                     }
                 if (sumssParams.askForMorePlots == YES)
-                    MrBayesPrint ("%s   Setting sumss to be interactiva by asking for more plots of burn-in or individual steps.\n", spacer);
+                    MrBayesPrint ("%s   Setting sumss to be interactive by asking for more plots of burn-in or individual steps.\n", spacer);
                 else
                     MrBayesPrint ("%s   Setting sumss not to be interactive. It will not ask to print more plots.\n", spacer);
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -3006,7 +3006,7 @@ PartCtr *AddSumtPartition (PartCtr *r, PolyTree *t, PolyNode *p, int runId)
                     {
                     r->bLen [i][runId][n] = t->effectiveBrLen[i][p->index];
                     r->bRate[i][runId][n] = t->effectiveBrLen[i][p->index] / p->length;
-                    if (p->length == 0.0)   r->bRate[i][runId][n] = 1.0;  // deal with zero brl
+                    if (p->length == 0.0)   r->bRate[i][runId][n] = 1.0;  // deal with zero length
                     }
                 }
             if (sumtParams.popSizeSet == YES)
@@ -4879,8 +4879,8 @@ int DoSumt (void)
     MrBFlt          f, var_s, sum_s, stddev_s=0.0, sumsq_s, sumStdDev=0.0, maxStdDev=0.0, sumPSRF=0.0,
                     maxPSRF=0.0, avgStdDev=0.0, avgPSRF=0.0, min_s=0.0, max_s=0.0, numPSRFSamples=0, min;
     PartCtr         *x;
-    char            *s=NULL, tempName[120], fileName[120], treeName[100], divString[100];
-    char            *tempStr=NULL; /*not static because error ext is handeled*/
+    char            *s=NULL, tempName[137], fileName[120], treeName[100], divString[100];
+    char            *tempStr=NULL; /*not static because error ext is handled*/
     int             tempStrLength;
     FILE            *fp=NULL;
     PartCtr         **treeParts=NULL,*tmp;
@@ -5086,7 +5086,7 @@ int DoSumt (void)
             sprintf (tempName, "%s.ratemult", chainParams.chainFileName);
             if ((rateMultfp=OpenNewMBPrintFile (tempName)) == NULL)
                 {
-                printf ("Error oppening file: %s to write", tempName);
+                printf ("Error opening file: %s to write", tempName);
                 goto errorExit;
                 }
             fprintf (rateMultfp,"rateMult_CPP\n");
@@ -5244,7 +5244,7 @@ int DoSumt (void)
                 MrBayesPrint ("%s   taxa that are not included are denoted using the '.' symbol.                  \n", spacer);
                 MrBayesPrint ("                                                                                   \n");
                 MrBayesPrint ("%s   The output first includes a key to all the bipartitions with frequency larger \n", spacer);
-                MrBayesPrint ("%s   or equual to (Minpartfreq) in at least one run. Minpartfreq is a parameter to \n", spacer);
+                MrBayesPrint ("%s   or equal to (Minpartfreq) in at least one run. Minpartfreq is a parameter to  \n", spacer);
                 MrBayesPrint ("%s   sumt command and currently it is set to %1.2lf.  This is followed by a table  \n", spacer, sumtParams.minPartFreq);
                 MrBayesPrint ("%s   with statistics for the informative bipartitions (those including at least    \n", spacer);
                 MrBayesPrint ("%s   two taxa), sorted from highest to lowest probability. For each bipartition,   \n", spacer);
@@ -6413,7 +6413,7 @@ int DoSumtTree (void)
         /* get the tree we just read in */
         t = sumtParams.tree;
         
-        /* move calculation root for nonrooted trees if necessary */
+        /* move calculation root for unrooted trees if necessary */
         MovePolyCalculationRoot (t, localOutGroup);
         
         /* check taxon set and outgroup */
@@ -6529,7 +6529,7 @@ int DoSumtTree (void)
                     if (p->index == i) {
                          if (strlen(p->label)>99)
                             {
-                            MrBayesPrint ("%s   Taxon name %s is too long. Maximun 99 characters is allowed.\n", spacer, p->label);
+                            MrBayesPrint ("%s   Taxon name %s is too long. Maximum 99 characters is allowed.\n", spacer, p->label);
                             return (ERROR);
                             }
                         AddString(&sumtParams.taxaNames, i, p->label);
@@ -7276,7 +7276,7 @@ void PartCtrUppass (PartCtr *r, PartCtr **uppass, int *index)
 }
 
 
-/* PrintBrParamsToFile: Print branach parameters to file */
+/* PrintBrParamsToFile: Print branch parameters to file */
 int PrintBrParamsToFile (PartCtr **treeParts, int numTreeParts, int treeNo, char *divString)
 {
     int     i, j, numPartitions, min, treeSample, runNo;
@@ -7572,13 +7572,13 @@ void PrintFigTreeNodeInfo (FILE *fp, PartCtr *x, MrBFlt length)
             {
             GetSummary (x->bLen[i], sumtParams.numRuns, x->count, &theStats, sumtParams.HPD);
             if (sumtParams.HPD == YES)
-                fprintf (fp, ",effectivebrlen%s_mean=%lf,effectivebrlen%s_median=%lf,effectivebrlen%s_95%%HPD={%lf,%lf}",
+                fprintf (fp, ",brlen%s_mean=%lf,brlen%s_median=%lf,brlen%s_95%%HPD={%lf,%lf}",
                     sumtParams.tree->bSetName[i], theStats.mean,
                     sumtParams.tree->bSetName[i], theStats.median,
                     sumtParams.tree->bSetName[i], theStats.lower,
                     theStats.upper);
             else
-                fprintf (fp, ",effectivebrlen%s_mean=%lf,effectivebrlen%s_median=%lf,effectivebrlen%s_95%%CredInt={%lf,%lf}",
+                fprintf (fp, ",brlen%s_mean=%lf,brlen%s_median=%lf,brlen%s_95%%CredInt={%lf,%lf}",
                     sumtParams.tree->bSetName[i], theStats.mean,
                     sumtParams.tree->bSetName[i], theStats.median,
                     sumtParams.tree->bSetName[i], theStats.lower,

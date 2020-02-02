@@ -26,9 +26,9 @@ Current repository directory layout:
     └── src            : C source code
 
 
-The web site is available at
+The MrBayes web site is available at
 
-    http://NBISweden.github.io/MrBayes/
+    http://mrbayes.net/
 
 
 Historical releases are tagged with "v3.2.0" (etc.) from release 3.2.0

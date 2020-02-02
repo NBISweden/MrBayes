@@ -485,8 +485,8 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
                         if (m->successCount[chain] < 2)
                             {
                             rescaleFreqNew -= rescaleFreqNew >> 3;
-                            /* to avoid situation when we may stack at high rescaleFreq when new states do not get accepted because of low liklihood but there proposed frequency is high we reduce rescaleFreq even if we reject the last move*/
-                            /* basically the higher probability of proposing of low liklihood state which needs smaller rescaleFreq would lead to higher probability of hitting this code which should reduce rescaleFreqOld thus reduce further probability of hitting this code */
+                            /* to avoid situation when we may stack at high rescaleFreq when new states do not get accepted because of low likelihood but there proposed frequency is high we reduce rescaleFreq even if we reject the last move*/
+                            /* basically the higher probability of proposing of low likelihood state which needs smaller rescaleFreq would lead to higher probability of hitting this code which should reduce rescaleFreqOld thus reduce further probability of hitting this code */
                             /* at some point this negative feedback mechanism should get in balance with the mechanism of periodically increasing rescaleFreq when long sequence of successes is achieved*/
                             m->rescaleFreqOld -= m->rescaleFreqOld >> 3;
                             }
@@ -781,7 +781,7 @@ int ScheduleLogLikeForAllDivisions()
  |
  |  TreeCondLikes_Beagle: This routine updates all conditional
  |       (partial) likelihoods of a beagle instance while doing no rescaling.
- |      That potentialy can make final liklihood bad then calculation with rescaling needs to be done.
+ |      That potentially can make final likelihood bad then calculation with rescaling needs to be done.
  |
  -----------------------------------------------------------------*/
 int TreeCondLikes_Beagle_No_Rescale (Tree *t, int division, int chain)
@@ -824,7 +824,7 @@ int TreeCondLikes_Beagle_No_Rescale (Tree *t, int division, int chain)
             m->operations[op].child2Partials         = m->condLikeIndex[chain][p->right->index];
             m->operations[op].child2TransitionMatrix = m->tiProbsIndex [chain][p->right->index];
             
-            /* All partials for tips are the same across omega categories, thus we are doing the following two if statments.*/
+            /* All partials for tips are the same across omega categories, thus we are doing the following two if statements.*/
             if (p->left->left== NULL)
                 chil1Step=0;
             else
@@ -926,7 +926,7 @@ int TreeCondLikes_Beagle_Rescale_All (Tree *t, int division, int chain)
         m->operations[op].child2Partials         = m->condLikeIndex[chain][p->right->index];
         m->operations[op].child2TransitionMatrix = m->tiProbsIndex [chain][p->right->index];
         
-        /* All partials for tips are the same across omega catigoris, thus we are doing the following two if statments.*/
+        /* All partials for tips are the same across omega categories, thus we are doing the following two if statements.*/
         if (p->left->left== NULL)
             chil1Step=0;
         else
@@ -1049,7 +1049,7 @@ int TreeCondLikes_Beagle_Always_Rescale (Tree *t, int division, int chain)
             m->operations[op].child2Partials         = m->condLikeIndex[chain][p->right->index];
             m->operations[op].child2TransitionMatrix = m->tiProbsIndex [chain][p->right->index];
 
-            /* All partials for tips are the same across omega catigoris, thus we are doing the following two if statments.*/
+            /* All partials for tips are the same across omega categories, thus we are doing the following two if statements.*/
             if (p->left->left== NULL && p->left->right== NULL)
                 chil1Step=0;
             else
@@ -1431,6 +1431,14 @@ int TreeTiProbs_Beagle (Tree *t, int division, int chain)
             else if (m->tk02BranchRates != NULL)
                 {
                 length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
+                }
+            else if (m->wnBranchRates != NULL)
+                {
+                length = GetParamSubVals (m->wnBranchRates, chain, state[chain])[p->index];
+                }
+            else if (m->ilnBranchRates != NULL)
+                {
+                length = GetParamSubVals (m->ilnBranchRates, chain, state[chain])[p->index];
                 }
             else if (m->igrBranchRates != NULL)
                 {
@@ -1846,8 +1854,8 @@ void LaunchBEAGLELogLikeMultiPartition(int* divisions, int divisionCount, int ch
                                     if (m->successCount[chain] < 2)
                                         {
                                         m->rescaleFreqNew -= m->rescaleFreqNew >> 3;
-                                        /* to avoid situation when we may stack at high rescaleFreq when new states do not get accepted because of low liklihood but there proposed frequency is high we reduce rescaleFreq even if we reject the last move*/
-                                        /* basically the higher probability of proposing of low liklihood state which needs smaller rescaleFreq would lead to higher probability of hitting this code which should reduce rescaleFreqOld thus reduce further probability of hitting this code */
+                                        /* to avoid situation when we may stack at high rescaleFreq when new states do not get accepted because of low likelihood but there proposed frequency is high we reduce rescaleFreq even if we reject the last move*/
+                                        /* basically the higher probability of proposing of low likelihood state which needs smaller rescaleFreq would lead to higher probability of hitting this code which should reduce rescaleFreqOld thus reduce further probability of hitting this code */
                                         /* at some point this negative feedback mechanism should get in balance with the mechanism of periodically increasing rescaleFreq when long sequence of successes is achieved*/
                                         m->rescaleFreqOld -= m->rescaleFreqOld >> 3;
                                         }
@@ -2070,6 +2078,14 @@ int TreeTiProbs_BeagleMultiPartition (int* divisions, int divisionCount, int cha
                     {
                     length = GetParamSubVals (m->tk02BranchRates, chain, state[chain])[p->index];
                     }
+                else if (m->wnBranchRates != NULL)
+                    {
+                    length = GetParamSubVals (m->wnBranchRates, chain, state[chain])[p->index];
+                    }
+                else if (m->ilnBranchRates != NULL)
+                    {
+                    length = GetParamSubVals (m->ilnBranchRates, chain, state[chain])[p->index];
+                    }
                 else if (m->igrBranchRates != NULL)
                     {
                     length = GetParamSubVals (m->igrBranchRates, chain, state[chain])[p->index];
@@ -2143,7 +2159,7 @@ int TreeTiProbs_BeagleMultiPartition (int* divisions, int divisionCount, int cha
  |
  |  TreeCondLikes_Beagle: This routine updates all conditional
  |       (partial) likelihoods of a beagle instance across all divisions while doing no rescaling.
- |      That potentialy can make final liklihood bad then calculation with rescaling needs to be done.
+ |      That potentially can make final likelihood bad then calculation with rescaling needs to be done.
  |
  -----------------------------------------------------------------*/
 int TreeCondLikes_BeagleMultiPartition_No_Rescale (int* divisions, int divisionCount, int chain)
@@ -2197,7 +2213,7 @@ int TreeCondLikes_BeagleMultiPartition_No_Rescale (int* divisions, int divisionC
                 m->operationsByPartition[m->opCount].child2Partials         = m->condLikeIndex[chain][p->right->index];
                 m->operationsByPartition[m->opCount].child2TransitionMatrix = m->tiProbsIndex [chain][p->right->index] + divisionOffset;
                 
-                /* All partials for tips are the same across omega categories, thus we are doing the following two if statments.*/
+                /* All partials for tips are the same across omega categories, thus we are doing the following two if statements.*/
                 if (p->left->left== NULL)
                     chil1Step=0;
                 else
@@ -2287,7 +2303,7 @@ int TreeCondLikes_BeagleMultiPartition_No_Rescale (int* divisions, int divisionC
  |
  |  TreeCondLikes_Beagle: This routine updates all conditional
  |       (partial) likelihoods of a beagle instance across all divisions while rescaling at every node.
- |        Note: all nodes get recalculated, not only tached by move.
+ |        Note: all nodes get recalculated, not only touched by move.
  |
  -----------------------------------------------------------------*/
 int TreeCondLikes_BeagleMultiPartition_Rescale_All (int* divisions, int divisionCount, int chain)
@@ -2344,7 +2360,7 @@ int TreeCondLikes_BeagleMultiPartition_Rescale_All (int* divisions, int division
             m->operationsByPartition[m->opCount].child2Partials         = m->condLikeIndex[chain][p->right->index];
             m->operationsByPartition[m->opCount].child2TransitionMatrix = m->tiProbsIndex [chain][p->right->index] + divisionOffset;
             
-            /* All partials for tips are the same across omega catigoris, thus we are doing the following two if statments.*/
+            /* All partials for tips are the same across omega categories, thus we are doing the following two if statements.*/
             if (p->left->left== NULL)
                 chil1Step=0;
             else
@@ -2505,7 +2521,7 @@ int TreeCondLikes_BeagleMultiPartition_Always_Rescale (int* divisions, int divis
                 m->operationsByPartition[m->opCount].child2Partials         = m->condLikeIndex[chain][p->right->index];
                 m->operationsByPartition[m->opCount].child2TransitionMatrix = m->tiProbsIndex [chain][p->right->index] + divisionOffset;
 
-                /* All partials for tips are the same across omega catigoris, thus we are doing the following two if statments.*/
+                /* All partials for tips are the same across omega categories, thus we are doing the following two if statements.*/
                 if (p->left->left== NULL && p->left->right== NULL)
                     chil1Step=0;
                 else

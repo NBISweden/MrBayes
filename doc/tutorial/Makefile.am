@@ -35,7 +35,6 @@ deps=	\
 	$(srcdir)/src/sysbio.bst
 
 if HAVE_LATEX
-
 if HAVE_LATEXMK
 
 MBDating.pdf: $(deps)
@@ -43,17 +42,22 @@ MBDating.pdf: $(deps)
 
 else # !HAVE_LATEXMK
 
+# The order of pdflatex and bibtex runs below (and the number of runs)
+# mirrors what latexmk seems to want to do.
 MBDating.pdf: $(deps)
 	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
 	env $(envvars) $(BIBTEX) -terse MBDating
 	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
+	env $(envvars) $(BIBTEX) -terse MBDating
+	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
+	env $(envvars) $(BIBTEX) -terse MBDating
 	env $(envvars) $(PDFLATEX) --interaction=batchmode $(srcdir)/src/MBDating
 
 endif
 else # !HAVE_LATEX
 
 MBDating.pdf:
-	echo 'Can not build the tutorial PDF since LaTeX was not detected' >&2
-	exit 0
+	@echo 'Can not build the tutorial PDF since LaTeX was not detected' >&2
+	@exit 0
 
 endif
