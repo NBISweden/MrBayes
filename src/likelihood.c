@@ -7287,15 +7287,16 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 
     /* find base frequencies */
     if (!strcmp(mp->statefreqModel,"Directional"))
-        { /* Seraina: All but the last else branch */
+        {
         bs = GetParamSubVals (m->stateFreq, chain, state[chain]) + m->numModelStates;
         }
     else if (!strcmp(mp->statefreqModel,"Mixed"))
         {
         bs = GetParamSubVals (m->stateFreq, chain, state[chain]) + m->numModelStates;
-         /* Seraina:
-          * if we are currently in stationary model, then NOT_APPLICABLE
-          * (-9999), and bs should point to stationary freqs */
+        /* if we are currently in stationary model, then root frequencies are
+         * set to NOT_APPLICABLE (-9999), and bs should point to stationary
+         * freqs */
+        // Seraina - TODO: Replace with direct test of model state
         if (*bs == NOT_APPLICABLE)
             {
             bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
@@ -7416,6 +7417,7 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
              * if we are currently in stationary model, then root
              * frequencies are set to NOT_APPLICABLE (-9999), and bs
              * should point to stationary freqs */
+            // Seraina - TODO: Replace with proper model test
             bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
             }
         }

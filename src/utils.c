@@ -4802,7 +4802,7 @@ int IsTreeConsistent (Param *param, int chain, int state)
         return NO;
         }
 
-    if (tree->isClock == NO)
+    if (tree->isRooted == NO)
         {
         for (i=0; i<tree->nNodes-1; i++)
             {
@@ -4819,7 +4819,26 @@ int IsTreeConsistent (Param *param, int chain, int state)
         return YES;
         }
 
+    if (tree->isRooted == YES && tree->isClock == NO)
+        {
+        for (i=0; i<tree->nNodes-2; i++)
+            {
+            p = tree->allDownPass[i];
+            if (p->length <= 0.0)
+                {
+                if (p->length == 0.0)
+                    printf ("Node %d has zero branch length %f\n", p->index, p->length);
+                else
+                    printf ("Node %d has negative branch length %f\n", p->index, p->length);
+                return NO;
+                }
+            }
+        return YES;
+        }
+
+
     /* Clock trees */
+    /* tree->isRooted == YES && tree->isClock == YES */
 
     /* Check that lengths and depths are consistent */
     for (i=0; i<tree->nNodes-2; i++) {

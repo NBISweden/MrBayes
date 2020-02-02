@@ -2594,12 +2594,14 @@ int DoMcmc (void)
             goto errorExit;
         }
 
-    /* Seraina: (This for loop initially commented out) */
+#ifndef NDEBUG
+    /* checking tree consistency for debug purposes */
     for (i=0; i<numParams; i++)
         {
         for (j=0; j<numGlobalChains; j++)
             assert (IsTreeConsistent(&params[i], j, 0) == YES);
         }
+#endif
 
     /* Initialize vectors of print parameters */
     if (InitPrintParams () == ERROR)
@@ -7808,15 +7810,21 @@ MrBFlt LogPrior (int chain)
             if (p->paramId == PI_DIR)
                 {
                 nStates = p->nSubValues;
-                sum = 0.0;
-                for (i=0; i<nStates; i++)
-                    sum += st[i];
-                x = LnGamma(sum);
-                for (i=0; i<nStates; i++)
-                    x -= LnGamma(st[i]);
-                for (i=0; i<nStates; i++)
-                    x += (st[i] - 1.0)*log(sst[i]);
-                lnPrior += x;
+                lnPrior += LnDirichlet(st, sst, nStates)
+                }
+            else if (strcmp(mp->statefreqModel,"Stationary") != 0)
+                {
+                /* now for directional evolution: first process states */
+                nStates = m->numModelStates;
+                if (p->paramId == DIRPI_DIRxDIR || p->paramId == DIRPI_DIRxFIXED || p->paramId == DIRPI_MIX)
+                    {
+                    lnPrior += LnDirichlet(st, sst, nStates);
+                    }
+                /* now same for the respective values of root frequencies */
+                if (p->paramId == DIRPI_DIRxDIR || p->paramId == DIRPI_FIXEDxDIR || (p->paramId == DIRPI_MIX && sst[nStates] != NOT_APPLICABLE)) //SK todo: check if this works! 
+                    {
+                    lnPrior += LnDirichlet(&st[nStates], &sst[nStates], nStates);
+                    }
                 }
             else if (p->paramId == SYMPI_EXP || p->paramId == SYMPI_EXP_MS)
                 {
@@ -12519,7 +12527,7 @@ int PrintStates (int curGen, int coldId)
                 {
                 /* print tree lengths or heights for all trees */
                 tree = GetTree (p, coldId, state[coldId]);
-                if (tree->isRooted == YES)
+                if (tree->isClock == YES)
                     {
                     if (FillRelPartsString(p, &partString) == YES)
                         SafeSprintf (&tempStr, &tempStrSize, "\tTH%s\tTL%s", partString, partString);
@@ -12910,6 +12918,15 @@ int PrintStates (int curGen, int coldId)
                 SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(sst[j]));
                 if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                 }
+            if (!strcmp(mp->statefreqModel, "Mixed")) //SK
+                {
+                if (sst[m->numModelStates] == NOT_APPLICABLE)
+                    modelIndex = 0;
+                else
+                    modelIndex = 1;
+                SafeSprintf (&tempStr, &tempStrSize, "\t%d", modelIndex);
+                if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+                }     
             }
         else if (p->paramType == P_TRATIO && !strcmp(mp->tratioFormat,"Dirichlet"))
             {

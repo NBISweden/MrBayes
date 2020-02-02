@@ -8297,10 +8297,11 @@ int DoTreeParm (char *parmName, char *tkn)
                 {
                 t->isRooted = YES;
                 t->isClock = YES;   /* assume clock if rooted */
-                /* Seraina:
-                 * Remove this (line above) in case I want to read in
-                 * user trees for directional model! Does that break
-                 * anything else? */
+                expecting = Expecting(RIGHTCOMMENT);
+                }
+            else if (strcmp(tkn, "D") == 0)
+                {
+                t->isRooted = YES;  /* we use 'D' for 'directed' to indicate a rooted non-clock tree */
                 expecting = Expecting(RIGHTCOMMENT);
                 }
             else if (strcmp(tkn, "U") == 0)

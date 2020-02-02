@@ -697,7 +697,7 @@ int AllocateNormalParams (void)
 -----------------------------------------------------------------------*/
 int AllocateTreeParams (void)
 {
-    int         i, j, k, n, nOfParams, nOfTrees, isRooted, numSubParamPtrs;
+    int         i, j, k, n, nOfParams, nOfTrees, isRooted, numSubParamPtrs, allModelsStationary;
     Param       *p, *q;
 
     /* Count the number of trees and dated trees */
@@ -995,7 +995,17 @@ int AllocateTreeParams (void)
         if (p->paramType == P_BRLENS)
             {
             /* find type of tree */
-            if (!strcmp(modelParams[p->relParts[0]].brlensPr,"Clock"))
+            allModelsStationary = YES;
+            for (i=0; i<p->nRelParts; i++)
+                {
+                if (strcmp(modelParams[p->relParts[i]].statefreqModel, "Stationary"      ))
+                    {
+                     allModelsStationary = NO;
+                     break;
+                    }
+                }
+            
+            if (!strcmp(modelParams[p->relParts[0]].brlensPr,"Clock") || allModelsStationary == NO)
                 isRooted = YES;
             else
                 isRooted = NO;
@@ -3795,10 +3805,51 @@ int DoLsetParm (char *parmName, char *tkn)
             else
                 return (ERROR);
             }
-                
-                
-                
-                
+        /* set StatefreqModel (statefreqModel) ************************************************************/  //SK
+        else if (!strcmp(parmName, "StatefreqModel"))
+            {
+            if (expecting == Expecting(EQUALSIGN))
+                expecting = Expecting(ALPHA);
+            else if (expecting == Expecting(ALPHA))
+                {
+                if (IsArgValid(tkn, tempStr) == NO_ERROR)
+                    {
+                    nApplied = NumActiveParts ();
+
+                    for (i=0; i<numCurrentDivisions; i++)
+                        {
+                        if ((activeParts[i] == YES || nApplied == 0))
+                            {     
+                            strcpy(modelParams[i].statefreqModel, tempStr);
+                            modelParams[i].nStates = NumStates (i);
+      
+                            if (nApplied == 0 && numCurrentDivisions == 1) 
+                                MrBayesPrint ("%s   Setting StatefreqModel to %s\n", spacer, modelParams[i].statefreqModel);
+                            else  
+                                MrBayesPrint ("%s   Setting StatefreqModel to %s for partition %d\n", spacer, modelParams[i].statefreqModel, i+1);
+      
+                            if (modelParams[i].dataType != RESTRICTION && strcmp(modelParams[i].statefreqModel, "Stationary"))
+                                {     
+                                MrBayesPrint ("%s   Invalid setting for state frequency model: non-stationary models only\n", spacer);
+                                MrBayesPrint ("%s   implemented for data type \"RESTRICTION\"\n", spacer);
+                                return (ERROR);
+
+                                }     
+                            }
+                        }
+                   }
+                else
+                    {
+                    MrBayesPrint ("%s   Invalid setting for state frequency model\n", spacer);
+                    return (ERROR);
+                    }
+                expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+                }
+            else
+                return (ERROR);
+            }
+        /* any additional setting goes here */
+
         else
             return (ERROR);
         }
@@ -6712,6 +6763,166 @@ int DoPrsetParm (char *parmName, char *tkn)
             else
                 return (ERROR);
             }
+        /* set Rootfreqpr (rootFreqPr) ******************************************************/
+        else if (!strcmp(parmName, "Rootfreqpr"))
+            {     
+            if (expecting == Expecting(EQUALSIGN))
+                expecting = Expecting(ALPHA);
+            else if (expecting == Expecting(ALPHA))
+                {  /*for root frequencies, only allow dirichlet and fixed (nb,nb,...) prior, no equal or empirical*/ 
+      
+                if (IsArgValid(tkn, tempStr) == NO_ERROR)
+                    {     
+                    nApplied = NumActiveParts ();
+                    for (i=0; i<numCurrentDivisions; i++)
+                        {     
+                        if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType == RESTRICTION)
+                            {     
+                            strcpy(modelParams[i].rootFreqPr, tempStr);
+                            flag=1;
+                            }     
+                        }     
+                    if( flag == 0) 
+                        {     
+                        MrBayesPrint ("%s   Warning: %s can only be set for partition containing RESTRICTION data.", spacer, parmName);
+                        return (ERROR);
+                        }     
+                    }     
+                else  
+                    {     
+                        MrBayesPrint ("%s   Invalid Rootfreqpr argument\n", spacer);
+                        return (ERROR);
+                    }         
+                // TODO: Here we set flat dirichlet parameters (SK: ??)
+                expecting  = Expecting(LEFTPAR);
+                }     
+            else if (expecting == Expecting(LEFTPAR))
+                { 
+                tempNumStates = 0;
+                expecting = Expecting(NUMBER) | Expecting(ALPHA);
+                }
+            else if (expecting == Expecting(NUMBER))
+                {
+                nApplied = NumActiveParts ();
+                sscanf (tkn, "%lf", &tempD);
+                tempStateFreqs[tempNumStates++] = tempD;
+
+                expecting = Expecting(COMMA) | Expecting(RIGHTPAR);
+                }
+            else if (expecting == Expecting(COMMA))
+                {
+                expecting  = Expecting(NUMBER);
+                }
+            else if (expecting == Expecting(RIGHTPAR))
+                {
+                nApplied = NumActiveParts ();
+                for (i=0; i<numCurrentDivisions; i++)
+                    {
+                    if (activeParts[i] == YES || nApplied == 0)
+                        {
+                        ns = NumStates(i);
+                        if (!strcmp(modelParams[i].rootFreqPr,"Dirichlet"))
+                            {
+                            if (tempNumStates == 1)
+                                {
+                                for (j=0; j<ns; j++)
+                                    modelParams[i].rootFreqsDir[j] = tempStateFreqs[0] / ns;
+
+                                MrBayesPrint ("%s   Setting Rootfreqpr to Dirichlet(", spacer);
+
+                                for (j=0; j<ns; j++)
+                                    {
+                                    MrBayesPrint("%1.2lf", modelParams[i].rootFreqsDir[j]);
+                                    if (j == ns - 1)
+                                        MrBayesPrint (")");
+                                    else
+                                        MrBayesPrint (",");
+                                    }
+                                if (nApplied == 0 && numCurrentDivisions == 1)
+                                    MrBayesPrint ("\n");
+                                else
+                                    MrBayesPrint (" for partition %d\n", i+1);
+                                modelParams[i].numDirParamsRoot = ns;
+                                }
+                            else
+                                {
+                                if (tempNumStates != ns)
+                                    {
+                                    MrBayesPrint ("%s   Found %d dirichlet parameters but expecting %d\n", spacer, tempNumStates, modelParams[i].nStates);
+                                    return (ERROR);
+                                    }
+                                else
+                                    {
+                                    modelParams[i].numDirParamsRoot = ns;
+                                    for (j=0; j<ns; j++)
+                                        modelParams[i].rootFreqsDir[j] = tempStateFreqs[j];
+                                    MrBayesPrint ("%s   Setting Rootfreqpr to Dirichlet(", spacer);
+                                    for (j=0; j<ns; j++)
+                                        {
+                                        MrBayesPrint("%1.2lf", modelParams[i].rootFreqsDir[j]);
+                                        if (j == ns - 1)
+                                            MrBayesPrint (")");
+                                        else
+                                            MrBayesPrint (",");
+                                        }
+                                    if (nApplied == 0 && numCurrentDivisions == 1)
+                                        MrBayesPrint ("\n");
+                                    else
+                                        MrBayesPrint (" for partition %d\n", i+1);
+                                    }
+                                }
+                            }
+                        else if (!strcmp(modelParams[i].rootFreqPr,"Fixed"))
+                            {
+                            if (tempNumStates == 0)
+                                {
+                                MrBayesPrint ("%s   Rootfreqpr=Fixed requires specification of state frequencies at the root,", spacer);
+                                MrBayesPrint ("%s   e.g., rootfreqpr=fixed(0.5,0.5). ", spacer);
+                                return (ERROR);
+                                }
+                            else
+                                {
+                                if (tempNumStates == ns)
+                                    {
+                                    sum = 0.0;
+                                    for (j=0; j<ns; j++)
+                                        sum += tempStateFreqs[j];
+                                    if (AreDoublesEqual (sum, (MrBFlt) 1.0, (MrBFlt) 0.001) == NO)
+                                        {
+                                        MrBayesPrint ("%s   Root state frequencies do not sum to 1.0\n", spacer);
+                                        return (ERROR);
+                                        }
+                                    for (j=0; j<ns; j++)
+                                        modelParams[i].rootFreqsFix[j] = tempStateFreqs[j];
+                                    MrBayesPrint ("%s   Setting Rootfreqpr to Fixed(", spacer);
+                                    for (j=0; j<ns; j++)
+                                        {
+                                        MrBayesPrint("%1.2lf", modelParams[i].rootFreqsFix[j]);
+                                        if (j == ns - 1)
+                                            MrBayesPrint (")");
+                                        else
+                                            MrBayesPrint (",");
+                                        }
+                                    if (nApplied == 0 && numCurrentDivisions == 1)
+                                        MrBayesPrint ("\n");
+                                    else
+                                        MrBayesPrint (" for partition %d\n", i+1);
+                                    }
+                                else
+                                    {
+                                    MrBayesPrint ("%s   Found %d root state frequencies but expecting %d\n", spacer, tempNumStates, modelParams[i].nStates);
+                                    return (ERROR);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
+                }
+            else
+                return (ERROR);
+            }
+
         /* set Topologypr (topologyPr) ********************************************************/
         else if (!strcmp(parmName, "Topologypr"))
             {
@@ -11186,6 +11397,75 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                     for (i=0; i<mp->nStates; i++)
                         subValue[i] = 1.0 / mp->nStates;
                     }
+                /* fill for the directional model of evolution for state frequencies */
+                else if (p->paramId == DIRPI_DIRxDIR || p->paramId == DIRPI_DIRxFIXED || p->paramId == DIRPI_FIXEDxDIR || p->paramId == DIRPI_MIX)
+                    {     
+                    /* check if both Dirichlet priors are set correctly, if applicable */                    if (p->paramId == DIRPI_DIRxDIR || p->paramId == DIRPI_DIRxFIXED || p->paramId == DIRPI_MIX)   
+                        {
+                        if (mp->numDirParams != mp->nStates && mp->numDirParams != 0)
+                            { 
+                            MrBayesPrint ("%s   Mismatch between number of dirichlet parameters for the equillibrium frequencies (%d) and the number of states (%d)\n", spacer, mp->numDirParams, m->numStates);    
+                            return ERROR;
+                            }
+                        }         
+                    if (p->paramId == DIRPI_DIRxDIR || p->paramId == DIRPI_FIXEDxDIR || p->paramId == DIRPI_MIX)       
+                        { 
+                        if (mp->numDirParamsRoot != mp->nStates && mp->numDirParamsRoot != 0)
+                            { 
+                            MrBayesPrint ("%s   Mismatch between number of dirichlet parameters for the root frequencies (%d) and the number of states (%d)\n", spacer, mp->numDirParamsRoot, m->numStates);        
+                            return ERROR;
+                            } 
+                        }         
+                    /* now fill in values and subvalues */
+                    if (p->paramId == DIRPI_DIRxDIR || p->paramId == DIRPI_DIRxFIXED || p->paramId == DIRPI_MIX)   
+                        { 
+                        /* if user has not set dirichlet parameters, go with default */
+                        /* overall variance equals number of states */
+                        if (mp->numDirParams == 0)
+                            for (i=0; i<mp->nStates; i++)
+                                value[i] = mp->stateFreqsDir[i] = 1.0;
+                        else
+                            for (i=0; i<m->numStates; i++)
+                                value[i] = mp->stateFreqsDir[i];
+
+                        /* now fill in subvalues for equillibrium frequencies */
+                        for (i=0; i<m->numStates; i++)
+                                subValue[i] =  (1.0 / mp->nStates);
+                        /* and the fixed root freqs, if any */
+                        if (p->paramId == DIRPI_DIRxFIXED)
+                            {
+                            for (i=0; i<m->numStates; i++)
+                                subValue[i+m->numStates] =  mp->rootFreqsFix[i];
+                            }
+                        }
+                    if (p->paramId == DIRPI_DIRxDIR || p->paramId == DIRPI_FIXEDxDIR || p->paramId == DIRPI_MIX)
+                        {
+                        /* now fill in the root freqs, 2nd half of vector */
+                        if (mp->numDirParamsRoot == 0)
+                            for (i=0; i<m->numStates; i++)
+                                value[i+m->numStates] = mp->rootFreqsDir[i] = 1.0;
+                        else
+                            for (i=0; i<m->numStates; i++)
+                                value[i+m->numStates] = mp->rootFreqsDir[i];
+
+                        for (i=0; i<m->numStates; i++)
+                                subValue[i+m->numStates] =  (1.0 / mp->nStates);
+
+                        if (p->paramId == DIRPI_FIXEDxDIR)
+                            {
+                            for (i=0; i<m->numStates; i++)
+                                subValue[i] =  mp->stateFreqsFix[i];
+                            }
+                        }
+                    }
+                else if (p->paramId == DIRPI_FIXEDxFIXED)
+                    {
+                    for (i=0; i<m->numStates; i++)
+                        {
+                        subValue[i] =  mp->stateFreqsFix[i];
+                        subValue[i+m->numStates] =  mp->rootFreqsFix[i];
+                        }
+                    }  
                 }
             else if (p->paramType == P_MIXTURE_RATES)
                 {
@@ -13592,6 +13872,8 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
                                                     or empirical values. We ignore this possibility. */
                                 }
                             }
+                        else
+                            isSame = NO;
                         }
                     }
                 else
@@ -13638,6 +13920,36 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
                                         or empirical values. We ignore this possibility. */
                     }
                 }
+            else
+                isSame = NO;
+
+            /* also check if both partitions use Stationary or Directional model - in the latter case, check if priors on root frequencies match */
+            if (!strcmp(modelParams[part1].statefreqModel, modelParams[part2].statefreqModel))
+                {     
+                if (!strcmp(modelParams[part1].statefreqModel, "Directional"))
+                    {     
+                    if (!strcmp(modelParams[part1].rootFreqPr, modelParams[part2].rootFreqPr)) 
+                        {     
+                        /* the prior form is the same */
+                        if (!strcmp(modelParams[part1].rootFreqPr, "Dirichlet")) /* both prior models must be dirichlet */
+                            {     
+                            for (i=0; i<modelParams[part1].nStates; i++)
+                                if (AreDoublesEqual (modelParams[part1].rootFreqsDir[i], modelParams[part2].rootFreqsDir[i], (MrBFlt) 0.00001) == NO)
+                                    isSame = NO; /* the dirichlet parameters are different */
+                            }     
+                        else /* in this case both prior models must be fixed to user values */
+                            {     
+                            for (i=0; i<modelParams[part1].nStates; i++)
+                                if (AreDoublesEqual (modelParams[part1].rootFreqsDir[i], modelParams[part2].rootFreqsDir[i], (MrBFlt) 0.00001) == NO)
+                                    isSame = NO; /* the user-specified state frequencies are different */
+                            }     
+                        }     
+                    else  
+                        isSame = NO;
+                    }
+                }
+            else
+                isSame = NO;
             }
 
         /* Check to see if the state frequencies are inapplicable for either partition. */
@@ -18740,137 +19052,210 @@ int SetModelParams (void)
                 /* deal with all models except standard */
                 /* no hyperprior or fixed to one value, set default to 0  */
                 p->nValues = 0;
-                /* one subvalue for each state */
-                p->nSubValues = mp->nStates;    /* mp->nStates is set to 20 if DNA || RNA && nucmodel==PROTEIN */
-                if (!strcmp(mp->stateFreqPr, "Dirichlet"))
+                /* first check if model is stationary; if not, we process it differently */
+                if (!strcmp(mp->statefreqModel,"Stationary"))          
                     {
-                    p->paramId = PI_DIR;
-                    p->nValues = mp->nStates;
-                    }
-                else if (!strcmp(mp->stateFreqPr, "Fixed") && !strcmp(mp->stateFreqsFixType,"User"))
-                    p->paramId = PI_USER;
-                else if (!strcmp(mp->stateFreqPr, "Fixed") && !strcmp(mp->stateFreqsFixType,"Empirical"))
-                    p->paramId = PI_EMPIRICAL;
-                else if (!strcmp(mp->stateFreqPr, "Fixed") && !strcmp(mp->stateFreqsFixType,"Equal"))
-                    {
-                    p->paramId = PI_EQUAL;
-                    }
-                    
-                if (m->dataType == PROTEIN)
-                    {
-                    if (!strcmp(mp->aaModelPr, "Fixed"))
+                    /* one subvalue for each state */
+                    p->nSubValues = mp->nStates;    /* mp->nStates is set to 20 if DNA || RNA && nucmodel==PROTEIN */
+                    if (!strcmp(mp->stateFreqPr, "Dirichlet"))
                         {
-                        if (!strcmp(mp->aaModel, "Poisson"))
-                            p->paramId = PI_EQUAL;
-                        else if (!strcmp(mp->aaModel, "Equalin") || !strcmp(mp->aaModel, "Gtr"))
+                        p->paramId = PI_DIR;
+                        p->nValues = mp->nStates;
+                        }
+                    else if (!strcmp(mp->stateFreqPr, "Fixed") && !strcmp(mp->stateFreqsFixType,"User"))
+                        p->paramId = PI_USER;
+                    else if (!strcmp(mp->stateFreqPr, "Fixed") && !strcmp(mp->stateFreqsFixType,"Empirical"))
+                        p->paramId = PI_EMPIRICAL;
+                    else if (!strcmp(mp->stateFreqPr, "Fixed") && !strcmp(mp->stateFreqsFixType,"Equal"))
+                        {
+                        p->paramId = PI_EQUAL;
+                        }
+                    
+                    if (m->dataType == PROTEIN)
+                        {
+                        if (!strcmp(mp->aaModelPr, "Fixed"))
                             {
-                            /* p->paramId stays to what it was set to above */
+                            if (!strcmp(mp->aaModel, "Poisson"))
+                                p->paramId = PI_EQUAL;
+                            else if (!strcmp(mp->aaModel, "Equalin") || !strcmp(mp->aaModel, "Gtr"))
+                                {
+                                /* p->paramId stays to what it was set to above */
+                                }
+                            else
+                                p->paramId = PI_FIXED;
                             }
                         else
                             p->paramId = PI_FIXED;
                         }
-                    else
-                        p->paramId = PI_FIXED;
-                    }
                     
-                if (p->paramId == PI_DIR)
-                    p->printParam = YES;
-                if (m->dataType == DNA || m->dataType == RNA)
-                    {
-                    if (!strcmp(mp->nucModel, "4by4"))
+                    if (p->paramId == PI_DIR)
+                        p->printParam = YES;
+                    if (m->dataType == DNA || m->dataType == RNA)
                         {
-                        sprintf (temp, "pi(%c)", StateCode_NUC4(0));
-                        SafeStrcat (&p->paramHeader,temp);
-                        SafeStrcat (&p->paramHeader,partString);
-                        for (n1=1; n1<4; n1++)
+                        if (!strcmp(mp->nucModel, "4by4"))
                             {
-                            sprintf (temp, "\tpi(%c)", StateCode_NUC4(n1));
+                            sprintf (temp, "pi(%c)", StateCode_NUC4(0));
                             SafeStrcat (&p->paramHeader,temp);
                             SafeStrcat (&p->paramHeader,partString);
-                            }
-                        }
-                    else if (!strcmp(mp->nucModel, "Doublet"))
-                        {
-                        State_DOUBLET(tempCodon,0);
-                        sprintf (temp, "pi(%s)", tempCodon);
-                        SafeStrcat (&p->paramHeader,temp);
-                        SafeStrcat (&p->paramHeader,partString);
-                        for (n1=1; n1<16; n1++)
-                            {
-                            State_DOUBLET(tempCodon,n1);
-                            sprintf (temp, "\tpi(%s)", tempCodon);
-                            SafeStrcat (&p->paramHeader,temp);
-                            SafeStrcat (&p->paramHeader,partString);
-                            }
-                        }
-                    else if (!strcmp(mp->nucModel, "Codon"))
-                        {
-                        for (c=0; c<p->nSubValues; c++)
-                            {
-                            if (mp->codonNucs[c][0] == 0)
-                                strcpy (tempCodon, "pi(A");
-                            else if (mp->codonNucs[c][0] == 1)
-                                strcpy (tempCodon, "pi(C");
-                            else if (mp->codonNucs[c][0] == 2)
-                                strcpy (tempCodon, "pi(G");
-                            else
-                                strcpy (tempCodon, "pi(T");
-                            if (mp->codonNucs[c][1] == 0)
-                                strcat (tempCodon, "A");
-                            else if (mp->codonNucs[c][1] == 1)
-                                strcat (tempCodon, "C");
-                            else if (mp->codonNucs[c][1] == 2)
-                                strcat (tempCodon, "G");
-                            else
-                                strcat (tempCodon, "T");
-                            if (mp->codonNucs[c][2] == 0)
-                                strcat (tempCodon, "A)");
-                            else if (mp->codonNucs[c][2] == 1)
-                                strcat (tempCodon, "C)");
-                            else if (mp->codonNucs[c][2] == 2)
-                                strcat (tempCodon, "G)");
-                            else
-                                strcat (tempCodon, "T)");
-                            if (c == 0)
+                            for (n1=1; n1<4; n1++)
                                 {
-                                SafeStrcat (&p->paramHeader, tempCodon);
-                                SafeStrcat (&p->paramHeader, partString);
+                                sprintf (temp, "\tpi(%c)", StateCode_NUC4(n1));
+                                SafeStrcat (&p->paramHeader,temp);
+                                SafeStrcat (&p->paramHeader,partString);
+                                }
+                            }
+                        else if (!strcmp(mp->nucModel, "Doublet"))
+                            {
+                            State_DOUBLET(tempCodon,0);
+                            sprintf (temp, "pi(%s)", tempCodon);
+                            SafeStrcat (&p->paramHeader,temp);
+                            SafeStrcat (&p->paramHeader,partString);
+                            for (n1=1; n1<16; n1++)
+                                {
+                                State_DOUBLET(tempCodon,n1);
+                                sprintf (temp, "\tpi(%s)", tempCodon);
+                                SafeStrcat (&p->paramHeader,temp);
+                                SafeStrcat (&p->paramHeader,partString);
+                                }
+                            }
+                        else if (!strcmp(mp->nucModel, "Codon"))
+                            {
+                            for (c=0; c<p->nSubValues; c++)
+                                {
+                                if (mp->codonNucs[c][0] == 0)
+                                    strcpy (tempCodon, "pi(A");
+                                else if (mp->codonNucs[c][0] == 1)
+                                    strcpy (tempCodon, "pi(C");
+                                else if (mp->codonNucs[c][0] == 2)
+                                    strcpy (tempCodon, "pi(G");
+                                else
+                                    strcpy (tempCodon, "pi(T");
+                                if (mp->codonNucs[c][1] == 0)
+                                    strcat (tempCodon, "A");
+                                else if (mp->codonNucs[c][1] == 1)
+                                    strcat (tempCodon, "C");
+                                else if (mp->codonNucs[c][1] == 2)
+                                    strcat (tempCodon, "G");
+                                else
+                                    strcat (tempCodon, "T");
+                                if (mp->codonNucs[c][2] == 0)
+                                    strcat (tempCodon, "A)");
+                                else if (mp->codonNucs[c][2] == 1)
+                                    strcat (tempCodon, "C)");
+                                else if (mp->codonNucs[c][2] == 2)
+                                    strcat (tempCodon, "G)");
+                                else
+                                    strcat (tempCodon, "T)");
+                                if (c == 0)
+                                    {
+                                    SafeStrcat (&p->paramHeader, tempCodon);
+                                    SafeStrcat (&p->paramHeader, partString);
+                                    }
+                                else
+                                    {
+                                    SafeStrcat (&p->paramHeader, "\t");
+                                    SafeStrcat (&p->paramHeader, tempCodon);
+                                    SafeStrcat (&p->paramHeader, partString);
+                                    }
+                                }
+                            }
+                        }
+                    else if (m->dataType == PROTEIN)
+                        {
+                        if (FillRelPartsString (p, &partString) == YES)
+                            {
+                            SafeSprintf (&tempStr, &tempStrSize, "pi(Ala)%s\tpi(Arg)%s\tpi(Asn)%s\tpi(Asp)%s\tpi(Cys)%s\tpi(Gln)%s\tpi(Glu)%s\tpi(Gly)%s\tpi(His)%s\tpi(Ile)%s\tpi(Leu)%s\tpi(Lys)%s\tpi(Met)%s\tpi(Phe)%s\tpi(Pro)%s\tpi(Ser)%s\tpi(Thr)%s\tpi(Trp)%s\tpi(Tyr)%s\tpi(Val)%s",
+                            partString, partString, partString, partString, partString, partString, partString, partString, partString, partString,
+                            partString, partString, partString, partString, partString, partString, partString, partString, partString, partString);
+                            SafeStrcat (&p->paramHeader, tempStr);
+                            }
+                        else
+                            SafeStrcat (&p->paramHeader, "pi(Ala)\tpi(Arg)\tpi(Asn)\tpi(Asp)\tpi(Cys)\tpi(Gln)\tpi(Glu)\tpi(Gly)\tpi(His)\tpi(Ile)\tpi(Leu)\tpi(Lys)\tpi(Met)\tpi(Phe)\tpi(Pro)\tpi(Ser)\tpi(Thr)\tpi(Trp)\tpi(Tyr)\tpi(Val)");
+                        }
+                    else if (mp->dataType == RESTRICTION)
+                        {
+                        if (FillRelPartsString (p, &partString) == YES)
+                            {
+                            SafeSprintf (&tempStr, &tempStrSize, "pi(0)%s\tpi(1)%s", partString, partString);
+                            SafeStrcat (&p->paramHeader, tempStr);
+                            }
+                        else
+                            SafeStrcat (&p->paramHeader, "pi(0)\tpi(1)");
+                        }
+                    else
+                        {
+                        MrBayesPrint ("%s   Unknown data type in SetModelParams\n", spacer);
+                        }
+                    }
+                else /* if statefreqmodel != stationary */
+                    {
+                    if (mp->dataType != RESTRICTION)
+                        {   
+                            MrBayesPrint ("%s   Error in SetModelParams: non-stationary models currently only implemented for RESTRICTION data type\n", spacer);
+                        }
+                    else
+                        {
+                        /* two subvalues for each state: stationary and root frequencies */
+                        p->nSubValues = mp->nStates * 2;
+
+                        if (!strcmp(mp->statefreqModel, "Mixed"))
+                            {
+                            p->paramId = DIRPI_MIX;
+                            p->nValues = mp->nStates * 2;
+                            }
+                        else if (!strcmp(mp->stateFreqPr, "Dirichlet"))
+                            {
+                            if (!strcmp(mp->rootFreqPr, "Dirichlet"))
+                                {
+                                p->paramId = DIRPI_DIRxDIR;
+                                }
+                            else if (!strcmp(mp->rootFreqPr, "Fixed"))
+                                {
+                                p->paramId = DIRPI_DIRxFIXED;
                                 }
                             else
                                 {
-                                SafeStrcat (&p->paramHeader, "\t");
-                                SafeStrcat (&p->paramHeader, tempCodon);
-                                SafeStrcat (&p->paramHeader, partString);
+                                MrBayesPrint ("%s   Error in SetModelParams: unknown setting for Rootfreqpr\n", spacer); 
+                                }
+                            p->nValues = m->numModelStates  * 2; //SK: use whole nValues vector even if only one of the priors is Dirichlet, start OR root freqs
+                            }
+
+                            else if (!strcmp(mp->rootFreqPr, "Fixed"))
+                                {
+                                p->paramId = DIRPI_FIXEDxFIXED;
+                                p->nValues = 0;
+                                }
+                            else
+                                {
+                                    MrBayesPrint ("%s   Error in SetModelParams: unknown setting for Rootfreqpr\n", spacer);
                                 }
                             }
-                        }
-                    }
-                else if (m->dataType == PROTEIN)
-                    {
-                    if (FillRelPartsString (p, &partString) == YES)
+                        else
+                            {
+                            MrBayesPrint ("%s   Error in SetModelParams: unknown setting for Statfreqpr, choose either 'Dirichlet' or 'Fixed'. \n", spacer);
+                            }
+
+                        if (p->paramId != DIRPI_FIXEDxFIXED)
+                            p->printParam = YES;
+
+                        if (FillRelPartsString (p, &partString) == YES)
                         {
-                        SafeSprintf (&tempStr, &tempStrSize, "pi(Ala)%s\tpi(Arg)%s\tpi(Asn)%s\tpi(Asp)%s\tpi(Cys)%s\tpi(Gln)%s\tpi(Glu)%s\tpi(Gly)%s\tpi(His)%s\tpi(Ile)%s\tpi(Leu)%s\tpi(Lys)%s\tpi(Met)%s\tpi(Phe)%s\tpi(Pro)%s\tpi(Ser)%s\tpi(Thr)%s\tpi(Trp)%s\tpi(Tyr)%s\tpi(Val)%s",
-                        partString, partString, partString, partString, partString, partString, partString, partString, partString, partString,
-                        partString, partString, partString, partString, partString, partString, partString, partString, partString, partString);
-                        SafeStrcat (&p->paramHeader, tempStr);
+                            SafeSprintf(&tempStr, &tempStrSize, "pi(0)%s\tpi(1)%s\trootpi(0)%s\trootpi(1)%s", partString, partString, partString, partString);
+                            SafeStrcat (&p->paramHeader, tempStr);
+                            if (p->paramId == DIRPI_MIX)
+                                {
+                                SafeSprintf(&tempStr, &tempStrSize, "\tstatefreqmodel%s", partString);
+                                SafeStrcat (&p->paramHeader, tempStr);
+                                }
                         }
-                    else
-                        SafeStrcat (&p->paramHeader, "pi(Ala)\tpi(Arg)\tpi(Asn)\tpi(Asp)\tpi(Cys)\tpi(Gln)\tpi(Glu)\tpi(Gly)\tpi(His)\tpi(Ile)\tpi(Leu)\tpi(Lys)\tpi(Met)\tpi(Phe)\tpi(Pro)\tpi(Ser)\tpi(Thr)\tpi(Trp)\tpi(Tyr)\tpi(Val)");
-                    }
-                else if (mp->dataType == RESTRICTION)
-                    {
-                    if (FillRelPartsString (p, &partString) == YES)
-                        {
-                        SafeSprintf (&tempStr, &tempStrSize, "pi(0)%s\tpi(1)%s", partString, partString);
-                        SafeStrcat (&p->paramHeader, tempStr);
+                        else
+                            {
+                            SafeStrcat (&p->paramHeader, "pi(0)\tpi(1)\trootpi(0)\trootpi(1)");
+                            if (p->paramId == DIRPI_MIX)
+                                SafeStrcat(&p->paramHeader, "\tstatefreqmodel");
+                            }
                         }
-                    else
-                        SafeStrcat (&p->paramHeader, "pi(0)\tpi(1)");
-                    }
-                else
-                    {
-                    MrBayesPrint ("%s   Unknown data type in SetModelParams\n", spacer);
-                    }
+                    }   // end nonstationary model 
                 }
             }
         else if (j == P_MIXTURE_RATES)
@@ -21936,6 +22321,66 @@ void SetUpMoveTypes (void)
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneSlider;
+    mt->targetRate = 0.25;
+
+    /* Move_StatefreqsRoot */
+    mt = &moveTypes[i++];
+    mt->name = "Dirichlet proposal";
+    mt->shortName = "Dirichlet";
+    mt->tuningName[0] = "Dirichlet parameter";
+    mt->shortTuningName[0] = "alpha";
+    mt->applicableTo[0] = DIRPI_DIRxDIR;
+    mt->applicableTo[1] = DIRPI_FIXEDxDIR;
+    mt->applicableTo[2] = DIRPI_MIX;
+    mt->nApplicable = 3;
+    mt->moveFxn = &Move_StatefreqsRoot;
+    mt->relProposalProb = 0.5;
+    mt->numTuningParams = 1;
+    mt->tuningParam[0] = 100.0; /* alphaPi per state */
+    mt->minimum[0] = 0.001;
+    mt->maximum[0] = 10000.0;
+    mt->parsimonyBased = NO; 
+    mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneDirichlet;
+    mt->targetRate = 0.25; 
+
+    /* Move_StatefreqsRoot_Slider */
+    mt = &moveTypes[i++];
+    mt->name = "Sliding window";
+    mt->shortName = "Slider";
+    mt->tuningName[0] = "Sliding window size";
+    mt->shortTuningName[0] = "delta";
+    mt->applicableTo[0] = DIRPI_DIRxDIR;
+    mt->applicableTo[1] = DIRPI_FIXEDxDIR;
+    mt->applicableTo[2] = DIRPI_MIX;
+    mt->nApplicable = 3;
+    mt->moveFxn = &Move_StatefreqsRoot_Slider;
+    mt->relProposalProb = 0.5;
+    mt->numTuningParams = 1;
+    mt->tuningParam[0] = 0.20;  /* window size (change in proportions) */
+    mt->minimum[0] = 0.00001;
+    mt->maximum[0] = 1.0;
+    mt->parsimonyBased = NO;
+    mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneSlider;
+    mt->targetRate = 0.25;
+
+    /* Move_Statefreqs_SplitMerge */
+    mt = &moveTypes[i++];
+    mt->name = "RJ between stationary and directional model";
+    mt->shortName = "RJ_Stat-Dir";
+    mt->paramName = "StateFreqModel";
+    mt->applicableTo[0] = DIRPI_MIX;
+    mt->nApplicable = 1;
+    mt->moveFxn = &Move_Statefreqs_SplitMerge;
+    mt->relProposalProb = 0.5;
+    mt->numTuningParams = 1;
+    mt->tuningParam[0] = 100.0; /* alphaPi per state */
+    mt->minimum[0] = 0.001;
+    mt->maximum[0] = 10000.0;
+    mt->parsimonyBased = NO;
+    mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneDirichlet;
     mt->targetRate = 0.25;
 
     /* Move_StatefreqsSymDirMultistate */

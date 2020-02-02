@@ -2468,9 +2468,10 @@ int PrintOverlayPlot (MrBFlt **xVals, MrBFlt **yVals, int nRuns,  int startingFr
 /* PrintParamStats: Print parameter table (not model indicator params) to screen and .pstat file */
 int PrintParamStats (char *fileName, char **headerNames, int nHeaders, ParameterSample *parameterSamples, int nRuns, int nSamples)
 {
-    int     i, j, len, longestHeader, *sampleCounts=NULL;
+    int     i, j, k, l, len, longestHeader, *sampleCounts=NULL, *validSampleCounts=NULL;
     static char *temp=NULL;
     char    tempf[100];
+    MrBFlt  **validVals=NULL;
     Stat    theStats;
     FILE    *fp;
     
@@ -2504,13 +2505,19 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 
     /* allocate and set nSamples */
     sampleCounts = (int *) SafeCalloc (nRuns, sizeof(int));
-    if (!sampleCounts)
+    validSampleCounts = (int *) SafeCalloc (nRuns, sizeof(int)); // for removing NAs
+    if (!sampleCounts || !validSampleCounts)
         {
         fclose(fp);
         return ERROR;
         }
     for (i=0; i<nRuns; i++)
         sampleCounts[i] = nSamples;
+
+    /* allocate a separate matrix for parameters that need NAs removed */
+    validVals    = (MrBFlt **) SafeCalloc (nRuns, sizeof(MrBFlt *));
+    for (i=0; i<nRuns; i++)
+        validVals[i] = (MrBFlt *)  SafeCalloc (nSamples, sizeof(MrBFlt));
 
     /* print the header rows */
     MrBayesPrint ("\n");
@@ -2550,8 +2557,27 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
         if (!strcmp (temp, "Gen") || !strcmp (temp, "LnL") || !strcmp (temp, "LnPr"))
             continue;
 
-        GetSummary (parameterSamples[i].values, nRuns, sampleCounts, &theStats, sumpParams.HPD);
-        
+        if (IsSame (temp, "rootpi(0)") == SAME || IsSame (temp, "rootpi(1)") == SAME) // Currently only doing NA removal for root freqs. Can be extended in the future.
+            {
+            for (k=0; k<nRuns; k++)
+                {
+                validSampleCounts[k] = 0;
+                for (l=0; l<nSamples; l++)
+                    {
+                    if (parameterSamples[i].values[k][l] != NOT_APPLICABLE)
+                        {
+                        validVals[k][validSampleCounts[k]] = parameterSamples[i].values[k][l];
+                        validSampleCounts[k]++;
+                        }
+                    }
+                }
+            GetSummary (validVals, nRuns, validSampleCounts, &theStats, sumpParams.HPD);
+            }
+        else
+            {
+            GetSummary (parameterSamples[i].values, nRuns, sampleCounts, &theStats, sumpParams.HPD);
+            }
+
         MrBayesPrint ("%s   %-*s ", spacer, longestHeader, temp);
         MrBayesPrint ("%10.6lf  %10.6lf  %10.6lf  %10.6lf  %10.6lf", theStats.mean, theStats.var, theStats.lower, theStats.upper, theStats.median);
         MrBayesPrintf (fp, "%s", temp);
@@ -2621,6 +2647,10 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 
     fclose (fp);
     free (sampleCounts);
+    for (i=0; i<nRuns; i++)
+        free(validVals[i]);
+    free(validVals);
+    validVals=NULL;
     SAFEFREE (temp);
 
     return (NO_ERROR);
