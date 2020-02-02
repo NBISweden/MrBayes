@@ -15670,7 +15670,8 @@ int Move_Statefreqs_SplitMerge (Param *param, int chain, RandLong *seed, MrBFlt 
     /* check which model we are currently in */
     if (oldPiRoot[0] == NOT_APPLICABLE) //SK: root PI are set to NOT_APPLICABLE (-9999) when in stationary model
         inStationary = 1;
-    else inStationary = 0;
+    else 
+        inStationary = 0;
 
 	/* allocate vec to hold state freqs * tuning parameter */
     temp = (MrBFlt *) SafeCalloc(nStates, sizeof (MrBFlt));
@@ -15794,8 +15795,10 @@ int Move_Statefreqs_SplitMerge (Param *param, int chain, RandLong *seed, MrBFlt 
      probability matrices require diagonalizing the rate matrix. */
 	for (i=0; i<param->nRelParts; i++)
 		modelSettings[param->relParts[i]].upDateCijk = YES;
- 
-	return (NO_ERROR);
+
+    free (temp); 
+	
+    return (NO_ERROR);
 	
 }
 

@@ -11394,7 +11394,7 @@ if (proc_id == 0)
                 }
 
             if (t->isRooted == YES && t->isClock == NO)
-                SafeSprintf (&tempString, &tempStrSize, " = ");
+                SafeSprintf (&tempString, &tempStrSize, " = [&D] ");
             else if (t->isRooted == YES && t->isClock == YES)
                 {
                 clockRate = *GetParamVals(modelSettings[p->relParts[0]].clockRate, j, state[j]);

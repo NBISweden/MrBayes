@@ -11400,7 +11400,8 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                 /* fill for the directional model of evolution for state frequencies */
                 else if (p->paramId == DIRPI_DIRxDIR || p->paramId == DIRPI_DIRxFIXED || p->paramId == DIRPI_FIXEDxDIR || p->paramId == DIRPI_MIX)
                     {     
-                    /* check if both Dirichlet priors are set correctly, if applicable */                    if (p->paramId == DIRPI_DIRxDIR || p->paramId == DIRPI_DIRxFIXED || p->paramId == DIRPI_MIX)   
+                    /* check if both Dirichlet priors are set correctly, if applicable */
+                    if (p->paramId == DIRPI_DIRxDIR || p->paramId == DIRPI_DIRxFIXED || p->paramId == DIRPI_MIX)   
                         {
                         if (mp->numDirParams != mp->nStates && mp->numDirParams != 0)
                             { 
@@ -11428,7 +11429,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                             for (i=0; i<m->numStates; i++)
                                 value[i] = mp->stateFreqsDir[i];
 
-                        /* now fill in subvalues for equillibrium frequencies */
+                        /* now fill in subvalues for equilibrium frequencies */
                         for (i=0; i<m->numStates; i++)
                                 subValue[i] =  (1.0 / mp->nStates);
                         /* and the fixed root freqs, if any */

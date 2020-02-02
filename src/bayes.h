@@ -366,7 +366,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define POSREAL_MIN             1E-25f
 #define POSREAL_MAX             1E25f
 
-/* Seraina:
+/* SK:
  * Used when doing reversible jump over stationary and directional
  * model: root frequencies are not used when in stationary model. */
 #define NOT_APPLICABLE -9999.0
@@ -871,14 +871,11 @@ typedef struct param
 #define MIXEDVAR_UNI                    145
 #define MIXEDBRCHRATES                  146
 #define MIXTURE_RATES                   147
-
-/* Seraina:
- * Note: incremented by 1 from Seraina's code as 147 was already used. */
-#define DIRPI_DIRxDIR                  148
-#define DIRPI_DIRxFIXED                149
-#define DIRPI_FIXEDxDIR                150
-#define DIRPI_FIXEDxFIXED              151
-#define DIRPI_MIX                      152
+#define DIRPI_DIRxDIR                   148
+#define DIRPI_DIRxFIXED                 149
+#define DIRPI_FIXEDxDIR                 150
+#define DIRPI_FIXEDxFIXED               151
+#define DIRPI_MIX                       152
 
 #if defined (BEAGLE_ENABLED)
 #define MB_BEAGLE_SCALE_ALWAYS          0
@@ -991,7 +988,7 @@ typedef struct model
 
     char        nucModel[100];     /* nucleotide model used                        */
     char        nst[100];          /* number of substitution types                 */
-    char        statefreqModel[100];    /* Seraina: stationary or directional Markov model  */
+    char        statefreqModel[100];/* stationary or directional Markov model      */  //SK
     char        parsModel[100];    /* use the (so-called) parsimony model          */
     char        geneticCode[100];  /* genetic code used                            */
     int         coding;            /* type of patterns encoded                     */
@@ -1251,7 +1248,7 @@ typedef struct modelinfo
     Param       *revMat;                    /* ptr to revMat used in model              */
     Param       *omega;                     /* ptr to omega used in model               */
     Param       *stateFreq;                 /* ptr to statFreq used in model            */
-                                            /* Seraina: same pointer (stateFreq) also
+                                            /* SK: same pointer (stateFreq) also
                                              * used for the stationary-root freq vector */
     Param       *mixtureRates;              /* ptr to site rate mixture used in model   */
     Param       *shape;                     /* ptr to shape used in model               */

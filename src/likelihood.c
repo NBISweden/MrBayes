@@ -7269,12 +7269,12 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
     int             c, k;
     MrBFlt          *bs, freq, like, pUnobserved, pObserved;
     CLFlt           *clPtr, **clP, *lnScaler, *nSitesOfPat;
-    ModelParams     *mp; /* Seraina: has this */
+    ModelParams     *mp;
     ModelInfo       *m;
 
     
     m = &modelSettings[division];
-    mp = &modelParams[division];    /* Seraina: this too */
+    mp = &modelParams[division];
 
     /* find conditional likelihood pointer */
     clPtr = m->condLikes[m->condLikeIndex[chain][p->index]];
@@ -7286,25 +7286,16 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
         }
 
     /* find base frequencies */
+    /* modified to deal with directional model by SK and FR */
+    bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
     if (!strcmp(mp->statefreqModel,"Directional"))
         {
-        bs = GetParamSubVals (m->stateFreq, chain, state[chain]) + m->numModelStates;
+        bs += m->numModelStates;
         }
     else if (!strcmp(mp->statefreqModel,"Mixed"))
         {
-        bs = GetParamSubVals (m->stateFreq, chain, state[chain]) + m->numModelStates;
-        /* if we are currently in stationary model, then root frequencies are
-         * set to NOT_APPLICABLE (-9999), and bs should point to stationary
-         * freqs */
-        // Seraina - TODO: Replace with direct test of model state
-        if (*bs == NOT_APPLICABLE)
-            {
-            bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
-            }
-        }
-    else
-        {
-        bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
+        if (bs[m->numModelStates] != NOT_APPLICABLE)
+            bs += m->numModelStates;
         }
 
     /* find category frequencies */
@@ -7387,11 +7378,11 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     __m128          *clPtr, **clP;
     __m128          m1, mA, mB, mFreq, mLike;
     ModelInfo       *m;
-    ModelParams     *mp;    /* Seraina: has this */
+    ModelParams     *mp;
 
     /* find model settings and pInvar, invar cond likes */
     m = &modelSettings[division];
-    mp = &modelParams[division];    /* Seraina: this too */
+    mp = &modelParams[division];
 
     /* find conditional likelihood pointers */
     clPtr = (__m128 *) (m->condLikes[m->condLikeIndex[chain][p->index]]);
@@ -7404,26 +7395,16 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     lnL_Vec  = m->lnL_Vec;
     
     /* find base frequencies */
+    /* modified to deal with directonal models by SK and FR */
+    bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
     if (!strcmp(mp->statefreqModel,"Directional"))
-        { /* Seraina: All but the last else branch */
-        bs = GetParamSubVals (m->stateFreq, chain, state[chain]) + m->numModelStates;
+        {
+        bs += m->numModelStates;
         }
     else if (!strcmp(mp->statefreqModel,"Mixed"))
         {
-        bs = GetParamSubVals (m->stateFreq, chain, state[chain]) + m->numModelStates;
-        if (*bs == NOT_APPLICABLE)
-            {
-            /* Seraina:
-             * if we are currently in stationary model, then root
-             * frequencies are set to NOT_APPLICABLE (-9999), and bs
-             * should point to stationary freqs */
-            // Seraina - TODO: Replace with proper model test
-            bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
-            }
-        }
-    else
-        {
-        bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
+        if (bs[m->numModelStates] != NOT_APPLICABLE)
+            bs += m->numModelStates;
         }
 
     mA = _mm_set1_ps ((CLFlt)(bs[0]));
