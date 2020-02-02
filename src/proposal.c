@@ -4582,7 +4582,7 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     int         i, j, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
                 isVPriorExp, alwaysMoveRoot, isCrownStartConstrained, isRootStartConstrained, isStopConstrained, tempInt;
     MrBFlt      m, x, y, tuning, maxV, minV, extensionProb, brlensExp=0.0;
-    TreeNode    *p, *a, *b, *c, *d, *u, *v, *interiorNode;
+    TreeNode    *p, *a, *b, *c, *d, *u, *v, *interiorRoot;
     Tree        *t;
     ModelParams *mp;
 
@@ -10113,7 +10113,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
                 cumulativeProb, warpFactor, ran, tuning, increaseProb, decreaseProb,
                 divFactor, nStates, rateMult, v_typical, sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
-    TreeNode    *p, *q, *a, *b, *u, *v, *c=NULL, *d, *interiorNode;
+    TreeNode    *p, *q, *a, *b, *u, *v, *c=NULL, *d, *interiorRoot;
     Tree        *t;
     ModelParams *mp;
     ModelInfo   *m = NULL;
@@ -15472,7 +15472,7 @@ int Move_Statefreqs_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnP
  |       as for stationary state frequencies. //SK
  |
  ----------------------------------------------------------------*/
-int Move_StatefreqsRoot (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_StatefreqsRoot (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 
 {
 	/* change pi */
@@ -15557,7 +15557,7 @@ int Move_StatefreqsRoot (Param *param, int chain, SafeLong *seed, MrBFlt *lnPrio
  |       state frequencies at root in directional model. //SK
  |
  ----------------------------------------------------------------*/
-int Move_StatefreqsRoot_Slider (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_StatefreqsRoot_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
 	int			i, j, nStates, isValid;
 	MrBFlt		delta, *newPi, *oldPi, *priorAlpha, x, y, sum, min, max;
@@ -15647,7 +15647,7 @@ int Move_StatefreqsRoot_Slider (Param *param, int chain, SafeLong *seed, MrBFlt 
  |       We assume equal prior probabilities of the two models. //SK
  |
  ----------------------------------------------------------------*/
-int Move_Statefreqs_SplitMerge (Param *param, int chain, SafeLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+int Move_Statefreqs_SplitMerge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
 	/* switch between stationary and directional model of evolution */
 	int			i, nStates, isValid, inStationary;

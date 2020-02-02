@@ -10437,18 +10437,15 @@ void DirichletRandomVariable (MrBFlt *alp, MrBFlt *z, int n, RandLong *seed)
 }
 
 
-/* Seraina: (this whole function, below) */
-
 /*---------------------------------------------------------------------------------
  |
  |   LnDirichlet
  |
- |   Calculates the log of the Dirichlet function.
+ |   Calculates the log density of the Dirichlet distribution. //SK
  |
  |
  ---------------------------------------------------------------------------------*/
 MrBFlt LnDirichlet (MrBFlt *alphai, MrBFlt *xi, int lengthi)
-
 {
     MrBFlt sum = 0.0;
     MrBFlt dirprob;

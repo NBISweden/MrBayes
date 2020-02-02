@@ -7810,7 +7810,7 @@ MrBFlt LogPrior (int chain)
             if (p->paramId == PI_DIR)
                 {
                 nStates = p->nSubValues;
-                lnPrior += LnDirichlet(st, sst, nStates)
+                lnPrior += LnDirichlet(st, sst, nStates);
                 }
             else if (strcmp(mp->statefreqModel,"Stationary") != 0)
                 {
@@ -12448,7 +12448,7 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
 
 int PrintStates (int curGen, int coldId)
 {
-    int             d, i, j, k, k1, compressedCharPosition, *printedChar=NULL, origAlignmentChars[3];
+    int             d, i, j, k, k1, compressedCharPosition, *printedChar=NULL, origAlignmentChars[3], modelIndex;
     char            *partString=NULL, stateString[4];
     MrBFlt          *st, *sst, sum;
     Param           *p;

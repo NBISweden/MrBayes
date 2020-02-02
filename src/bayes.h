@@ -1052,7 +1052,10 @@ typedef struct model
     MrBFlt      stateFreqsDir[200];
     char        stateFreqsFixType[100];
     int         numDirParams;
-    char        rootFreqPr[100];    /* Seraina: prior for root state frequencies   */
+    char        rootFreqPr[100];    /* prior for root state frequencies (dir model)*/ //SK
+    MrBFlt      rootFreqsFix[200];
+    MrBFlt      rootFreqsDir[200];
+    int         numDirParamsRoot;
     char        shapePr[100];      /* prior for gamma/lnorm shape parameter        */
     MrBFlt      shapeFix;
     MrBFlt      shapeUni[2];

@@ -19219,7 +19219,13 @@ int SetModelParams (void)
                                 }
                             p->nValues = m->numModelStates  * 2; //SK: use whole nValues vector even if only one of the priors is Dirichlet, start OR root freqs
                             }
-
+                        else if (!strcmp(mp->stateFreqPr, "Fixed"))
+                            {
+                            if (!strcmp(mp->rootFreqPr, "Dirichlet"))
+                                {
+                                p->paramId = DIRPI_FIXEDxDIR;
+                                p->nValues = mp->nStates * 2;
+                                }
                             else if (!strcmp(mp->rootFreqPr, "Fixed"))
                                 {
                                 p->paramId = DIRPI_FIXEDxFIXED;
