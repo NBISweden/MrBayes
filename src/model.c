@@ -628,21 +628,27 @@ int AllocateNormalParams (void)
 
     if (memAllocs[ALLOC_PARAMVALUES] == YES)
         {
-        paramValues = (MrBFlt *) SafeRealloc ((void *) paramValues, nOfParams * sizeof (MrBFlt));
-        for (i=0; i<nOfParams; i++)
-            paramValues[i] = 0.0;
+        if (nOfParams > 1)
+            {
+            paramValues = (MrBFlt *) SafeRealloc ((void *) paramValues, nOfParams * sizeof (MrBFlt));
+            for (i=0; i<nOfParams; i++)
+                paramValues[i] = 0.0;
+            }
         if (nOfIntParams > 0)
             intValues = (int *) SafeRealloc ((void *) intValues, nOfIntParams * sizeof(int));
         }
     else
         {
-        paramValues = (MrBFlt *) SafeCalloc (nOfParams, sizeof(MrBFlt));
+        if (nOfParams > 1)
+            paramValues = (MrBFlt *) SafeCalloc (nOfParams, sizeof(MrBFlt));
+        else
+            paramValues = NULL;
         if (nOfIntParams > 0)
             intValues = (int *) SafeCalloc (nOfIntParams, sizeof(int));
         else
             intValues = NULL;
         }
-    if (!paramValues || (nOfIntParams > 0 && !intValues))
+    if ((nOfParams > 0 && !paramValues) || (nOfIntParams > 0 && !intValues))
         {
         MrBayesPrint ("%s   Problem allocating paramValues\n", spacer);
         if (paramValues)
@@ -762,15 +768,17 @@ int AllocateTreeParams (void)
         mcmcTree = NULL;
         memAllocs[ALLOC_MCMCTREES] = NO;
         }
-    subParamPtrs = (Param **) SafeCalloc (numSubParamPtrs, sizeof (Param *));
+    if (numSubParamPtrs > 0)
+        subParamPtrs = (Param **) SafeCalloc (numSubParamPtrs, sizeof (Param *));
     mcmcTree = (Tree **) SafeCalloc (numTrees * 2 * numGlobalChains, sizeof (Tree *));
-    if (!subParamPtrs || !mcmcTree)
+    if ((numSubParamPtrs>0 && !subParamPtrs) || !mcmcTree)
         {
         if (subParamPtrs) free (subParamPtrs);
         if (mcmcTree) free (mcmcTree);
         subParamPtrs = NULL;
         mcmcTree = NULL;
         MrBayesPrint ("%s   Problem allocating MCMC trees\n", spacer);
+        printf("subparams: %d -- trees: %d \n", numSubParamPtrs, numTrees);
         return (ERROR);
         }
     else
