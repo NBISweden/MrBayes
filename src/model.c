@@ -743,6 +743,8 @@ int AllocateTreeParams (void)
         {
         if (params[k].paramType == P_TOPOLOGY && params[k].paramId == TOPOLOGY_SPECIESTREE)
             numSubParamPtrs += 1;
+        else if (params[k].paramType == P_TOPOLOGY && !strcmp(modelParams[params[k].relParts[0]].parsModel, "Yes"))
+            numSubParamPtrs += 1;
         else if (params[k].paramType == P_BRLENS)
             numSubParamPtrs += 1;
         else if (params[k].paramType == P_CPPEVENTS)
@@ -909,7 +911,7 @@ int AllocateTreeParams (void)
                 {
                 /* there is no brlen subparam */
                 /* so let subparam point to the param itself */
-                q = p->subParams[0] = p; /* FIXME: Not used (from clang static analyzer) */
+                q = p->subParams[0] = p;
                 /* p->tree and p->treeIndex have been set above */
                 }
             else
@@ -1032,6 +1034,11 @@ int AllocateTreeParams (void)
         else if (p->paramType == P_SPECIESTREE)
             {
             if (InitializeChainTrees (p, 0, numGlobalChains, YES) == ERROR)
+                return (ERROR);
+            }
+        else if (p->paramType == P_TOPOLOGY && p->subParams[0]==p)
+            {
+            if (InitializeChainTrees (p, 0, numGlobalChains, NO) == ERROR)
                 return (ERROR);
             }
         }

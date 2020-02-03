@@ -4804,19 +4804,35 @@ int IsTreeConsistent (Param *param, int chain, int state)
 
     if (tree->isClock == NO)
         {
-        for (i=0; i<tree->nNodes-1; i++)
+        if (modelSettings[param->relParts[0]].parsModelId == YES)
             {
-            p = tree->allDownPass[i];
-            if (p->length <= 0.0)
+            for (i=0; i<tree->nNodes-1; i++)
                 {
-                if (p->length == 0.0)
-                    printf ("Node %d has zero branch length %f\n", p->index, p->length);
-                else
-                    printf ("Node %d has negative branch length %f\n", p->index, p->length);
-                return NO;
+                p = tree->allDownPass[i];
+                if (p->length != 0.0)
+                    {
+                    printf ("Node %d does has non-zero branch length %f for parsimony tree\n", p->index, p->length);
+                    return NO;
+                    }
                 }
+            return YES;
             }
-        return YES;
+        else
+            {
+            for (i=0; i<tree->nNodes-1; i++)
+                {
+                p = tree->allDownPass[i];
+                if (p->length <= 0.0)
+                    {
+                    if (p->length == 0.0)
+                        printf ("Node %d has zero branch length %f\n", p->index, p->length);
+                    else
+                        printf ("Node %d has negative branch length %f\n", p->index, p->length);
+                    return NO;
+                    }
+                }
+            return YES;
+            }
         }
 
     /* Clock trees */

@@ -448,56 +448,60 @@ int DoSump (void)
         }
     SafeFclose(&fpLstat);
 
-    /* Calculate burnin */
-    burnin = fileInfo.firstParamLine - fileInfo.headerLine;
-
-    /* Print parameter information to screen and to file. */
-    if (sumpParams.numRuns > 1 && sumpParams.allRuns == YES)
+    /* Only print parameter summaries if we have any sampled paramters (except Gen, LnL and LnPr) */
+    if (nHeaders > 3)
         {
-        for (i=0; i<sumpParams.numRuns; i++)
+        /* Calculate burnin */
+        burnin = fileInfo.firstParamLine - fileInfo.headerLine;
+
+        /* Print parameter information to screen and to file. */
+        if (sumpParams.numRuns > 1 && sumpParams.allRuns == YES)
             {
-            /* print table header */
-            MrBayesPrint ("\n");
-            MrBayesPrint ("%s   Model parameter summaries for run sampled in file \"%s.run%d.p\":\n", spacer, sumpParams.sumpFileName, i+1);
-            MrBayesPrint ("%s      (Based on %d samples out of a total of %d samples from this analysis)\n\n", spacer, numRows, numRows + burnin);
-            if (PrintParamStats (sumpParams.sumpOutfile, headerNames, nHeaders, parameterSamples, numRuns, numRows) == ERROR)
-                goto errorExit;
-            if (PrintModelStats (sumpParams.sumpOutfile, headerNames, nHeaders, parameterSamples, numRuns, numRows) == ERROR)
-                goto errorExit;
+            for (i=0; i<sumpParams.numRuns; i++)
+                {
+                /* print table header */
+                MrBayesPrint ("\n");
+                MrBayesPrint ("%s   Model parameter summaries for run sampled in file \"%s.run%d.p\":\n", spacer, sumpParams.sumpFileName, i+1);
+                MrBayesPrint ("%s      (Based on %d samples out of a total of %d samples from this analysis)\n\n", spacer, numRows, numRows + burnin);
+                if (PrintParamStats (sumpParams.sumpOutfile, headerNames, nHeaders, parameterSamples, numRuns, numRows) == ERROR)
+                    goto errorExit;
+                if (PrintModelStats (sumpParams.sumpOutfile, headerNames, nHeaders, parameterSamples, numRuns, numRows) == ERROR)
+                    goto errorExit;
+                }
             }
-        }
 
-    MrBayesPrint ("\n");
-    if (sumpParams.numRuns == 1)
-        MrBayesPrint ("%s   Model parameter summaries for run sampled in file \"%s\":\n", spacer, sumpParams.sumpFileName);
-    else if (sumpParams.numRuns == 2)
-        {
-        MrBayesPrint ("%s   Model parameter summaries over the runs sampled in files\n", spacer);
-        MrBayesPrint ("%s      \"%s.run1.p\" and \"%s.run2.p\":\n", spacer, sumpParams.sumpFileName, sumpParams.sumpFileName);
-        }
-    else
-        {
-        MrBayesPrint ("%s   Model parameter summaries over all %d runs sampled in files\n", spacer, sumpParams.numRuns);
-        MrBayesPrint ("%s      \"%s.run1.p\", \"%s.run2.p\" etc:\n", spacer, sumpParams.sumpFileName, sumpParams.sumpFileName);
-        }
+        MrBayesPrint ("\n");
+        if (sumpParams.numRuns == 1)
+            MrBayesPrint ("%s   Model parameter summaries for run sampled in file \"%s\":\n", spacer, sumpParams.sumpFileName);
+        else if (sumpParams.numRuns == 2)
+            {
+            MrBayesPrint ("%s   Model parameter summaries over the runs sampled in files\n", spacer);
+            MrBayesPrint ("%s      \"%s.run1.p\" and \"%s.run2.p\":\n", spacer, sumpParams.sumpFileName, sumpParams.sumpFileName);
+            }
+        else
+            {
+            MrBayesPrint ("%s   Model parameter summaries over all %d runs sampled in files\n", spacer, sumpParams.numRuns);
+            MrBayesPrint ("%s      \"%s.run1.p\", \"%s.run2.p\" etc:\n", spacer, sumpParams.sumpFileName, sumpParams.sumpFileName);
+            }
 
-    if (sumpParams.numRuns == 1)
-        {
-        MrBayesPrint ("%s      Based on a total of %d samples out of a total of %d samples\n", spacer, numRows, numRows + burnin);
-        MrBayesPrint ("%s         from this analysis.\n", spacer);
-        }
-    else
-        {
-        MrBayesPrint ("%s      Summaries are based on a total of %d samples from %d runs.\n", spacer, sumpParams.numRuns*numRows, sumpParams.numRuns);
-        MrBayesPrint ("%s      Each run produced %d samples of which %d samples were included.\n", spacer, numRows + burnin, numRows);
-        }
-    MrBayesPrint ("%s      Parameter summaries saved to file \"%s.pstat\".\n", spacer, sumpParams.sumpOutfile);
+        if (sumpParams.numRuns == 1)
+            {
+            MrBayesPrint ("%s      Based on a total of %d samples out of a total of %d samples\n", spacer, numRows, numRows + burnin);
+            MrBayesPrint ("%s         from this analysis.\n", spacer);
+            }
+        else
+            {
+            MrBayesPrint ("%s      Summaries are based on a total of %d samples from %d runs.\n", spacer, sumpParams.numRuns*numRows, sumpParams.numRuns);
+            MrBayesPrint ("%s      Each run produced %d samples of which %d samples were included.\n", spacer, numRows + burnin, numRows);
+            }
+        MrBayesPrint ("%s      Parameter summaries saved to file \"%s.pstat\".\n", spacer, sumpParams.sumpOutfile);
 
-    if (PrintParamStats (sumpParams.sumpOutfile, headerNames, nHeaders, parameterSamples, numRuns, numRows) == ERROR)
-        goto errorExit;
-    if (PrintModelStats (sumpParams.sumpOutfile, headerNames, nHeaders, parameterSamples, numRuns, numRows) == ERROR)
-        goto errorExit;
-
+        if (PrintParamStats (sumpParams.sumpOutfile, headerNames, nHeaders, parameterSamples, numRuns, numRows) == ERROR)
+            goto errorExit;
+        if (PrintModelStats (sumpParams.sumpOutfile, headerNames, nHeaders, parameterSamples, numRuns, numRows) == ERROR)
+            goto errorExit;
+        }
+    
     /* free memory */
     FreeParameterSamples(parameterSamples);
     for (i=0; i<nHeaders; i++)
@@ -3371,7 +3375,8 @@ treeConstruction:
             q->partitionIndex = i;
             q->x = nBits;
             q->partition = partition;
-            GetSummary(part->length, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
+            if (part->length != NULL)
+                GetSummary(part->length, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
             q->support = freq;
             q->length = theStats.median;
             r=NULL;
@@ -3463,7 +3468,8 @@ treeConstruction:
             q->partitionIndex = i;
             q->partition = partition;
             numTerminalsEncountered++;
-            GetSummary(part->length, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
+            if (part->length!=NULL)
+                GetSummary(part->length, sumtParams.numRuns, part->count, &theStats, sumtParams.HPD);
             q->length = theStats.median;
             if (sumtParams.isClock == YES)
                 {
@@ -5513,14 +5519,16 @@ int DoSumt (void)
             }
 
         /* Third, print statitistics for branch and node parameters */
-        if (sumtParams.table == YES)
+        /* check if we have at least lengths before printing this table; we might have parsimony trees */
+        if (sumtParams.table == YES && treeParts[1]->length != NULL)
             {
             MrBayesPrint ("\n");
             MrBayesPrint ("%s   Summary statistics for branch and node parameters\n", spacer);
             MrBayesPrint ("%s      (saved to file \"%s.vstat\"):\n", spacer, sumtParams.sumtOutfile);
             }
-        
-        if (sumtParams.table == YES)
+
+        /* check if we have at least lengths before printing this table; we might have parsimony trees */
+        if (sumtParams.table == YES && treeParts[1]->length != NULL)
             {
             /* calculate longest header */
             longestHeader = 9;  /* length of 'parameter' */
@@ -6855,11 +6863,14 @@ void FreePartCtr (PartCtr *r)
         free (r->bRate);
         }
 
-    /* free basic parameters */
-    for (i=0; i<sumtParams.numRuns; i++)
-        free (r->length[i]);
+    if (r->length)
+        {
+        for (i=0; i<sumtParams.numRuns; i++)
+            free (r->length[i]);
+        free (r->length);
+        }
 
-    free (r->length);
+    /* free basic parameters */
     free (r->count);
     free (r->partition);
     free (r);

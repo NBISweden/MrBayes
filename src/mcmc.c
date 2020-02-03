@@ -5907,24 +5907,92 @@ int InitChainCondLikes (void)
 
     /* check if conditional likelihoods are needed */
     if (condLikesUsed == YES)
+        {
         MrBayesPrint ("%s   Initializing conditional likelihoods\n", spacer);
-    else
-        return NO_ERROR;
 
 #   if defined (BEAGLE_ENABLED)
-    useBeagleMultiPartitions = NO;
+        useBeagleMultiPartitions = NO;
 #   endif
 
 #   if defined (BEAGLE_V3_ENABLED)
-    if (beagleResourceNumber != 0 && numCurrentDivisions > 1 && InitBeagleMultiPartitionInstance() != ERROR && m->useBeagle == YES)
-        useBeagleMultiPartitions = YES;
+        if (beagleResourceNumber != 0 && numCurrentDivisions > 1 && InitBeagleMultiPartitionInstance() != ERROR && m->useBeagle == YES)
+            useBeagleMultiPartitions = YES;
 #   endif
+        }
 
     /* allocate space and fill in info for tips */
     for (d=0; d<numCurrentDivisions; d++)
         {
         m = &modelSettings[d];
-       
+
+        /* get size of tree */
+        nIntNodes = GetTree(m->brlens,0,0)->nIntNodes;
+        nNodes = GetTree(m->brlens,0,0)->nNodes;
+
+        /* allocate and set indices from tree nodes to cond like arrays */
+        /* we set them up first because they are needed also for parsimony partitions */
+        m->condLikeIndex = (int **) SafeMalloc (numLocalChains * sizeof(int *));
+        if (!m->condLikeIndex)
+            return (ERROR);
+        for (i=0; i<numLocalChains; i++)
+            {
+            m->condLikeIndex[i] = (int *) SafeMalloc (nNodes * sizeof(int));
+            if (!m->condLikeIndex[i])
+                return (ERROR);
+            }
+        for (i=0; i<numLocalChains; i++)
+            for (j=0; j<nNodes; j++)
+                m->condLikeIndex[i][j] = -1;
+
+        /* set up indices for terminal nodes */
+        clIndex = 0;
+        if (useBeagle == YES)
+            indexStep = m->nCijkParts;
+        else
+            indexStep = 1;
+        for (i=0; i<numLocalTaxa; i++)
+            {
+#   if !defined (DEBUG_NOSHORTCUTS)
+            /* TODO: Until CondLikeRoot_XXX are fixed (case 4 when one of the children is non-ambig) we allocate space for non-ambig tips. If fixed also uncomment down the function */
+            /* if (useBeagle == NO && useSSE == NO && m->isPartAmbig[i] == NO && m->dataType != STANDARD)
+                continue;
+            */
+#   endif
+            for (j=0; j<numLocalChains; j++)
+                m->condLikeIndex[j][i] = clIndex;
+            clIndex += 1; /* even for multiple omega cat we need only one set of conditional likelihoods  for terminals for all chains.*/
+            }
+
+        /* reserve private space for parsimony-based moves if parsimony model is used */
+        if (m->parsModelId == YES && m->parsimonyBasedMove == YES)
+            clIndex += nIntNodes;
+
+        /* set up indices for internal nodes */
+        for (j=0; j<numLocalChains; j++)
+            {
+            for (i=0; i<nIntNodes; i++)
+                {
+                m->condLikeIndex[j][i+numLocalTaxa] = clIndex;
+                clIndex += indexStep;
+                }
+            }
+
+        /* allocate and set up scratch cond like indices */
+        m->condLikeScratchIndex = (int *) SafeMalloc (nNodes * sizeof(int));
+        if (!m->condLikeScratchIndex)
+            return (ERROR);
+        for (i=0; i<nNodes; i++)
+            m->condLikeScratchIndex[i] = -1;
+        for (i=0; i<nIntNodes; i++)
+            {
+            m->condLikeScratchIndex[i+numLocalTaxa] = clIndex;
+            clIndex += indexStep;
+            }
+
+        /* parsimony models need nothing of the below */
+        if (m->parsModelId == YES)
+            continue;
+
         /* allocate space for conditional likelihoods */
         useBeagle = NO;
 #   if defined (BEAGLE_ENABLED)
@@ -5940,7 +6008,7 @@ int InitChainCondLikes (void)
 #   endif
 #   if defined (SSE_ENABLED)
         /*if (useBeagle == NO && m->dataType != STANDARD)
-            m->useSSE = YES;*/
+               m->useSSE = YES;*/
         if (useBeagle == YES)
             {
             m->useVec = VEC_NONE;
@@ -6114,69 +6182,6 @@ int InitChainCondLikes (void)
                 if (!m->cijks[i])
                     return (ERROR);
                 }
-            }
-
-        /* get size of tree */
-        nIntNodes = GetTree(m->brlens,0,0)->nIntNodes;
-        nNodes = GetTree(m->brlens,0,0)->nNodes;
-
-        /* allocate and set indices from tree nodes to cond like arrays */
-        m->condLikeIndex = (int **) SafeMalloc (numLocalChains * sizeof(int *));
-        if (!m->condLikeIndex)
-            return (ERROR);
-        for (i=0; i<numLocalChains; i++)
-            {
-            m->condLikeIndex[i] = (int *) SafeMalloc (nNodes * sizeof(int));
-            if (!m->condLikeIndex[i])
-                return (ERROR);
-            }
-        for (i=0; i<numLocalChains; i++)
-            for (j=0; j<nNodes; j++)
-                m->condLikeIndex[i][j] = -1;
-
-        /* set up indices for terminal nodes */
-        clIndex = 0;
-        if (useBeagle == YES)
-            indexStep = m->nCijkParts;
-        else
-            indexStep = 1;
-        for (i=0; i<numLocalTaxa; i++)
-            {
-#   if !defined (DEBUG_NOSHORTCUTS)
-            /* TODO: Until CondLikeRoot_XXX are fixed (case 4 when one of the children is non-ambig) we allocate space for non-ambig tips. If fixed also uncomment down the function */
-            /* if (useBeagle == NO && useSSE == NO && m->isPartAmbig[i] == NO && m->dataType != STANDARD)
-                continue;
-            */
-#   endif
-            for (j=0; j<numLocalChains; j++)
-                m->condLikeIndex[j][i] = clIndex;
-            clIndex += 1; /* even for multiple omega cat we need only one set of conditional likelihoods  for terminals for all chains.*/
-            }
-
-        /* reserve private space for parsimony-based moves if parsimony model is used */
-        if (m->parsModelId == YES && m->parsimonyBasedMove == YES)
-            clIndex += nIntNodes;
-
-        /* set up indices for internal nodes */
-        for (j=0; j<numLocalChains; j++)
-            {
-            for (i=0; i<nIntNodes; i++)
-                {
-                m->condLikeIndex[j][i+numLocalTaxa] = clIndex;
-                clIndex += indexStep;
-                }
-            }
-
-        /* allocate and set up scratch cond like indices */
-        m->condLikeScratchIndex = (int *) SafeMalloc (nNodes * sizeof(int));
-        if (!m->condLikeScratchIndex)
-            return (ERROR);
-        for (i=0; i<nNodes; i++)
-            m->condLikeScratchIndex[i] = -1;
-        for (i=0; i<nIntNodes; i++)
-            {
-            m->condLikeScratchIndex[i+numLocalTaxa] = clIndex;
-            clIndex += indexStep;
             }
 
         /* allocate and set indices from tree edges to ti prob arrays */
@@ -7208,7 +7213,7 @@ int InitPrintParams (void)
             /* always print parsimony topology (printParam == YES), otherwise */
             /* print topology only if brlens never requested (nPrintSubParams == 0)*/
             if (p->printParam == YES || p->nPrintSubParams == 0)
-                numPrintTreeParams++;
+                printTreeParam[k++] = p;
             }
         else if (p->paramType == P_BRLENS)
             {
@@ -15785,9 +15790,9 @@ void ResetFlips (int chain)
                     m->rescaleFreq[chain] = m->rescaleFreqOld;
                 }
 #else
-        FlipSiteScalerSpace (m, chain);
+        if (m->parsModelId == NO)
+            FlipSiteScalerSpace (m, chain);
 #endif
-            
         
         if (m->upDateCijk == YES && m->nCijkParts > 0)
             FlipCijkSpace (m, chain);
@@ -15810,7 +15815,8 @@ void ResetFlips (int chain)
                         (m->rescaleBeagleAll == YES && isScalerNode[p->index] == YES))
                         FlipNodeScalerSpace (m, chain, p->index);
 #else
-                    FlipNodeScalerSpace (m, chain, p->index);
+                    if (m->parsModelId == NO)
+                        FlipNodeScalerSpace (m, chain, p->index);
 #endif
                     }
 #if defined (BEAGLE_ENABLED)
