@@ -4843,7 +4843,7 @@ void DELETE_ME_dump_depth(PolyNode *p)
 
 int DoSumt (void)
 {
-    int             i, j=0, k, n, len, longestName, treeNo, numTreePartsToPrint,
+    int             i, j=0, k, n, len, longestName, numTreePartsToPrint,
                     maxWidthID, maxWidthNumberPartitions, maxNumTaxa, tableWidth=0, unreliable, oneUnreliable,
                     longestHeader;
     MrBFlt          f, var_s, sum_s, stddev_s=0.0, sumsq_s, sumStdDev=0.0, maxStdDev=0.0, sumPSRF=0.0,
@@ -4887,6 +4887,7 @@ int DoSumt (void)
     sumtParams.taxaNames = NULL;
     sumtParams.BitsLongsNeeded = 0;
     sumtParams.tree = AllocatePolyTree (numTaxa);
+    sumtParams.treeNo = 0;
     sumtParams.nESets = 0;
     sumtParams.nBSets = 0;
     sumtParams.eSetName = NULL;
@@ -4908,7 +4909,7 @@ int DoSumt (void)
 
     /* Make sure outgroup is set correctly */
     
-    for (treeNo = 0; treeNo < sumtParams.numTrees; treeNo++)
+    for (sumtParams.treeNo = 0; sumtParams.treeNo < sumtParams.numTrees; sumtParams.treeNo++)
         {
         /* initialize across-file tree and partition counters */
         sumtParams.numTreesSampled = sumtParams.numTreesEncountered = 0;
@@ -4926,7 +4927,7 @@ int DoSumt (void)
 
         /* tell user we are ready to go */
         if (sumtParams.numTrees > 1)
-            sprintf (fileName,"%s.tree%d", sumtParams.sumtFileName, treeNo+1);
+            sprintf (fileName,"%s.tree%d", sumtParams.sumtFileName, sumtParams.treeNo+1);
         else
             strcpy (fileName, sumtParams.sumtFileName);
 
@@ -4962,11 +4963,11 @@ int DoSumt (void)
             if (sumtParams.runId == 0)
                 {
                 if (sumtParams.numRuns > 1 && sumtParams.numTrees > 1)
-                    MrBayesPrint ("%s   Examining first file for tree %d ...\n", spacer, treeNo);
+                    MrBayesPrint ("%s   Examining first file for tree %d ...\n", spacer, sumtParams.treeNo);
                 else if (sumtParams.numRuns > 1 && sumtParams.numTrees == 1)
                     MrBayesPrint ("%s   Examining first file ...\n", spacer);
                 else if (sumtParams.numRuns == 1 && sumtParams.numTrees > 1)
-                    MrBayesPrint ("%s   Examining file for tree %d ...\n", spacer, treeNo);
+                    MrBayesPrint ("%s   Examining file for tree %d ...\n", spacer, sumtParams.treeNo);
                 else
                     MrBayesPrint ("%s   Examining file ...\n", spacer);
                 }
@@ -5019,7 +5020,7 @@ int DoSumt (void)
                 }
         
             /* Now we read the file for real. First, allocate a string for reading the file... */
-            if (sumtParams.runId == 0 && treeNo == 0)
+            if (sumtParams.runId == 0 && sumtParams.treeNo == 0)
                 {
                 s = (char *) SafeMalloc ((size_t)(sumtFileInfo.longestLineLength) * sizeof(char));
                 if (!s)
@@ -5066,7 +5067,7 @@ int DoSumt (void)
             if (sumtParams.runId == 0)
                 {
                 if (sumtParams.numTrees > 1)
-                    MrBayesPrint ("\n%s   Tree reading status for tree %d:\n\n", spacer, treeNo+1);
+                    MrBayesPrint ("\n%s   Tree reading status for tree %d:\n\n", spacer, sumtParams.treeNo+1);
                 else
                     MrBayesPrint ("\n%s   Tree reading status:\n\n", spacer);
                 MrBayesPrint ("%s   0      10      20      30      40      50      60      70      80      90     100\n", spacer);
@@ -5106,7 +5107,7 @@ int DoSumt (void)
                 }
     
             /* print out information on absent and pruned taxa */
-            if (sumtParams.runId == sumtParams.numRuns - 1 && treeNo == 0)
+            if (sumtParams.runId == sumtParams.numRuns - 1 && sumtParams.treeNo == 0)
                 PrintSumtTaxaInfo ();
 
             /* tell user how many trees were successfully read */
@@ -5181,11 +5182,11 @@ int DoSumt (void)
         SortTerminalPartCtr (treeParts, numUniqueSplitsFound);
 
         /* open output files for summary information (three files) */
-        if (OpenSumtFiles (treeNo) == ERROR)
+        if (OpenSumtFiles (sumtParams.treeNo) == ERROR)
             goto errorExit;
 
         /* Print partitions to screen. */
-        if (treeNo == 0)
+        if (sumtParams.treeNo == 0)
             {
             longestName = 0;
             for (k=0; k<numTaxa; k++)
@@ -5257,8 +5258,24 @@ int DoSumt (void)
         if (sumtParams.numTrees > 1 && (sumtParams.table == YES || sumtParams.summary == YES))
             {
             MrBayesPrint ("\n\n");
-            MrBayesPrint ("%s   Results for tree number %d\n", spacer, treeNo+1);
-            MrBayesPrint ("%s   ==========================\n\n", spacer);
+            if (strcmp(modelParams[0].topologyPr,"Speciestree")==0)
+                {
+                if (sumtParams.treeNo<sumtParams.numTrees-1)
+                    {
+                    MrBayesPrint ("%s   Results for gene tree number %d\n", spacer, sumtParams.treeNo+1);
+                    MrBayesPrint ("%s   ===============================\n\n", spacer);
+                    }
+                else
+                    {
+                    MrBayesPrint ("%s   Results for species tree\n", spacer, sumtParams.treeNo+1);
+                    MrBayesPrint ("%s   ========================\n\n", spacer);
+                    }
+                }
+            else
+                {
+                MrBayesPrint ("%s   Results for tree number %d\n", spacer, sumtParams.treeNo+1);
+                MrBayesPrint ("%s   ==========================\n\n", spacer);
+                }
             }
 
         /* First print key to taxon bipartitions */
@@ -5268,7 +5285,7 @@ int DoSumt (void)
             if (sumtParams.numTrees == 1)
                 MrBayesPrint ("%s   Key to taxon bipartitions (saved to file \"%s.parts\"):\n\n", spacer, sumtParams.sumtOutfile);
             else
-                MrBayesPrint ("%s   Key to taxon bipartitions (saved to file \"%s.tree%d.parts\"):\n\n", spacer,  sumtParams.sumtOutfile, treeNo+1);
+                MrBayesPrint ("%s   Key to taxon bipartitions (saved to file \"%s.tree%d.parts\"):\n\n", spacer,  sumtParams.sumtOutfile, sumtParams.treeNo+1);
             }
 
         /* calculate a couple of numbers that are handy to have */
@@ -5723,7 +5740,7 @@ int DoSumt (void)
             
             /* Print branch parameters to file if requested */
             strcpy( divString, treeName+4);
-            if (sumtParams.saveBrParams == YES && PrintBrParamsToFile (treeParts, numUniqueSplitsFound, treeNo, divString) == ERROR)
+            if (sumtParams.saveBrParams == YES && PrintBrParamsToFile (treeParts, numUniqueSplitsFound, sumtParams.treeNo, divString) == ERROR)
                 goto errorExit;
             
             /* Exclude trivial splits when calculating average standard deviation of split frequencies. */
@@ -6383,9 +6400,6 @@ int DoSumtTree (void)
         /* get the tree we just read in */
         t = sumtParams.tree;
         
-        /* move calculation root for unrooted trees if necessary */
-        MovePolyCalculationRoot (t, localOutGroup);
-        
         /* check taxon set and outgroup */
         if (sumtParams.runId == 0 && sumtParams.numFileTreesSampled[0] == 1)
             {
@@ -6400,15 +6414,31 @@ int DoSumtTree (void)
                 /* figure out which taxa are absent */
                 for (i=0; i<numTaxa; i++)
                     sumtParams.absentTaxa[i] = YES;
-                for (i=0; i<numTranslates; i++)
+                if (strcmp(modelParams[0].topologyPr,"Speciestree")==0 && sumtParams.treeNo==sumtParams.numTrees-1)
                     {
-                    for (j=0; j<numTaxa; j++)
+                    for (i=0; i<numTranslates; i++)
                         {
-                        if (strcmp(transFrom[i], taxaNames[j]) == 0)
-                            break;
+                        for (j=0; j<speciesNameSets[speciespartitionNum].numNames; j++)
+                            {
+                            if (strcmp(transFrom[i], speciesNameSets[speciespartitionNum].names[j]) == 0)
+                                break;
+                            }
+                        if (j < speciesNameSets[speciespartitionNum].numNames)
+                            sumtParams.absentTaxa[j] = NO;
                         }
-                    if (j < numTaxa)
-                        sumtParams.absentTaxa[j] = NO;
+                    }
+                else
+                    {
+                    for (i=0; i<numTranslates; i++)
+                        {
+                        for (j=0; j<numTaxa; j++)
+                            {
+                            if (strcmp(transFrom[i], taxaNames[j]) == 0)
+                                break;
+                            }
+                        if (j < numTaxa)
+                            sumtParams.absentTaxa[j] = NO;
+                        }
                     }
                 /* find local outgroup */
                 for (i=0; i<numTranslates; i++)
@@ -6442,6 +6472,9 @@ int DoSumtTree (void)
                     }
                 }
 
+            /* move calculation root for unrooted trees if necessary */
+            MovePolyCalculationRoot (t, localOutGroup);
+        
             /* now we can safely prune the tree based on taxaInfo[].isDeleted */
             /* note that PrunePolyTree relies on labels to recognize tips */
             PrunePolyTree(t);
