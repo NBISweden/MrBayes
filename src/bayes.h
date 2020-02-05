@@ -1446,6 +1446,7 @@ typedef struct sumt
     int         showSumtTrees;         /* should the individual tree probs be shown     */
     int         numRuns;               /* number of independent analyses to summarize   */
     int         numTrees;              /* number of tree params to summarize            */
+    int         treeNo;                /* current tree being processed                  */
     int         orderTaxa;             /* order taxa in trees?                          */
     MrBFlt      minPartFreq;           /* minimum part. freq. for overall diagnostics   */
     int         table;                 /* show table of partition frequencies?          */
