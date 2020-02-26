@@ -35,7 +35,7 @@
 \newcommand{\prout}[1]{\ttt{#1}}
 \newcommand{\tb}[1]{\ttt{\textbf{#1}}}
 
-%%%% JN: Draft version, August 2019
+%%%% JN: Draft version, February 2020
 %%%% JN: I (JN) have started to review the text, and added occasional comments.
 %%%% JN: Note that I use automatic text wrapping for paragraphs (in vim: `set textwidth=99`).
 
@@ -43,7 +43,7 @@
 
 \title{MrBayes version 3.2 Manual: \\ Tutorials and Model Summaries}
 
-\date{\large Draft version, August 2019}
+\date{\large Draft version, February 2020}
 
 \author{Fredrik Ronquist, John P. Huelsenbeck, \\ Maxim Teslenko, Johan A. A. Nylander}
 
@@ -3560,27 +3560,27 @@ should look something like this:
 \begin{verbatim}
   Clade credibility values:
  
-  /------------------------------------------------------------------ SpeciesA (1)
-  |                                                                               
-  |------------------------------------------------------------------ SpeciesB (2)
-  +                                                                               
-  |------------------------------------------------------------------ SpeciesC (3)
-  |                                                                               
-  \------------------------------------------------------------------ SpeciesD (4)
-                                                                                  
- 
-  Phylogram (based on median node depths):
- 
-  /------------------------------------------------------------------ SpeciesA (1)
-  |                                                                               
-  |------------------------------------------------------------------ SpeciesB (2)
-  +                                                                               
-  |------------------------------------------------------------------ SpeciesC (3)
-  |                                                                               
-  \------------------------------------------------------------------ SpeciesD (4)
-                                                                                  
-  ----------|-------------|-------------|-------------|-------------|             
-        4.00e-04      3.00e-04      2.00e-04      1.00e-04      2.71e-20          
+   /------------------------------------------------------------------ SpeciesA (1)
+   |                                                                               
+   |------------------------------------------------------------------ SpeciesB (2)
+   +                                                                               
+   |------------------------------------------------------------------ SpeciesC (3)
+   |                                                                               
+   \------------------------------------------------------------------ SpeciesD (4)
+                                                                                   
+
+   Phylogram (based on median node depths):
+
+   /------------------------------------------------------------------ SpeciesA (1)
+   |                                                                               
+   |------------------------------------------------------------------ SpeciesB (2)
+   +                                                                               
+   |------------------------------------------------------------------ SpeciesC (3)
+   |                                                                               
+   \------------------------------------------------------------------ SpeciesD (4)
+                                                                                   
+   ---|------------|------------|-----------|------------|-----------|             
+   5.00e-04    4.00e-04     3.00e-04    2.00e-04     1.00e-04    2.71e-20 
  
   [Expected changes per site]
 \end{verbatim}
@@ -3591,44 +3591,6 @@ These summaries of the tree samples show that the species tree topology is unres
 that the species tree is very shallow, so the sequences are quite similar to each other. In the
 partition tables printed above the trees, it is possible to find the posterior probability for each
 of the individual clades found in the tree samples.
-
-%%%% JN: tis 23 jul 2019 16:55:36: Ad hoc work around for bug #116.
-{\color{red}
-Please note, a bug in v.3.2.7a (June 2019) prevents the \ttt{sumt} command to complete. See
-\url{https://github.com/NBISweden/MrBayes/issues/116}. One may, however, apply a work-around that
-will allow the analysis to complete:} 
-
-\footnotesize
-To continue the example above based on the data in \ttt{finch.nex}, type \tb{quit} to quit MrBayes
-after attempting the \ttt{sumt}, and continue in your shell (your Terminal window (``bash'',
-applicable on Macintosh, Unix, and later versions of MS Windows), and assuming that your MrBayes
-program is named \tb{mb}):
-
-\scriptsize
-\begin{singlespacing}
-\begin{verbatim}
-$ cat << ADHOC > finch.nex.tree31
-#NEXUS
-Begin data;
-Dimensions ntax=4 nchar=1;
-Format datatype=DNA gap=- missing=?;
-Matrix
-SpeciesA A
-SpeciesB A
-SpeciesC A
-SpeciesD A
-;
-end;
-begin mrbayes;
-set autoclose=yes nowarnings=yes;
-sumt;
-end;
-ADHOC
-
-$ mb -i finch.nex.tree31
-\end{verbatim}
-\end{singlespacing}
-\normalsize
 
 
 \chapter{Working with MrBayes}
