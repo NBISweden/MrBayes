@@ -595,11 +595,13 @@ reads:
    Nodeagepr        Unconstrained/Calibrated     Unconstrained
    Clockratepr      Fixed/Normal/Lognormal/      Fixed(1.00)
                     Exponential/Gamma
-   Clockvarpr       Strict/Cpp/TK02/Igr/Mixed    Strict
+   Clockvarpr       Strict/Cpp/TK02/WN/IGR/ILN   Strict
    Cppratepr        Fixed/Exponential            Exponential(0.10)
    Cppmultdevpr     Fixed                        Fixed(0.40)
    TK02varpr        Fixed/Exponential/Uniform    Exponential(1.00)
-   Igrvarpr         Fixed/Exponential/Uniform    Exponential(10.00)
+   WNvarpr          Fixed/Exponential/Uniform    Exponential(10.00)
+   IGRvarpr         Fixed/Exponential/Uniform    Exponential(1.00)
+   ILNvarpr         Fixed/Exponential/Uniform    Exponential(1.00)
    Ratepr           Fixed/Variable=Dirichlet     Fixed
    Generatepr       Fixed/Variable=Dirichlet     Fixed
 
@@ -2580,23 +2582,26 @@ MrBayes > prset brlenspr=clock:uniform
 \end{singlespacing}
 \normalsize
 
-Other options include the coalescent and the birth-death models. In the next step, we are going
-to ``relax'' the strict clock assumption by selecting a model for the variation of the clock rate
-across lineages. MrBayes offers three relaxed clock models: the Thorne--Kishino 2002 (TK02), the
-compound poisson process (CPP), and the independent gamma rates (IGR) models. Let us use the
-independent gamma rates model, which is a continuous uncorrelated model of rate variation across
-lineages. We invoke this model using:
+Other options include the coalescent and the birth-death models. 
+
+In the next step, we are going to ``relax'' the strict clock assumption by selecting a model for the variation of the clock rate across lineages. 
+MrBayes offers five relaxed clock models: the Thorne--Kishino 2002 (TK02) \citep{thorne02}, the
+compound poisson process (CPP) \citep{huelsenbeck00a}, the white noise (WN) \citep{lepage07}, the independent gamma rates (IGR), and independent lognormal (ILN) \citep{drummond06} models. 
+We note here that, since version 3.2.8, the name `WN' is used to refer to `IGR' in old versions, while `IGR' is used to refer to a different model. In the new IGR model, the rates are i.i.d. gamma distributions across branches and the variance does not dependent on branch lengths as in the WN model.
+The ILN model differs from IGR in that the rate variation follows i.i.d. lognormal distributions instead of gamma distributions.
+
+Let us use the WN model, which is a continuous uncorrelated model of rate variation across lineages. We invoke this model using:
 
 \small
 \begin{singlespacing}
 \begin{verbatim}
-MrBayes > prset clockvarpr=igr
+MrBayes > prset clockvarpr=wn
 \end{verbatim}
 \end{singlespacing}
 \normalsize
 
-Each relaxed clock model has one or more additional parameters. In the case of the IGR model, it is
-the rate at which the variance of the effective branch length increases over time, \ttt{Igrvarpr}.
+Each relaxed clock model has one or more additional parameters. In the case of the WN model, it is
+the rate at which the variance of the effective branch length increases over time, \ttt{WNvarpr}.
 Because the strict clock model fits this data set so well (see previous tutorial), we do not expect
 the variance to increase much over time. The default prior for this parameter, an exponential
 distribution with rate $10.0$, should be more than generous enough for our analysis.
@@ -2725,7 +2730,7 @@ partition descriptor with a single dot in the second position; all other positio
 with stars. This bipartition has ID 20. Similarly, we find that the bipartition IDs of
 \textit{Tarsius syrichta} and its sister lineage are 1 and 16, respectively.
 
-Now we examine the posterior distribution of IGR branch rates for these taxon bipartitions. If the
+Now we examine the posterior distribution of WN branch rates for these taxon bipartitions. If the
 clock is accelerated, the branch rate should be above $1.0$; if the rate is decelerated, the branch
 rate should be below $1.0$. This is the relevant rows of the table:
 
@@ -2736,12 +2741,12 @@ rate should be below $1.0$. This is the relevant rows of the table:
                                                  --------------------
  Parameter                Mean       Variance     Lower       Upper       Median     PSRF+  Nruns
  ------------------------------------------------------------------------------------------------
- IgrBrlens_rate[1]       1.007293    0.003879    0.888841    1.124742    1.009719    1.003    2
- IgrBrlens_rate[2]       0.929211    0.007155    0.758538    1.053767    0.938230    1.044    2
+ WNBrlens_rate[1]        1.007293    0.003879    0.888841    1.124742    1.009719    1.003    2
+ WNBrlens_rate[2]        0.929211    0.007155    0.758538    1.053767    0.938230    1.044    2
  ...
- IgrBrlens_rate[16]      1.117410    0.065654    0.808765    1.595881    1.064906    1.018    2
+ WNBrlens_rate[16]       1.117410    0.065654    0.808765    1.595881    1.064906    1.018    2
  ...
- IgrBrlens_rate[20]      0.765294    0.301914    0.020191    1.648757    0.743613    1.000    2
+ WNBrlens_rate[20]       0.765294    0.301914    0.020191    1.648757    0.743613    1.000    2
 
 \end{verbatim}
 \end{singlespacing}
@@ -2882,15 +2887,15 @@ rate is fixed to $1.0$. When we change the clock prior, we usually need to recon
 For instance, we might want to modify the prior so that it has the same effect on branch lengths
 measured in substitution units. In our case, we want to change the default prior, with expected
 mean $1.0$, to one with expected mean $1.0 / 0.01 = 100$, that is, the original value divided by
-the expected clock rate. Since the expectation of the exponential distribution is the same as the
-inverse of the rate parameter, we thus need to modify the tree age prior to an exponential
-distribution with the rate $0.01$. We do this using the following command line.
+the expected clock rate. 
+%Since the expectation of the exponential distribution is the same as the inverse of the rate parameter, we thus need to modify the tree age prior to an exponential distribution with the rate $0.01$. 
+Here we specify a gamma distribution with mean 100 and standard deviation 50.
+We do this using the following command line.
 
-%%%% JN: 'exponential' is no longer avaialble for treeagepr in 3.2.7
 \small
 \begin{singlespacing}
 \begin{verbatim}
-MrBayes > prset treeagepr=exponential(0.01)
+MrBayes > prset treeagepr=gamma(100,50)
 \end{verbatim}
 \end{singlespacing}
 \normalsize
@@ -3229,24 +3234,24 @@ Here, we assume that the uncertainty concerning the age of each fossil is neglig
 other sources of uncertainty, so we simply fix the age of each fossil instead of associating it
 with a prior probability distribution.
 
-The next three lines set up an IGR relaxed clock model. You should recognize the commands from the
+The next three lines set up an WN relaxed clock model. You should recognize the commands from the
 tutorial in section \ref{relaxedClock}.
 
 \small
 \begin{singlespacing}
 \begin{verbatim}
     prset brlenspr=clock:uniform;
-    prset clockvarpr=igr;
-    prset igrvarpr=exp(37.12);
+    prset clockvarpr=wn;
+    prset wnvarpr=exp(37);
 \end{verbatim}
 \end{singlespacing}
 \normalsize
 
-An appropriate prior for the \ttt{igrvarpr} parameter, the variance increase parameter of the IGR
+An appropriate prior for the \ttt{wnvarpr} parameter, the variance increase parameter of the WN
 model, was found by simulations. Specifically, strict-clock and non-clock branch lengths were
-inferred on the same topology, and then simulations under the IGR model were used to try to match
+inferred on the same topology, and then simulations under the WN model were used to try to match
 the variation observed between them \citep{ronquist12b}. Stepping-stone sampling indicated that the
-IGR model matched these data better than the other two relaxed clock models provided by MrBayes.
+WN model matched these data better than the TK02 relaxed clock model provided by MrBayes.
 
 The final five lines define a prior on the clock rate and sets the two outgroup calibration points
 using the same commands discussed previously in this tutorial:
@@ -3254,9 +3259,9 @@ using the same commands discussed previously in this tutorial:
 \small
 \begin{singlespacing}
 \begin{verbatim}
-    prset clockratepr=lognorm(-7.08069,2.458582);
-    calibrate root=offsetexp(315,0.01234568);
-    calibrate holometabola_withFossils=offsetexp(302,0.0106383);
+    prset clockratepr=lognorm(-7.1,0.5);
+    calibrate root=offsetexp(315,396);
+    calibrate holometabola_withFossils=offsetexp(302,396);
     prset topologypr=constraints(root,holometabola_withFossils);
     prset nodeagepr=calibrated;
 \end{verbatim}
@@ -6017,9 +6022,9 @@ for the theta parameter is set using \ttt{prset thetapr}. The ploidy level is se
 ploidy}.
 
 The $simple$ $clock$ model is invoked by \ttt{prset brlenspr=clock:uniform}. There is only one
-additional parameter in the simple clock model, namely the total tree height. The prior for this
-parameter is set by \ttt{prset treeheightpr}. The default prior is an exponential distribution with
-parameter 1.0 (\ttt{Exponential(1.0)}).
+additional parameter in the simple clock model, namely the total tree height/age. The prior for this
+parameter is set by \ttt{prset treeagepr}. The default prior is an gamma distribution with
+mean 1.0 (\ttt{gamma(1.0,1.0)}, i.e. \ttt{exp(1.0)}).
 
 \subsection{Relaxed Clock Trees}
 %%%% JN: subsection need to be expanded

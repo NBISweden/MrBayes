@@ -1355,7 +1355,7 @@ begin mrbayes;
     calibrate HolometabolaWithFossils=offsetexp(302,396);
     prset nodeagepr=calibrated;
 
-    prset clockvarpr=igr;
+    prset clockvarpr=wn;
     prset igrvarpr=exp(37);
     prset clockratepr=lognorm(-7.1,0.5);
 
