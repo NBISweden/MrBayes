@@ -2580,7 +2580,7 @@ MrBayes > prset brlenspr=clock:uniform
 \end{singlespacing}
 \normalsize
 
-Other options include the coalescent and the birth -- death models. In the next step, we are going
+Other options include the coalescent and the birth-death models. In the next step, we are going
 to ``relax'' the strict clock assumption by selecting a model for the variation of the clock rate
 across lineages. MrBayes offers three relaxed clock models: the Thorne--Kishino 2002 (TK02), the
 compound poisson process (CPP), and the independent gamma rates (IGR) models. Let us use the
@@ -3294,6 +3294,8 @@ the topology prior:
 This completes the description of the analysis specifications. As you will notice, the file ends by
 setting up some \ttt{mcmc} parameters using the \ttt{mcmcp} command but it leaves it up to you to
 actually start the analysis.
+
+Another total-evidence dating tutorial using the Hymenoptera data (truncated) is provided by Zhang (\url{https://arxiv.org/abs/1603.05707}). It uses the fossilized birth-death model \citep{Stadler:2010fn,Heath:2014hn,Zhang:2016kf} as a tree prior.
 
 \section{Inferring Ancestral States}
 
@@ -5997,11 +5999,11 @@ Dirichlet distribution (default).
 
 \subsection{Strict Clock Trees}
 
-MrBayes implements three strict clock models: the simple (uniform) model, the birthdeath model, and
+MrBayes implements three strict clock models: the simple (uniform) model, the birth-death model, and
 the coalescence model. The birth-death model and coalescence models both have additional parameters
 describing the tree-generating process, whereas the simple model does not.
 
-In the $birth-death$ $model$ (see \citet{yang97b}, for a Bayesian implementation), trees are
+In the $birth$-$death$ $model$ (see \citet{yang97b}, for a Bayesian implementation), trees are
 generated according to a birth-death model with a speciation and an extinction rate. The model, as
 implemented in MrBayes, can also be associated with a sampling probability of terminal lineages.
 The priors for these three parameters are set using the \ttt{speciationpr, extinctionpr,} and
