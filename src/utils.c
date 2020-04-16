@@ -13129,7 +13129,7 @@ MrBFlt LogNormalRandomVariable (MrBFlt mean, MrBFlt sd, RandLong *seed)
     
     x = PointNormal(RandomNumber(seed));
 
-    x*= sd;
+    x *= sd;
     x += mean;
     
     return exp(x);
@@ -13469,6 +13469,23 @@ MrBFlt PointNormal (MrBFlt prob)
     z = y + ((((y*a4+a3)*y+a2)*y+a1)*y+a0) / ((((y*b4+b3)*y+b2)*y+b1)*y+b0);
     
     return (p<0.5 ? -z : z);
+}
+
+
+/*---------------------------------------------------------------------------------
+|
+|   NormalRandomVariable
+|
+|   Draw a random variable from a normal distribution.
+|
+---------------------------------------------------------------------------------*/
+MrBFlt NormalRandomVariable (MrBFlt mean, MrBFlt sd, RandLong *seed)
+{
+    MrBFlt      x;
+    
+    x = PointNormal(RandomNumber(seed));
+
+    return mean + x*sd;
 }
 
 
