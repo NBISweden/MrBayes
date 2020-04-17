@@ -1,27 +1,17 @@
 \documentclass[12pt]{book}
-\usepackage{geometry}         % See geometry.pdf to learn the layout options. There are lots.
-\geometry{a4paper}            % ... or a4paper or a5paper or ...
-%\geometry{landscape}         % Activate for rotated page geometry
+\usepackage[a4paper]{geometry} %  (or letter, a4paper, a5paper...) See geometry.pdf to learn the layout options.
+%geometry{landscape}         % Activate for rotated page geometry
+\usepackage[english]{babel}   % Will manage the 90% hyphenation for us 
 \usepackage[parfill]{parskip} % Activate to begin paragraphs width empty line instead of indent
 \usepackage{graphicx}
-\usepackage{amssymb}
+\usepackage{amssymb,amsmath} % is nice having similar packages grouped, and we save one line
 \usepackage{setspace}
-\usepackage{amsmath}
 \usepackage{url}
 \usepackage{natbib}
 \usepackage{pdfpages}
 \usepackage{longtable}
 \usepackage{booktabs}
-\usepackage[]{hyperref}
-\hypersetup{
-    linktoc=all,
-    colorlinks=true,
-    citecolor=black,
-    filecolor=black,
-    linkcolor=black,
-    urlcolor=blue
-}
-
+\usepackage[linktoc=all,colorlinks=true,citecolor=darkgray,filecolor=black,linkcolor=blue,urlcolor=purple]{hyperref}
 
 % The following specifies a line spacing of 1.2 times normal
 \renewcommand{\baselinestretch}{1.2}
@@ -109,10 +99,11 @@ absent husbands. We realize that the childish enthusiasm we have shown when a ne
 some incomprehensible numbers scrolling by on the screen has been poor compensation. Thank you so
 much for all of your support and your sacrifices; we love you!
 
-\flushleft November, 2011
-\flushleft \textit{Fredrik Ronquist} \\
-\textit{John Huelsenbeck}
+\vspace{1cm}
 
+November, 2011\hfill\\
+\textit{Fredrik Ronquist}\hfill\\
+\textit{John Huelsenbeck}\hfill\\
 
 \mainmatter
 
