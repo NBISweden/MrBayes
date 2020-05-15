@@ -11261,7 +11261,7 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 int PrintCheckPoint (int gen)
 {
     int         i, j, k, k1, nErrors=0, run, chn, nValues, tempStrSize = TEMPSTRSIZE,
-                hasEvents, *intValue, id, oldPrecision;
+                hasEvents, *intValue, oldPrecision;
     char        bkupFileName[220], oldBkupFileName[220], ckpFileName[220], *tempString=NULL;
     MrBFlt      *value, clockRate;
     Param       *p = NULL, *subParm = NULL;
@@ -11429,13 +11429,7 @@ if (proc_id == 0)
                                          subParm->paramType == P_IGRBRANCHRATES || subParm->paramType == P_ILNBRANCHRATES ||
                                          subParm->paramType == P_MIXEDBRCHRATES || subParm->paramType == P_WNBRANCHRATES))
                         {
-                        if (subParm->paramType == P_MIXEDBRCHRATES)
-                            {
-                            id = *GetParamIntVals(subParm, j, state[j]);
-                            if (SafeSprintf (&tempString, &tempStrSize, " [&B %s %d]", subParm->name, id) == ERROR) nErrors++;
-                            }
-                        else
-                            if (SafeSprintf (&tempString, &tempStrSize, " [&B %s]", subParm->name) == ERROR) nErrors++;
+                        if (SafeSprintf (&tempString, &tempStrSize, " [&B %s]", subParm->name) == ERROR) nErrors++;
                         if (nErrors == 0 && AddToPrintString (tempString) == ERROR) nErrors++;
                         }
                     }
