@@ -4840,7 +4840,7 @@ int     CondLikeUp_NUC4 (TreeNode *p, int division, int chain)
 int     CondLikeUp_Std (TreeNode *p, int division, int chain)
 {
     int             a, c, i, j, k, t, nStates, nCats, coppySize,tmp;
-    CLFlt           *clFA, *clFP, *clDP, *pA, *tiP, condLikeUp[10], sum;
+    CLFlt           *clFA, *clFP, *clDP, *pA, *tiP, condLikeUp[MAX_STD_STATES], sum;
     ModelInfo       *m;
     
     /* find model settings for this division */
@@ -10155,11 +10155,6 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
     else
         catRate = &theRate;
     
-#   if defined (DEBUG_TIPROBS_STD)
-    /* find base frequencies */
-    bs = GetParamStdStateFreqs (m->stateFreq, chain, state[chain]);
-#   endif
-
     /* find length */
     if (m->cppEvents != NULL)
         {
@@ -10196,6 +10191,9 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
     else if (length < BRLENS_MIN)
         length = BRLENS_MIN;
 
+    /* find base frequencies */
+    bs = GetParamStdStateFreqs (m->stateFreq, chain, state[chain]);
+    
     /* fill in values; this has to be done differently if state freqs are not equal */
     if (m->stateFreq->paramId == SYMPI_EQUAL)
         {
@@ -10205,14 +10203,14 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
 #   if defined (DEBUG_TIPROBS_STD)
         index3 = 0;
 #   endif
-        for (nStates=2; nStates<=10; nStates++)
+        for (nStates=2; nStates<=MAX_STD_STATES; nStates++)
             {
             if (m->isTiNeeded[nStates-2] == NO)
                 continue;
             for (k=0; k<m->numRateCats; k++)
                 {
                 /* calculate probabilities */
-                v =  length * catRate[k] * baseRate;
+                v =  length * baseRate * catRate[k];
                 eV1 =  exp(-(nStates / (nStates -  1.0)) * v);
                 pChange   = (CLFlt) ((1.0 / nStates) - ((1.0 / nStates) * eV1));
                 pNoChange = (CLFlt) ((1.0 / nStates) + ((nStates - 1.0) / nStates) * eV1);
@@ -10237,8 +10235,21 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
 #   endif
             }
 
-        /* fill in values for 3-state ordered character */
-        if (m->isTiNeeded[9] == YES)
+        /* TODO: need a general algorithm for ordered characters */
+        /* for (nStates=3; nStates<=MAX_STD_STATES; nStates++)
+            {
+            if (m->isTiNeeded[nStates+MAX_STD_STATES-4] == NO)
+                continue;
+            for (k=0; k<m->numRateCats; k++)
+                {
+                v =  length * baseRate * catRate[k];
+                
+                // UpDateCijk() here?
+                }
+            } */
+
+        /* 3-state ordered character */
+        if (m->isTiNeeded[MAX_STD_STATES-1] == YES)
             {
             nStates = 3;
             for (k=0; k<m->numRateCats; k++)
@@ -10279,7 +10290,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
             }
 
         /* 4-state ordered character */
-        if (m->isTiNeeded[10] == YES)
+        if (m->isTiNeeded[MAX_STD_STATES] == YES)
             {
             nStates = 4;
             pi = 1.0 / 4.0;
@@ -10329,7 +10340,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
             }
 
         /* 5-state ordered character */
-        if (m->isTiNeeded[11] == YES)
+        if (m->isTiNeeded[MAX_STD_STATES+1] == YES)
             {
             nStates = 5;
             pi = 1.0 / 5.0;
@@ -10358,13 +10369,11 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
                 /* pij(0,0) */
                 tiP[index] = (CLFlt) (pi* (1.0 + (f1*eV3) + (f2*eV1) + (f3*eV2) + (f4*eV4)));
                 /* pij(0,1) = pij(1,0) */
-                tiP[index+1] = tiP[index+5] =
-                    (CLFlt) (pi*(1.0 - (eV3/2.0) + (f5*eV1) - (f5*eV2) - (eV4/2.0)));
+                tiP[index+1] = tiP[index+5] = (CLFlt) (pi*(1.0 - (eV3/2.0) + (f5*eV1) - (f5*eV2) - (eV4/2.0)));
                 /* pij(0,2) = pij(2,0) */
                 tiP[index+2] = tiP[index+10] = (CLFlt) (pi*(1.0 - (f6*eV3) + (f7*eV4)));
                 /* pij(0,3) = pij(1,4) */
-                tiP[index+3] = tiP[index+9] =
-                    (CLFlt) (pi*(1.0 - (eV3/2.0) - (f5*eV1) + (f5*eV2) - (eV4/2.0)));
+                tiP[index+3] = tiP[index+9] = (CLFlt) (pi*(1.0 - (eV3/2.0) - (f5*eV1) + (f5*eV2) - (eV4/2.0)));
                 /* pij(0,4) */
                 tiP[index+4] = (CLFlt) (pi*(1.0 + (f1*eV3) - (f2*eV1) - (f3*eV2) + (f4*eV4)));
                 /* pij(1,1) */
@@ -10397,10 +10406,10 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
             }
 
         /* 6-state ordered character */
-        if (m->isTiNeeded[12] == YES)
+        if (m->isTiNeeded[MAX_STD_STATES+2] == YES)
             {
             nStates = 6;
-            pi =  1.0 /  6.0;
+            pi =  1.0 / 6.0;
             root =  sqrt (3.0);
 
             f4 = (3.0 / (2.0 * root));
@@ -10426,11 +10435,9 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
                 /* pij(0,1) = pij(1,0) */
                 tiP[index+1] = tiP[index+6] = (CLFlt) (pi*(1.0 - eV1 - eV2 + (f3*eV4) + (f4*eV5)));
                 /* pij(0,2) = pij(2,0) */
-                tiP[index+2] = tiP[index+12] = 
-                    (CLFlt) (pi*(1.0 + (0.5*eV1) - eV2 - (1.5*eV3) + (0.5*eV4) + (0.5*eV5)));
+                tiP[index+2] = tiP[index+12] = (CLFlt) (pi*(1.0 + (0.5*eV1) - eV2 - (1.5*eV3) + (0.5*eV4) + (0.5*eV5)));
                 /* pij(0,3) = pij(2,5) */
-                tiP[index+3] = tiP[index+17] = 
-                    (CLFlt) (pi*(1.0 + (0.5*eV1) + eV2 - (1.5*eV3) - (0.5*eV4) - (0.5*eV5)));
+                tiP[index+3] = tiP[index+17] = (CLFlt) (pi*(1.0 + (0.5*eV1) + eV2 - (1.5*eV3) - (0.5*eV4) - (0.5*eV5)));
                 /* pij(0,4) = pij(1,5) */
                 tiP[index+4] = tiP[index+11] = (CLFlt) (pi*(1.0 - eV1 + eV2 - (f3*eV4) - (f4*eV5)));
                 /* pij(0,5) */
@@ -10476,9 +10483,6 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
         /* first fill in for binary characters using beta categories if needed */
         if (m->isTiNeeded[0] == YES)
             {
-            /* find base frequencies */
-            bs = GetParamStdStateFreqs (m->stateFreq, chain, state[chain]);
-
             /* cycle through beta and gamma cats */
             for (b=0; b<m->numBetaCats; b++)
                 {
@@ -10486,7 +10490,7 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
                 for (k=0; k<m->numRateCats; k++)
                     {
                     /* calculate probabilities */
-                    v =  length * catRate[k] * baseRate;
+                    v =  length * baseRate * catRate[k];
                     eV1 =  exp(- mu * v);
                     tiP[index++] = (CLFlt) (bs[0] + (bs[1] * eV1));
                     tiP[index++] = (CLFlt) (bs[1] - (bs[1] * eV1));
@@ -10612,11 +10616,11 @@ int UpDateCijk (int whichPart, int whichChain)
             numQAllocated = 1;
             p = m->stateFreq;
             eigenValues = m->cijks[m->cijkIndex[whichChain]];
-            q[0] = AllocateSquareDoubleMatrix (10);
-            eigvecs = AllocateSquareDoubleMatrix (10);
-            inverseEigvecs = AllocateSquareDoubleMatrix (10);
-            Ceigvecs = AllocateSquareComplexMatrix (10);
-            CinverseEigvecs = AllocateSquareComplexMatrix (10);
+            q[0] = AllocateSquareDoubleMatrix (MAX_STD_STATES);
+            eigvecs = AllocateSquareDoubleMatrix (MAX_STD_STATES);
+            inverseEigvecs = AllocateSquareDoubleMatrix (MAX_STD_STATES);
+            Ceigvecs = AllocateSquareComplexMatrix (MAX_STD_STATES);
+            CinverseEigvecs = AllocateSquareComplexMatrix (MAX_STD_STATES);
             bsBase = GetParamStdStateFreqs (m->stateFreq, whichChain, state[whichChain]);
             
             /* cycle over characters needing cijks */

@@ -10881,8 +10881,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    both rates. (The first number is off->on and the second      \n");
         MrBayesPrint ("                    is on->off).                                                 \n");
         MrBayesPrint ("   Symdirihyperpr - This option sets the prior for the stationary frequencies    \n");
-        MrBayesPrint ("                    of the states for morphological (standard) data. There can   \n");
-        MrBayesPrint ("                    be as many as 10 states for standard data. However, the      \n");
+        MrBayesPrint ("                    of the states for morphological (standard) data. The         \n");
         MrBayesPrint ("                    labelling of the states is somewhat arbitrary. For example,  \n");
         MrBayesPrint ("                    the state \"1\" for different characters does not have the   \n");
         MrBayesPrint ("                    same meaning. This is not true for DNA characters, for ex-   \n");
@@ -14821,6 +14820,62 @@ int StandID (char nuc)
         {
         return 512;
         }
+    else if (n == 'A' || n == 'a')
+        {
+        return 1024;
+        }
+    else if (n == 'B' || n == 'b')
+        {
+        return 2048;
+        }
+    else if (n == 'C' || n == 'c')
+        {
+        return 4096;
+        }
+    else if (n == 'D' || n == 'd')
+        {
+        return 8192;
+        }
+    else if (n == 'E' || n == 'e')
+        {
+        return 16384;
+        }
+    else if (n == 'F' || n == 'f')
+        {
+        return 32768;
+        }
+    else if (n == 'G' || n == 'g')
+        {
+        return 65536;
+        }
+    else if (n == 'H' || n == 'h')
+        {
+        return 131072;
+        }
+    else if (n == 'I' || n == 'i')
+        {
+        return 262144;
+        }
+    else if (n == 'J' || n == 'j')
+        {
+        return 524288;
+        }
+    else if (n == 'K' || n == 'k')
+        {
+        return 1048576;
+        }
+    else if (n == 'L' || n == 'l')
+        {
+        return 2097152;
+        }
+    else if (n == 'M' || n == 'm')
+        {
+        return 4194304;
+        }
+    else if (n == 'N' || n == 'n')
+        {
+        return 8388608;
+        }
     else if (n == missingId)
         {
         return MISSING;
@@ -15253,7 +15308,35 @@ char WhichStand (int x)
         return ('8');
     else if (x == 512)
         return ('9');
-    else if (x > 0 && x < 512)
+    else if (x == 1024)
+        return ('a');
+    else if (x == 2048)
+        return ('b');
+    else if (x == 4096)
+        return ('c');
+    else if (x == 8192)
+        return ('d');
+    else if (x == 16384)
+        return ('e');
+    else if (x == 32768)
+        return ('f');
+    else if (x == 65536)
+        return ('g');
+    else if (x == 131072)
+        return ('h');
+    else if (x == 262144)
+        return ('i');
+    else if (x == 524288)
+        return ('j');
+    else if (x == 1048576)
+        return ('k');
+    else if (x == 2097152)
+        return ('l');
+    else if (x == 4194304)
+        return ('m');
+    else if (x == 8388608)
+        return ('n');
+    else if (x > 0 && x < 8388608)
         return ('*');
     else if (x == MISSING)
         return ('?');

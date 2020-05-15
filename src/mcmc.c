@@ -5863,20 +5863,15 @@ int InitChainCondLikes (void)
             m->numTiCats = 0;   /* We do not have repeated similar transition probability matrices */
             if (m->stateFreq->paramId == SYMPI_EQUAL)
                 {
-                for (k=0; k<9; k++)
+                for (k = 0; k < MAX_STD_STATES-1; k++)  /* UNORD */
                     {
                     if (m->isTiNeeded[k] == YES)
                         m->tiProbLength += (k + 2) * (k + 2) * m->numRateCats;
                     }
-                for (k=9; k<13; k++)
+                for (k = MAX_STD_STATES-1; k < 2*MAX_STD_STATES-3; k++)  /* ORD */
                     {
                     if (m->isTiNeeded[k] == YES)
-                        m->tiProbLength += (k - 6) * (k - 6) * m->numRateCats;
-                    }
-                for (k=13; k<18; k++)
-                    {
-                    if (m->isTiNeeded[k] == YES)
-                         m->tiProbLength += (k - 11) * (k - 11) * m->numRateCats;
+                        m->tiProbLength += (k-MAX_STD_STATES+4) * (k-MAX_STD_STATES+4) * m->numRateCats;
                     }
                 }
             else
