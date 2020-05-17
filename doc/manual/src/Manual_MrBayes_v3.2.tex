@@ -8,6 +8,7 @@
 \usepackage{setspace}
 \usepackage{url}
 \usepackage{natbib}
+\usepackage{wrapfig}
 \usepackage{pdfpages}
 \usepackage{longtable}
 \usepackage{booktabs}
@@ -257,7 +258,7 @@ mcmc}. The \ttt{lset} settings table at the end should look like this:
    Parsmodel    No/Yes                                  No
 
    ------------------------------------------------------------------
-\end{verbatim}\end{singlespacing}
+\end{verbatim}\end{figure}
 
 Note that MrBayes 3 supports abbreviations of commands and options, so in many cases it is
 sufficient to type the first few letters of a command or option instead of the full name.
@@ -1405,19 +1406,20 @@ MrBayes handles a wide variety of data types and models, as well as any mix of t
 this example we will look at how to set up a simple analysis of a combined data set, consisting of
 data from four genes and morphology for 30 taxa of gall wasps and outgroups. A similar approach can
 be used, e.g., to set up a partitioned analysis of molecular data coming from different genes. The
-data set for this tutorial is found in the file \ttt{cynmix.nex}.
+data set for this tutorial is found in the file \texttt{cynmix.nex}. 
+%% PV: The benefits of saving this three characters are scarce, and emacs will stop parsing texttt.
+%% I'll suggest to change it for this chapter but is just an option.
 
 \section{Getting Mixed Data into MrBayes}
 
-First, open up the Nexus data file in a text editor. The \ttt{DATA} block of the Nexus file should
-look familiar but there are some differences compared to the \ttt{primates.nex} file in the format
+First, open up the Nexus data file in a text editor. The \texttt{DATA} block of the Nexus file should
+look familiar but there are some differences compared to the \texttt{primates.nex} file in the format
 statement:
 
-\begin{singlespacing}
-\footnotesize
+%% PV: This will remove an undesirable widowed line in the next paragraph
+\begin{singlespacing}\footnotesize
 \begin{verbatim}
-   Format datatype=mixed(Standard:1-166,DNA:167-3246)
-       interleave=yes gap=- missing=?;
+Format datatype=mixed(Standard:1-166,DNA:167-3246) interleave=yes gap=- missing=?;
 \end{verbatim}
 \normalsize
 \end{singlespacing}
@@ -1437,12 +1439,12 @@ By default, MrBayes partitions the data according to data type. There are only t
 the matrix, so the default model will include only a morphology (standard) and a DNA partition. To
 divide the DNA partition into gene regions or other appropriate subsets, it is convenient to first
 specify character sets. In principle, this can be done from the command line but it is easier to do
-it in a \ttt{MRBAYES} block in the data file. At the end of the \ttt{cynmix.nex}, there is such a
-block (starting with \ttt{begin mrbayes;}). Any text between square brackets (\ttt{[]}) are
+it in a \texttt{MRBAYES} block in the data file. At the end of the \texttt{cynmix.nex}, there is such a
+block (starting with \texttt{begin mrbayes;}). Any text between square brackets (\texttt{[]}) are
 comments and ignored by MrBayes. Note also that each command ends with a semicolon.
 
-The relevant lines for setting up partitions starts with the command \ttt{charset}. That command
-simply associates a name with a set of characters. For instance, the character set \ttt{COI} is
+The relevant lines for setting up partitions starts with the command \texttt{charset}. That command
+simply associates a name with a set of characters. For instance, the character set \texttt{COI} is
 defined to include characters 167 to 1244. The next step is to define a partition of the data
 according to genes and morphology. This is accomplished with the line:
 
@@ -1455,22 +1457,21 @@ according to genes and morphology. This is accomplished with the line:
 \end{singlespacing}
 
 The elements of the \ttt{partition} command are: (1) the name of the partitioning scheme
-(\ttt{favored}); (2) an equal sign ($=$); (3) the number of character divisions in the scheme
-(\ttt{5}); (4) a colon (:); and (5) a list of the characters in each division, separated by commas.
+(\texttt{favored}); (2) an equal sign ($=$); (3) the number of character divisions in the scheme
+(\texttt{5}); (4) a colon (:); and (5) a list of the characters in each division, separated by commas.
 The list of characters can simply be an enumeration of the character numbers (the above line is
-equivalent to \ttt{partition favored = 5: 1-166, 167-1244, 1245-1611, 1612-2092, 2093-3246;}) but
-it is often more convenient to use predefined character sets as given in the \ttt{MRBAYES} block.
-The \ttt{end;} statement closes the \ttt{MRBAYES} block.
+equivalent to \texttt{partition favored = 5: 1-166, 167-1244, 1245-1611, 1612-2092, 2093-3246;}) but
+it is often more convenient to use predefined character sets as given in the \texttt{MRBAYES} block.
+The \texttt{end;} statement closes the \texttt{MRBAYES} block.
 
 When we read this block into MrBayes, we will have defined variables that can be used for setting
 up a partitioned analysis with the first character division being morphology, the second division
 being the COI gene, etc. Exit your text editor, launch MrBayes and type \tb{execute cynmix.nex}
 to read in your data and the variables. The final step is to tell MrBayes that we want to work with
-this partitioning of the data instead of the default partitioning. We do this using the \ttt{set}
-command:
+this partitioning of the data instead of the default partitioning. We do this using \ttt{set}:
+%% PV: I need to save a line here for later...
 
-\begin{singlespacing}
-\footnotesize
+\begin{singlespacing}\footnotesize
 \begin{verbatim}
    set partition = favored;
 \end{verbatim}
@@ -1481,26 +1482,24 @@ command:
 \section{Specifying a Partitioned Model}
 
 Before starting to specify the partitioned model, it is useful to examine the default model. Type
-\tb{showmodel} and you should get this table as part of the output:
+\tb{showmodel} and you should get this table as part of the output:~\rotatebox[origin=l]{270}{$\Rsh$} 
+%% PV: ... because this.
 
-\begin{singlespacing}
-\footnotesize
+\begin{wrapfigure}{r}{0.44\textwidth}\singlespacing\footnotesize\vspace{-5mm}
 \begin{verbatim}
    Active parameters:
 
-                       Partition(s)
-      Parameters       1  2  3  4  5
-      ------------------------------
-      Statefreq        1  2  2  2  2
-      Ratemultiplier   3  3  3  3  3
-      Topology         4  4  4  4  4
-      Brlens           5  5  5  5  5
-      ------------------------------
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+                     Partition(s)
+    Parameters       1  2  3  4  5
+    ------------------------------
+    Statefreq        1  2  2  2  2
+    Ratemultiplier   3  3  3  3  3
+    Topology         4  4  4  4  4
+    Brlens           5  5  5  5  5
+    ------------------------------
+\end{verbatim}\end{wrapfigure}
 
-There is a lot of other useful information in the output of \ttt{showmodel} but this table is the
+There is a lot of other useful information in the output of \texttt{showmodel} but this table is the
 key to the partitioned model. We can see that there are five partitions in the model and five
 active (free) parameters. There are two stationary state frequency parameters, one for the
 morphological data (parameter 1) and one for the DNA data (parameter 2). Then there is also a
@@ -1511,39 +1510,37 @@ Now, assume we want a separate GTR + I + $\Gamma$ model for each gene partition.
 should be estimated separately for the individual genes. Assume further that we want the overall
 evolutionary rate to be (potentially) different across partitions, and that we want to assume
 gamma-shaped rate variation for the morphological data. We can obtain this model by using
-\ttt{lset} and \ttt{prset} with the \ttt{applyto} mechanism, which allows us to apply the settings
+\texttt{lset} and \texttt{prset} with the \texttt{applyto} mechanism, which allows us to apply the settings
 to specific partitions. For instance, to apply a GTR + I + $\Gamma$ model to the molecular partitions,
 we type \tb{lset applyto=(2,3,4,5) nst=6 rates=invgamma}. This will produce the following table
-when \tb{showmodel} is invoked:
+when \tb{showmodel} is invoked:\newpage
 
-\begin{singlespacing}
-\footnotesize
+\begin{wrapfigure}{l}{0.42\textwidth}\singlespacing\footnotesize
 \begin{verbatim}
-   Active parameters:
+Active parameters:
  
-                       Partition(s)
-      Parameters       1  2  3  4  5
-      ------------------------------
-      Revmat           .  1  1  1  1
-      Statefreq        2  3  3  3  3
-      Shape            .  4  4  4  4
-      Pinvar           .  5  5  5  5
-      Ratemultiplier   6  6  6  6  6
-      Topology         7  7  7  7  7
-      Brlens           8  8  8  8  8
-      ------------------------------
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+                Partition(s)
+Parameters      1  2  3  4  5
+-----------------------------
+Revmat          .  1  1  1  1
+Statefreq       2  3  3  3  3
+Shape           .  4  4  4  4
+Pinvar          .  5  5  5  5
+Ratemultiplier  6  6  6  6  6
+Topology        7  7  7  7  7
+Brlens          8  8  8  8  8
+-----------------------------
+\end{verbatim}\end{wrapfigure}
 
+%% PV: Extra \tb included deliberately to parse the line
 As you can see, all molecular partitions now evolve under the correct model but all parameters
-(\ttt{statefreq}, \ttt{revmat}, \ttt{shape}, \ttt{pinvar}) are shared across partitions. To unlink
-them such that each partition has its own set of parameters, type: \tb{unlink revmat=(all)
-pinvar=(all) shape=(all) statefreq=(all)}. Gamma-shaped rate variation for the morphological data
-is enforced by typing \tb{lset applyto=(1) rates=gamma}. The trickiest part is to allow the overall
-rate to be different across partitions. This is achieved using the \ttt{ratepr} parameter of the
-\ttt{prset} command. By default, \ttt{ratepr} is set to \ttt{fixed}, meaning that all partitions
-have the same overall rate. By changing this to \ttt{variable}, the rates are allowed to vary under
+(\texttt{statefreq}, \texttt{revmat}, \texttt{shape}, \texttt{pinvar}) are shared across partitions. 
+To unlink them such that each partition has its own set of parameters, type: \tb{unlink revmat=(all)}
+\tb{pinvar=(all)} \tb{shape=(all)} \tb{statefreq=(all)}. Gamma-shaped rate variation for the morphological
+data is enforced by typing \tb{lset applyto=(1) rates=gamma}. The trickiest part is to allow the overall
+rate to be different across partitions. This is achieved using the \texttt{ratepr} parameter of the
+\ttt{prset} command. By default, \texttt{ratepr} is set to \texttt{fixed}, meaning that all partitions
+have the same overall rate. By changing this to \texttt{variable}, the rates are allowed to vary under
 a flat Dirichlet prior. To allow all our partitions to evolve under different rates, type \tb{prset
 applyto=(all) ratepr=variable}.
 
@@ -1551,44 +1548,45 @@ The model is now essentially complete but there is one final thing to consider. 
 morphological data matrices do not include all types of characters. Specifically, morphological
 data matrices do not usually include any constant (invariable) characters. Sometimes,
 autapomorphies are not included either, and the matrix is restricted to parsimony-informative
-characters. For MrBayes to calculate the probability of the data correctly, we need to inform it of
-this ascertainment (coding) bias. By default, MrBayes assumes that standard data sets include all
-variable characters but no constant characters. If necessary, one can change this setting using
-\ttt{lset coding}. We will leave the \ttt{coding} setting at the default, though, which is
-\ttt{variable} for standard (morphology) data. Now, \tb{showmodel} should produce this table:
+characters. For MrBayes to calculate the probability of the data correctly, we need 
+%% PV: Dirty trick but it works. Don't remove the following blank line
 
-\begin{singlespacing}
-\footnotesize
+\begin{wrapfigure}{r}{0.46\textwidth}\singlespacing\footnotesize\vspace{-4mm}
 \begin{verbatim}
-   Active parameters:
+    Active parameters:
  
-                       Partition(s)
-      Parameters       1  2  3  4  5
-      ------------------------------
-      Revmat           .  1  2  3  4
-      Statefreq        5  6  7  8  9
-      Shape           10 11 12 13 14
-      Pinvar           . 15 16 17 18
-      Ratemultiplier  19 19 19 19 19
-      Topology        20 20 20 20 20
-      Brlens          21 21 21 21 21
-      ------------------------------
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+                      Partition(s)
+     Parameters       1  2  3  4  5
+     ------------------------------
+     Revmat           .  1  2  3  4
+     Statefreq        5  6  7  8  9
+     Shape           10 11 12 13 14
+     Pinvar           . 15 16 17 18
+     Ratemultiplier  19 19 19 19 19
+     Topology        20 20 20 20 20
+     Brlens          21 21 21 21 21
+     ------------------------------
+\end{verbatim}\end{wrapfigure}
+
+\vspace{-2mm} to inform it of this ascertainment (coding) bias. By default, MrBayes assumes that standard 
+data sets include all variable characters but no constant characters. If necessary, one can change this 
+setting using \texttt{lset coding}. We will leave the \texttt{coding} setting at the default, though, which 
+is \texttt{variable} for standard (morphology) data. Now, \tb{showmodel} should produce this table:~$\rightarrow$
+
+\clearpage 
 
 \section{Running the Analysis}
 
 When the model has been completely specified, we can proceed with the analysis essentially as
-described above in the tutorial for the \ttt{primates.nex} data set. However, in the case of the
-\ttt{cynmix.nex} dataset, the analysis will have to be run longer before it converges.
+described above in the tutorial for the \texttt{primates.nex} data set. However, in the case of the
+\texttt{cynmix.nex} dataset, the analysis will have to be run longer before it converges.
 
 When looking at the parameter samples from a partitioned analysis, it is useful to know that the
 names of the parameters are followed by the character division (partition) number in curly braces.
-For instance, \ttt{pi(A)\{3\}} is the stationary frequency of nucleotide A in character division 3,
+For instance, \texttt{pi(A)\{3\}} is the stationary frequency of nucleotide A in character division 3,
 which is the EF1a division in the above analysis.
 
-In this section we have used a separate Nexus file for the \ttt{MRBAYES} block. Although one can
+In this section we have used a separate Nexus file for the \texttt{MRBAYES} block. Although one can
 add this command block to the data file itself, there are several advantages to keeping the
 commands and the data blocks separate. For example, one can create a set of different analyses with
 different parameters in separate command files and submit all those files to a job scheduling
@@ -1597,10 +1595,10 @@ the file containing the character matrix as the default for all output files. Th
 your analyses in the same directory, results from different analyses will overwrite each other.
 
 To change this behavior, include the command \tb{mcmcp filename=$<$filename$>$;} in each of your
-run files, just before issuing the \ttt{mcmc} command, using a different file name for each run
+run files, just before issuing the \texttt{mcmc} command, using a different file name for each run
 file. For instance, if you wish to name the output files from one analysis using the root
-\ttt{analysis1}, you use the line \tb{mcmcp filename=analysis1;}. The files will then be named
-\ttt{analysis1.run1.t}, \ttt{analysis1.run2.t}, etc. An alternative approach is to run each
+\texttt{analysis1}, you use the line \tb{mcmcp filename=analysis1;}. The files will then be named
+\texttt{analysis1.run1.t}, \texttt{analysis1.run2.t}, etc. An alternative approach is to run each
 analysis in a separate directory, in which case the naming of the output files will not be an
 issue.
 
