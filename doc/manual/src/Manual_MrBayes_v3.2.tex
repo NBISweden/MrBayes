@@ -7,6 +7,7 @@
 \usepackage{amssymb,amsmath} % is nice having similar packages grouped, and we save one line
 \usepackage{setspace}
 \usepackage{url}
+\usepackage{wrapfig}
 \usepackage{natbib}
 \usepackage{pdfpages}
 \usepackage{longtable}
@@ -1611,15 +1612,14 @@ In this chapter, we provide a number of brief tutorials that cover a wide range 
 and analyses in MrBayes. We use a slightly different format for these tutorials. First, we assume
 that you are familiar with the basic working of the program, so we skip uninteresting details when
 they should be obvious. Also, in addition to the conventions used previously, we will often simply
-give the command line, including the \ttt{MrBayes >} prompt. What you need to type in is simply the
+give the command line, including the \texttt{MrBayes >} prompt. What you need to type in is simply the
 text after the prompt.
 
 You may wish to start each tutorial by switching off warnings and asking MrBayes to quietly finish
 each analysis after the requested number of generations, without asking you if you want to extend
-the analysis. You can accomplish this with the command line:
+the analysis. You can accomplish this with: %% PV: Saving a line here...
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > set autoclose=yes nowarn=yes
 \end{verbatim}
@@ -1633,8 +1633,9 @@ order should give some added insight.
 
 The tutorials by no means cover the entire range of models or analytical options supported by
 MrBayes. In chapters \ref{advancedTopics} and \ref{evolutionaryModels} we describe all component
-models and algorithms that are available, so refer to these for complete coverage. A graphical
-overview of the models implemented in MrBayes 3.2 is provided in Appendix \ref{appendixOverview}.
+models and algorithms available, so refer to these for complete coverage. A graphical
+overview of the models implemented in MrBayes 3.2 is provided in Appendix~\ref{appendixOverview}. 
+%% PV: ... and another here, so we can fix this specially bad case of widow word.
 
 \section{An Amino Acid Analysis}
 
@@ -1643,18 +1644,16 @@ we will ask MrBayes to integrate over a predetermined set of fixed rate matrices
 repeat the analysis using a fixed rate matrix. To start the tutorial, first read in the amino acid
 data:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > execute avian_ovomucoids.nex
 \end{verbatim}
 \normalsize
 \end{singlespacing}
 
-To ask MrBayes to sample across fixed amino acid rate matrices, we use the \ttt{prset} command:
+To ask MrBayes to sample across fixed amino acid rate matrices, we use the \texttt{prset} command:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > prset aamodelpr=mixed
 \end{verbatim}
@@ -1663,40 +1662,37 @@ MrBayes > prset aamodelpr=mixed
 
 Now we run the analysis as usual. The analysis is much slower than a normal nucleotide analysis, so
 let us try first and see if we can get convergence without using Metropolis coupling (heated
-chains). We do this by asking for a single chain per analysis using \ttt{nchains=1} in the
-\ttt{mcmc} command. Although convergence might be slightly slower if measured in terms of the
+chains). We do this by asking for a single chain per analysis using \texttt{nchains=1} in the
+\texttt{mcmc} command. Although convergence might be slightly slower if measured in terms of the
 number of generations, the analysis will run much faster without the overhead of the heated chains.
 We are still using the default of two parallel runs, so we can monitor topological convergence on
 the fly. For the dataset in this tutorial, our previous results indicate that about 300,000
 generations are sufficient for decent topological convergence. Run 300,000 generations without
 heating using the command:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > mcmc nchains=1 ngen=300000
 \end{verbatim}
 \normalsize
 \end{singlespacing}
 
-Now we can summarize the parameter and tree samples as usual using the \ttt{sumt} and \ttt{sump}
-commands. The output of the \ttt{sump} command will include a table giving the posterior
+Now we can summarize the parameter and tree samples as usual using the \texttt{sumt} and \texttt{sump}
+commands. The output of the \texttt{sump} command will include a table giving the posterior
 probabilities of the amino acid models:
 
-\begin{singlespacing}
-\scriptsize
+%% PV: If we make some room, we can afford footnotesize here
+\begin{figure}[h]\singlespacing\footnotesize
 \begin{verbatim}
-   Model probabilities above 0.050
-   Estimates saved to file "avian_ovomucoids.nex.mstat".
+Model probabilities above 0.050
+Estimates saved to file "avian_ovomucoids.nex.mstat".
 
-                           Posterior      Standard         Min.           Max.   
-   Model                  Probability     Deviation     Probability    Probability
-   -------------------------------------------------------------------------------
-   aamodel[Jones]            1.000          0.000          1.000          1.000
-   -------------------------------------------------------------------------------
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+                      Posterior     Standard        Min.           Max.   
+  Model              Probability    Deviation    Probability    Probability
+  -------------------------------------------------------------------------
+  aamodel[Jones]        1.000         0.000         1.000          1.000
+  -------------------------------------------------------------------------
+\end{verbatim}\end{figure}
 
 This particular dataset overwhelmingly supports the Jones model, so this may be the only model
 sampled after the burn-in phase. This means that the move mechanism trying to change the amino acid
@@ -1713,8 +1709,7 @@ If desired, it is possible to run the same data set under another amino acid mod
 the Dayhoff model, by fixing the rate matrix. Do this by running the analysis with the following
 commands:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > prset aamodelpr=fixed(dayhoff)
 MrBayes > mcmc nchains=1 ngen=300000
@@ -1737,8 +1732,7 @@ codons to amino acids, generating relevant ambiguous amino acid state sets when 
 running the analysis. For instance, we would run a mixed amino acid model analysis on the
 protein-coding viral sequences in the \ttt{replicase.nex} data set using:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > execute replicase.nex
 MrBayes > lset nucmodel=protein
@@ -1755,8 +1749,7 @@ sequence. We will use the data in the file \ttt{replicase.nex}.
 
 First, we read in the data:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > execute replicase.nex
 \end{verbatim}
@@ -1766,8 +1759,7 @@ MrBayes > execute replicase.nex
 Then we specify that we want to use a codon model with omega variation across sites, and that we
 want MrBayes to report positive selection probabilities and site omega values (dN/dS ratios).
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > lset nucmodel=codon omegavar=ny98
 MrBayes > report possel=yes siteomega=yes
@@ -1799,38 +1791,34 @@ long table summarizing the estimates of the posterior distributions of the model
 including the probabilities of sites being in the positively selected class, and the weighted site
 omega values (dN/dS ratios):
 
-
-\begin{singlespacing}
-\tiny
+% PV: ... and we can afford scriptsize here also
+\begin{figure}[h]\singlespacing\scriptsize
 \begin{verbatim}
-                                             95% HPD Interval
-                                            --------------------
-   Parameter         Mean      Variance     Lower       Upper       Median    min ESS*  avg ESS    PSRF+ 
-   ------------------------------------------------------------------------------------------------------
-   TL              6.063468    0.869372    4.156027    7.813660    6.025831      5.08     12.36    1.014
-   omega(-)        0.069961    0.000184    0.047403    0.095480    0.068025      6.48      7.61    1.048
-   omega(N)        1.000000    0.000000    1.000000    1.000000    1.000000       NA        NA      NA   
-   omega(+)        1.657224    1.111911    1.000940    4.105477    1.112150     34.57     84.80    0.999
-   pi(-)           0.827655    0.001925    0.764926    0.906755    0.828821     10.20     11.70    0.999
-   pi(N)           0.125519    0.002765    0.009573    0.206275    0.128064     16.95     33.05    1.166
-   pi(+)           0.046826    0.003448    0.000100    0.172577    0.015650     20.67     43.00    1.119
-   pi(AAA)         0.014750    0.000007    0.011227    0.019912    0.014817     10.95     12.02    1.010
-   pi(AAC)         0.014741    0.000009    0.009607    0.019714    0.015200      7.43     37.31    1.488
-   pi(AAG)         0.021098    0.000010    0.015839    0.026900    0.020483     11.36     17.71    1.089
-   ...
-   pr+(1,2,3)      0.012812    0.000861    0.000000    0.059747    0.000743     40.76    171.75    1.080
-   pr+(4,5,6)      0.000332    0.000000    0.000000    0.001532    0.000036     43.44    195.80    1.092
-   pr+(7,8,9)      0.000068    0.000000    0.000000    0.000316    0.000003     83.01    223.65    1.054
-   ...
-   omega(1,2,3)    0.103900    0.002723    0.054415    0.176367    0.089053     16.88     20.23    1.014
-   omega(4,5,6)    0.071107    0.000195    0.048813    0.097142    0.069085      6.47      7.37    1.041
-   omega(7,8,9)    0.070189    0.000188    0.048528    0.096028    0.068360      6.46      7.48    1.046
-   ...
-   ------------------------------------------------------------------------------------------------------
-
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+                                         95% HPD Interval
+                                       -------------------
+Parameter         Mean      Variance    Lower      Upper       Median   min ESS*  avg ESS   PSRF+ 
+--------------------------------------------------------------------------------------------------
+TL              6.063468    0.869372   4.156027   7.813660    6.025831     5.08     12.36    1.014
+omega(-)        0.069961    0.000184   0.047403   0.095480    0.068025     6.48      7.61    1.048
+omega(N)        1.000000    0.000000   1.000000   1.000000    1.000000       NA        NA       NA   
+omega(+)        1.657224    1.111911   1.000940   4.105477    1.112150    34.57     84.80    0.999
+pi(-)           0.827655    0.001925   0.764926   0.906755    0.828821    10.20     11.70    0.999
+pi(N)           0.125519    0.002765   0.009573   0.206275    0.128064    16.95     33.05    1.166
+pi(+)           0.046826    0.003448   0.000100   0.172577    0.015650    20.67     43.00    1.119
+pi(AAA)         0.014750    0.000007   0.011227   0.019912    0.014817    10.95     12.02    1.010
+pi(AAC)         0.014741    0.000009   0.009607   0.019714    0.015200     7.43     37.31    1.488
+pi(AAG)         0.021098    0.000010   0.015839   0.026900    0.020483    11.36     17.71    1.089
+...
+pr+(1,2,3)      0.012812    0.000861   0.000000   0.059747    0.000743    40.76    171.75    1.080
+pr+(4,5,6)      0.000332    0.000000   0.000000   0.001532    0.000036    43.44    195.80    1.092
+pr+(7,8,9)      0.000068    0.000000   0.000000   0.000316    0.000003    83.01    223.65    1.054
+...
+omega(1,2,3)    0.103900    0.002723   0.054415   0.176367    0.089053    16.88     20.23    1.014
+omega(4,5,6)    0.071107    0.000195   0.048813   0.097142    0.069085     6.47      7.37    1.041
+omega(7,8,9)    0.070189    0.000188   0.048528   0.096028    0.068360     6.46      7.48    1.046
+...
+--------------------------------------------------------------------------------------------------
+\end{verbatim}\end{figure}
 
 First, note that the effective sample size (ESS) is still somewhat low for many parameters. The
 total ESS across the two runs is the double of the average ESS (avg ESS). The total in this
@@ -1842,28 +1830,28 @@ longer to get an accurate sample from the posterior, and we might expect the sam
 to be reasonably close to the correct values.
 
 Now focus on the summaries of the parameter samples. From the top, the parameters are total tree
-length (\ttt{TL}), the omega values (dN/dS ratios) for the negatively selected, neutral, and
-positively selected sites (\ttt{omega(-)}, \ttt{omega(N)}, and \ttt{omega(+)}), the frequencies of
-the site categories (\ttt{pi(-)}, \ttt{pi(N)}, and \ttt{pi(+)}), and the stationary state
-frequencies of the codons (\ttt{pi(AAA)}, \ttt{pi(AAC)}, etc).
+length (\texttt{TL}), the omega values (dN/dS ratios) for the negatively selected, neutral, and
+positively selected sites (\texttt{omega(-)}, \texttt{omega(N)}, and \texttt{omega(+)}), the frequencies
+of the site categories (\texttt{pi(-)}, \texttt{pi(N)}, and \texttt{pi(+)}), and the stationary state
+frequencies of the codons (\texttt{pi(AAA)}, \texttt{pi(AAC)}, etc).
 
 The table ends with the probabilities of individual sites being in the positively selected class,
-with \ttt{pr+(1,2,3)} being the probability of the codon corresponding to nucleotide sites 1--3
-being positively selected, \ttt{pr+(4,5,6)} being the probability for the codon corresponding to
+with \texttt{pr+(1,2,3)} being the probability of the codon corresponding to nucleotide sites 1--3
+being positively selected, \texttt{pr+(4,5,6)} being the probability for the codon corresponding to
 sites 4--6 being positively selected, etc.
 
 The positive selection probabilities are followed by the site omega values, which represent a
-weighted average for each site across all categories of omega values, with \ttt{omega(1,2,3)} being
-the value for the codon corresponding to nucleotide sites 1--3, \ttt{omega(4,5,6)} the value for
+weighted average for each site across all categories of omega values, with \texttt{omega(1,2,3)} being
+the value for the codon corresponding to nucleotide sites 1--3, \texttt{omega(4,5,6)} the value for
 the codon corresponding to sites 4--6, etc.
 
-Looking at the values, we note that about 85 \% (\ttt{pi(-)}) of the sites are under strong
-constraining selection (\ttt{omega(-)=0.0699}). Only a small fraction of sites, around 5 \%, are
-under positive selection (\ttt{pi(+)}).
+Looking at the values, we note that about 85 \% (\texttt{pi(-)}) of the sites are under strong
+constraining selection (\texttt{omega(-)=0.0699}). Only a small fraction of sites, around 5 \%, are
+under positive selection (\texttt{pi(+)}).
 
 Examination of the positive selection probabilities and codon site omega values reveals which sites
-are most likely to be experiencing positive selection (a high value for \ttt{pr+(n,n,n)}, and
-\ttt{omega(n,n,n)} $> 1.0$).
+are most likely to be experiencing positive selection (a high value for \texttt{pr+(n,n,n)}, and
+\texttt{omega(n,n,n)} $> 1.0$).
 % For instance, the evidence is strong that site (292,293,294) is under positive selection
 % (\ttt{pr+(292,293,294) = 0.998}, \ttt{omega(292,293,294) = 1.21}).
 %%%% JN: My rerun using 3.2.7 did not find any pr+ value > 0.282567,
@@ -1880,12 +1868,11 @@ substitution model space in the Bayesian MCMC analysis itself \citep{huelsenbeck
 need for a priori model testing. The purpose of this tutorial is to demonstrate how to set up an
 analysis that integrates out the uncertainty about the correct substitution model by sampling
 across the entire general time reversible (GTR) model space. We will use the data in the file
-\ttt{primates.nex}.
+\texttt{primates.nex}.
 
 First, we read in the data:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > execute primates.nex
 \end{verbatim}
@@ -1895,8 +1882,7 @@ MrBayes > execute primates.nex
 Then we specify that we want to use a gamma model of rate variation across sites, and that we want
 to sample across the GTR model space:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > lset nst=mixed rates=gamma
 \end{verbatim}
@@ -1908,36 +1894,33 @@ parameter samples, including the probabilities of the sampled substitution model
 convergence by making sure that these probabilities are the same across independent runs. This is a
 sample table from an analysis using two independent runs on the tutorial data set:
 
-\begin{singlespacing}
-\footnotesize
+\begin{figure}[h]\singlespacing\footnotesize
 \begin{verbatim}
-   Model probabilities above 0.050
-   Estimates saved to file "primates.nex.mstat".
+  Model probabilities above 0.050
+  Estimates saved to file "primates.nex.mstat".
 
-                              Posterior      Standard         Min.           Max.   
-   Model                     Probability     Deviation     Probability    Probability
-   ----------------------------------------------------------------------------------
-   gtrsubmodel[121123]          0.196          0.015          0.186          0.207
-   gtrsubmodel[121121]          0.099          0.007          0.094          0.104
-   gtrsubmodel[121321]          0.066          0.017          0.053          0.078
-   gtrsubmodel[121324]          0.063          0.013          0.054          0.072
-   gtrsubmodel[121323]          0.062          0.008          0.057          0.068
-   gtrsubmodel[123323]          0.055          0.004          0.053          0.058
-   ----------------------------------------------------------------------------------
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+                           Posterior     Standard        Min.          Max.   
+  Model                   Probability    Deviation    Probability   Probability
+  -----------------------------------------------------------------------------
+  gtrsubmodel[121123]        0.196         0.015         0.186         0.207
+  gtrsubmodel[121121]        0.099         0.007         0.094         0.104
+  gtrsubmodel[121321]        0.066         0.017         0.053         0.078
+  gtrsubmodel[121324]        0.063         0.013         0.054         0.072
+  gtrsubmodel[121323]        0.062         0.008         0.057         0.068
+  gtrsubmodel[123323]        0.055         0.004         0.053         0.058
+  -----------------------------------------------------------------------------
+\end{verbatim}\end{figure}
 
 The models are labeled using a so-called restricted growth function. The six different substitution
 rates are given in the order $r_{AC}$, $r_{AG}$, $r_{AT}$, $r_{CG}$, $r_{CT}$, $r_{GT}$. The first rate is
 labeled ``1''. The next rate is labeled with the next higher, unused integer if it is different,
 and otherwise with the same integer as the partition it belongs to. For instance,
-\ttt{gtrsubmodel[111111]} refers to the Jukes--Cantor or F81 model, \ttt{gtrsubmodel[123456]} to
-the GTR model, and \ttt{gtrsubmodel[121121]} to the HKY model, and so on.
+\texttt{gtrsubmodel[111111]} refers to the Jukes--Cantor or F81 model, \texttt{gtrsubmodel[123456]} to
+the GTR model, and \texttt{gtrsubmodel[121121]} to the HKY model, and so on.
 
 For this particular data set, we observe that there is considerable uncertainty concerning the
 correct substitution model. The model with the highest posterior probability is
-\ttt{gtrsubmodel[121123]}, which differs from the HKY model only in that the G--T substitution rate
+\texttt{gtrsubmodel[121123]}, which differs from the HKY model only in that the G--T substitution rate
 is different from the other transversion rates, presumably lower. The HKY model has the second best
 posterior probability of all the models reaching above the reporting threshold of $0.050$. All other
 estimates of model parameters derived from this analysis, the topology estimate for instance, will
@@ -1960,22 +1943,12 @@ we need to compute the ratio of the marginal likelihoods of the two models, $M_{
 This ratio is known as the Bayes factor, $B_{12}$, and is a summary of the evidence provided by the
 data in favor of model 1 over model 2 \citep{kass95} (see also section \ref{bayesianModelChoice}).
 
-We will use the data in the file \ttt{primates.nex} for the analysis. First, read in the data
-using:
+We will use the data in the file \texttt{primates.nex} for the analysis. First, read in the data 
+and then specify a GTR + I + $\Gamma$ model: %% PV: I need to save some lines here for later
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > execute primates.nex
-\end{verbatim}
-\end{singlespacing}
-\normalsize
-
-Now let us specify a GTR + I + $\Gamma$ model:
-
-\begin{singlespacing}
-\small
-\begin{verbatim}
 MrBayes > lset nst=6 rates=invgamma
 \end{verbatim}
 \end{singlespacing}
@@ -1986,8 +1959,7 @@ The hard constraint will allow us to force a partition to always be present in t
 The negative constraint will allow us to sample across all trees that do not contain the specified
 partition. Specify the constraints using the following commands:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > constraint humanchimp = Homo_sapiens Pan
 MrBayes > constraint nohumanchimp negative = Homo_sapiens Pan
@@ -2000,80 +1972,82 @@ harmonic mean of the likelihood values of the MCMC samples. It is simple to comp
 pretty rough estimate of the model likelihood. To obtain a more accurate model likelihood, MrBayes
 provides the stepping-stone method. First, let us use the harmonic mean estimate of the model
 likelihoods of the two models we want to compare. First we enforce the positive constraint, run an
-MCMC analysis with 100,000 generations, and use \ttt{sump} to get the harmonic mean estimate (we
-also use \ttt{set autoclose=yes nowarnings=yes} for allowing execution without being prompted for
-answering \ttt{yes}/\ttt{no} between steps):
+MCMC analysis with 100,000 generations, and use \texttt{sump} to get the harmonic mean estimate (we
+also use \texttt{set autoclose=yes nowarnings=yes} for allowing execution without being prompted for
+answering \texttt{yes/no} between steps):
 
-\begin{singlespacing}
-\small
+%% PV: And I need to reduce the line length here
+\begin{singlespacing}\small
 \begin{verbatim}
-MrBayes > set autoclose=yes nowarnings=yes
-MrBayes > prset topologypr=constraints(humanchimp)
-MrBayes > mcmc ngen=100000
-MrBayes > sump
+> set autoclose=yes nowarnings=yes
+> prset topologypr=constraints(humanchimp)
+> mcmc ngen=100000
+> sump
 \end{verbatim}
 \end{singlespacing}
 \normalsize
+
+\begin{wrapfigure}{r}{0.4\textwidth}\singlespacing\footnotesize
+\vspace{-18mm}
+\begin{verbatim}
+     Estimated marginal likeli-
+     hoods for runs sampled in 
+     files "primates.nex.run1.p"
+     and "primates.nex.run2.p":
+
+     (Use the harmonic mean for 
+      Bayes factor comparisons 
+      of models)
+ 
+     (Values are saved to the 
+      file primates.nex.lstat)
+
+    Run   Arithmetic    Harmonic 
+             mean         mean
+    ----------------------------
+      1    -5719.86     -5730.72
+      2    -5720.03     -5730.95
+    ----------------------------
+    TOTAL  -5719.94     -5730.84
+    ----------------------------
+\end{verbatim}\end{wrapfigure}
 
 In the output from the \ttt{sump} command, focus on the table summarizing the likelihoods of the
-MCMC samples:
-
-\begin{singlespacing}
-\footnotesize
-\begin{verbatim}
-   Estimated marginal likelihoods for runs sampled in files
-      "primates.nex.run1.p" and "primates.nex.run2.p":
-      (Use the harmonic mean for Bayes factor comparisons of models)
-
-      (Values are saved to the file primates.nex.lstat)
-
-   Run   Arithmetic mean   Harmonic mean
-   --------------------------------------
-     1      -5719.86         -5730.72
-     2      -5720.03         -5730.95
-   --------------------------------------
-   TOTAL    -5719.94         -5730.84
-   --------------------------------------
-
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+MCMC samples:~$\rightarrow$
 
 It is the harmonic mean that we will use as the initial estimate of the model likelihood. The
 estimate of the logarithm of the model likelihood is $-5730.84$, with a little bit of heterogeneity
-between the runs.
+between the runs.\vspace{4mm}
 
-Now we enforce the negative constraint, and repeat the procedure using the commands:
+Now we enforce the negative constraint, and repeat the procedure using:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
-MrBayes > prset topologypr=constraints(nohumanchimp)
-MrBayes > mcmc ngen=100000
-MrBayes > sump
+> prset topologypr=constraints(nohumanchimp)
+> mcmc ngen=100000
+> sump
 \end{verbatim}
-\end{singlespacing}
-\normalsize
+\normalsize\end{singlespacing}
 
-Our run produced the following estimates of the log of the model likelihoods:
+Our run produced the following estimates of the log of the model likelihoods:~$\rightarrow$
 
-\begin{singlespacing}
-\footnotesize
+\begin{wrapfigure}{r}{0.4\textwidth}\singlespacing\footnotesize
+\vspace{-23mm}
 \begin{verbatim}
-   Run   Arithmetic mean   Harmonic mean
-   --------------------------------------
-     1      -5726.95         -5735.94
-     2      -5727.59         -5738.19
-   --------------------------------------
-   TOTAL    -5727.22         -5737.59
-   --------------------------------------
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+    Run    Arithmetic   Harmonic 
+             mean         mean
+    ----------------------------
+      1    -5726.95     -5735.94
+      2    -5727.59     -5738.19
+    ----------------------------
+    TOTAL  -5727.22     -5737.59
+    ----------------------------
+
+\end{verbatim}\end{wrapfigure}
 
 The harmonic mean estimate for this model is $-5737.59$ in log units, which is about 6 log units
 worse than the previous model---wich gives us a $2logB_{12} = 13.5$. A value $10$ is typically
-considered ``very strong'' evidence in favor of the better model (Table \ref{table:bftable}). Thus,
+considered ``very strong'' evidence in favor of the better model  (See table \ref{table:bftable} on page~\pageref{table:bftable}). Thus,
 the harmonic mean estimator indicates that we have very strong evidence in favor of human and chimp
 being each others closest relatives, with Gorilla and other primates being more distant.
 
@@ -2083,7 +2057,7 @@ this tree groups chimps (\textit{Pan}) and gorillas (\textit{Gorilla}) together,
 \textit{Homo sapiens} being just outside, as one might have expected.
 
 Let us now repeat the comparison using the more accurate stepping-stone sampling approach. Instead
-of using the \ttt{mcmc} command followed by the \ttt{sump} command, we simply use the \ttt{ss}
+of using the \texttt{mcmc} command followed by the \texttt{sump} command, we simply use the \texttt{ss}
 command instead, which will produce the estimated model likelihood directly. The stepping-stone
 analysis moves from the posterior to the prior through a number of steps (MCMC analyses) in which
 the sampled distribution is a mixture of varying proportions of the two.
@@ -2096,26 +2070,25 @@ of trees with similar probability will become huge for any reasonably-sized set 
 To help you monitor convergence during stepping-stone sampling, MrBayes will print the average
 standard deviation of split frequencies across runs if you use at least two independent, parallel
 runs. Each step in the algorithm is treated as an independent MCMC sampling problem, and where most
-of the parameters in the \ttt{mcmcp} and \ttt{mcmc} commands are applicable to the MCMC analysis in
-each step. For example, the \ttt{samplefreq} and the \ttt{burnin} parameters, respectively, are
-used for setting sampling frequency and burnin behaviour within each step. In addition, the
-\ttt{ss} command also uses its own burnin parameter, \ttt{Burninss}, for specifying the number of
+of the parameters in the \texttt{mcmcp} and \texttt{mcmc} commands are applicable to the MCMC analysis 
+in each step. For example, the \texttt{samplefreq} and the \texttt{burnin} parameters, respectively, 
+are used for setting sampling frequency and burnin behaviour within each step. In addition, the
+\texttt{ss} command also uses its own burnin parameter, \texttt{Burninss}, for specifying the number of
 samples to be discarded before sampling of the first step starts. The length of the initial burn-in
 can be specified either in terms of the number of samples to be discarded (positive numbers) or in
 terms of step lengths (negative numbers). By default, the initial burn-in phase is as long as one
-of the subsequent steps in the algorithm, that is, \ttt{burninss=-1}. For example, assume that
-\ttt{Burninss} is set to $-1$, \ttt{Nsteps} to $49$, \ttt{Ngen} to $300000$ and \ttt{samplefreq} to
-$500$. The algorithm will then run 49 steps, each with 6,000 generations ($Ngen/Nsteps+1$), which
-is the number of generations per step left---after a burnin of (the length of) one step is
-removed.
+of the subsequent steps in the algorithm, that is, \texttt{burninss=-1}. For example, assume that
+\texttt{Burninss} is set to $-1$, \texttt{Nsteps} to $49$, \texttt{Ngen} to $300000$ and 
+\texttt{samplefreq} to $500$. The algorithm will then run 49 steps, each with 6,000 generations 
+($Ngen/Nsteps+1$), which is the number of generations per step left---after a burnin of (the 
+length of) one step is removed.
 
 To obtain an adequate sample from most of the steps in the algorithm, we will use the settings
 given above. To monitor convergence, twice during each step, we set the diagnostics frequency to
 once every 3,000 generations. Stepping-stone analysis under the two models using these settings
 will be generated by the following commands:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > prset topologypr=constraints(humanchimp)
 MrBayes > ss ngen=300000 diagnfreq=3000
@@ -2125,39 +2098,37 @@ MrBayes > ss
 \end{singlespacing}
 \normalsize
 
-The output from the \ttt{ss} command will include the following table, which is given here for the
-first model:
+The output from the \texttt{ss} command will include the following tables for the first model (upper table) and second model (lower table):~\rotatebox[origin=l]{270}{$\Rsh$}
 
-\scriptsize
-\begin{singlespacing}
+\begin{wrapfigure}{r}{0.45\textwidth}\singlespacing\footnotesize
+  \vspace{-7mm}
 \begin{verbatim}
-   Marginal likelihood (in natural log units) estimated using stepping-stone sampling based on
-   49 steps with 6000 generations (12 samples) within each step. 
+   Marginal likelihood (in natural
+   log units) estimated using 
+   stepping-stone sampling based 
+   on 49 steps with 6000 generations
+   (12 samples) within each step. 
 
-       Run   Marginal likelihood (ln)
-       ------------------------------
-         1     -5797.07   
-         2     -5795.82   
-       ------------------------------
-       Mean:   -5796.26
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+       Run       Marginal 
+               likelihood (ln)
+        ----------------------
+          1      -5797.07   
+          2      -5795.82   
+        ----------------------
+        Mean:    -5796.26
 
-In our run, the second model produced the following version of the same table:
 
-\scriptsize
-\begin{singlespacing}
-\begin{verbatim}
-       Run   Marginal likelihood (ln)
-       ------------------------------
-         1     -5805.21   
-         2     -5807.67   
-       ------------------------------
-       Mean:   -5805.82
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+
+        Run       Marginal 
+                likelihood (ln)
+        ----------------------
+          1      -5805.21   
+          2      -5807.67   
+        ----------------------
+        Mean:    -5805.82
+
+
+\end{verbatim}\end{wrapfigure}
 
 The model likelihoods are thus $-5796.26$ for the first model,and $-5805.82$ for the second (in
 natural log units). We first note that both likelihoods are considerably smaller than the
@@ -2169,17 +2140,16 @@ upwards in practice.
 We also note that the more accurate model likelihoods suggest a larger difference between the two
 models, about 9 log likelihood units (with a $2*logB_{12} = 19,12$). Thus, we conclude that the
 better model (humans and chimps do form a monophyletic group) is very strongly supported by the
-Bayes factor.
+Bayes factor.\newpage
 
 Finally, let us examine one of the convergence diagnostics plots from one of our stepping-stone
 analyses:
 
-\footnotesize
-\begin{singlespacing}
+\begin{figure}[h]\singlespacing\footnotesize
 \begin{verbatim}
-   Plot of average standard deviation of split frequencies across steps.
-   Points at -1.0 (y-axis) indicate that there were no splits
-   above minimum frequency for corresponding step.
+  Plot of average standard deviation of split frequencies across steps.
+  Points at -1.0 (y-axis) indicate that there were no splits
+  above minimum frequency for corresponding step.
    +------------------------------------------------------------+ 0.101
    |                                     *    *    *            |
    |                      *       *       *                     |
@@ -2199,9 +2169,7 @@ analyses:
    +------+-----+-----+-----+-----+-----+-----+-----+-----+-----+ 0.000
    ^                                                            ^
    1                                                           49
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+\end{verbatim}\end{figure}
 
 Here, we see the expected pattern of low average standard deviation of split frequencies in the
 early steps of the algorithm (to the left in the diagram), and difficulties of sampling across
@@ -2213,9 +2181,9 @@ analysis suggests that the accuracy is already reasonably good.
 
 It might be worth repeating that for any difficult MCMC scenario (such as getting an accurate
 estimate from the stepping-stone algorithm), it is well worth trying to repeat the analyses,
-perhaps with slightly different settings, to look for robustness. In the case of the \ttt{ss}
-command, one might also use the parameter \ttt{fromprior=yes}, which starts from the prior and goes
-towards the posterior (the opposite direction from the default settings). The two approaches
+perhaps with slightly different settings, to look for robustness. In the case of the \texttt{ss}
+command, one might also use the parameter \texttt{fromprior=yes}, which starts from the prior and
+goes towards the posterior (the opposite direction from the default settings). The two approaches
 should, in theory, give the same estimate (plus/minus the MCMC error).
 
 \section{Testing the Strict Molecular Clock}
@@ -2330,7 +2298,6 @@ command. It should look something like this:
 \scriptsize
 \begin{verbatim}
    Phylogram (based on median node depths):
-
                   /------------------------------------------- Tarsius_syrichta (1)
    /--------------+                                                                
    |              \------------------------------------------- Lemur_catta (2)
@@ -2357,7 +2324,6 @@ command. It should look something like this:
                                                                                    
    --|---------|--------|--------|---------|--------|--------|                     
    0.60      0.50     0.40     0.30      0.20     0.10     0.00                    
-
    [Expected changes per site]
 \end{verbatim}
 \normalsize
