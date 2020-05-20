@@ -7,6 +7,7 @@
 \usepackage{amssymb,amsmath} % is nice having similar packages grouped, and we save one line
 \usepackage{setspace}
 \usepackage{url}
+\usepackage{wrapfig}
 \usepackage{natbib}
 \usepackage{pdfpages}
 \usepackage{longtable}
@@ -2222,7 +2223,7 @@ should, in theory, give the same estimate (plus/minus the MCMC error).
 \label{strictClock}
 
 In this tutorial, we will use a Bayes factor comparison to test the strict clock model against the
-non-clock model for an example data set, \ttt{primates.nex}. The data set is unusual in that a
+non-clock model for an example data set, \texttt{primates.nex}. The data set is unusual in that a
 standard non-clock analysis suggests that the evolution of these sequences may be fairly well
 explained by a strict clock. The analysis is quite similar to the previous one, so you might find
 it useful to go through that tutorial first. The basic idea is that we want to compare the marginal
@@ -2230,21 +2231,12 @@ likelihoods of the two models (non-clock and strict clock) against each other. T
 to estimate the marginal likelihoods either using the rough harmonic mean method or the more
 accurate stepping-stone method. We will use both in this tutorial and compare the results.
 
-As usual, we first read in the data:
+% PV: I need to save some lines for later
+As usual, we first read in the data and then we specify a GTR + I + $\Gamma$ model:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > execute primates.nex
-\end{verbatim}
-\end{singlespacing}
-\normalsize
-
-Then we specify a GTR + I + $\Gamma$ model:
-
-\begin{singlespacing}
-\small
-\begin{verbatim}
 MrBayes > lset nst=6 rates=invgamma
 \end{verbatim}
 \end{singlespacing}
@@ -2252,13 +2244,12 @@ MrBayes > lset nst=6 rates=invgamma
 
 To estimate marginal likelihoods of the two models using harmonic means of the likelihoods of the
 MCMC samples, we simply run an ordinary MCMC analysis and obtain the appropriate values using the
-standard \ttt{sump} command. Specifically, we first run the standard non-clock model for 100,000
-generations and summarize the obtained samples using \ttt{sump} (we also use \ttt{set autoclose=yes
-nowarnings=yes} for allowing execution without being prompted for answering \ttt{yes}/\ttt{no}
+standard \texttt{sump} command. Specifically, we first run the standard non-clock model for 100,000
+generations and summarize the obtained samples using \texttt{sump} (we also use \ttt{set autoclose=yes
+nowarnings=yes} for allowing execution without being prompted for answering \texttt{yes/no}
 between steps):
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > mcmc ngen=100000
@@ -2267,7 +2258,7 @@ MrBayes > sump
 \end{singlespacing}
 \normalsize
 
-In the \ttt{sump} output, we focus on the table summarizing the means of the likelihoods of the
+In the \texttt{sump} output, we focus on the table summarizing the means of the likelihoods of the
 MCMC samples obtained after the burn-in:
 
 \begin{singlespacing}
@@ -2291,8 +2282,7 @@ Now we repeat the procedure under the strict clock model. To enforce branch leng
 strict clock, we choose one of the clock priors for the branch lengths. Specifically, we are going
 to use the uniform prior on clock trees. The other commands are the same as those used previously:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 > prset brlenspr=clock:uniform
 > mcmc ngen=100000
