@@ -7,6 +7,7 @@
 \usepackage{amssymb,amsmath} % is nice having similar packages grouped, and we save one line
 \usepackage{setspace}
 \usepackage{url}
+\usepackage{wrapfig}
 \usepackage{natbib}
 \usepackage{pdfpages}
 \usepackage{longtable}
@@ -2267,23 +2268,22 @@ MrBayes > sump
 \end{singlespacing}
 \normalsize
 
-In the \ttt{sump} output, we focus on the table summarizing the means of the likelihoods of the
-MCMC samples obtained after the burn-in:
-
-\begin{singlespacing}
-\footnotesize
+\begin{wrapfigure}{r}{0.42\textwidth}\singlespacing\footnotesize
+  \vspace{-1cm}
 \begin{verbatim}
-   Run   Arithmetic mean   Harmonic mean
-   --------------------------------------
-     1      -5720.09         -5732.97
-     2      -5719.24         -5730.36
-   --------------------------------------
-   TOTAL    -5719.58         -5732.35
-   --------------------------------------
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+   Run     Arithmetic   Harmonic 
+              mean        mean
+   -----------------------------
+     1     -5720.09     -5732.97
+     2     -5719.24     -5730.36
+   -----------------------------
+   TOTAL   -5719.58     -5732.35
+   -----------------------------
+\end{verbatim}\end{wrapfigure}
 
+In the \texttt{sump} output, we focus on the table summarizing the means of the likelihoods of the
+MCMC samples obtained after the burn-in.~$\rightarrow$
+    
 The harmonic mean suggests that the marginal likelihood of the standard non-clock model is
 $-5732.35$ log units. Notice, however, some heterogeneity between the runs.
 
@@ -2291,32 +2291,27 @@ Now we repeat the procedure under the strict clock model. To enforce branch leng
 strict clock, we choose one of the clock priors for the branch lengths. Specifically, we are going
 to use the uniform prior on clock trees. The other commands are the same as those used previously:
 
-\begin{singlespacing}
-\small
 \begin{verbatim}
-> prset brlenspr=clock:uniform
-> mcmc ngen=100000
-> sump
+   > prset brlenspr=clock:uniform
+   > mcmc ngen=100000
+   > sump
 \end{verbatim}
-\end{singlespacing}
-\normalsize
 
-Again, we focus on the table summarizing the means of the likelihoods of the MCMC samples:
-
-\begin{singlespacing}
-\footnotesize
+  \begin{wrapfigure}{r}{0.42\textwidth}\singlespacing\footnotesize
+    \vspace{-9mm}
 \begin{verbatim}
-   Run   Arithmetic mean   Harmonic mean
-   --------------------------------------
-     1      -5719.56         -5729.48
-     2      -5719.12         -5731.20
-   --------------------------------------
-   TOTAL    -5719.32         -5730.67
-   --------------------------------------
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+   Run     Arithmetic   Harmonic 
+              mean        mean
+   -----------------------------
+     1      -5719.56    -5729.48
+     2      -5719.12    -5731.20
+   -----------------------------
+   TOTAL    -5719.32    -5730.67
+   -----------------------------
+\end{verbatim}\end{wrapfigure}
 
+Again, we focus on the table summarizing the means of the likelihoods of the MCMC samples: $\rightarrow$
+    
 The harmonic mean is lower for the strict-clock model than for the non-clock model, the log values
 being $-5730.67$ and $-5732.35$, respectively. This is as we suspected, but the difference is small
 and there is overlap between the estimates obtained in individual runs. In this case, we
@@ -2324,44 +2319,42 @@ undoubtedly need the increased accuracy of the stepping-stone sampling method.
 
 Before moving on to the stepping-stone analysis, first compute a summary of the tree samples using
 the \tb{sumt} command. Now focus on the phylogram, the second tree, in the output from this
-command. It should look something like this:
+command. It should look something like the figure in page~\pageref{phylomediannode}:
 
-\begin{singlespacing}
-\scriptsize
+% PV: We can afford footnotesize here
+\begin{figure}[h]\singlespacing\footnotesize\label{phylomediannode}
 \begin{verbatim}
-   Phylogram (based on median node depths):
+Phylogram (based on median node depths):
 
-                  /------------------------------------------- Tarsius_syrichta (1)
-   /--------------+                                                                
-   |              \------------------------------------------- Lemur_catta (2)
-   |                                                                               
-   |                                                    /----- Homo_sapiens (3)
-   |                                                  /-+                          
-   |                                                  | \----- Pan (4)
-   |                                          /-------+                            
-   |                                          |       \------- Gorilla (5)
-   |                                      /---+                                    
-   +                                      |   \--------------- Pongo (6)
-   |                        /-------------+                                        
-   |                        |             \------------------- Hylobates (7)
-   |                        |                                                      
-   |                        |                              /-- Macaca_fuscata (8)
-   |            /-----------+                           /--+                       
-   |            |           |                           |  \-- M_mulatta (9)
-   |            |           |                        /--+                          
-   |            |           |                        |  \----- M_fascicularis (10)
-   \------------+           \------------------------+                             
-                |                                    \-------- M_sylvanus (11)
-                |                                                                  
-                \--------------------------------------------- Saimiri_sciure~ (12)
+               /------------------------------------------- Tarsius_syrichta (1)
+/--------------+                                                                
+|              \------------------------------------------- Lemur_catta (2)
+|                                                                               
+|                                                    /----- Homo_sapiens (3)
+|                                                  /-+                          
+|                                                  | \----- Pan (4)
+|                                          /-------+                            
+|                                          |       \------- Gorilla (5)
+|                                      /---+                                    
++                                      |   \--------------- Pongo (6)
+|                        /-------------+                                        
+|                        |             \------------------- Hylobates (7)
+|                        |                                                      
+|                        |                              /-- Macaca_fuscata (8)
+|            /-----------+                           /--+                       
+|            |           |                           |  \-- M_mulatta (9)
+|            |           |                        /--+                          
+|            |           |                        |  \----- M_fascicularis (10)
+\------------+           \------------------------+                             
+             |                                    \-------- M_sylvanus (11)
+             |                                                                  
+             \--------------------------------------------- Saimiri_sciure~ (12)
                                                                                    
-   --|---------|--------|--------|---------|--------|--------|                     
-   0.60      0.50     0.40     0.30      0.20     0.10     0.00                    
+--|---------|--------|--------|---------|--------|--------|                     
+  0.60      0.50     0.40     0.30      0.20     0.10     0.00                    
 
-   [Expected changes per site]
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+ [Expected changes per site]
+\end{verbatim}\end{figure}
 
 We briefly want to point out two things. First, all tips in the tree have the same distance to the
 root in the consensus phylogram, the summary tree that is based on branch lengths. This is because
@@ -2380,13 +2373,13 @@ only used when drawing unrooted trees.
 Now let us continue with a more accurate assessment of the marginal model likelihoods using the
 stepping-stone method. It estimates the model likelihood by sampling a series of distributions that
 represent different mixtures of the posterior distribution and the prior distribution
-\citep{xie11}. The stepping-stone algorithm is invoked with the \ttt{ss} command, and it uses the
-same computational machinery as the \ttt{mcmc} command for each of the steps. Let us run the
+\citep{xie11}. The stepping-stone algorithm is invoked with the \texttt{ss} command, and it uses the
+same computational machinery as the \texttt{mcmc} command for each of the steps. Let us run the
 algorithm for 50 steps (the default) of 5,000 generations each, which makes a total of 250,000
 generations. We will adjust the default frequency of calculating convergence diagnostics to once
 every 2,500 generations to get two reports from each step in the algorithm. By default, the
 algorithm uses an initial burn-in corresponding to one step, which corresponds to setting the
-\ttt{burninss} option to $-1$. The total length of the analysis will therefore be 255,000
+\texttt{burninss} option to $-1$. The total length of the analysis will therefore be 255,000
 generations.
 
 As before, the run needs to be repeated for each of the two models. The following set of commands
@@ -2396,8 +2389,7 @@ alternative way of resetting the model to the default is to execute the data set
 choose that alternative, do not forget to specify the GTR + I + $\Gamma$ model before running the
 stepping-stone method.
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 > MrBayes > prset brlenspr=unconstrained:exp(10.0)
 > MrBayes > ss ngen=255000 diagnfreq=2500
@@ -2405,26 +2397,36 @@ stepping-stone method.
 \end{singlespacing}
 \normalsize
 
-The estimated marginal likelihoods are found in a table printed by the \ttt{ss} command after the
-analysis is completed. Here are the estimates from our run:
-
-\begin{singlespacing}
-\footnotesize
+\begin{wrapfigure}{r}{0.32\textwidth}\singlespacing\footnotesize
+  \vspace{-10mm}
 \begin{verbatim}
-       Run   Marginal likelihood (ln)
-       ------------------------------
-         1     -5798.62   
-         2     -5799.24   
-       ------------------------------
-       Mean:   -5798.88
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+     Run      Marginal 
+           likelihood (ln)
+     ---------------------
+       1      -5798.62   
+       2      -5799.24   
+     ---------------------
+     Mean:    -5798.88
+
+
+
+
+
+     Run    Marginal 
+          likelihood (ln)
+     --------------------
+       1     -5783.66   
+       2     -5784.14   
+     --------------------
+     Mean:   -5783.87
+\end{verbatim}\end{wrapfigure}
+
+The estimated marginal likelihoods are found in a table printed by the \ttt{ss} command after the
+analysis is completed. Here are the estimates from our run:~$\rightarrow$
 
 We now run the same analysis on the strict clock model:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 > MrBayes > prset brlenspr=clock:uniform
 > MrBayes > ss ngen=255000 diagnfreq=2500
@@ -2432,20 +2434,7 @@ We now run the same analysis on the strict clock model:
 \end{singlespacing}
 \normalsize
 
-We got the following estimates of the marginal model likelihoods:
-
-\begin{singlespacing}
-\footnotesize
-\begin{verbatim}
-       Run   Marginal likelihood (ln)
-       ------------------------------
-         1     -5783.66   
-         2     -5784.14   
-       ------------------------------
-       Mean:   -5783.87
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+We got the following estimates of the marginal model likelihoods:~$\rightarrow$
 
 First we note that there is good agreement between the two independent analyses for both models,
 indicating that we now have more accurate estimates of the marginal model likelihoods. If we
@@ -2454,13 +2443,15 @@ lower.  Although the harmonic mean estimator is unbiased if you let the number o
 infinity, it relies heavily on rarely sampled states with low likelihood. Short runs tend not to
 include such samples, so the harmonic mean estimate is often considerably inflated in practice.
 
+%% PV: (optional) If the manual is printed, including the page will help to find the table faster
 We also see that the strict-clock model is now almost $15$ log likelihood units better than the
 non-clock model. A difference exceeding 5 log likelihood units is usually considered very strong
-evidence in favor of the better model \citep{kass95} (see also Table \ref{table:bftable}). If you
-are familiar with likelihood ratio tests, it may seem counter-intuitive that the strict clock model
-can be so strongly preferred. After all, the strict clock is just a special case of the non-clock
-model, so the (maximum) likelihood \emph{must} necessarily be higher, or at least as high, for the
-latter. How can the strict-clock model still be preferred in the Bayes factor comparison?
+evidence in favor of the better model \citep{kass95} (see also Table \ref{table:bftable} on 
+page~\pageref{tablebftable}). If you are familiar with likelihood ratio tests, it may seem 
+counter-intuitive that the strict clock model can be so strongly preferred. After all, the strict
+clock is just a special case of the non-clock model, so the (maximum) likelihood \emph{must} 
+necessarily be  higher, or at least as high, for the latter. How can the strict-clock model still 
+be preferred in the Bayes factor comparison?
 
 The answer has to do with the number of parameters. For a data set with $n$ taxa, a non-clock model
 has roughly $2n$ independent branch length parameters, whereas a strict clock model only has around
@@ -2479,7 +2470,7 @@ captures values close to the peak likelihoods of the more complex model, then th
 to have a lower average likelihood when the values are spread out across its larger parameter
 space. This is what happens here, resulting in a strong preference for the strict clock model.
 
-For a brief discussion on convergence diagnostics and the plot printed by the \ttt{ss} command,
+For a brief discussion on convergence diagnostics and the plot printed by the \texttt{ss} command,
 see the previous tutorial.
 
 
