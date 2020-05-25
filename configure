@@ -5837,6 +5837,7 @@ else
            clang:     __clang__
            cray:      _CRAYC
            fujitsu:   __FUJITSU
+           sdcc:      SDCC, __SDCC
            gnu:       __GNUC__
            sun:       __SUNPRO_C,__SUNPRO_CC
            hp:        __HP_cc,__HP_aCC
@@ -6853,6 +6854,58 @@ fi
   tcc) :
 
   ax_cv_c_compiler_version=`tcc -v | $SED 's/^[ ]*tcc[ ]\+version[ ]\+\([0-9.]\+\).*/\1/g'`
+   ;; #(
+  sdcc) :
+
+  if ac_fn_c_compute_int "$LINENO" "/* avoid parse error with comments */
+    #if(defined(__SDCC_VERSION_MAJOR))
+	__SDCC_VERSION_MAJOR
+    #else
+	SDCC/100
+    #endif
+    " "_ax_c_compiler_version_major"        ""; then :
+
+else
+  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "_AX_COMPILER_VERSION_SDCC unknown sdcc major
+See \`config.log' for more details" "$LINENO" 5; }
+fi
+
+  if ac_fn_c_compute_int "$LINENO" "/* avoid parse error with comments */
+    #if(defined(__SDCC_VERSION_MINOR))
+	__SDCC_VERSION_MINOR
+    #else
+	(SDCC%100)/10
+    #endif
+    " "_ax_c_compiler_version_minor"        ""; then :
+
+else
+  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "_AX_COMPILER_VERSION_SDCC unknown sdcc minor
+See \`config.log' for more details" "$LINENO" 5; }
+fi
+
+  if ac_fn_c_compute_int "$LINENO" "
+    /* avoid parse error with comments */
+    #if(defined(__SDCC_VERSION_PATCH))
+	__SDCC_VERSION_PATCH
+    #elsif(defined(_SDCC_VERSION_PATCHLEVEL))
+	__SDCC_VERSION_PATCHLEVEL
+    #else
+	SDCC%10
+    #endif
+    " "_ax_c_compiler_version_patch"        ""; then :
+
+else
+  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "_AX_COMPILER_VERSION_SDCC unknown sdcc patch level
+See \`config.log' for more details" "$LINENO" 5; }
+fi
+
+  ax_cv_c_compiler_version="$_ax_c_compiler_version_major.$_ax_c_compiler_version_minor.$_ax_c_compiler_version_patch"
    ;; #(
   *) :
     ax_cv_c_compiler_version="" ;;
