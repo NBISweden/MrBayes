@@ -169,7 +169,7 @@ architecture-dependent compiler flags.  Therefore,
 
   These may be installed through
 
-    sudo apt-get install automake autoconf pkg-config autoconf-archive
+    sudo apt install automake autoconf pkg-config autoconf-archive
 
 When all the prerequisites are in place:
 
