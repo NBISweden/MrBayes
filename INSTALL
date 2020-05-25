@@ -94,9 +94,8 @@ compile and optionally install MrBayes:
     make
 
   Note that if "pdflatex" or "bibtex" could not be found by the
-  "configure" script, the PDF documentation in doc/manual and
-  doc/tutorial will not be rebuilt, even if the PDF documents are
-  outdated or missing.
+  "configure" script, the PDF documentation in doc/manual will not
+  be rebuilt, even if the PDF documents are outdated or missing.
 
 * Install it on the system (optional).  This will install
   the executable "mb" in /usr/local/bin, the documentation
@@ -170,7 +169,7 @@ architecture-dependent compiler flags.  Therefore,
 
   These may be installed through
 
-    sudo apt-get install automake autoconf pkg-config autoconf-archive
+    sudo apt install automake autoconf pkg-config autoconf-archive
 
 When all the prerequisites are in place:
 
