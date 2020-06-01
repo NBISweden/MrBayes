@@ -10,8 +10,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Install prerequisites
-        run: 'sudo apt-get install libreadline-dev'
+      - name: Install code prerequisites
+        run: 'sudo apt-get install libreadline-dev libhmsbeagle-dev libopenmpi-dev'
+
+      - name: Install documentation prerequisites
+        run: 'sudo apt-get install latexmk'
 
       - name: Configure project
         run: ./configure
