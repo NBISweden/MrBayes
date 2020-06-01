@@ -1,0 +1,17 @@
+---
+
+name: Make sure that a build of the project works.
+on: push
+
+jobs:
+  pushchecks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+	uses: actions/checkout@v2
+
+      - name: Install prerequisites
+	run: 'sudo apt-get install build-essential make libreadline-dev'
+
+      - name: Run distcheck
+	run: make distcheck
