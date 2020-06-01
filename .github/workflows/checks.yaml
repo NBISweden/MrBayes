@@ -14,7 +14,7 @@ jobs:
         run: 'sudo apt-get install libreadline-dev libhmsbeagle-dev libopenmpi-dev'
 
       - name: Install documentation prerequisites
-        run: 'sudo apt-get install latexmk'
+        run: 'sudo apt-get install texlive-latex-base'
 
       - name: Configure project
         run: ./configure
