@@ -11,7 +11,10 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install prerequisites
-        run: 'sudo apt-get install build-essential make libreadline-dev'
+        run: 'sudo apt-get install libreadline-dev'
+
+      - name: Configure project
+        run: ./configure
 
       - name: Run distcheck
         run: make distcheck
