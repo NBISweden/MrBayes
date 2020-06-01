@@ -2,9 +2,8 @@ dist_pdf_DATA=	Huelsenbeck_Ronquist_SMME_2005.pdf
 
 EXTRA_DIST=	src
 
-DISTCLEANFILES=	Huelsenbeck_Ronquist_SMME_2005.pdf
-
 CLEANFILES=	\
+	Huelsenbeck_Ronquist_SMME_2005.pdf \
 	Huelsenbeck_Ronquist_SMME_2005.aux \
 	Huelsenbeck_Ronquist_SMME_2005.bbl \
 	Huelsenbeck_Ronquist_SMME_2005.blg \
