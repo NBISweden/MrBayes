@@ -16,11 +16,14 @@ jobs:
       - name: Install documentation prerequisites
         run: 'sudo apt-get install latexmk texlive-formats-extra'
 
+      - name: Test build documentation
+	run: ./configure && make -C doc
+
       - name: Test build plain project
-        run: ./configure --without-mpi --without-beagle && make && make clean
+        run: ./configure --without-mpi --without-beagle && make -j 2 && make clean
       - name: Test build Beagle project
-        run: ./configure --without-mpi --with-beagle    && make && make clean
+        run: ./configure --without-mpi --with-beagle    && make -j 2 && make clean
       - name: Test build MPI project
-        run: ./configure --with-mpi    --without-beagle && make && make clean
+        run: ./configure --with-mpi    --without-beagle && make -j 2 && make clean
       - name: Test build MPI+Beagle project
-        run: ./configure --with-mpi    --with-beagle    && make && make clean
+        run: ./configure --with-mpi    --with-beagle    && make -j 2 && make clean
