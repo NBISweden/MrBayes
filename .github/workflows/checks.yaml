@@ -17,7 +17,7 @@ jobs:
         run: 'sudo apt-get install latexmk texlive-formats-extra'
 
       - name: Test build documentation
-	run: ./configure && make -C doc
+        run: ./configure && make -C doc
 
       - name: Test build plain project
         run: ./configure --without-mpi --without-beagle && make -j 2 && make clean
