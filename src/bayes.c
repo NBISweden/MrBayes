@@ -67,7 +67,9 @@
 #    include <readline/history.h>
 #  elif defined(HAVE_HISTORY_H)
 #    include <history.h>
-#  endif /* defined(HAVE_READLINE_HISTORY_H) */
+#  else
+#    undef HAVE_READLINE_HISTORY
+#  endif
 #endif /* HAVE_READLINE_HISTORY */
 
 #ifdef HAVE_LIBREADLINE
