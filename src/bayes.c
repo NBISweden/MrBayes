@@ -196,8 +196,10 @@ int main (int argc, char *argv[])
     
 #   ifdef HAVE_LIBREADLINE
     rl_attempted_completion_function = readline_completion;
+#   ifdef HAVE_READLINE_HISTORY
     using_history();
-#   endif
+#   endif /* HAVE_READLINE_HISTORY */
+#   endif /* HAVE_LIBREADLINE */
     /* Set up parameter table. */
     SetUpParms ();
     
@@ -408,8 +410,10 @@ int CommandLine (int argc, char **argv)
             if (cmdStrP!=NULL) 
                     {
                     strncpy (cmdStr,cmdStrP,CMD_STRING_LENGTH - 2);
+#                   ifdef HAVE_READLINE_HISTORY
                     if (*cmdStrP) 
                         add_history (cmdStrP);
+#                   endif /* HAVE_READLINE_HISTORY */
                     free (cmdStrP);
                     }
             else /* fall through to if (feof(stdin))..*/
