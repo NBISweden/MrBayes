@@ -53,8 +53,15 @@
 #    include <readline/readline.h>
 #  elif defined(HAVE_READLINE_H)
 #    include <readline.h>
-#  endif /* !defined(HAVE_READLINE_H) */
-#endif /* HAVE_LIBREADLINE */
+#  else
+#    /* Library available, but header files are not. */
+#    /* This typically happens on Linux where libraries may be split
+#       into runtime and development packages. See Github Issue #182. */
+#    undef HAVE_LIBREADLINE
+#    undef HAVE_READLINE_HISTORY
+#  endif
+# endif /* HAVE_LIBREADLINE */
+
 #ifdef HAVE_READLINE_HISTORY
 #  if defined(HAVE_READLINE_HISTORY_H)
 #    include <readline/history.h>
