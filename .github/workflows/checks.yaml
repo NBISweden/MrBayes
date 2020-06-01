@@ -14,10 +14,13 @@ jobs:
         run: 'sudo apt-get install libreadline-dev libhmsbeagle-dev libopenmpi-dev'
 
       - name: Install documentation prerequisites
-        run: 'sudo apt-get install texlive-latex-base'
+        run: 'sudo apt-get install latexmk texlive-formats-extra'
 
-      - name: Configure project
-        run: ./configure
-
-      - name: Run distcheck
-        run: make
+      - name: Test build plain project
+        run: ./configure --without-mpi --without-beagle && make && make clean
+      - name: Test build Beagle project
+        run: ./configure --without-mpi --with-beagle    && make && make clean
+      - name: Test build MPI project
+        run: ./configure --with-mpi    --without-beagle && make && make clean
+      - name: Test build MPI+Beagle project
+        run: ./configure --with-mpi    --with-beagle    && make && make clean
