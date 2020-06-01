@@ -1,0 +1,30 @@
+---
+
+name: Run code build tests
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        beagle: [ --with-beagle, --without-beagle ]
+        mpi: [ --with-mpi, --without-mpi ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Install Readline
+        run: sudo apt-get install libreadline-dev
+
+      - name: Install Beagle if needed
+        if: ${{ matrix.beagle == '--with-beagle' }}
+        run: sudo apt-get install libhmsbeagle-dev
+
+      - name: Install MPI if needed
+        if: ${{ matrix.mpi == '--with-mpi' }}
+        run: sudo apt-git install libopenmpi-dev
+
+      - name: Build project
+        run: ./configure --disable-doc ${{ matrix.mpi }} ${{ matrix.beagle }} && make -j 2 && make clean
