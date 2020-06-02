@@ -1,7 +1,10 @@
 ---
 
 name: Run code build tests
-on: [push]
+on:
+  push:
+    paths-ignore:
+      - 'doc/**'
 
 jobs:
   build:
