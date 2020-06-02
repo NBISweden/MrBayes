@@ -16,18 +16,18 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
       - name: Install Readline
-        run: sudo apt-get install libreadline-dev
+        run: sudo apt install libreadline-dev
 
       - name: Install Beagle if needed
         if: ${{ matrix.beagle == '--with-beagle' }}
-        run: sudo apt-get install libhmsbeagle-dev
+        run: sudo apt install libhmsbeagle-dev
 
       - name: Install MPI if needed
         if: ${{ matrix.mpi == '--with-mpi' }}
-        run: sudo apt-get install libopenmpi-dev
+        run: sudo apt install libopenmpi-dev
 
       - name: Configure project
         run: ./configure --disable-doc ${{ matrix.mpi }} ${{ matrix.beagle }}

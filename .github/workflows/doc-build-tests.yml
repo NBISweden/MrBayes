@@ -12,10 +12,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
       - name: Install documentation prerequisites
-        run: sudo apt-get install latexmk texlive-formats-extra
+        run: sudo apt install latexmk texlive-formats-extra
 
       - name: Configure project
         run: ./configure
