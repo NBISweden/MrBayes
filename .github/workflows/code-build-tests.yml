@@ -29,5 +29,8 @@ jobs:
         if: ${{ matrix.mpi == '--with-mpi' }}
         run: sudo apt-get install libopenmpi-dev
 
+      - name: Configure project
+        run: ./configure --disable-doc ${{ matrix.mpi }} ${{ matrix.beagle }}
+
       - name: Build project
-        run: ./configure --disable-doc ${{ matrix.mpi }} ${{ matrix.beagle }} && make -j 2 && make clean
+        run: make -j 2
