@@ -15234,10 +15234,10 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         if (strcmp(modelParams[part2].clockVarPr, "WN"))
             *isApplic2 = NO;
         
-        /* Now, check that the igr shape parameter is the same */
-        if (IsModelSame (P_IGRVAR, part1, part2, &temp1, &temp2) == NO)
+        /* Now, check that the wn shape parameter is the same */
+        if (IsModelSame (P_WNVAR, part1, part2, &temp1, &temp2) == NO)
             isSame = NO;
-        if (linkTable[P_IGRVAR][part1] != linkTable[P_IGRVAR][part2])
+        if (linkTable[P_WNVAR][part1] != linkTable[P_WNVAR][part2])
             isSame = NO;
     
         /* Not same if branch lengths are not the same */
