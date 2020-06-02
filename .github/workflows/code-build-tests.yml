@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        beagle: [ --with-beagle, --without-beagle ]
-        mpi: [ --with-mpi, --without-mpi ]
+        beagle: [--with-beagle, --without-beagle]
+        mpi: [--with-mpi, --without-mpi]
 
     steps:
       - name: Checkout
