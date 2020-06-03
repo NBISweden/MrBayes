@@ -263,8 +263,8 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 dist_pdf_DATA = Manual_MrBayes_v3.2.pdf
 EXTRA_DIST = src
+DISTCLEANFILES = Manual_MrBayes_v3.2.pdf
 CLEANFILES = \
-	Manual_MrBayes_v3.2.pdf \
 	Manual_MrBayes_v3.2.aux \
 	Manual_MrBayes_v3.2.bbl \
 	Manual_MrBayes_v3.2.blg \
@@ -411,6 +411,7 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-test -z "$(DISTCLEANFILES)" || rm -f $(DISTCLEANFILES)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
