@@ -7,6 +7,7 @@
 \usepackage{amssymb,amsmath} % is nice having similar packages grouped, and we save one line
 \usepackage{setspace}
 \usepackage{url}
+\usepackage{wrapfig}
 \usepackage{natbib}
 \usepackage{pdfpages}
 \usepackage{longtable}
@@ -348,7 +349,7 @@ and a proportion of invariable sites (``GTR + I + $\Gamma$''). If your data are 
 want to invoke a different model, or if you want to use non-default priors, refer to the rest of
 this manual and the Appendix for more help.
 
-\tb{3.1}. At the \ttt{MrBayes >} prompt, type \tb{mcmc ngen=20000 samplefreq=100 printfreq=100
+\tb{3.1}. At the \ttt{MrBayes >} prompt, type \tb{mcmc ngen=20000 samplefreq=100}\\ \tb{printfreq=100
 diagnfreq=1000}. This will start the Markov chain Monte Carlo simulation. It will also ensure that
 you get at least 200 samples from the posterior probability distribution, and that diagnostics are
 calculated every 1,000 generations. For larger data sets you probably want to run the analysis
@@ -836,13 +837,13 @@ a long time to converge, you may even want to sample less frequently than the de
 end up with very large files containing tree and parameter samples.
 
 When the chain is sampled, the current values of the model parameters are printed to file. The
-substitution model parameters are printed to a \ttt{.p} file (in our case, there will be one file
+substitution model parameters are printed to a \ttt{.p} file; a tab delimited text file that can be 
+imported into most statistics and graphing programs~\footnote{In our case, there will be one file
 for each independent analysis, and they will be called \ttt{primates.nex.run1.p} and
-\ttt{primates.nex.run2.p}). The \ttt{.p} files are tab delimited text files that can be imported
-into most statistics and graphing programs. The topology and branch lengths are printed to a
-\ttt{.t} file (in our case, there will be two files called \ttt{primates.nex.run1.t} and
-\ttt{primates.nex.run2.t}). The \ttt{.t} files are Nexus tree files that can be imported into
-programs like PAUP* \citep{swofford98}, Mesquite, and FigTree. The root of the \ttt{.p} and
+\ttt{primates.nex.run2.p}}. The topology and branch lengths are printed to a
+\ttt{.t} file; a Nexus tree file that can be imported into
+programs like PAUP* \citep{swofford98}, Mesquite, and FigTree~\footnote{In our case, \ttt{primates.nex.run1.t} and
+\ttt{primates.nex.run2.t}}. The root of the \ttt{.p} and
 \ttt{.t} file names can be altered using the \ttt{Filename} setting.
 
 The \ttt{Printfreq} parameter controls the frequency with which brief info about the analysis is
@@ -1021,19 +1022,17 @@ During the run, samples of the substitution model parameters have been written t
 files every \ttt{samplefreq} generation. These files are tab-delimited text files that look
 something like this:
 
-\begin{singlespacing}
-\scriptsize
+%% PV: removed white spaces at the left to reduce the effect of long lines extending beyond textwidth
+\begin{figure}[h]\singlespacing\scriptsize
 \begin{verbatim}
-   [ID: 0184438524]
-   Gen   LnL           LnPr         TL           r(A<->C)     ... pi(T)        alpha        pinvar
-   0     -8.849255e+03 4.262056e+01 4.200000e-01 1.666667e-01 ... 2.500000e-01 1.000000e+00 0.000000e+00
-   100   -6.564318e+03 1.426025e+01 1.722886e+00 1.499856e-01 ... 2.500000e-01 1.000000e+00 8.643869e-02
-   ...
-   19900 -5.725040e+03 4.019204e+00 2.936465e+00 4.674104e-02 ... 2.517984e-01 4.555687e-01 8.178856e-02
-   20000 -5.726992e+03 2.358156e+00 3.184675e+00 4.674104e-02 ... 2.517984e-01 4.689211e-01 4.150474e-02
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+[ID: 0184438524]
+Gen   LnL           LnPr         TL           r(A<->C)     ... pi(T)        alpha        pinvar
+0     -8.849255e+03 4.262056e+01 4.200000e-01 1.666667e-01 ... 2.500000e-01 1.000000e+00 0.000000e+00
+100   -6.564318e+03 1.426025e+01 1.722886e+00 1.499856e-01 ... 2.500000e-01 1.000000e+00 8.643869e-02
+ ...
+19900 -5.725040e+03 4.019204e+00 2.936465e+00 4.674104e-02 ... 2.517984e-01 4.555687e-01 8.178856e-02
+20000 -5.726992e+03 2.358156e+00 3.184675e+00 4.674104e-02 ... 2.517984e-01 4.689211e-01 4.150474e-02
+\end{verbatim}\end{figure}
 
 The first number, in square brackets, is a randomly generated ID number that lets you identify the
 analysis from which the samples come. The next line contains the column headers, and is followed by
@@ -1062,8 +1061,7 @@ the data (the log likelihood values). If we are at stationarity, this plot shoul
 noise'', that is, there should be no tendency of increase or decrease over time. The plot should
 look something like this:
 
-\begin{singlespacing}
-\footnotesize
+\begin{figure}[h]\singlespacing\footnotesize
 \begin{verbatim}
    +------------------------------------------------------------+ -5718.97
    |     2                                                      |
@@ -1084,10 +1082,7 @@ look something like this:
    +------+-----+-----+-----+-----+-----+-----+-----+-----+-----+ -5734.79
    ^                                                            ^
    5000                                                         20000
-
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+\end{verbatim}\end{figure}
 
 If you see an obvious trend in your plot, either increasing or decreasing, you very likely need to
 run the analysis longer to get an adequate sample from the posterior probability distribution.
