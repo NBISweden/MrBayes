@@ -56,7 +56,10 @@ jobs:
         run: sudo apt install libopenmpi-dev
 
       - name: Configure project
-        run: ./configure --disable-doc --with-mpi ${{ matrix.beagle }}
+        run: ./configure --disable-doc --with-mpi ${{ matrix.beagle }} CC=clang CFLAGS="$( mpicc --showme:compile )" LDFLAGS="$( mpicc --showme:link )"
 
       - name: Build project
         run: make -j 2
+
+      - name: Run test
+        run: cd examples && mpirun -np 2 -H localhost:2 ../src/mb short-test.nex
