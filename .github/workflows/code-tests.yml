@@ -36,7 +36,7 @@ jobs:
         run: make -j 2
 
       - name: Short test run
-	run: cd examples && ../src/mb short-test.nex >test.out 2>test.err
+        run: cd examples && ../src/mb short-test.nex >test.out 2>test.err
 
       - name: Error output should be empty
-	run: test ! -s examples/test.err
+        run: test ! -s examples/test.err
