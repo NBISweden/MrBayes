@@ -30,7 +30,7 @@ jobs:
         run: sudo apt install libopenmpi-dev
 
       - name: Configure project
-        run: ./configure --disable-doc ${{ matrix.mpi }} ${{ matrix.beagle }} CC=clang
+        run: ./configure --disable-doc ${{ matrix.mpi }} ${{ matrix.beagle }}
 
       - name: Build project
         run: make -j 2
