@@ -26,10 +26,13 @@ jobs:
         run: sudo apt install libhmsbeagle-dev
 
       - name: Configure project
-        run: ./configure --disable-doc ${{ matrix.mpi }} ${{ matrix.beagle }}
+        run: ./configure --disable-doc --without-mpi ${{ matrix.beagle }} CC=clang
 
       - name: Build project
         run: make -j 2
+
+      - name: Run test
+        run: cd examples && ../src/mb short-test.nex
 
   with-mpi:
     name: Tests with MPI
