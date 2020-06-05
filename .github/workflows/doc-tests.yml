@@ -7,7 +7,7 @@ on:
       - 'src/**'
 
 jobs:
-  build:
+  build-doc:
     runs-on: ubuntu-latest
 
     steps:
