@@ -15780,23 +15780,24 @@ void ResetFlips (int chain)
         if (m->upDateCl != YES)
             continue;
         
+        if (m->parsModelId == NO)
+            {
 #if defined (BEAGLE_ENABLED)
-        if (m->useBeagle == NO || 
-            beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ||
-            m->rescaleBeagleAll == YES)
+            if (m->useBeagle == NO || 
+                beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ||
+                m->rescaleBeagleAll == YES)
                 {
                 FlipSiteScalerSpace (m, chain);
                 if (m->useBeagle == YES && m->rescaleBeagleAll == YES)
                     m->rescaleFreq[chain] = m->rescaleFreqOld;
                 }
 #else
-        if (m->parsModelId == NO)
             FlipSiteScalerSpace (m, chain);
 #endif
-        
-        if (m->upDateCijk == YES && m->nCijkParts > 0)
-            FlipCijkSpace (m, chain);
-        
+            if (m->upDateCijk == YES && m->nCijkParts > 0)
+                FlipCijkSpace (m, chain);
+            }
+ 
         /* cycle over tree */
         tree = GetTree (m->brlens, chain, state[chain]);
         for (i=0; i<tree->nNodes; i++)
@@ -15809,16 +15810,19 @@ void ResetFlips (int chain)
                 if (p->upDateCl == YES)
                     {
                     FlipCondLikeSpace (m, chain, p->index);
-#if defined (BEAGLE_ENABLED)
-                    if (m->useBeagle == NO || 
-                        beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ||
-                        (m->rescaleBeagleAll == YES && isScalerNode[p->index] == YES))
-                        FlipNodeScalerSpace (m, chain, p->index);
-#else
                     if (m->parsModelId == NO)
+                        {
+#if defined (BEAGLE_ENABLED)
+                        if (m->useBeagle == NO || 
+                            beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ||
+                            (m->rescaleBeagleAll == YES && isScalerNode[p->index] == YES))
+                            FlipNodeScalerSpace (m, chain, p->index);
+#else
                         FlipNodeScalerSpace (m, chain, p->index);
 #endif
+                        }
                     }
+
 #if defined (BEAGLE_ENABLED)
                 else if (m->rescaleBeagleAll == YES)
                     {
