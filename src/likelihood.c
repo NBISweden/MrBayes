@@ -7680,7 +7680,7 @@ int Likelihood_Pars (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
     int             c, i, nStates;
     BitsLong        done, *pL, *pR, *pP, *pA, *oldpP, x;
     CLFlt           nParsChars, treeLength;
-    CLFlt           length, *nSitesOfPat, *newNodeLength, oldNodeLength;
+    CLFlt           length, *nSitesOfPat, *newNodeLengthPtr, oldNodeLength;
     Tree            *t;
     ModelInfo       *m;
 
@@ -7698,21 +7698,6 @@ int Likelihood_Pars (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 
     /* Get number of sites of pat */
     nSitesOfPat = numSitesOfPat + (whichSitePats*numCompressedChars) + m->compCharStart;
-
-    /* Mark the nodes that can be stop nodes                 */
-    /* (there must not be any touched side nodes below them) */
-    p = t->root;
-    p->marked = YES;
-    for (i=t->nIntNodes-1; i>=0; i--)
-        {
-        p = t->intDownPass[i];
-        p->marked = NO;
-        if (p->upDateCl == YES && p->anc->marked == YES)
-            {
-            if (p->left->upDateCl == NO || p->right->upDateCl == NO)
-                p->marked = YES;
-            }
-        }
 
     /* Now make downpass node by node */
     for (i=0; i<t->nIntNodes; i++)
@@ -7733,8 +7718,8 @@ int Likelihood_Pars (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
         pP    = m->parsSets[m->condLikeIndex[chain][p->index       ]];
 
         /* find old and new node lengths */
-        oldNodeLength =  m->parsNodeLens[m->condLikeScratchIndex[p->index]];
-        newNodeLength = &m->parsNodeLens[m->condLikeIndex[chain][p->index]];
+        oldNodeLength    =  m->parsNodeLens[m->condLikeScratchIndex[p->index]];
+        newNodeLengthPtr = &m->parsNodeLens[m->condLikeIndex[chain][p->index]];
         
         if (t->isRooted == NO && p->anc->anc == NULL)
             {
@@ -7753,7 +7738,7 @@ int Likelihood_Pars (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
                 pP[c] = x;
                 }
             treeLength += (length - oldNodeLength);
-            newNodeLength[0] = length;
+            *newNodeLengthPtr = length;
             }
         else
             {
@@ -7768,12 +7753,9 @@ int Likelihood_Pars (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
                     length += nSitesOfPat[c];
                     }
                 pP[c] = x;
-                done |= (x^oldpP[c]);
                 }
             treeLength += (length - oldNodeLength);
-            newNodeLength[0] = length;
-            if (p->marked == YES && done == 0)
-                break;
+            *newNodeLengthPtr = length;
             }
         }
 
@@ -8021,15 +8003,16 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL)
         }
 #   endif
         
-    /* Flip and copy or reset site scalers */
-    FlipSiteScalerSpace(m, chain);
-    if (m->upDateAll == YES)
-        ResetSiteScalers(m, chain);
-    else
-        CopySiteScalers(m, chain);
-    
     if (m->parsModelId == NO)
         {
+        /* get site scalers ready */
+        FlipSiteScalerSpace(m, chain);
+        if (m->upDateAll == YES)
+            ResetSiteScalers(m, chain);
+        else
+            CopySiteScalers(m, chain);
+
+        /* pass over tree */
         for (i=0; i<tree->nIntNodes; i++)
             {
             p = tree->intDownPass[i];
@@ -8107,6 +8090,8 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL)
                 }
             }
         }
+    
+    /* call likelihood function to summarize result */
     TIME(m->Likelihood (tree->root->left, d, chain, lnL, (chainId[chain] % chainParams.numChains)),CPULilklihood);
     return;
 }
