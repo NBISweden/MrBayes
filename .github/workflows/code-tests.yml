@@ -33,10 +33,15 @@ jobs:
         run: ./configure --disable-doc ${{ matrix.mpi }} ${{ matrix.beagle }}
 
       - name: Build project
-        run: make -j 2
+        run: make
 
-      - name: Short test run
+      - name: Short test run (without MPI)
+        if: ${{ matrix.mpi != '--with-mpi' }}
         run: cd examples && ../src/mb short-test.nex >test.out 2>test.err
+
+      - name: Short test run (with MPI)
+        if: ${{ matrix.mpi == '--with-mpi' }}
+        run: cd examples && mpirun -np 2 ../src/mb short-test.nex >test.out 2>test.err
 
       - name: Error output should be empty
         run: test ! -s examples/test.err
