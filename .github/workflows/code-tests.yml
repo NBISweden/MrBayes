@@ -19,11 +19,11 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Readline
-        run: sudo apt install libreadline-dev
+        run: sudo apt-get install libreadline-dev
 
       - name: Install Beagle if needed
         if: ${{ matrix.beagle == '--with-beagle' }}
-        run: sudo apt install libhmsbeagle-dev
+        run: sudo apt-get install libhmsbeagle-dev
 
       - name: Configure project
         run: ./configure --disable-doc --without-mpi ${{ matrix.beagle }} CC=clang
@@ -47,14 +47,14 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Readline
-        run: sudo apt install libreadline-dev
+        run: sudo apt-get install libreadline-dev
 
       - name: Install Beagle if needed
         if: ${{ matrix.beagle == '--with-beagle' }}
-        run: sudo apt install libhmsbeagle-dev
+        run: sudo apt-get install libhmsbeagle-dev
 
       - name: Install MPI if needed
-        run: sudo apt install libopenmpi-dev
+        run: sudo apt-get install libopenmpi-dev
 
       - name: Configure project
         run: ./configure --disable-doc --with-mpi ${{ matrix.beagle }} CC=clang CFLAGS="$( mpicc --showme:compile )" LDFLAGS="$( mpicc --showme:link )"
