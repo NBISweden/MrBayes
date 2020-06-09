@@ -7,7 +7,7 @@ on:
       - 'src/**'
 
 jobs:
-  build:
+  build-doc:
     runs-on: ubuntu-latest
 
     steps:
@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install documentation prerequisites
-        run: sudo apt install latexmk texlive-formats-extra
+        run: sudo apt-get install latexmk texlive-formats-extra
 
       - name: Configure project
         run: ./configure

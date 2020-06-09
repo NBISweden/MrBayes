@@ -7,30 +7,61 @@ on:
       - 'doc/**'
 
 jobs:
-  build:
+  without-mpi:
+    name: Tests without MPI
     runs-on: ubuntu-latest
     strategy:
       matrix:
         beagle: [--with-beagle, --without-beagle]
-        mpi: [--with-mpi, --without-mpi]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
       - name: Install Readline
-        run: sudo apt install libreadline-dev
+        run: sudo apt-get install libreadline-dev
 
       - name: Install Beagle if needed
         if: ${{ matrix.beagle == '--with-beagle' }}
-        run: sudo apt install libhmsbeagle-dev
-
-      - name: Install MPI if needed
-        if: ${{ matrix.mpi == '--with-mpi' }}
-        run: sudo apt install libopenmpi-dev
+        run: sudo apt-get install libhmsbeagle-dev
 
       - name: Configure project
-        run: ./configure --disable-doc ${{ matrix.mpi }} ${{ matrix.beagle }}
+        run: ./configure --disable-doc --without-mpi ${{ matrix.beagle }} CC=clang
 
       - name: Build project
         run: make -j 2
+
+      - name: Run test (not with Beagle for now)
+        if: ${{ matrix.beagle != '--with-beagle' }}
+        run: cd examples && ../src/mb short-test.nex
+
+  with-mpi:
+    name: Tests with MPI
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        beagle: [--with-beagle, --without-beagle]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Readline
+        run: sudo apt-get install libreadline-dev
+
+      - name: Install Beagle if needed
+        if: ${{ matrix.beagle == '--with-beagle' }}
+        run: sudo apt-get install libhmsbeagle-dev
+
+      - name: Install MPI if needed
+        run: sudo apt-get install libopenmpi-dev
+
+      - name: Configure project
+        run: ./configure --disable-doc --with-mpi ${{ matrix.beagle }} CC=clang CFLAGS="$( mpicc --showme:compile )" LDFLAGS="$( mpicc --showme:link )"
+
+      - name: Build project
+        run: make -j 2
+
+      - name: Run test (not with Beagle for now)
+        if: ${{ matrix.beagle != '--with-beagle' }}
+        run: cd examples && mpirun -np 2 -H localhost:2 ../src/mb short-test.nex
