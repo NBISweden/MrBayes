@@ -31,7 +31,8 @@ jobs:
       - name: Build project
         run: make -j 2
 
-      - name: Run test
+      - name: Run test (not with Beagle for now)
+        if: ${{ matrix.beagle != '--with-beagle' }}
         run: cd examples && ../src/mb short-test.nex
 
   with-mpi:
@@ -61,5 +62,6 @@ jobs:
       - name: Build project
         run: make -j 2
 
-      - name: Run test
+      - name: Run test (not with Beagle for now)
+        if: ${{ matrix.beagle != '--with-beagle' }}
         run: cd examples && mpirun -np 2 -H localhost:2 ../src/mb short-test.nex
