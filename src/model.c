@@ -7632,9 +7632,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                         else if (!strcmp(modelParams[i].extinctionPr,"Fixed"))
                             {
                             sscanf (tkn, "%lf", &tempD);
-                            if (tempD < 0.0 || tempD >= 1.0)
+                            if (tempD <= 0.0 || tempD >= 1.0)
                                 {
-                                MrBayesPrint ("%s   Relative extinction rate must be in range [0,1)\n", spacer);
+                                MrBayesPrint ("%s   Relative extinction rate must be in range (0,1)\n", spacer);
                                 return (ERROR);
                                 }
                             modelParams[i].extinctionFix = tempD;
@@ -7715,9 +7715,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                         else if (!strcmp(modelParams[i].fossilizationPr,"Fixed"))
                             {
                             sscanf (tkn, "%lf", &tempD);
-                            if (tempD < 0.0 || tempD > 1.0)
+                            if (tempD < 0.0 || tempD >= 1.0)
                                 {
-                                MrBayesPrint ("%s   Relative fossilization rate must be in the range (0,1]\n", spacer);
+                                MrBayesPrint ("%s   Relative fossilization rate must be in the range (0,1)\n", spacer);
                                 return (ERROR);
                                 }
                             modelParams[i].fossilizationFix = tempD;
