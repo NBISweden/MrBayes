@@ -4222,6 +4222,15 @@ analyses, and we therefore introduced the average standard deviation of split fr
 
 ASDSF is calculated by comparing split or clade frequencies across multiple independent MCMC runs
 that ideally should be started from different randomly chosen starting trees \citep{lakner08}.
+Specifically, let $f_i^j$ be the fraction of the trees from run $i$ containing the split or clade (taxon
+bipartition) $j$. Then ASDSF is defined as
+\begin{equation*}
+\text{ASDSF} = \frac{1}{M} \sum_j \left( \sqrt{ \frac{1}{N-1} \sum_i (f_i^j - \bar{f}^j)^2} \, \right)
+\end{equation*}
+where $N$ is the number of runs, $M$ is the total number of splits or clades present in the tree
+samples being compared, and $\bar{f}^j$ is the mean fraction of trees across all runs containing
+split or clade $j$.
+
 ASDSF should approach $0.0$ as runs converge to the same distribution. The frequencies of rare
 splits or clades are difficult to estimate accurately and these groupings are usually of marginal
 interest. Therefore, it may be advantageous to exclude them from the diagnostic. MrBayes allows the
