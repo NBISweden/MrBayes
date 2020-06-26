@@ -15,6 +15,8 @@
 
 %\usepackage{wrapfig}
 \usepackage{float}
+\usepackage{fancyvrb}
+
 
 % The following specifies a line spacing of 1.2 times normal
 \renewcommand{\baselinestretch}{1.2}
@@ -28,7 +30,7 @@
 \newcommand{\prout}[1]{\ttt{#1}}
 \newcommand{\tb}[1]{\ttt{\textbf{#1}}}
 
-%%%% JN: Draft version, February 2020
+%%%% JN: Draft version, June 2020
 %%%% JN: I (JN) have started to review the text, and added occasional comments.
 %%%% JN: Note that I use automatic text wrapping for paragraphs (in vim: `set textwidth=99`).
 
@@ -151,6 +153,7 @@ Throughout the document, we use \ttt{typewriter font} for things you see on scre
 file, and \tb{bold typewriter font} for things you should type in. Alternative commands, options,
 file names, etc are also given in \ttt{typewriter font}.
 
+
 \section{Acquiring and Installing MrBayes}
 
 MrBayes 3 is distributed without charge by download from the MrBayes web site,
@@ -189,13 +192,37 @@ analyses you can perform with the program, and you can use them as templates for
 In the tutorials given in chapters \ref{tutorialSimple} to \ref{tutorialAdvanced}, you can learn
 more about how to set up various types of analyses based on these example data files.
 
+
 \section{Getting Started}
 
 Start MrBayes by double-clicking the application icon (or typing \tb{./mb} or simply \tb{mb}
 depending on your system) and you will see the following information:
 
-\begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+%\begin{figure}[h]\singlespacing\footnotesize
+%\centering
+%\begin{verbatim}
+%                      MrBayes v3.2.7
+%
+%             (Bayesian Analysis of Phylogeny)
+%
+%     Distributed under the GNU General Public License
+%
+%
+%      Type "help" or "help <command>" for information
+%            on the commands that are available.
+%
+%          Type "about" for authorship and general
+%              information about the program.
+%
+%
+%MrBayes >
+%\end{verbatim}\end{figure}
+
+\begin{figure}[h]
+\singlespacing
+\footnotesize
+\centering
+\begin{BVerbatim}
                       MrBayes v3.2.7
 
              (Bayesian Analysis of Phylogeny)
@@ -211,7 +238,10 @@ depending on your system) and you will see the following information:
 
 
 MrBayes >
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
+
+
 
 Note the \ttt{MrBayes >} prompt at the bottom, which tells you that MrBayes is ready for your
 commands.
@@ -238,7 +268,8 @@ also see a list of the current settings at the end. Try, for instance, \tb{help 
 mcmc}. The \ttt{lset} settings table at the end should look like this:
 
 \begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
 Parameter    Options                               Current Setting
 ------------------------------------------------------------------
 Nucmodel     4by4/Doublet/Codon/Protein              4by4
@@ -260,7 +291,8 @@ Coding       All/Variable/Informative/Nosingletons
 Parsmodel    No/Yes                                  No
 
 ------------------------------------------------------------------
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 Note that MrBayes 3 supports abbreviations of commands and options, so in many cases it is
 sufficient to type the first few letters of a command or option instead of the full name.
@@ -437,9 +469,9 @@ In general, a good start is to type \tb{help lset}. Ignore the help information 
 concentrate on the table at the bottom of the output, which specifies the current settings. It
 should look like this:
 
-\begin{singlespacing}
-\footnotesize
-\begin{verbatim}
+\begin{figure}[h]\singlespacing\footnotesize
+\centering
+\begin{BVerbatim}
 Model settings for partition 1:
 
 Parameter    Options                               Current Setting
@@ -463,9 +495,8 @@ Coding       All/Variable/Informative/Nosingletons
 Parsmodel    No/Yes                                  No
 
 ------------------------------------------------------------------
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+\end{BVerbatim}
+\end{figure}
 
 First, note that the table is headed by \ttt{Model settings for partition 1}. By default, MrBayes
 divides the data into one partition for each type of data you have in your \ttt{DATA} block. If you
@@ -503,9 +534,10 @@ single nucleotide models. We will use neither the parsimony model nor the covari
 data, so we will leave these settings at their default values. If you type \tb{help lset} now to
 verify that the model is correctly set, the table should look like this:
 
-\begin{singlespacing}
-\footnotesize
-\begin{verbatim}
+%%%% JN: TODO: place this figure correctly
+\begin{figure}[h]\singlespacing\footnotesize
+\centering
+\begin{BVerbatim}
 Model settings for partition 1:
 
 Parameter    Options                               Current Setting
@@ -529,9 +561,8 @@ Coding       All/Variable/Informative/Nosingletons
 Parsmodel    No/Yes                                  No
 
 ------------------------------------------------------------------
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+\end{BVerbatim}
+\end{figure}
 
 \subsection{Setting the Priors}
 
@@ -544,7 +575,11 @@ default settings for the parameters in your model. The table at the end of the h
 reads:
 
 \begin{singlespacing}
-\scriptsize
+\footnotesize
+%\scriptsize
+%\begin{verbatim}
+%\begin{figure}[h]\singlespacing\footnotesize
+%\centering
 \begin{verbatim}
 Model settings for partition 1:
 Parameter        Options                      Current Setting
@@ -595,7 +630,8 @@ Generatepr       Fixed/Variable=Dirichlet     Fixed
 
 ------------------------------------------------------------------
 \end{verbatim}
-\normalsize
+%\end{figure}
+%\normalsize
 \end{singlespacing}
 
 We need to focus on \ttt{Revmatpr} (for the six substitution rates of the GTR rate matrix),
