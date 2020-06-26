@@ -628,21 +628,27 @@ int AllocateNormalParams (void)
 
     if (memAllocs[ALLOC_PARAMVALUES] == YES)
         {
-        paramValues = (MrBFlt *) SafeRealloc ((void *) paramValues, nOfParams * sizeof (MrBFlt));
-        for (i=0; i<nOfParams; i++)
-            paramValues[i] = 0.0;
+        if (nOfParams > 1)
+            {
+            paramValues = (MrBFlt *) SafeRealloc ((void *) paramValues, nOfParams * sizeof (MrBFlt));
+            for (i=0; i<nOfParams; i++)
+                paramValues[i] = 0.0;
+            }
         if (nOfIntParams > 0)
             intValues = (int *) SafeRealloc ((void *) intValues, nOfIntParams * sizeof(int));
         }
     else
         {
-        paramValues = (MrBFlt *) SafeCalloc (nOfParams, sizeof(MrBFlt));
+        if (nOfParams > 1)
+            paramValues = (MrBFlt *) SafeCalloc (nOfParams, sizeof(MrBFlt));
+        else
+            paramValues = NULL;
         if (nOfIntParams > 0)
             intValues = (int *) SafeCalloc (nOfIntParams, sizeof(int));
         else
             intValues = NULL;
         }
-    if (!paramValues || (nOfIntParams > 0 && !intValues))
+    if ((nOfParams > 0 && !paramValues) || (nOfIntParams > 0 && !intValues))
         {
         MrBayesPrint ("%s   Problem allocating paramValues\n", spacer);
         if (paramValues)
@@ -737,6 +743,8 @@ int AllocateTreeParams (void)
         {
         if (params[k].paramType == P_TOPOLOGY && params[k].paramId == TOPOLOGY_SPECIESTREE)
             numSubParamPtrs += 1;
+        else if (params[k].paramType == P_TOPOLOGY && !strcmp(modelParams[params[k].relParts[0]].parsModel, "Yes"))
+            numSubParamPtrs += 1;
         else if (params[k].paramType == P_BRLENS)
             numSubParamPtrs += 1;
         else if (params[k].paramType == P_CPPEVENTS)
@@ -762,15 +770,17 @@ int AllocateTreeParams (void)
         mcmcTree = NULL;
         memAllocs[ALLOC_MCMCTREES] = NO;
         }
-    subParamPtrs = (Param **) SafeCalloc (numSubParamPtrs, sizeof (Param *));
+    if (numSubParamPtrs > 0)
+        subParamPtrs = (Param **) SafeCalloc (numSubParamPtrs, sizeof (Param *));
     mcmcTree = (Tree **) SafeCalloc (numTrees * 2 * numGlobalChains, sizeof (Tree *));
-    if (!subParamPtrs || !mcmcTree)
+    if ((numSubParamPtrs>0 && !subParamPtrs) || !mcmcTree)
         {
         if (subParamPtrs) free (subParamPtrs);
         if (mcmcTree) free (mcmcTree);
         subParamPtrs = NULL;
         mcmcTree = NULL;
         MrBayesPrint ("%s   Problem allocating MCMC trees\n", spacer);
+        printf("subparams: %d -- trees: %d \n", numSubParamPtrs, numTrees);
         return (ERROR);
         }
     else
@@ -901,7 +911,7 @@ int AllocateTreeParams (void)
                 {
                 /* there is no brlen subparam */
                 /* so let subparam point to the param itself */
-                q = p->subParams[0] = p; /* FIXME: Not used (from clang static analyzer) */
+                q = p->subParams[0] = p;
                 /* p->tree and p->treeIndex have been set above */
                 }
             else
@@ -1024,6 +1034,11 @@ int AllocateTreeParams (void)
         else if (p->paramType == P_SPECIESTREE)
             {
             if (InitializeChainTrees (p, 0, numGlobalChains, YES) == ERROR)
+                return (ERROR);
+            }
+        else if (p->paramType == P_TOPOLOGY && p->subParams[0]==p)
+            {
+            if (InitializeChainTrees (p, 0, numGlobalChains, NO) == ERROR)
                 return (ERROR);
             }
         }
@@ -7617,9 +7632,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                         else if (!strcmp(modelParams[i].extinctionPr,"Fixed"))
                             {
                             sscanf (tkn, "%lf", &tempD);
-                            if (tempD < 0.0 || tempD >= 1.0)
+                            if (tempD <= 0.0 || tempD >= 1.0)
                                 {
-                                MrBayesPrint ("%s   Relative extinction rate must be in range [0,1)\n", spacer);
+                                MrBayesPrint ("%s   Relative extinction rate must be in range (0,1)\n", spacer);
                                 return (ERROR);
                                 }
                             modelParams[i].extinctionFix = tempD;
@@ -7700,9 +7715,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                         else if (!strcmp(modelParams[i].fossilizationPr,"Fixed"))
                             {
                             sscanf (tkn, "%lf", &tempD);
-                            if (tempD < 0.0 || tempD > 1.0)
+                            if (tempD < 0.0 || tempD >= 1.0)
                                 {
-                                MrBayesPrint ("%s   Relative fossilization rate must be in the range (0,1]\n", spacer);
+                                MrBayesPrint ("%s   Relative fossilization rate must be in the range (0,1)\n", spacer);
                                 return (ERROR);
                                 }
                             modelParams[i].fossilizationFix = tempD;
@@ -15234,10 +15249,10 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         if (strcmp(modelParams[part2].clockVarPr, "WN"))
             *isApplic2 = NO;
         
-        /* Now, check that the igr shape parameter is the same */
-        if (IsModelSame (P_IGRVAR, part1, part2, &temp1, &temp2) == NO)
+        /* Now, check that the wn shape parameter is the same */
+        if (IsModelSame (P_WNVAR, part1, part2, &temp1, &temp2) == NO)
             isSame = NO;
-        if (linkTable[P_IGRVAR][part1] != linkTable[P_IGRVAR][part2])
+        if (linkTable[P_WNVAR][part1] != linkTable[P_WNVAR][part2])
             isSame = NO;
     
         /* Not same if branch lengths are not the same */

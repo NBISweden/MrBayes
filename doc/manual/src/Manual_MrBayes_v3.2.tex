@@ -9,6 +9,7 @@
 \usepackage{url}
 \usepackage{wrapfig}
 \usepackage{natbib}
+\usepackage{wrapfig}
 \usepackage{pdfpages}
 \usepackage{longtable}
 \usepackage{booktabs}
@@ -258,7 +259,7 @@ mcmc}. The \ttt{lset} settings table at the end should look like this:
    Parsmodel    No/Yes                                  No
 
    ------------------------------------------------------------------
-\end{verbatim}\end{singlespacing}
+\end{verbatim}\end{figure}
 
 Note that MrBayes 3 supports abbreviations of commands and options, so in many cases it is
 sufficient to type the first few letters of a command or option instead of the full name.
@@ -349,7 +350,7 @@ and a proportion of invariable sites (``GTR + I + $\Gamma$''). If your data are 
 want to invoke a different model, or if you want to use non-default priors, refer to the rest of
 this manual and the Appendix for more help.
 
-\tb{3.1}. At the \ttt{MrBayes >} prompt, type \tb{mcmc ngen=20000 samplefreq=100 printfreq=100
+\tb{3.1}. At the \ttt{MrBayes >} prompt, type \tb{mcmc ngen=20000 samplefreq=100}\\ \tb{printfreq=100
 diagnfreq=1000}. This will start the Markov chain Monte Carlo simulation. It will also ensure that
 you get at least 200 samples from the posterior probability distribution, and that diagnostics are
 calculated every 1,000 generations. For larger data sets you probably want to run the analysis
@@ -837,13 +838,13 @@ a long time to converge, you may even want to sample less frequently than the de
 end up with very large files containing tree and parameter samples.
 
 When the chain is sampled, the current values of the model parameters are printed to file. The
-substitution model parameters are printed to a \ttt{.p} file (in our case, there will be one file
+substitution model parameters are printed to a \ttt{.p} file; a tab delimited text file that can be 
+imported into most statistics and graphing programs~\footnote{In our case, there will be one file
 for each independent analysis, and they will be called \ttt{primates.nex.run1.p} and
-\ttt{primates.nex.run2.p}). The \ttt{.p} files are tab delimited text files that can be imported
-into most statistics and graphing programs. The topology and branch lengths are printed to a
-\ttt{.t} file (in our case, there will be two files called \ttt{primates.nex.run1.t} and
-\ttt{primates.nex.run2.t}). The \ttt{.t} files are Nexus tree files that can be imported into
-programs like PAUP* \citep{swofford98}, Mesquite, and FigTree. The root of the \ttt{.p} and
+\ttt{primates.nex.run2.p}}. The topology and branch lengths are printed to a
+\ttt{.t} file; a Nexus tree file that can be imported into
+programs like PAUP* \citep{swofford98}, Mesquite, and FigTree~\footnote{In our case, \ttt{primates.nex.run1.t} and
+\ttt{primates.nex.run2.t}}. The root of the \ttt{.p} and
 \ttt{.t} file names can be altered using the \ttt{Filename} setting.
 
 The \ttt{Printfreq} parameter controls the frequency with which brief info about the analysis is
@@ -1022,19 +1023,17 @@ During the run, samples of the substitution model parameters have been written t
 files every \ttt{samplefreq} generation. These files are tab-delimited text files that look
 something like this:
 
-\begin{singlespacing}
-\scriptsize
+%% PV: removed white spaces at the left to reduce the effect of long lines extending beyond textwidth
+\begin{figure}[h]\singlespacing\scriptsize
 \begin{verbatim}
-   [ID: 0184438524]
-   Gen   LnL           LnPr         TL           r(A<->C)     ... pi(T)        alpha        pinvar
-   0     -8.849255e+03 4.262056e+01 4.200000e-01 1.666667e-01 ... 2.500000e-01 1.000000e+00 0.000000e+00
-   100   -6.564318e+03 1.426025e+01 1.722886e+00 1.499856e-01 ... 2.500000e-01 1.000000e+00 8.643869e-02
-   ...
-   19900 -5.725040e+03 4.019204e+00 2.936465e+00 4.674104e-02 ... 2.517984e-01 4.555687e-01 8.178856e-02
-   20000 -5.726992e+03 2.358156e+00 3.184675e+00 4.674104e-02 ... 2.517984e-01 4.689211e-01 4.150474e-02
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+[ID: 0184438524]
+Gen   LnL           LnPr         TL           r(A<->C)     ... pi(T)        alpha        pinvar
+0     -8.849255e+03 4.262056e+01 4.200000e-01 1.666667e-01 ... 2.500000e-01 1.000000e+00 0.000000e+00
+100   -6.564318e+03 1.426025e+01 1.722886e+00 1.499856e-01 ... 2.500000e-01 1.000000e+00 8.643869e-02
+ ...
+19900 -5.725040e+03 4.019204e+00 2.936465e+00 4.674104e-02 ... 2.517984e-01 4.555687e-01 8.178856e-02
+20000 -5.726992e+03 2.358156e+00 3.184675e+00 4.674104e-02 ... 2.517984e-01 4.689211e-01 4.150474e-02
+\end{verbatim}\end{figure}
 
 The first number, in square brackets, is a randomly generated ID number that lets you identify the
 analysis from which the samples come. The next line contains the column headers, and is followed by
@@ -1063,8 +1062,7 @@ the data (the log likelihood values). If we are at stationarity, this plot shoul
 noise'', that is, there should be no tendency of increase or decrease over time. The plot should
 look something like this:
 
-\begin{singlespacing}
-\footnotesize
+\begin{figure}[h]\singlespacing\footnotesize
 \begin{verbatim}
    +------------------------------------------------------------+ -5718.97
    |     2                                                      |
@@ -1085,10 +1083,7 @@ look something like this:
    +------+-----+-----+-----+-----+-----+-----+-----+-----+-----+ -5734.79
    ^                                                            ^
    5000                                                         20000
-
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+\end{verbatim}\end{figure}
 
 If you see an obvious trend in your plot, either increasing or decreasing, you very likely need to
 run the analysis longer to get an adequate sample from the posterior probability distribution.
@@ -1406,19 +1401,20 @@ MrBayes handles a wide variety of data types and models, as well as any mix of t
 this example we will look at how to set up a simple analysis of a combined data set, consisting of
 data from four genes and morphology for 30 taxa of gall wasps and outgroups. A similar approach can
 be used, e.g., to set up a partitioned analysis of molecular data coming from different genes. The
-data set for this tutorial is found in the file \ttt{cynmix.nex}.
+data set for this tutorial is found in the file \texttt{cynmix.nex}. 
+%% PV: The benefits of saving this three characters are scarce, and emacs will stop parsing texttt.
+%% I'll suggest to change it for this chapter but is just an option.
 
 \section{Getting Mixed Data into MrBayes}
 
-First, open up the Nexus data file in a text editor. The \ttt{DATA} block of the Nexus file should
-look familiar but there are some differences compared to the \ttt{primates.nex} file in the format
+First, open up the Nexus data file in a text editor. The \texttt{DATA} block of the Nexus file should
+look familiar but there are some differences compared to the \texttt{primates.nex} file in the format
 statement:
 
-\begin{singlespacing}
-\footnotesize
+%% PV: This will remove an undesirable widowed line in the next paragraph
+\begin{singlespacing}\footnotesize
 \begin{verbatim}
-   Format datatype=mixed(Standard:1-166,DNA:167-3246)
-       interleave=yes gap=- missing=?;
+Format datatype=mixed(Standard:1-166,DNA:167-3246) interleave=yes gap=- missing=?;
 \end{verbatim}
 \normalsize
 \end{singlespacing}
@@ -1438,12 +1434,12 @@ By default, MrBayes partitions the data according to data type. There are only t
 the matrix, so the default model will include only a morphology (standard) and a DNA partition. To
 divide the DNA partition into gene regions or other appropriate subsets, it is convenient to first
 specify character sets. In principle, this can be done from the command line but it is easier to do
-it in a \ttt{MRBAYES} block in the data file. At the end of the \ttt{cynmix.nex}, there is such a
-block (starting with \ttt{begin mrbayes;}). Any text between square brackets (\ttt{[]}) are
+it in a \texttt{MRBAYES} block in the data file. At the end of the \texttt{cynmix.nex}, there is such a
+block (starting with \texttt{begin mrbayes;}). Any text between square brackets (\texttt{[]}) are
 comments and ignored by MrBayes. Note also that each command ends with a semicolon.
 
-The relevant lines for setting up partitions starts with the command \ttt{charset}. That command
-simply associates a name with a set of characters. For instance, the character set \ttt{COI} is
+The relevant lines for setting up partitions starts with the command \texttt{charset}. That command
+simply associates a name with a set of characters. For instance, the character set \texttt{COI} is
 defined to include characters 167 to 1244. The next step is to define a partition of the data
 according to genes and morphology. This is accomplished with the line:
 
@@ -1456,22 +1452,21 @@ according to genes and morphology. This is accomplished with the line:
 \end{singlespacing}
 
 The elements of the \ttt{partition} command are: (1) the name of the partitioning scheme
-(\ttt{favored}); (2) an equal sign ($=$); (3) the number of character divisions in the scheme
-(\ttt{5}); (4) a colon (:); and (5) a list of the characters in each division, separated by commas.
+(\texttt{favored}); (2) an equal sign ($=$); (3) the number of character divisions in the scheme
+(\texttt{5}); (4) a colon (:); and (5) a list of the characters in each division, separated by commas.
 The list of characters can simply be an enumeration of the character numbers (the above line is
-equivalent to \ttt{partition favored = 5: 1-166, 167-1244, 1245-1611, 1612-2092, 2093-3246;}) but
-it is often more convenient to use predefined character sets as given in the \ttt{MRBAYES} block.
-The \ttt{end;} statement closes the \ttt{MRBAYES} block.
+equivalent to \texttt{partition favored = 5: 1-166, 167-1244, 1245-1611, 1612-2092, 2093-3246;}) but
+it is often more convenient to use predefined character sets as given in the \texttt{MRBAYES} block.
+The \texttt{end;} statement closes the \texttt{MRBAYES} block.
 
 When we read this block into MrBayes, we will have defined variables that can be used for setting
 up a partitioned analysis with the first character division being morphology, the second division
 being the COI gene, etc. Exit your text editor, launch MrBayes and type \tb{execute cynmix.nex}
 to read in your data and the variables. The final step is to tell MrBayes that we want to work with
-this partitioning of the data instead of the default partitioning. We do this using the \ttt{set}
-command:
+this partitioning of the data instead of the default partitioning. We do this using \ttt{set}:
+%% PV: I need to save a line here for later...
 
-\begin{singlespacing}
-\footnotesize
+\begin{singlespacing}\footnotesize
 \begin{verbatim}
    set partition = favored;
 \end{verbatim}
@@ -1482,26 +1477,24 @@ command:
 \section{Specifying a Partitioned Model}
 
 Before starting to specify the partitioned model, it is useful to examine the default model. Type
-\tb{showmodel} and you should get this table as part of the output:
+\tb{showmodel} and you should get this table as part of the output:~\rotatebox[origin=l]{270}{$\Rsh$} 
+%% PV: ... because this.
 
-\begin{singlespacing}
-\footnotesize
+\begin{wrapfigure}{r}{0.44\textwidth}\singlespacing\footnotesize\vspace{-5mm}
 \begin{verbatim}
    Active parameters:
 
-                       Partition(s)
-      Parameters       1  2  3  4  5
-      ------------------------------
-      Statefreq        1  2  2  2  2
-      Ratemultiplier   3  3  3  3  3
-      Topology         4  4  4  4  4
-      Brlens           5  5  5  5  5
-      ------------------------------
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+                     Partition(s)
+    Parameters       1  2  3  4  5
+    ------------------------------
+    Statefreq        1  2  2  2  2
+    Ratemultiplier   3  3  3  3  3
+    Topology         4  4  4  4  4
+    Brlens           5  5  5  5  5
+    ------------------------------
+\end{verbatim}\end{wrapfigure}
 
-There is a lot of other useful information in the output of \ttt{showmodel} but this table is the
+There is a lot of other useful information in the output of \texttt{showmodel} but this table is the
 key to the partitioned model. We can see that there are five partitions in the model and five
 active (free) parameters. There are two stationary state frequency parameters, one for the
 morphological data (parameter 1) and one for the DNA data (parameter 2). Then there is also a
@@ -1512,39 +1505,37 @@ Now, assume we want a separate GTR + I + $\Gamma$ model for each gene partition.
 should be estimated separately for the individual genes. Assume further that we want the overall
 evolutionary rate to be (potentially) different across partitions, and that we want to assume
 gamma-shaped rate variation for the morphological data. We can obtain this model by using
-\ttt{lset} and \ttt{prset} with the \ttt{applyto} mechanism, which allows us to apply the settings
+\texttt{lset} and \texttt{prset} with the \texttt{applyto} mechanism, which allows us to apply the settings
 to specific partitions. For instance, to apply a GTR + I + $\Gamma$ model to the molecular partitions,
 we type \tb{lset applyto=(2,3,4,5) nst=6 rates=invgamma}. This will produce the following table
-when \tb{showmodel} is invoked:
+when \tb{showmodel} is invoked:\newpage
 
-\begin{singlespacing}
-\footnotesize
+\begin{wrapfigure}{l}{0.42\textwidth}\singlespacing\footnotesize
 \begin{verbatim}
-   Active parameters:
+Active parameters:
  
-                       Partition(s)
-      Parameters       1  2  3  4  5
-      ------------------------------
-      Revmat           .  1  1  1  1
-      Statefreq        2  3  3  3  3
-      Shape            .  4  4  4  4
-      Pinvar           .  5  5  5  5
-      Ratemultiplier   6  6  6  6  6
-      Topology         7  7  7  7  7
-      Brlens           8  8  8  8  8
-      ------------------------------
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+                Partition(s)
+Parameters      1  2  3  4  5
+-----------------------------
+Revmat          .  1  1  1  1
+Statefreq       2  3  3  3  3
+Shape           .  4  4  4  4
+Pinvar          .  5  5  5  5
+Ratemultiplier  6  6  6  6  6
+Topology        7  7  7  7  7
+Brlens          8  8  8  8  8
+-----------------------------
+\end{verbatim}\end{wrapfigure}
 
+%% PV: Extra \tb included deliberately to parse the line
 As you can see, all molecular partitions now evolve under the correct model but all parameters
-(\ttt{statefreq}, \ttt{revmat}, \ttt{shape}, \ttt{pinvar}) are shared across partitions. To unlink
-them such that each partition has its own set of parameters, type: \tb{unlink revmat=(all)
-pinvar=(all) shape=(all) statefreq=(all)}. Gamma-shaped rate variation for the morphological data
-is enforced by typing \tb{lset applyto=(1) rates=gamma}. The trickiest part is to allow the overall
-rate to be different across partitions. This is achieved using the \ttt{ratepr} parameter of the
-\ttt{prset} command. By default, \ttt{ratepr} is set to \ttt{fixed}, meaning that all partitions
-have the same overall rate. By changing this to \ttt{variable}, the rates are allowed to vary under
+(\texttt{statefreq}, \texttt{revmat}, \texttt{shape}, \texttt{pinvar}) are shared across partitions. 
+To unlink them such that each partition has its own set of parameters, type: \tb{unlink revmat=(all)}
+\tb{pinvar=(all)} \tb{shape=(all)} \tb{statefreq=(all)}. Gamma-shaped rate variation for the morphological
+data is enforced by typing \tb{lset applyto=(1) rates=gamma}. The trickiest part is to allow the overall
+rate to be different across partitions. This is achieved using the \texttt{ratepr} parameter of the
+\ttt{prset} command. By default, \texttt{ratepr} is set to \texttt{fixed}, meaning that all partitions
+have the same overall rate. By changing this to \texttt{variable}, the rates are allowed to vary under
 a flat Dirichlet prior. To allow all our partitions to evolve under different rates, type \tb{prset
 applyto=(all) ratepr=variable}.
 
@@ -1552,44 +1543,45 @@ The model is now essentially complete but there is one final thing to consider. 
 morphological data matrices do not include all types of characters. Specifically, morphological
 data matrices do not usually include any constant (invariable) characters. Sometimes,
 autapomorphies are not included either, and the matrix is restricted to parsimony-informative
-characters. For MrBayes to calculate the probability of the data correctly, we need to inform it of
-this ascertainment (coding) bias. By default, MrBayes assumes that standard data sets include all
-variable characters but no constant characters. If necessary, one can change this setting using
-\ttt{lset coding}. We will leave the \ttt{coding} setting at the default, though, which is
-\ttt{variable} for standard (morphology) data. Now, \tb{showmodel} should produce this table:
+characters. For MrBayes to calculate the probability of the data correctly, we need 
+%% PV: Dirty trick but it works. Don't remove the following blank line
 
-\begin{singlespacing}
-\footnotesize
+\begin{wrapfigure}{r}{0.46\textwidth}\singlespacing\footnotesize\vspace{-4mm}
 \begin{verbatim}
-   Active parameters:
+    Active parameters:
  
-                       Partition(s)
-      Parameters       1  2  3  4  5
-      ------------------------------
-      Revmat           .  1  2  3  4
-      Statefreq        5  6  7  8  9
-      Shape           10 11 12 13 14
-      Pinvar           . 15 16 17 18
-      Ratemultiplier  19 19 19 19 19
-      Topology        20 20 20 20 20
-      Brlens          21 21 21 21 21
-      ------------------------------
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+                      Partition(s)
+     Parameters       1  2  3  4  5
+     ------------------------------
+     Revmat           .  1  2  3  4
+     Statefreq        5  6  7  8  9
+     Shape           10 11 12 13 14
+     Pinvar           . 15 16 17 18
+     Ratemultiplier  19 19 19 19 19
+     Topology        20 20 20 20 20
+     Brlens          21 21 21 21 21
+     ------------------------------
+\end{verbatim}\end{wrapfigure}
+
+\vspace{-2mm} to inform it of this ascertainment (coding) bias. By default, MrBayes assumes that standard 
+data sets include all variable characters but no constant characters. If necessary, one can change this 
+setting using \texttt{lset coding}. We will leave the \texttt{coding} setting at the default, though, which 
+is \texttt{variable} for standard (morphology) data. Now, \tb{showmodel} should produce this table:~$\rightarrow$
+
+\clearpage 
 
 \section{Running the Analysis}
 
 When the model has been completely specified, we can proceed with the analysis essentially as
-described above in the tutorial for the \ttt{primates.nex} data set. However, in the case of the
-\ttt{cynmix.nex} dataset, the analysis will have to be run longer before it converges.
+described above in the tutorial for the \texttt{primates.nex} data set. However, in the case of the
+\texttt{cynmix.nex} dataset, the analysis will have to be run longer before it converges.
 
 When looking at the parameter samples from a partitioned analysis, it is useful to know that the
 names of the parameters are followed by the character division (partition) number in curly braces.
-For instance, \ttt{pi(A)\{3\}} is the stationary frequency of nucleotide A in character division 3,
+For instance, \texttt{pi(A)\{3\}} is the stationary frequency of nucleotide A in character division 3,
 which is the EF1a division in the above analysis.
 
-In this section we have used a separate Nexus file for the \ttt{MRBAYES} block. Although one can
+In this section we have used a separate Nexus file for the \texttt{MRBAYES} block. Although one can
 add this command block to the data file itself, there are several advantages to keeping the
 commands and the data blocks separate. For example, one can create a set of different analyses with
 different parameters in separate command files and submit all those files to a job scheduling
@@ -1598,10 +1590,10 @@ the file containing the character matrix as the default for all output files. Th
 your analyses in the same directory, results from different analyses will overwrite each other.
 
 To change this behavior, include the command \tb{mcmcp filename=$<$filename$>$;} in each of your
-run files, just before issuing the \ttt{mcmc} command, using a different file name for each run
+run files, just before issuing the \texttt{mcmc} command, using a different file name for each run
 file. For instance, if you wish to name the output files from one analysis using the root
-\ttt{analysis1}, you use the line \tb{mcmcp filename=analysis1;}. The files will then be named
-\ttt{analysis1.run1.t}, \ttt{analysis1.run2.t}, etc. An alternative approach is to run each
+\texttt{analysis1}, you use the line \tb{mcmcp filename=analysis1;}. The files will then be named
+\texttt{analysis1.run1.t}, \texttt{analysis1.run2.t}, etc. An alternative approach is to run each
 analysis in a separate directory, in which case the naming of the output files will not be an
 issue.
 
@@ -1612,15 +1604,14 @@ In this chapter, we provide a number of brief tutorials that cover a wide range 
 and analyses in MrBayes. We use a slightly different format for these tutorials. First, we assume
 that you are familiar with the basic working of the program, so we skip uninteresting details when
 they should be obvious. Also, in addition to the conventions used previously, we will often simply
-give the command line, including the \ttt{MrBayes >} prompt. What you need to type in is simply the
+give the command line, including the \texttt{MrBayes >} prompt. What you need to type in is simply the
 text after the prompt.
 
 You may wish to start each tutorial by switching off warnings and asking MrBayes to quietly finish
 each analysis after the requested number of generations, without asking you if you want to extend
-the analysis. You can accomplish this with the command line:
+the analysis. You can accomplish this with: %% PV: Saving a line here...
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > set autoclose=yes nowarn=yes
 \end{verbatim}
@@ -1634,8 +1625,9 @@ order should give some added insight.
 
 The tutorials by no means cover the entire range of models or analytical options supported by
 MrBayes. In chapters \ref{advancedTopics} and \ref{evolutionaryModels} we describe all component
-models and algorithms that are available, so refer to these for complete coverage. A graphical
-overview of the models implemented in MrBayes 3.2 is provided in Appendix \ref{appendixOverview}.
+models and algorithms available, so refer to these for complete coverage. A graphical
+overview of the models implemented in MrBayes 3.2 is provided in Appendix~\ref{appendixOverview}. 
+%% PV: ... and another here, so we can fix this specially bad case of widow word.
 
 \section{An Amino Acid Analysis}
 
@@ -1644,18 +1636,16 @@ we will ask MrBayes to integrate over a predetermined set of fixed rate matrices
 repeat the analysis using a fixed rate matrix. To start the tutorial, first read in the amino acid
 data:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > execute avian_ovomucoids.nex
 \end{verbatim}
 \normalsize
 \end{singlespacing}
 
-To ask MrBayes to sample across fixed amino acid rate matrices, we use the \ttt{prset} command:
+To ask MrBayes to sample across fixed amino acid rate matrices, we use the \texttt{prset} command:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > prset aamodelpr=mixed
 \end{verbatim}
@@ -1664,40 +1654,37 @@ MrBayes > prset aamodelpr=mixed
 
 Now we run the analysis as usual. The analysis is much slower than a normal nucleotide analysis, so
 let us try first and see if we can get convergence without using Metropolis coupling (heated
-chains). We do this by asking for a single chain per analysis using \ttt{nchains=1} in the
-\ttt{mcmc} command. Although convergence might be slightly slower if measured in terms of the
+chains). We do this by asking for a single chain per analysis using \texttt{nchains=1} in the
+\texttt{mcmc} command. Although convergence might be slightly slower if measured in terms of the
 number of generations, the analysis will run much faster without the overhead of the heated chains.
 We are still using the default of two parallel runs, so we can monitor topological convergence on
 the fly. For the dataset in this tutorial, our previous results indicate that about 300,000
 generations are sufficient for decent topological convergence. Run 300,000 generations without
 heating using the command:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > mcmc nchains=1 ngen=300000
 \end{verbatim}
 \normalsize
 \end{singlespacing}
 
-Now we can summarize the parameter and tree samples as usual using the \ttt{sumt} and \ttt{sump}
-commands. The output of the \ttt{sump} command will include a table giving the posterior
+Now we can summarize the parameter and tree samples as usual using the \texttt{sumt} and \texttt{sump}
+commands. The output of the \texttt{sump} command will include a table giving the posterior
 probabilities of the amino acid models:
 
-\begin{singlespacing}
-\scriptsize
+%% PV: If we make some room, we can afford footnotesize here
+\begin{figure}[h]\singlespacing\footnotesize
 \begin{verbatim}
-   Model probabilities above 0.050
-   Estimates saved to file "avian_ovomucoids.nex.mstat".
+Model probabilities above 0.050
+Estimates saved to file "avian_ovomucoids.nex.mstat".
 
-                           Posterior      Standard         Min.           Max.   
-   Model                  Probability     Deviation     Probability    Probability
-   -------------------------------------------------------------------------------
-   aamodel[Jones]            1.000          0.000          1.000          1.000
-   -------------------------------------------------------------------------------
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+                      Posterior     Standard        Min.           Max.   
+  Model              Probability    Deviation    Probability    Probability
+  -------------------------------------------------------------------------
+  aamodel[Jones]        1.000         0.000         1.000          1.000
+  -------------------------------------------------------------------------
+\end{verbatim}\end{figure}
 
 This particular dataset overwhelmingly supports the Jones model, so this may be the only model
 sampled after the burn-in phase. This means that the move mechanism trying to change the amino acid
@@ -1714,8 +1701,7 @@ If desired, it is possible to run the same data set under another amino acid mod
 the Dayhoff model, by fixing the rate matrix. Do this by running the analysis with the following
 commands:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > prset aamodelpr=fixed(dayhoff)
 MrBayes > mcmc nchains=1 ngen=300000
@@ -1738,8 +1724,7 @@ codons to amino acids, generating relevant ambiguous amino acid state sets when 
 running the analysis. For instance, we would run a mixed amino acid model analysis on the
 protein-coding viral sequences in the \ttt{replicase.nex} data set using:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > execute replicase.nex
 MrBayes > lset nucmodel=protein
@@ -1756,8 +1741,7 @@ sequence. We will use the data in the file \ttt{replicase.nex}.
 
 First, we read in the data:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > execute replicase.nex
 \end{verbatim}
@@ -1767,8 +1751,7 @@ MrBayes > execute replicase.nex
 Then we specify that we want to use a codon model with omega variation across sites, and that we
 want MrBayes to report positive selection probabilities and site omega values (dN/dS ratios).
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > lset nucmodel=codon omegavar=ny98
 MrBayes > report possel=yes siteomega=yes
@@ -1800,38 +1783,34 @@ long table summarizing the estimates of the posterior distributions of the model
 including the probabilities of sites being in the positively selected class, and the weighted site
 omega values (dN/dS ratios):
 
-
-\begin{singlespacing}
-\tiny
+% PV: ... and we can afford scriptsize here also
+\begin{figure}[h]\singlespacing\scriptsize
 \begin{verbatim}
-                                             95% HPD Interval
-                                            --------------------
-   Parameter         Mean      Variance     Lower       Upper       Median    min ESS*  avg ESS    PSRF+ 
-   ------------------------------------------------------------------------------------------------------
-   TL              6.063468    0.869372    4.156027    7.813660    6.025831      5.08     12.36    1.014
-   omega(-)        0.069961    0.000184    0.047403    0.095480    0.068025      6.48      7.61    1.048
-   omega(N)        1.000000    0.000000    1.000000    1.000000    1.000000       NA        NA      NA   
-   omega(+)        1.657224    1.111911    1.000940    4.105477    1.112150     34.57     84.80    0.999
-   pi(-)           0.827655    0.001925    0.764926    0.906755    0.828821     10.20     11.70    0.999
-   pi(N)           0.125519    0.002765    0.009573    0.206275    0.128064     16.95     33.05    1.166
-   pi(+)           0.046826    0.003448    0.000100    0.172577    0.015650     20.67     43.00    1.119
-   pi(AAA)         0.014750    0.000007    0.011227    0.019912    0.014817     10.95     12.02    1.010
-   pi(AAC)         0.014741    0.000009    0.009607    0.019714    0.015200      7.43     37.31    1.488
-   pi(AAG)         0.021098    0.000010    0.015839    0.026900    0.020483     11.36     17.71    1.089
-   ...
-   pr+(1,2,3)      0.012812    0.000861    0.000000    0.059747    0.000743     40.76    171.75    1.080
-   pr+(4,5,6)      0.000332    0.000000    0.000000    0.001532    0.000036     43.44    195.80    1.092
-   pr+(7,8,9)      0.000068    0.000000    0.000000    0.000316    0.000003     83.01    223.65    1.054
-   ...
-   omega(1,2,3)    0.103900    0.002723    0.054415    0.176367    0.089053     16.88     20.23    1.014
-   omega(4,5,6)    0.071107    0.000195    0.048813    0.097142    0.069085      6.47      7.37    1.041
-   omega(7,8,9)    0.070189    0.000188    0.048528    0.096028    0.068360      6.46      7.48    1.046
-   ...
-   ------------------------------------------------------------------------------------------------------
-
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+                                         95% HPD Interval
+                                       -------------------
+Parameter         Mean      Variance    Lower      Upper       Median   min ESS*  avg ESS   PSRF+ 
+--------------------------------------------------------------------------------------------------
+TL              6.063468    0.869372   4.156027   7.813660    6.025831     5.08     12.36    1.014
+omega(-)        0.069961    0.000184   0.047403   0.095480    0.068025     6.48      7.61    1.048
+omega(N)        1.000000    0.000000   1.000000   1.000000    1.000000       NA        NA       NA   
+omega(+)        1.657224    1.111911   1.000940   4.105477    1.112150    34.57     84.80    0.999
+pi(-)           0.827655    0.001925   0.764926   0.906755    0.828821    10.20     11.70    0.999
+pi(N)           0.125519    0.002765   0.009573   0.206275    0.128064    16.95     33.05    1.166
+pi(+)           0.046826    0.003448   0.000100   0.172577    0.015650    20.67     43.00    1.119
+pi(AAA)         0.014750    0.000007   0.011227   0.019912    0.014817    10.95     12.02    1.010
+pi(AAC)         0.014741    0.000009   0.009607   0.019714    0.015200     7.43     37.31    1.488
+pi(AAG)         0.021098    0.000010   0.015839   0.026900    0.020483    11.36     17.71    1.089
+...
+pr+(1,2,3)      0.012812    0.000861   0.000000   0.059747    0.000743    40.76    171.75    1.080
+pr+(4,5,6)      0.000332    0.000000   0.000000   0.001532    0.000036    43.44    195.80    1.092
+pr+(7,8,9)      0.000068    0.000000   0.000000   0.000316    0.000003    83.01    223.65    1.054
+...
+omega(1,2,3)    0.103900    0.002723   0.054415   0.176367    0.089053    16.88     20.23    1.014
+omega(4,5,6)    0.071107    0.000195   0.048813   0.097142    0.069085     6.47      7.37    1.041
+omega(7,8,9)    0.070189    0.000188   0.048528   0.096028    0.068360     6.46      7.48    1.046
+...
+--------------------------------------------------------------------------------------------------
+\end{verbatim}\end{figure}
 
 First, note that the effective sample size (ESS) is still somewhat low for many parameters. The
 total ESS across the two runs is the double of the average ESS (avg ESS). The total in this
@@ -1843,28 +1822,28 @@ longer to get an accurate sample from the posterior, and we might expect the sam
 to be reasonably close to the correct values.
 
 Now focus on the summaries of the parameter samples. From the top, the parameters are total tree
-length (\ttt{TL}), the omega values (dN/dS ratios) for the negatively selected, neutral, and
-positively selected sites (\ttt{omega(-)}, \ttt{omega(N)}, and \ttt{omega(+)}), the frequencies of
-the site categories (\ttt{pi(-)}, \ttt{pi(N)}, and \ttt{pi(+)}), and the stationary state
-frequencies of the codons (\ttt{pi(AAA)}, \ttt{pi(AAC)}, etc).
+length (\texttt{TL}), the omega values (dN/dS ratios) for the negatively selected, neutral, and
+positively selected sites (\texttt{omega(-)}, \texttt{omega(N)}, and \texttt{omega(+)}), the frequencies
+of the site categories (\texttt{pi(-)}, \texttt{pi(N)}, and \texttt{pi(+)}), and the stationary state
+frequencies of the codons (\texttt{pi(AAA)}, \texttt{pi(AAC)}, etc).
 
 The table ends with the probabilities of individual sites being in the positively selected class,
-with \ttt{pr+(1,2,3)} being the probability of the codon corresponding to nucleotide sites 1--3
-being positively selected, \ttt{pr+(4,5,6)} being the probability for the codon corresponding to
+with \texttt{pr+(1,2,3)} being the probability of the codon corresponding to nucleotide sites 1--3
+being positively selected, \texttt{pr+(4,5,6)} being the probability for the codon corresponding to
 sites 4--6 being positively selected, etc.
 
 The positive selection probabilities are followed by the site omega values, which represent a
-weighted average for each site across all categories of omega values, with \ttt{omega(1,2,3)} being
-the value for the codon corresponding to nucleotide sites 1--3, \ttt{omega(4,5,6)} the value for
+weighted average for each site across all categories of omega values, with \texttt{omega(1,2,3)} being
+the value for the codon corresponding to nucleotide sites 1--3, \texttt{omega(4,5,6)} the value for
 the codon corresponding to sites 4--6, etc.
 
-Looking at the values, we note that about 85 \% (\ttt{pi(-)}) of the sites are under strong
-constraining selection (\ttt{omega(-)=0.0699}). Only a small fraction of sites, around 5 \%, are
-under positive selection (\ttt{pi(+)}).
+Looking at the values, we note that about 85 \% (\texttt{pi(-)}) of the sites are under strong
+constraining selection (\texttt{omega(-)=0.0699}). Only a small fraction of sites, around 5 \%, are
+under positive selection (\texttt{pi(+)}).
 
 Examination of the positive selection probabilities and codon site omega values reveals which sites
-are most likely to be experiencing positive selection (a high value for \ttt{pr+(n,n,n)}, and
-\ttt{omega(n,n,n)} $> 1.0$).
+are most likely to be experiencing positive selection (a high value for \texttt{pr+(n,n,n)}, and
+\texttt{omega(n,n,n)} $> 1.0$).
 % For instance, the evidence is strong that site (292,293,294) is under positive selection
 % (\ttt{pr+(292,293,294) = 0.998}, \ttt{omega(292,293,294) = 1.21}).
 %%%% JN: My rerun using 3.2.7 did not find any pr+ value > 0.282567,
@@ -1881,12 +1860,11 @@ substitution model space in the Bayesian MCMC analysis itself \citep{huelsenbeck
 need for a priori model testing. The purpose of this tutorial is to demonstrate how to set up an
 analysis that integrates out the uncertainty about the correct substitution model by sampling
 across the entire general time reversible (GTR) model space. We will use the data in the file
-\ttt{primates.nex}.
+\texttt{primates.nex}.
 
 First, we read in the data:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > execute primates.nex
 \end{verbatim}
@@ -1896,8 +1874,7 @@ MrBayes > execute primates.nex
 Then we specify that we want to use a gamma model of rate variation across sites, and that we want
 to sample across the GTR model space:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > lset nst=mixed rates=gamma
 \end{verbatim}
@@ -1909,36 +1886,33 @@ parameter samples, including the probabilities of the sampled substitution model
 convergence by making sure that these probabilities are the same across independent runs. This is a
 sample table from an analysis using two independent runs on the tutorial data set:
 
-\begin{singlespacing}
-\footnotesize
+\begin{figure}[h]\singlespacing\footnotesize
 \begin{verbatim}
-   Model probabilities above 0.050
-   Estimates saved to file "primates.nex.mstat".
+  Model probabilities above 0.050
+  Estimates saved to file "primates.nex.mstat".
 
-                              Posterior      Standard         Min.           Max.   
-   Model                     Probability     Deviation     Probability    Probability
-   ----------------------------------------------------------------------------------
-   gtrsubmodel[121123]          0.196          0.015          0.186          0.207
-   gtrsubmodel[121121]          0.099          0.007          0.094          0.104
-   gtrsubmodel[121321]          0.066          0.017          0.053          0.078
-   gtrsubmodel[121324]          0.063          0.013          0.054          0.072
-   gtrsubmodel[121323]          0.062          0.008          0.057          0.068
-   gtrsubmodel[123323]          0.055          0.004          0.053          0.058
-   ----------------------------------------------------------------------------------
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+                           Posterior     Standard        Min.          Max.   
+  Model                   Probability    Deviation    Probability   Probability
+  -----------------------------------------------------------------------------
+  gtrsubmodel[121123]        0.196         0.015         0.186         0.207
+  gtrsubmodel[121121]        0.099         0.007         0.094         0.104
+  gtrsubmodel[121321]        0.066         0.017         0.053         0.078
+  gtrsubmodel[121324]        0.063         0.013         0.054         0.072
+  gtrsubmodel[121323]        0.062         0.008         0.057         0.068
+  gtrsubmodel[123323]        0.055         0.004         0.053         0.058
+  -----------------------------------------------------------------------------
+\end{verbatim}\end{figure}
 
 The models are labeled using a so-called restricted growth function. The six different substitution
 rates are given in the order $r_{AC}$, $r_{AG}$, $r_{AT}$, $r_{CG}$, $r_{CT}$, $r_{GT}$. The first rate is
 labeled ``1''. The next rate is labeled with the next higher, unused integer if it is different,
 and otherwise with the same integer as the partition it belongs to. For instance,
-\ttt{gtrsubmodel[111111]} refers to the Jukes--Cantor or F81 model, \ttt{gtrsubmodel[123456]} to
-the GTR model, and \ttt{gtrsubmodel[121121]} to the HKY model, and so on.
+\texttt{gtrsubmodel[111111]} refers to the Jukes--Cantor or F81 model, \texttt{gtrsubmodel[123456]} to
+the GTR model, and \texttt{gtrsubmodel[121121]} to the HKY model, and so on.
 
 For this particular data set, we observe that there is considerable uncertainty concerning the
 correct substitution model. The model with the highest posterior probability is
-\ttt{gtrsubmodel[121123]}, which differs from the HKY model only in that the G--T substitution rate
+\texttt{gtrsubmodel[121123]}, which differs from the HKY model only in that the G--T substitution rate
 is different from the other transversion rates, presumably lower. The HKY model has the second best
 posterior probability of all the models reaching above the reporting threshold of $0.050$. All other
 estimates of model parameters derived from this analysis, the topology estimate for instance, will
@@ -1961,22 +1935,12 @@ we need to compute the ratio of the marginal likelihoods of the two models, $M_{
 This ratio is known as the Bayes factor, $B_{12}$, and is a summary of the evidence provided by the
 data in favor of model 1 over model 2 \citep{kass95} (see also section \ref{bayesianModelChoice}).
 
-We will use the data in the file \ttt{primates.nex} for the analysis. First, read in the data
-using:
+We will use the data in the file \texttt{primates.nex} for the analysis. First, read in the data 
+and then specify a GTR + I + $\Gamma$ model: %% PV: I need to save some lines here for later
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > execute primates.nex
-\end{verbatim}
-\end{singlespacing}
-\normalsize
-
-Now let us specify a GTR + I + $\Gamma$ model:
-
-\begin{singlespacing}
-\small
-\begin{verbatim}
 MrBayes > lset nst=6 rates=invgamma
 \end{verbatim}
 \end{singlespacing}
@@ -1987,8 +1951,7 @@ The hard constraint will allow us to force a partition to always be present in t
 The negative constraint will allow us to sample across all trees that do not contain the specified
 partition. Specify the constraints using the following commands:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > constraint humanchimp = Homo_sapiens Pan
 MrBayes > constraint nohumanchimp negative = Homo_sapiens Pan
@@ -2001,80 +1964,82 @@ harmonic mean of the likelihood values of the MCMC samples. It is simple to comp
 pretty rough estimate of the model likelihood. To obtain a more accurate model likelihood, MrBayes
 provides the stepping-stone method. First, let us use the harmonic mean estimate of the model
 likelihoods of the two models we want to compare. First we enforce the positive constraint, run an
-MCMC analysis with 100,000 generations, and use \ttt{sump} to get the harmonic mean estimate (we
-also use \ttt{set autoclose=yes nowarnings=yes} for allowing execution without being prompted for
-answering \ttt{yes}/\ttt{no} between steps):
+MCMC analysis with 100,000 generations, and use \texttt{sump} to get the harmonic mean estimate (we
+also use \texttt{set autoclose=yes nowarnings=yes} for allowing execution without being prompted for
+answering \texttt{yes/no} between steps):
 
-\begin{singlespacing}
-\small
+%% PV: And I need to reduce the line length here
+\begin{singlespacing}\small
 \begin{verbatim}
-MrBayes > set autoclose=yes nowarnings=yes
-MrBayes > prset topologypr=constraints(humanchimp)
-MrBayes > mcmc ngen=100000
-MrBayes > sump
+> set autoclose=yes nowarnings=yes
+> prset topologypr=constraints(humanchimp)
+> mcmc ngen=100000
+> sump
 \end{verbatim}
 \end{singlespacing}
 \normalsize
+
+\begin{wrapfigure}{r}{0.4\textwidth}\singlespacing\footnotesize
+\vspace{-18mm}
+\begin{verbatim}
+     Estimated marginal likeli-
+     hoods for runs sampled in 
+     files "primates.nex.run1.p"
+     and "primates.nex.run2.p":
+
+     (Use the harmonic mean for 
+      Bayes factor comparisons 
+      of models)
+ 
+     (Values are saved to the 
+      file primates.nex.lstat)
+
+    Run   Arithmetic    Harmonic 
+             mean         mean
+    ----------------------------
+      1    -5719.86     -5730.72
+      2    -5720.03     -5730.95
+    ----------------------------
+    TOTAL  -5719.94     -5730.84
+    ----------------------------
+\end{verbatim}\end{wrapfigure}
 
 In the output from the \ttt{sump} command, focus on the table summarizing the likelihoods of the
-MCMC samples:
-
-\begin{singlespacing}
-\footnotesize
-\begin{verbatim}
-   Estimated marginal likelihoods for runs sampled in files
-      "primates.nex.run1.p" and "primates.nex.run2.p":
-      (Use the harmonic mean for Bayes factor comparisons of models)
-
-      (Values are saved to the file primates.nex.lstat)
-
-   Run   Arithmetic mean   Harmonic mean
-   --------------------------------------
-     1      -5719.86         -5730.72
-     2      -5720.03         -5730.95
-   --------------------------------------
-   TOTAL    -5719.94         -5730.84
-   --------------------------------------
-
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+MCMC samples:~$\rightarrow$
 
 It is the harmonic mean that we will use as the initial estimate of the model likelihood. The
 estimate of the logarithm of the model likelihood is $-5730.84$, with a little bit of heterogeneity
-between the runs.
+between the runs.\vspace{4mm}
 
-Now we enforce the negative constraint, and repeat the procedure using the commands:
+Now we enforce the negative constraint, and repeat the procedure using:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
-MrBayes > prset topologypr=constraints(nohumanchimp)
-MrBayes > mcmc ngen=100000
-MrBayes > sump
+> prset topologypr=constraints(nohumanchimp)
+> mcmc ngen=100000
+> sump
 \end{verbatim}
-\end{singlespacing}
-\normalsize
+\normalsize\end{singlespacing}
 
-Our run produced the following estimates of the log of the model likelihoods:
+Our run produced the following estimates of the log of the model likelihoods:~$\rightarrow$
 
-\begin{singlespacing}
-\footnotesize
+\begin{wrapfigure}{r}{0.4\textwidth}\singlespacing\footnotesize
+\vspace{-23mm}
 \begin{verbatim}
-   Run   Arithmetic mean   Harmonic mean
-   --------------------------------------
-     1      -5726.95         -5735.94
-     2      -5727.59         -5738.19
-   --------------------------------------
-   TOTAL    -5727.22         -5737.59
-   --------------------------------------
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+    Run    Arithmetic   Harmonic 
+             mean         mean
+    ----------------------------
+      1    -5726.95     -5735.94
+      2    -5727.59     -5738.19
+    ----------------------------
+    TOTAL  -5727.22     -5737.59
+    ----------------------------
+
+\end{verbatim}\end{wrapfigure}
 
 The harmonic mean estimate for this model is $-5737.59$ in log units, which is about 6 log units
 worse than the previous model---wich gives us a $2logB_{12} = 13.5$. A value $10$ is typically
-considered ``very strong'' evidence in favor of the better model (Table \ref{table:bftable}). Thus,
+considered ``very strong'' evidence in favor of the better model  (See table \ref{table:bftable} on page~\pageref{table:bftable}). Thus,
 the harmonic mean estimator indicates that we have very strong evidence in favor of human and chimp
 being each others closest relatives, with Gorilla and other primates being more distant.
 
@@ -2084,7 +2049,7 @@ this tree groups chimps (\textit{Pan}) and gorillas (\textit{Gorilla}) together,
 \textit{Homo sapiens} being just outside, as one might have expected.
 
 Let us now repeat the comparison using the more accurate stepping-stone sampling approach. Instead
-of using the \ttt{mcmc} command followed by the \ttt{sump} command, we simply use the \ttt{ss}
+of using the \texttt{mcmc} command followed by the \texttt{sump} command, we simply use the \texttt{ss}
 command instead, which will produce the estimated model likelihood directly. The stepping-stone
 analysis moves from the posterior to the prior through a number of steps (MCMC analyses) in which
 the sampled distribution is a mixture of varying proportions of the two.
@@ -2097,26 +2062,25 @@ of trees with similar probability will become huge for any reasonably-sized set 
 To help you monitor convergence during stepping-stone sampling, MrBayes will print the average
 standard deviation of split frequencies across runs if you use at least two independent, parallel
 runs. Each step in the algorithm is treated as an independent MCMC sampling problem, and where most
-of the parameters in the \ttt{mcmcp} and \ttt{mcmc} commands are applicable to the MCMC analysis in
-each step. For example, the \ttt{samplefreq} and the \ttt{burnin} parameters, respectively, are
-used for setting sampling frequency and burnin behaviour within each step. In addition, the
-\ttt{ss} command also uses its own burnin parameter, \ttt{Burninss}, for specifying the number of
+of the parameters in the \texttt{mcmcp} and \texttt{mcmc} commands are applicable to the MCMC analysis 
+in each step. For example, the \texttt{samplefreq} and the \texttt{burnin} parameters, respectively, 
+are used for setting sampling frequency and burnin behaviour within each step. In addition, the
+\texttt{ss} command also uses its own burnin parameter, \texttt{Burninss}, for specifying the number of
 samples to be discarded before sampling of the first step starts. The length of the initial burn-in
 can be specified either in terms of the number of samples to be discarded (positive numbers) or in
 terms of step lengths (negative numbers). By default, the initial burn-in phase is as long as one
-of the subsequent steps in the algorithm, that is, \ttt{burninss=-1}. For example, assume that
-\ttt{Burninss} is set to $-1$, \ttt{Nsteps} to $49$, \ttt{Ngen} to $300000$ and \ttt{samplefreq} to
-$500$. The algorithm will then run 49 steps, each with 6,000 generations ($Ngen/Nsteps+1$), which
-is the number of generations per step left---after a burnin of (the length of) one step is
-removed.
+of the subsequent steps in the algorithm, that is, \texttt{burninss=-1}. For example, assume that
+\texttt{Burninss} is set to $-1$, \texttt{Nsteps} to $49$, \texttt{Ngen} to $300000$ and 
+\texttt{samplefreq} to $500$. The algorithm will then run 49 steps, each with 6,000 generations 
+($Ngen/Nsteps+1$), which is the number of generations per step left---after a burnin of (the 
+length of) one step is removed.
 
 To obtain an adequate sample from most of the steps in the algorithm, we will use the settings
 given above. To monitor convergence, twice during each step, we set the diagnostics frequency to
 once every 3,000 generations. Stepping-stone analysis under the two models using these settings
 will be generated by the following commands:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > prset topologypr=constraints(humanchimp)
 MrBayes > ss ngen=300000 diagnfreq=3000
@@ -2126,39 +2090,37 @@ MrBayes > ss
 \end{singlespacing}
 \normalsize
 
-The output from the \ttt{ss} command will include the following table, which is given here for the
-first model:
+The output from the \texttt{ss} command will include the following tables for the first model (upper table) and second model (lower table):~\rotatebox[origin=l]{270}{$\Rsh$}
 
-\scriptsize
-\begin{singlespacing}
+\begin{wrapfigure}{r}{0.45\textwidth}\singlespacing\footnotesize
+  \vspace{-7mm}
 \begin{verbatim}
-   Marginal likelihood (in natural log units) estimated using stepping-stone sampling based on
-   49 steps with 6000 generations (12 samples) within each step. 
+   Marginal likelihood (in natural
+   log units) estimated using 
+   stepping-stone sampling based 
+   on 49 steps with 6000 generations
+   (12 samples) within each step. 
 
-       Run   Marginal likelihood (ln)
-       ------------------------------
-         1     -5797.07   
-         2     -5795.82   
-       ------------------------------
-       Mean:   -5796.26
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+       Run       Marginal 
+               likelihood (ln)
+        ----------------------
+          1      -5797.07   
+          2      -5795.82   
+        ----------------------
+        Mean:    -5796.26
 
-In our run, the second model produced the following version of the same table:
 
-\scriptsize
-\begin{singlespacing}
-\begin{verbatim}
-       Run   Marginal likelihood (ln)
-       ------------------------------
-         1     -5805.21   
-         2     -5807.67   
-       ------------------------------
-       Mean:   -5805.82
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+
+        Run       Marginal 
+                likelihood (ln)
+        ----------------------
+          1      -5805.21   
+          2      -5807.67   
+        ----------------------
+        Mean:    -5805.82
+
+
+\end{verbatim}\end{wrapfigure}
 
 The model likelihoods are thus $-5796.26$ for the first model,and $-5805.82$ for the second (in
 natural log units). We first note that both likelihoods are considerably smaller than the
@@ -2170,17 +2132,16 @@ upwards in practice.
 We also note that the more accurate model likelihoods suggest a larger difference between the two
 models, about 9 log likelihood units (with a $2*logB_{12} = 19,12$). Thus, we conclude that the
 better model (humans and chimps do form a monophyletic group) is very strongly supported by the
-Bayes factor.
+Bayes factor.\newpage
 
 Finally, let us examine one of the convergence diagnostics plots from one of our stepping-stone
 analyses:
 
-\footnotesize
-\begin{singlespacing}
+\begin{figure}[h]\singlespacing\footnotesize
 \begin{verbatim}
-   Plot of average standard deviation of split frequencies across steps.
-   Points at -1.0 (y-axis) indicate that there were no splits
-   above minimum frequency for corresponding step.
+  Plot of average standard deviation of split frequencies across steps.
+  Points at -1.0 (y-axis) indicate that there were no splits
+  above minimum frequency for corresponding step.
    +------------------------------------------------------------+ 0.101
    |                                     *    *    *            |
    |                      *       *       *                     |
@@ -2200,9 +2161,7 @@ analyses:
    +------+-----+-----+-----+-----+-----+-----+-----+-----+-----+ 0.000
    ^                                                            ^
    1                                                           49
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+\end{verbatim}\end{figure}
 
 Here, we see the expected pattern of low average standard deviation of split frequencies in the
 early steps of the algorithm (to the left in the diagram), and difficulties of sampling across
@@ -2214,16 +2173,16 @@ analysis suggests that the accuracy is already reasonably good.
 
 It might be worth repeating that for any difficult MCMC scenario (such as getting an accurate
 estimate from the stepping-stone algorithm), it is well worth trying to repeat the analyses,
-perhaps with slightly different settings, to look for robustness. In the case of the \ttt{ss}
-command, one might also use the parameter \ttt{fromprior=yes}, which starts from the prior and goes
-towards the posterior (the opposite direction from the default settings). The two approaches
+perhaps with slightly different settings, to look for robustness. In the case of the \texttt{ss}
+command, one might also use the parameter \texttt{fromprior=yes}, which starts from the prior and
+goes towards the posterior (the opposite direction from the default settings). The two approaches
 should, in theory, give the same estimate (plus/minus the MCMC error).
 
 \section{Testing the Strict Molecular Clock}
 \label{strictClock}
 
 In this tutorial, we will use a Bayes factor comparison to test the strict clock model against the
-non-clock model for an example data set, \ttt{primates.nex}. The data set is unusual in that a
+non-clock model for an example data set, \texttt{primates.nex}. The data set is unusual in that a
 standard non-clock analysis suggests that the evolution of these sequences may be fairly well
 explained by a strict clock. The analysis is quite similar to the previous one, so you might find
 it useful to go through that tutorial first. The basic idea is that we want to compare the marginal
@@ -2231,21 +2190,12 @@ likelihoods of the two models (non-clock and strict clock) against each other. T
 to estimate the marginal likelihoods either using the rough harmonic mean method or the more
 accurate stepping-stone method. We will use both in this tutorial and compare the results.
 
-As usual, we first read in the data:
+% PV: I need to save some lines for later
+As usual, we first read in the data and then we specify a GTR + I + $\Gamma$ model:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > execute primates.nex
-\end{verbatim}
-\end{singlespacing}
-\normalsize
-
-Then we specify a GTR + I + $\Gamma$ model:
-
-\begin{singlespacing}
-\small
-\begin{verbatim}
 MrBayes > lset nst=6 rates=invgamma
 \end{verbatim}
 \end{singlespacing}
@@ -2253,13 +2203,12 @@ MrBayes > lset nst=6 rates=invgamma
 
 To estimate marginal likelihoods of the two models using harmonic means of the likelihoods of the
 MCMC samples, we simply run an ordinary MCMC analysis and obtain the appropriate values using the
-standard \ttt{sump} command. Specifically, we first run the standard non-clock model for 100,000
-generations and summarize the obtained samples using \ttt{sump} (we also use \ttt{set autoclose=yes
-nowarnings=yes} for allowing execution without being prompted for answering \ttt{yes}/\ttt{no}
+standard \texttt{sump} command. Specifically, we first run the standard non-clock model for 100,000
+generations and summarize the obtained samples using \texttt{sump} (we also use \ttt{set autoclose=yes
+nowarnings=yes} for allowing execution without being prompted for answering \texttt{yes/no}
 between steps):
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > mcmc ngen=100000
@@ -2297,7 +2246,7 @@ to use the uniform prior on clock trees. The other commands are the same as thos
    > sump
 \end{verbatim}
 
-  \begin{wrapfigure}{r}{0.42\textwidth}\singlespacing\footnotesize
+\begin{wrapfigure}{r}{0.42\textwidth}\singlespacing\footnotesize
     \vspace{-9mm}
 \begin{verbatim}
    Run     Arithmetic   Harmonic 
@@ -4218,6 +4167,15 @@ analyses, and we therefore introduced the average standard deviation of split fr
 
 ASDSF is calculated by comparing split or clade frequencies across multiple independent MCMC runs
 that ideally should be started from different randomly chosen starting trees \citep{lakner08}.
+Specifically, let $f_i^j$ be the fraction of the trees from run $i$ containing the split or clade (taxon
+bipartition) $j$. Then ASDSF is defined as
+\begin{equation*}
+\text{ASDSF} = \frac{1}{M} \sum_j \left( \sqrt{ \frac{1}{N-1} \sum_i (f_i^j - \bar{f}^j)^2} \, \right)
+\end{equation*}
+where $N$ is the number of runs, $M$ is the total number of splits or clades present in the tree
+samples being compared, and $\bar{f}^j$ is the mean fraction of trees across all runs containing
+split or clade $j$.
+
 ASDSF should approach $0.0$ as runs converge to the same distribution. The frequencies of rare
 splits or clades are difficult to estimate accurately and these groupings are usually of marginal
 interest. Therefore, it may be advantageous to exclude them from the diagnostic. MrBayes allows the

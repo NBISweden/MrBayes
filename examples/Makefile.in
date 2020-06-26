@@ -252,6 +252,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -269,7 +270,8 @@ dist_examples_DATA = \
 	hymfossil.nex \
 	kim.nex \
 	primates.nex \
-	replicase.nex
+	replicase.nex \
+	short-test.nex
 
 all: all-am
 

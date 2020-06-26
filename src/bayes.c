@@ -53,14 +53,23 @@
 #    include <readline/readline.h>
 #  elif defined(HAVE_READLINE_H)
 #    include <readline.h>
-#  endif /* !defined(HAVE_READLINE_H) */
-#endif /* HAVE_LIBREADLINE */
+#  else
+#    /* Library available, but header files are not. */
+#    /* This typically happens on Linux where libraries may be split
+#       into runtime and development packages. See Github Issue #182. */
+#    undef HAVE_LIBREADLINE
+#    undef HAVE_READLINE_HISTORY
+#  endif
+# endif /* HAVE_LIBREADLINE */
+
 #ifdef HAVE_READLINE_HISTORY
 #  if defined(HAVE_READLINE_HISTORY_H)
 #    include <readline/history.h>
 #  elif defined(HAVE_HISTORY_H)
 #    include <history.h>
-#  endif /* defined(HAVE_READLINE_HISTORY_H) */
+#  else
+#    undef HAVE_READLINE_HISTORY
+#  endif
 #endif /* HAVE_READLINE_HISTORY */
 
 #ifdef HAVE_LIBREADLINE
@@ -187,8 +196,10 @@ int main (int argc, char *argv[])
     
 #   ifdef HAVE_LIBREADLINE
     rl_attempted_completion_function = readline_completion;
+#   ifdef HAVE_READLINE_HISTORY
     using_history();
-#   endif
+#   endif /* HAVE_READLINE_HISTORY */
+#   endif /* HAVE_LIBREADLINE */
     /* Set up parameter table. */
     SetUpParms ();
     
@@ -399,8 +410,10 @@ int CommandLine (int argc, char **argv)
             if (cmdStrP!=NULL) 
                     {
                     strncpy (cmdStr,cmdStrP,CMD_STRING_LENGTH - 2);
+#                   ifdef HAVE_READLINE_HISTORY
                     if (*cmdStrP) 
                         add_history (cmdStrP);
+#                   endif /* HAVE_READLINE_HISTORY */
                     free (cmdStrP);
                     }
             else /* fall through to if (feof(stdin))..*/

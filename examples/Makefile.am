@@ -8,4 +8,5 @@ dist_examples_DATA=	\
 	hymfossil.nex \
 	kim.nex \
 	primates.nex \
-	replicase.nex
+	replicase.nex \
+	short-test.nex
