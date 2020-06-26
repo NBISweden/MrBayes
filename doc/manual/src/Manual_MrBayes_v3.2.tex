@@ -3238,13 +3238,13 @@ Another total-evidence dating tutorial using the Hymenoptera data (truncated) is
 The purpose of the analysis discussed in this tutorial is to infer the ancestral state
 probabilities for a given node in a phylogeny, while simultaneously accommodating uncertainty in
 all other model parameters, including the topology of other parts of the tree. We will use the
-\ttt{cynmix.nex} dataset for the tutorial.
+\texttt{cynmix.nex} dataset for the tutorial.
 
-First, we read in the data (we also use \ttt{set autoclose=yes nowarnings=yes} for allowing
-execution without being prompted for answering \ttt{yes}/\ttt{no} between steps):
+%% Saving a line here to fix an orphan
+First, we read in the data (and use \texttt{set autoclose=yes nowarnings=yes} for allowing
+execution without being prompted for answering \texttt{yes/no} between steps):
 
-\small
-\begin{singlespacing}
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > execute cynmix.nex
@@ -3264,15 +3264,15 @@ the states of all other morphological characters, we will treat it in a separate
 Otherwise, we will use the same partitioned model as in chapter \ref{tutorialPartitioned}. To set
 up the model, we need to type in the following lines:
 
-\small
-\begin{singlespacing}
+%% PV: Suggestion for this particular group: short form, more easy to read
+\begin{singlespacing}\small
 \begin{verbatim}
-MrBayes > partition ancstates = 6: 1, 2-166, COI, EF1a, LWRh, 28S
-MrBayes > set partition=ancstates
-MrBayes > lset applyto=(2) rates=gamma
-MrBayes > lset applyto=(3,4,5,6) rates=invgamma nst=6
-MrBayes > unlink statefreq=(all) revmat=(all) pinvar=(all) shape=(all)
-MrBayes > prset ratepr=variable
+> partition ancstates = 6: 1, 2-166, COI, EF1a, LWRh, 28S
+> set partition=ancstates
+> lset applyto=(2) rates=gamma
+> lset applyto=(3,4,5,6) rates=invgamma nst=6
+> unlink statefreq=(all) revmat=(all) pinvar=(all) shape=(all)
+> prset ratepr=variable
 \end{verbatim}
 \end{singlespacing}
 \normalsize
@@ -3282,8 +3282,7 @@ MrBayes to report ancestral states for that node and the relevant partition. We 
 corresponding to the Cynipidae to always be present in the sampled trees by first defining and then
 enforcing the constraint:
 
-\small
-\begin{singlespacing}
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > constraint cynipidae=1-29
 MrBayes > prset topologypr=constraints(cynipidae)
@@ -3294,8 +3293,7 @@ MrBayes > prset topologypr=constraints(cynipidae)
 To ask MrBayes to report ancestral states for the first partition, which contains only the first
 morphological character, we use:
 
-\small
-\begin{singlespacing}
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > report applyto=(1) ancstates=yes
 \end{verbatim}
@@ -3304,10 +3302,9 @@ MrBayes > report applyto=(1) ancstates=yes
 
 We now run the analysis, say for 30,000 generations, which is barely enough to get adequate
 convergence. After the analysis is completed, we summarize the parameter samples, including those
-of the ancestral state probabilities, using the \ttt{sump} command:
+of the ancestral state probabilities, using \texttt{sump}:
 
-\small
-\begin{singlespacing}
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > mcmc ngen=30000
 MrBayes > sump
@@ -3315,13 +3312,12 @@ MrBayes > sump
 \end{singlespacing}
 \normalsize
 
-The output from \ttt{sump} will include the state probabilities of the first character for the node
+The output from \texttt{sump} will include the state probabilities of the first character for the node
 corresponding to the most recent common ancestor of the Cynipidae. Here are the relevant lines in
 the parameter table from our analysis (they are found at the bottom of the table), based on a run
 of 1 M generations:
 
-\begin{singlespacing}
-\footnotesize
+\begin{figure}[h]\singlespacing\footnotesize
 \begin{verbatim}
  Parameter           Mean      Variance     min ESS*  avg ESS  PSRF+
  --------------------------------------------------------------------
@@ -3329,9 +3325,7 @@ of 1 M generations:
  p(0){1@cynipidae}   0.547910  0.019476 ... 36.72     43.47    1.000
  p(1){1@cynipidae}   0.452090  0.019476 ... 36.72     43.47    1.000
  --------------------------------------------------------------------
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+\end{verbatim}\end{figure}
 
 The first line gives the probability of state 0 for character 1 at the constrained node labeled
 ``cynipidae''. The second line gives the probability of state 1 for the same character and the same
@@ -3354,11 +3348,10 @@ hybridization.
 
 For this tutorial, we will use the \ttt{finch.nex} data set, which contains data from 30 loci for a
 set of four individuals belonging to four different species. As usual, we first read in the data
-(we also use \ttt{set autoclose=yes nowarnings=yes} for allowing execution without being prompted
-for answering \ttt{yes}/\ttt{no} between steps):
+(we also use \texttt{set autoclose=yes nowarnings=yes} for allowing execution without being prompted
+for answering \texttt{yes/no} between steps):
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > execute finch.nex
@@ -3366,11 +3359,10 @@ MrBayes > execute finch.nex
 \end{singlespacing}
 \normalsize
 
-The data file contains a \ttt{MRBAYES} block, with commands to define a partition that divides the
+The data file contains a \texttt{MRBAYES} block, with commands to define a partition that divides the
 data into the 30 separate genes. Lets start by making sure this partition is used:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > set partition = genes
 \end{verbatim}
@@ -3378,12 +3370,11 @@ MrBayes > set partition = genes
 \normalsize
 
 The next step in specifying the multi-species coalescent is to define what species to which the
-different sequenced individuals belong. This is done using the \ttt{speciespartition} command. By
+different sequenced individuals belong. This is done using the \texttt{speciespartition} command. By
 default, it is assumed that each individual belongs to a separate species, which is the case we are
 dealing with, but let us nevertheless be explicit:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > speciespartition species = SpeciesA: 1, SpeciesB: 2,
                                      SpeciesC: 3, SpeciesD: 4
@@ -3394,17 +3385,16 @@ MrBayes > set speciespartition=species
 
 The first line (broken here into two to fit the page, but you need to enter it as a single line in
 the console window) simply names each of the species and then lists the sequences that belong to
-that species. The list of sequences is a standard taxon list, as used by the \ttt{taxset} command.
+that species. The list of sequences is a standard taxon list, as used by the \texttt{taxset} command.
 This means that you can use either the index or the name of a sequence (``taxon''). Ranges are
 specified using a dash, and a period can be used as a synonym of the last sequence in the matrix.
 Here, each species that we name is represented by a single sequence, specified by its row index in
 the data matrix.
 
 We now need to unlink the topology parameter of the 30 gene partitions, which is done using the
-\ttt{unlink} command:
+\texttt{unlink} command:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > unlink topology=(all)
 \end{verbatim}
@@ -3415,8 +3405,7 @@ To set the multi-species coalescent as the prior for each of the gene trees, we 
 that the branch lengths should come from a coalescent process within a species tree,and that the
 topology should be constrained by the species tree. This is achieved using the following commands:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > prset topologypr=speciestree
 MrBayes > prset brlenspr=clock:speciestree
@@ -3433,8 +3422,7 @@ model parameters by using the \tb{showmodel} command to verify this.
 We now turn our attention to the substitution model. Assume that we would like to use an HKY model
 with site rates modeled using a discrete gamma. This would be accomplished using the line:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > lset nst=2 rates=gamma
 \end{verbatim}
@@ -3448,8 +3436,7 @@ lognormal distribution with the mean on the log scale being equal to a populatio
 the standard deviation on the log scale being equal to 10. Since the natural log of 100 is about
 $4.6$, and the natural log of 10 is about $2.3$, this would be achieved using the lines:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > prset popvarpr=variable
 MrBayes > prset popsizepr=lognormal(4.6,2.3)
@@ -3464,8 +3451,7 @@ We do that by setting the number of chains to one, \ttt{nchains=1}. Under these 
 run seemed to produce an adequate sample within 1 M generations. To run an analysis of this length
 without Metropolis coupling, use:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > mcmc ngen=1000000 nchains=1
 \end{verbatim}
@@ -3476,8 +3462,7 @@ By default, MrBayes runs two analysis in parallel, and computes convergence diag
 trees as well as on the species tree. Ideally, we would like to see topological convergence on all
 trees. This is a sample output from our analysis:
 
-\footnotesize
-\begin{singlespacing}
+\begin{singlespacing}\footnotesize
 \begin{verbatim}
    Average standard deviation of split frequencies for gene tree 1: 0.007974
    Average standard deviation of split frequencies for gene tree 2: 0.016684
@@ -3493,8 +3478,7 @@ tree. To summarize the tree samples, simply use the \tb{sumt} command, which wil
 the gene trees and then the species tree. Focus on the last tree, which is the species tree. It
 should look something like this:
 
-\scriptsize
-\begin{singlespacing}
+\begin{figure}[h]\singlespacing\scriptsize
 \begin{verbatim}
   Clade credibility values:
  
@@ -3521,9 +3505,7 @@ should look something like this:
    5.00e-04    4.00e-04     3.00e-04    2.00e-04     1.00e-04    2.71e-20 
  
   [Expected changes per site]
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+\end{verbatim}\end{figure}
 
 These summaries of the tree samples show that the species tree topology is unresolved. Note also
 that the species tree is very shallow, so the sequences are quite similar to each other. In the
