@@ -1632,6 +1632,14 @@ int InitBeagleMultiPartitionInstance ()
     if (beagleInstance < 0)
         return ERROR;
 
+    /* allocate space for tip data */
+    inStates = (int *) SafeMalloc (numChars * sizeof(int));
+    if (!inStates)
+        return ERROR;
+    inPartials = (double *) SafeMalloc (numChars * numModelStates * sizeof(double));
+    if (!inPartials)
+        return ERROR;
+
     for (d=0; d<numCurrentDivisions; d++)
         {
         m = &modelSettings[d];
@@ -1640,12 +1648,6 @@ int InitBeagleMultiPartitionInstance ()
         }
 
     /* initialize tip data */
-    inStates = (int *) SafeMalloc (numChars * sizeof(int));
-    if (!inStates)
-        return ERROR;
-    inPartials = (double *) SafeMalloc (numChars * numModelStates * sizeof(double));
-    if (!inPartials)
-        return ERROR;
     for (i=0; i<numLocalTaxa; i++)
         {
         if (anyDivPartAmbigTip[i] == NO)
