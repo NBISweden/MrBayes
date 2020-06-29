@@ -4874,7 +4874,7 @@ int DoSumt (void)
     MrBFlt          f, var_s, sum_s, stddev_s=0.0, sumsq_s, sumStdDev=0.0, maxStdDev=0.0, sumPSRF=0.0,
                     maxPSRF=0.0, avgStdDev=0.0, avgPSRF=0.0, min_s=0.0, max_s=0.0, numPSRFSamples=0, min;
     PartCtr         *x;
-    char            *s=NULL, tempName[137], fileName[120], *treeName=NULL, divString[100];
+    char            *s=NULL, tempName[137], fileName[120], *treeName=NULL, *divString=NULL;
     char            *tempStr=NULL; /*not static because error ext is handled*/
     int             tempStrLength;
     FILE            *fp=NULL;
@@ -4896,7 +4896,7 @@ int DoSumt (void)
     /* set file pointers to NULL */
     fp = fpParts = fpTstat = fpVstat = fpCon = fpTrees = NULL;
 
-    /* allocate initial space for tree name and set a default name */
+    /* allocate initial space for tree name and set a default name and empty divString */
     treeName = (char*)SafeCalloc(5,sizeof(char));
     if (!treeName)
         {
@@ -4904,6 +4904,13 @@ int DoSumt (void)
         goto errorExit;
         }
     strcpy(treeName,"tree"); 
+    divString = (char*)SafeCalloc(1,sizeof(char));
+    if (!divString)
+        {
+        MrBayesPrint ("%s   Problems allocating divString\n", spacer);
+        goto errorExit;
+        }
+    strcpy(divString,""); 
 
     /* Check if there is anything to do */
     if (sumtParams.table == NO && sumtParams.summary == NO && sumtParams.showConsensus == NO)
@@ -5007,6 +5014,17 @@ int DoSumt (void)
             /* examine file */
             if (ExamineSumtFile(tempName, &sumtFileInfo, &treeName, &sumtParams.brlensDef) == ERROR)
                 goto errorExit;
+
+            /* make sure divString can hold string with relevant partitions/divisions */
+            if (strlen(treeName) > strlen(divString))
+                {
+                divString=(char*)SafeRealloc(divString,strlen(treeName)*sizeof(char));
+                if (!divString)
+                    {
+                    MrBayesPrint("%s   Problem allocating divString\n", spacer);
+                    goto errorExit;
+                    }
+                }
 
             /* capture values */
             if (sumtParams.runId == 0)
@@ -5629,7 +5647,7 @@ int DoSumt (void)
             MrBayesPrint ("\n");
 
             /* print lengths */
-            strcpy (divString, treeName+4);
+           strcpy (divString, treeName+4);
             for (i=1; i<numTreePartsToPrint; i++)
                 {
                 x = treeParts[i];
@@ -5829,6 +5847,7 @@ int DoSumt (void)
     /* free memory and file pointers */
     if (s) free(s);
     free(treeName);
+    free(divString);
     FreeSumtParams();
 
     /* reset numLocalTaxa and localOutGroup */
@@ -5848,7 +5867,8 @@ int DoSumt (void)
     errorExit:
         /* free sumtParams */
         if (s) free(s);
-        if (treeName) free(treeName);
+        free(treeName);
+        free(divString);
         FreeSumtParams();
         
         /* close files in case they are open*/
