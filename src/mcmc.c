@@ -2746,11 +2746,6 @@ int DoSsParm (char *parmName, char *tkn)
             else if (expecting == Expecting(NUMBER))
                 {
                 sscanf (tkn, "%d", &tempI);
-                if ( chainParams.numGen / tempI > INT_MAX )
-                    {
-                    MrBayesPrint("%s   Maximum %d generations per step allowed. Decrease 'ngen' or increase 'nsteps'.\n", spacer, INT_MAX);
-                    return (ERROR);
-                    }
                 chainParams.numStepsSS = tempI;
                 MrBayesPrint ("%s   Setting number of steps in stepping-stone sampling to %d\n", spacer, chainParams.numStepsSS);
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -2924,11 +2919,6 @@ int DoMcmcParm (char *parmName, char *tkn)
                     MrBayesPrint ("%s   Maximum %d samples allowed. Decrease 'ngen' or increase 'samplefreq'.\n", spacer, INT_MAX);
                     return (ERROR);
                     }
-                if ( tempL / chainParams.numStepsSS > INT_MAX )
-                    {
-                    MrBayesPrint ("%s   Maximum %d samples allowed. Decrease 'ngen' or increase 'nsteps'.\n", spacer, INT_MAX);
-                    return (ERROR);
-                    }
                 chainParams.numGen = tempL;
                 MrBayesPrint ("%s   Setting number of generations to %lli\n", spacer, chainParams.numGen);
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -2955,7 +2945,7 @@ int DoMcmcParm (char *parmName, char *tkn)
                     }
                 if ( chainParams.numGen / tempI > INT_MAX )
                     {
-                    MrBayesPrint ("%s   Maximum %d samples allowed. Decrease ngen or increase samplefreq.\n", spacer, INT_MAX);
+                    MrBayesPrint ("%s   Maximum %d samples allowed. Decrease 'ngen' or increase 'samplefreq'.\n", spacer, INT_MAX);
                     return (ERROR);
                     }
                 chainParams.sampleFreq = tempI;
@@ -16099,7 +16089,7 @@ int ReusePreviousResults (int *numSamples, int steps)
 int RunChain (RandLong *seed)
 {
     int         i, j, k, chn, swapA=0, swapB=0, whichMove, acceptMove;
-    long long   n, numGenOld, lastStepEndSS=0;
+    long long   n, numGenOld, lastStepEndSS=0, numGenInStepSS=0, numGenInStepBurninSS=0;
     int         lastDiagnostics;    // the sample no. when last diagnostic was performed
     int         removeFrom, removeTo=0;
     int         stopChain, nErrors;
@@ -16111,7 +16101,7 @@ int RunChain (RandLong *seed)
     struct timespec tw1, tw2;
 #   endif
     /* Stepping-stone sampling variables */
-    int         run, samplesCountSS=0, stepIndexSS=0, numGenInStepSS=0, numGenInStepBurninSS=0;
+    int         run, samplesCountSS=0, stepIndexSS=0;
     MrBFlt      stepLengthSS=0, meanSS, varSS, *tempX;
     char        ckpFileName[220], bkupFileName[234];
 
@@ -16435,20 +16425,20 @@ int RunChain (RandLong *seed)
     /* All steps are assumed to have the same length. */
     if (chainParams.isSS == YES)
         {
-        numGenInStepSS = (int)((chainParams.numGen - (long long)(chainParams.burninSS)*chainParams.sampleFreq)/ chainParams.numStepsSS);
+        numGenInStepSS = (chainParams.numGen - (long long)(chainParams.burninSS)*chainParams.sampleFreq)/ chainParams.numStepsSS;
         numGenInStepSS = chainParams.sampleFreq*(numGenInStepSS/chainParams.sampleFreq); /*make muliple of chainParams.sampleFreq*/
         numGenOld = chainParams.numGen;
-        chainParams.numGen = ((long long)(chainParams.burninSS)*chainParams.sampleFreq + (long long)(chainParams.numStepsSS)*numGenInStepSS) ; 
+        chainParams.numGen = ((long long)(chainParams.burninSS)*chainParams.sampleFreq + chainParams.numStepsSS*numGenInStepSS) ; 
         if (stepRelativeBurninSS==YES)
-            numGenInStepBurninSS = ((int)(numGenInStepSS*chainParams.burninFraction / chainParams.sampleFreq))*chainParams.sampleFreq;
+            numGenInStepBurninSS = ((long long)(numGenInStepSS*chainParams.burninFraction / chainParams.sampleFreq))*chainParams.sampleFreq;
         else
-            numGenInStepBurninSS = chainParams.chainBurnIn * chainParams.sampleFreq;
+            numGenInStepBurninSS = (long long)(chainParams.chainBurnIn) * chainParams.sampleFreq;
         MrBayesPrint ("\n");
         MrBayesPrint ("%s   Starting stepping-stone sampling to estimate marginal likelihood.         \n", spacer);
-        MrBayesPrint ("%s   %d steps will be used with %d generations (%d samples) within each step.  \n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq);
+        MrBayesPrint ("%s   %d steps will be used with %lli generations (%d samples) within each step.  \n", spacer, chainParams.numStepsSS, numGenInStepSS, (int)(numGenInStepSS/chainParams.sampleFreq));
         MrBayesPrint ("%s   Total of %lli generations (%d samples) will be collected while first        \n", spacer, chainParams.numGen, (int)(chainParams.numGen/chainParams.sampleFreq));
         MrBayesPrint ("%s   %d generations (%d samples) will be discarded as initial burnin.          \n", spacer, chainParams.burninSS*chainParams.sampleFreq, chainParams.burninSS);
-        MrBayesPrint ("%s   Additionally at the beginning of each step %d generations (%d samples)     \n", spacer, numGenInStepBurninSS, numGenInStepBurninSS/chainParams.sampleFreq);
+        MrBayesPrint ("%s   Additionally at the beginning of each step %lli generations (%d samples)     \n", spacer, numGenInStepBurninSS, (int)(numGenInStepBurninSS/chainParams.sampleFreq));
         MrBayesPrint ("%s   will be discarded as burnin.  \n", spacer);
         if (chainParams.startFromPriorSS==YES)
             MrBayesPrint ("%s   Sampling from prior to posterior, i.e. first step samples from prior.   \n", spacer);
@@ -17116,8 +17106,8 @@ int RunChain (RandLong *seed)
                                              || (chainParams.isSS == YES && (n-lastStepEndSS) % numGenInStepSS == 0)))
             {
             if (chainParams.numRuns > 1 &&
-                ((n > 0 && chainParams.relativeBurnin == YES && (chainParams.isSS == NO || (n > chainParams.burninSS * chainParams.sampleFreq && (n-lastStepEndSS) > numGenInStepBurninSS)))
-                 || (n >= chainParams.chainBurnIn * chainParams.sampleFreq && chainParams.relativeBurnin == NO)))
+                ((n > 0 && chainParams.relativeBurnin == YES && (chainParams.isSS == NO || (n > (long long)(chainParams.burninSS) * chainParams.sampleFreq && (n-lastStepEndSS) > numGenInStepBurninSS)))
+                 || (n >= (long long)(chainParams.chainBurnIn) * chainParams.sampleFreq && chainParams.relativeBurnin == NO)))
                 {
                 /* we need some space for coming output */
                 MrBayesPrint ("\n");
@@ -17615,7 +17605,7 @@ int RunChain (RandLong *seed)
         {
         MrBayesPrint ("\n");
         MrBayesPrint ("%s   Marginal likelihood (in natural log units) estimated using stepping-stone sampling based on\n", spacer);
-        MrBayesPrint ("%s   %d steps with %d generations (%d samples) within each step. \n\n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq);
+        MrBayesPrint ("%s   %d steps with %lli generations (%d samples) within each step. \n\n", spacer, chainParams.numStepsSS, numGenInStepSS, (int)(numGenInStepSS/chainParams.sampleFreq));
         MrBayesPrint ("%s       Run   Marginal likelihood (ln)\n",spacer);
         MrBayesPrint ("%s       ------------------------------\n",spacer);
         for (j=0; j<chainParams.numRuns; j++)
