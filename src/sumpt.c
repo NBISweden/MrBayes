@@ -111,7 +111,7 @@ TreeCtr *AllocTreeCtr (void);
 void     CalculateTreeToTreeDistance (Tree *tree1, Tree *tree2, MrBFlt *d1, MrBFlt *d2, MrBFlt *d3);
 int      ConTree (PartCtr **treeParts, int numTreeParts);
 MrBFlt   CppEvolRate (PolyTree *t, PolyNode *p, int eSet);
-int      ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char *treeName, int *brlensDef);
+int      ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char **treeName, int *brlensDef);
 void     FreePartCtr (PartCtr *r);
 void     FreeSumtParams (void);
 void     FreeTreeCtr (TreeCtr *r);
@@ -3450,7 +3450,7 @@ treeConstruction:
                     pl = r;
                     }
                 }
-            /* terminate new sib-node chain */
+            /* terminate new sib-nod chain */
             ql->sib = NULL;
             /* new node is last in old sib-node chain */
             pl->sib = q;
@@ -3663,7 +3663,7 @@ int DoCompareTree (void)
     PartCtr         *x;
     MrBFlt          xProb, yProb, xInc, yInc, xUpper, xLower, yUpper, yLower, *dT1=NULL, *dT2=NULL, *dT3=NULL, d1, d2, d3, 
                     meanY[60], xVal, yVal, minX, minY, maxX, maxY, sums[3];
-    char            *s=NULL, prCh, treeName[2][100];
+    char            *s=NULL, prCh, *treeName[2];
     FILE            *fp;
     time_t          curTime;
     PartCtr         **treeParts=NULL;
@@ -3681,7 +3681,12 @@ int DoCompareTree (void)
     /* set file pointer to NULL */
     fp = NULL;
 
-    strcpy(treeName[0],"tree"); //in case if parameter is not specified in a .t file
+    /* set default tree names, in case parameter name is not specified in the .t file(s) */
+    treeName[0] = (char*)SafeCalloc(5,sizeof(char));
+    treeName[1] = (char*)SafeCalloc(5,sizeof(char));
+    if (!treeName[0] || !treeName[1])
+        goto errorExit;
+    strcpy(treeName[0],"tree");
     strcpy(treeName[1],"tree");
 
     /* Check that a data set has been read in. We check taxon names against
@@ -3699,7 +3704,7 @@ int DoCompareTree (void)
     MrBayesPrint ("%s   Examining files ...\n", spacer);
 
     /* Examine first file */
-    if (ExamineSumtFile(comptreeParams.comptFileName1, &sumtFileInfo, treeName[0], &(brlensDef[0])) == ERROR)
+    if (ExamineSumtFile(comptreeParams.comptFileName1, &sumtFileInfo, &treeName[0], &(brlensDef[0])) == ERROR)
         return ERROR;
 
     /* Capture info */
@@ -3709,7 +3714,7 @@ int DoCompareTree (void)
     lastTreeBlockEnd[0]    = sumtFileInfo.lastTreeBlockEnd;
 
     /* Examine second file */
-    if (ExamineSumtFile(comptreeParams.comptFileName2, &sumtFileInfo, treeName[1], &brlensDef[1]) == ERROR)
+    if (ExamineSumtFile(comptreeParams.comptFileName2, &sumtFileInfo, &treeName[1], &brlensDef[1]) == ERROR)
         return ERROR;
 
     /* Capture info */
@@ -4320,6 +4325,8 @@ int DoCompareTree (void)
 
     /* free memory and file pointers */
     free(s);    
+    if (treeName[0]) free(treeName[0]);
+    if (treeName[1]) free(treeName[1]);
     free (dT1);
     FreeTree (tree1);
     FreeTree (tree2);
@@ -4363,6 +4370,8 @@ int DoCompareTree (void)
     /* error exit */            
     errorExit:
         if (s) free(s);
+        if (treeName[0]) free(treeName[0]);
+        if (treeName[1]) free(treeName[1]);
 
         /* free sumtParams */
         FreeSumtParams();
@@ -4572,7 +4581,7 @@ int DoCompRefTree (void)
     /* Compare a tree file with the reference tree files to generate the SDSFs.
        Use parameters in CompareTree and MCMCP (lazy option) */
     
-    char         outName[130], inName[130], inRefName[130], treeName[100], *lineBuf=NULL, *s;
+    char         outName[130], inName[130], inRefName[130], *treeName=NULL, *lineBuf=NULL, *s;
     FILE         *fpTre=NULL, *fpOut=NULL;
     int          i, n, longestL=0, burnin, gen, nRefRun, nTre[2]={0}, skip;
     SumtFileInfo tFileInfo;
@@ -4608,6 +4617,14 @@ int DoCompRefTree (void)
     else
         memAllocs[ALLOC_STATS] = YES;
 
+    treeName = (char*)SafeCalloc(5,sizeof(char));
+    if (!treeName)
+        {
+        MrBayesPrint ("%s   Problem allocating treeName\n", spacer);
+        goto errorExit;
+        }
+    strcpy(treeName,"tree");
+
     /* deal with the reference tree files */
     // for (k=0; k<numTopologies; k++)
     for (n=0; n<nRefRun; n++)
@@ -4619,7 +4636,7 @@ int DoCompRefTree (void)
         MrBayesPrint ("%s   Processing run %d in the reference trees\n", spacer, n+1);
             
         /* Examine each ref tree file, save info to tFileInfo */
-        if (ExamineSumtFile(inRefName, &tFileInfo, treeName, &sumtParams.brlensDef) == ERROR)
+        if (ExamineSumtFile(inRefName, &tFileInfo, &treeName, &sumtParams.brlensDef) == ERROR)
             goto errorExit;
         if (longestL < tFileInfo.longestLineLength)
             {
@@ -4701,7 +4718,7 @@ int DoCompRefTree (void)
 
     /* Examine the tree file to be compared, save info to tFileInfo */
     strcpy(inName, comptreeParams.comptFileName1);
-    if (ExamineSumtFile(inName, &tFileInfo, treeName, &sumtParams.brlensDef) == ERROR)
+    if (ExamineSumtFile(inName, &tFileInfo, &treeName, &sumtParams.brlensDef) == ERROR)
         goto errorExit;
     if (longestL < tFileInfo.longestLineLength)
         {
@@ -4777,6 +4794,7 @@ int DoCompRefTree (void)
     SafeFclose (&fpOut);
     /* free memory */
     free(lineBuf);
+    free(treeName);
     FreeTree (t);
     FreeChainMemory();
     
@@ -4793,6 +4811,7 @@ errorExit:
     FreeTree (t);
     FreeChainMemory();
     free(lineBuf);
+    free(treeName);
     
     return (ERROR);
 }
@@ -4855,7 +4874,7 @@ int DoSumt (void)
     MrBFlt          f, var_s, sum_s, stddev_s=0.0, sumsq_s, sumStdDev=0.0, maxStdDev=0.0, sumPSRF=0.0,
                     maxPSRF=0.0, avgStdDev=0.0, avgPSRF=0.0, min_s=0.0, max_s=0.0, numPSRFSamples=0, min;
     PartCtr         *x;
-    char            *s=NULL, tempName[137], fileName[120], treeName[100], divString[100];
+    char            *s=NULL, tempName[137], fileName[120], *treeName=NULL, divString[100];
     char            *tempStr=NULL; /*not static because error ext is handled*/
     int             tempStrLength;
     FILE            *fp=NULL;
@@ -4877,7 +4896,14 @@ int DoSumt (void)
     /* set file pointers to NULL */
     fp = fpParts = fpTstat = fpVstat = fpCon = fpTrees = NULL;
 
-    strcpy(treeName,"tree"); //in case if parameter is not specified in a .t file
+    /* allocate initial space for tree name and set a default name */
+    treeName = (char*)SafeCalloc(5,sizeof(char));
+    if (!treeName)
+        {
+        MrBayesPrint ("%s   Problems allocating treeName\n", spacer);
+        goto errorExit;
+        }
+    strcpy(treeName,"tree"); 
 
     /* Check if there is anything to do */
     if (sumtParams.table == NO && sumtParams.summary == NO && sumtParams.showConsensus == NO)
@@ -4979,7 +5005,7 @@ int DoSumt (void)
                 }
 
             /* examine file */
-            if (ExamineSumtFile(tempName, &sumtFileInfo, treeName, &sumtParams.brlensDef) == ERROR)
+            if (ExamineSumtFile(tempName, &sumtFileInfo, &treeName, &sumtParams.brlensDef) == ERROR)
                 goto errorExit;
 
             /* capture values */
@@ -5802,6 +5828,7 @@ int DoSumt (void)
 
     /* free memory and file pointers */
     if (s) free(s);
+    free(treeName);
     FreeSumtParams();
 
     /* reset numLocalTaxa and localOutGroup */
@@ -5821,6 +5848,7 @@ int DoSumt (void)
     errorExit:
         /* free sumtParams */
         if (s) free(s);
+        if (treeName) free(treeName);
         FreeSumtParams();
         
         /* close files in case they are open*/
@@ -6671,7 +6699,7 @@ int DoSumtTree (void)
 }
 
 
-int ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char *treeName, int *brlensDef)
+int ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char **treeName, int *brlensDef)
 {
     int     i, foundBegin, lineTerm, inTreeBlock, blockErrors, inSumtComment, lineNum, numTreesInBlock,
             tokenType;
@@ -6701,7 +6729,7 @@ int ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char *treeName,
         MrBayesPrint ("%s   Problem allocating string for examining file \"%s\"\n", spacer, fileName);
         return (ERROR);
         }
-        
+
     /* close binary file */
     SafeFclose (&fp);
     
@@ -6741,12 +6769,15 @@ int ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char *treeName,
                         goto errorExit;
                     if (GetToken (sumtToken, &tokenType, &sumtTokenP))   /* get the tree name */
                         goto errorExit;
-                    strcpy (treeName, sumtToken);
+                    /* reallocate space for tree name if too small */
+                    if (strlen(s) > strlen(*treeName))
+                        (*treeName) = (char*)SafeRealloc((*treeName), (strlen(s)+1)*sizeof(char));
+                    strcpy ((*treeName), sumtToken);
                     if (GetToken (sumtToken, &tokenType, &sumtTokenP))
                         goto errorExit;
                     while (IsSame("]", sumtToken) != SAME)
                         {
-                        strcat (treeName, sumtToken);
+                        strcat ((*treeName), sumtToken);
                         if (GetToken (sumtToken, &tokenType, &sumtTokenP))
                             goto errorExit;
                         }

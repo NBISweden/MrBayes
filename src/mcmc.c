@@ -17770,6 +17770,7 @@ int RunChain (RandLong *seed)
             MrBayesPrint ("%s   cies larger than 0.10 (%1.2lf)). MrBayes suggests that you run the ana-   \n", spacer, f);
             MrBayesPrint ("%s   lysis longer or try to improve the MCMC sampling efficiency by fine-      \n", spacer);
             MrBayesPrint ("%s   tuning MCMC proposal or heating parameters.                               \n", spacer);
+            MrBayesPrint ("\n");
             }
         }
     
