@@ -7598,12 +7598,18 @@ MrBFlt LogDirPrior (Tree *t, ModelParams *mp, int PV)
     /* ln prior prob. under Dirichlet priors and twoExp prior
      //chi */
 
-    int    i, nb[2] = {0,0};
+    int    i, numBranches, nb[2] = {0,0};
     MrBFlt lnprior = 0.0, tb[2] = {0,0}, treeL = 0.0;
     MrBFlt aT, bT, a, c;
     TreeNode  *p;
+
+    /* Make sure this works for both rooted and non-rooted non-clock trees */
+    /* For rooted trees, the last two nodes do not have branches under them; for unrooted
+     * trees, it is only the last node that does not have a branch.
+     */
+    numBranches = (t->isRooted == YES? t->nNodes - 2 : t->nNodes - 1);
     
-    /* Not safe, should define Marcos. YES or NO should never be defined to 2 or 3 or 4! */
+    /* Not safe, should define Macros. YES or NO should never be defined to 2 or 3 or 4! */
     /* PV is 2 or 3: Dirichlet priors */    
     if (PV == 2 || PV == 3)
         {
@@ -7613,15 +7619,12 @@ MrBFlt LogDirPrior (Tree *t, ModelParams *mp, int PV)
         a  = mp->brlensDir[2];
         c  = mp->brlensDir[3];
     
-        for (i = 0; i < t->nNodes; i++)
+        for (i = 0; i < numBranches; i++)
             {
             p = t->allDownPass[i];
-            if (p->anc != NULL)
-                {
-                treeL += p->length;
-                nb[IsTip(p)]++;
-                tb[IsTip(p)] += log(p->length);
-                }
+            treeL += p->length;
+            nb[IsTip(p)]++;
+            tb[IsTip(p)] += log(p->length);
             }
         lnprior += (a-1)*tb[1] + (a*c -1)*tb[0];
         if (PV == 2)
@@ -7632,13 +7635,11 @@ MrBFlt LogDirPrior (Tree *t, ModelParams *mp, int PV)
     /* or 4: twoExp prior */
     else if (PV == 4)
         {
-        for (i = 0; i < t->nNodes; i++) {
+        for (i = 0; i < numBranches; i++)
+            {
             p = t->allDownPass[i];
-            if (p->anc != NULL)
-                {
-                nb[IsTip(p)]++;
-                tb[IsTip(p)] += p->length;
-                }
+            nb[IsTip(p)]++;
+            tb[IsTip(p)] += p->length;
             }
         for (i = 0; i < 2; i++)
             lnprior += nb[i] * log(mp->brlens2Exp[i]) - tb[i] * (mp->brlens2Exp[i]);
@@ -7650,7 +7651,7 @@ MrBFlt LogDirPrior (Tree *t, ModelParams *mp, int PV)
 
 MrBFlt LogPrior (int chain)
 {
-    int             i, j, c, n, nStates, *nEvents, sumEvents, *ist, nRates, nParts[6];
+    int             i, j, c, n, nStates, *nEvents, sumEvents, *ist, nRates, nParts[6], numBranches;
     const int       *rateCat;
     MrBFlt          *st, *sst, lnPrior, sum, x=0.0, clockRate, theta, popSize, growth, *alphaDir, newProp[190],
                     sF, *sR, *eR, *fR,  freq, pInvar, lambda, sigma, nu, var, **rateMultiplier;
@@ -8095,22 +8096,25 @@ MrBFlt LogPrior (int chain)
                 }
             else
                 {
+                /* compute the number of branches depending on whether the tree is rooted */
+                if (t->isRooted == YES)
+                    numBranches = t->nNodes - 2;
+                else
+                    numBranches = t->nNodes - 1;
                 if (p->paramId == BRLENS_UNI)
                     {
-                    for (i=0; i<t->nNodes; i++)
+                    for (i=0; i<numBranches; i++)
                         {
                         branch = t->allDownPass[i];
-                        if (branch->anc != NULL)
-                            lnPrior += log(1.0) - log(mp->brlensUni[1] - BRLENS_MIN);
+                        lnPrior += log(1.0) - log(mp->brlensUni[1] - BRLENS_MIN);
                         }
                     }
                 else if (p->paramId == BRLENS_EXP)
                     {
-                    for (i=0; i<t->nNodes; i++)
+                    for (i=0; i<numBranches; i++)
                         {
                         branch = t->allDownPass[i];
-                        if (branch->anc != NULL)
-                            lnPrior += log(mp->brlensExp) - mp->brlensExp * branch->length;
+                        lnPrior += log(mp->brlensExp) - mp->brlensExp * branch->length;
                         }
                     }
                 /* Dirichlet priors */
@@ -8118,15 +8122,15 @@ MrBFlt LogPrior (int chain)
                     {
                     lnPrior += LogDirPrior(t, mp, 2);
                     lnPrior += (mp->brlensDir[0]) * log(mp->brlensDir[1]) - LnGamma(mp->brlensDir[0])
-                                + LnGamma (mp->brlensDir[2] * numTaxa + mp->brlensDir[2] * mp->brlensDir[3] * (numTaxa-3))
-                                - numTaxa * LnGamma(mp->brlensDir[2]) - (numTaxa-3) * LnGamma(mp->brlensDir[2] * mp->brlensDir[3]);
+                                + LnGamma (mp->brlensDir[2] * numTaxa + mp->brlensDir[2] * mp->brlensDir[3] * (numBranches-numTaxa))
+                                - numTaxa * LnGamma(mp->brlensDir[2]) - (numBranches-numTaxa) * LnGamma(mp->brlensDir[2] * mp->brlensDir[3]);
                     } 
                 else if (p->paramId == BRLENS_iGmDir)
                     {
                     lnPrior += LogDirPrior(t, mp, 3);
                     lnPrior += (mp->brlensDir[0]) * log(mp->brlensDir[1]) - LnGamma(mp->brlensDir[0])
-                                + LnGamma (mp->brlensDir[2] * numTaxa + mp->brlensDir[2] * mp->brlensDir[3] * (numTaxa-3))
-                                - numTaxa * LnGamma(mp->brlensDir[2]) - (numTaxa-3) * LnGamma(mp->brlensDir[2] * mp->brlensDir[3]);
+                                + LnGamma (mp->brlensDir[2] * numTaxa + mp->brlensDir[2] * mp->brlensDir[3] * (numBranches-numTaxa))
+                                - numTaxa * LnGamma(mp->brlensDir[2]) - (numBranches-numTaxa) * LnGamma(mp->brlensDir[2] * mp->brlensDir[3]);
                     }
                 /* twoExp prior */
                 else if (p->paramId == BRLENS_twoExp)

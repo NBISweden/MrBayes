@@ -47,7 +47,7 @@
 #endif
 
 #define NUMCOMMANDS                     62    /* The total number of commands in the program  */
-#define NUMPARAMS                       282   /* The total number of parameters  */
+#define NUMPARAMS                       283   /* The total number of parameters  */
 #define PARAM(i, s, f, l)               p->string = s;    \
                                         p->fp = f;        \
                                         p->valueList = l; \
@@ -313,7 +313,7 @@ CmdType     commands[] =
             { 22,            "Link",  NO,            DoLink, 30,  {55,56,57,58,59,60,61,62,63,72,73,74,75,76,105,118,193,194,195,196,197,242,243,252,253,255,256,
                                                                                                                                                      270,273,274},        4,               "Links parameters across character partitions",  IN_CMD, SHOW },
             { 23,             "Log",  NO,             DoLog,  5,                                                                                 {85,86,87,88,89},        4,                               "Logs screen output to a file",  IN_CMD, SHOW },
-            { 24,            "Lset",  NO,            DoLset, 18,                                     {28,29,30,31,32,33,34,40,51,52,53,90,91,131,188,189,276,277},        4,                "Sets the parameters of the likelihood model",  IN_CMD, SHOW },
+            { 24,            "Lset",  NO,            DoLset, 20,                                     {28,29,30,31,32,33,34,40,51,52,53,90,91,131,188,189,276,277,280,282},4,                "Sets the parameters of the likelihood model",  IN_CMD, SHOW },
             { 25,          "Manual",  NO,          DoManual,  1,                                                                                            {126},       36,                  "Prints a command reference to a text file",  IN_CMD, SHOW },
             { 26,          "Matrix", YES,          DoMatrix,  1,                                                                                             {11},649252640,                 "Defines matrix of characters in data block", IN_FILE, SHOW },
             { 27,            "Mcmc",  NO,            DoMcmc, 46,  {17,18,19,20,21,22,23,24,25,26,27,84,98,112,113,114,115,116,132,142,143,144,148,149,150,151,152,
@@ -10558,7 +10558,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                Informative/Nosingletons) or restriction site (All/Variable/     \n");
         MrBayesPrint ("                Informative/Nosingletons/Noabsencesites/Nopresencesites/         \n");
         MrBayesPrint ("                Nosingletonpresence/Nosingletonabsence) data.                    \n");
-        MrBayesPrint ("   Statefreqmodel -- This option allows you to specify whether a \"stationary\"  \n");
+        MrBayesPrint ("  Statefrmod -- This option allows you to specify whether a \"stationary\"  \n");
         MrBayesPrint ("                (= steady state) or a \"directional\" model of evolution should  \n");
         MrBayesPrint ("                be used (the option \"mixed\" invokes a reversible jump over     \n");
         MrBayesPrint ("                both alternatives). In the stationary (which is the standard)    \n");
@@ -10620,7 +10620,7 @@ int GetUserHelp (char *helpTkn)
             MrBayesPrint ("   Coding       All/Variable/Informative/Nosingletons                            \n");
             MrBayesPrint ("                Noabsencesites/Nopresencesites/                                  \n");
             MrBayesPrint ("                Nosingletonabsence/Nosingletonpresence  %s                       \n", mp->codingString);
-            MrBayesPrint ("   Statefreqmodel    Stationary/Directional/Mixed       %s                       \n", mp->statefreqModel); //SK
+            MrBayesPrint ("   Statefrmod   Stationary/Directional/Mixed            %s                       \n", mp->statefreqModel); //SK
             MrBayesPrint ("   Parsmodel    No/Yes                                  %s                       \n", mp->parsModel);
         /*  MrBayesPrint ("   Augment      No/Yes                                  %s                       \n", mp->augmentData); */
             MrBayesPrint ("                                                                                 \n");
@@ -10854,7 +10854,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    probable with a variance related to the single parameter     \n");
         MrBayesPrint ("                    passed in.                                                   \n");
         MrBayesPrint ("   Rootfreqpr    -- This prior is only available when the \"Directional\" model  \n");
-        MrBayesPrint ("                    was chosen as the Statefreqmodel in \"lset\". It specifies the\n");
+        MrBayesPrint ("                    was chosen as the Statefrmod in \"lset\". It specifies the   \n");
         MrBayesPrint ("                    prior on the state freuencies at the root, in contrast to    \n");
         MrBayesPrint ("                    the equilibrium state frequencies. The options are:          \n");
         MrBayesPrint ("                                                                                 \n");
@@ -14745,11 +14745,12 @@ void SetUpParms (void)
     PARAM (277, "Nmixtcat",       DoLsetParm,        "\0");
     PARAM (278, "Beaglethreadcount",  DoSetParm,     "\0");
     PARAM (279, "Beaglefloattips",DoSetParm,  "Yes|No|\0");
-    PARAM (280, "StatefreqModel", DoLsetParm,         "Stationary|Directional|Mixed|\0"); //SK
+    PARAM (280, "Statefreqmodel", DoLsetParm,         "Stationary|Directional|Mixed|\0"); //SK
     PARAM (281, "Rootfreqpr",     DoPrsetParm,        "Dirichlet|Fixed|\0"); //SK
+    PARAM (282, "Statefrmod",     DoLsetParm,         "Stationary|Directional|Mixed|\0"); //SK
 
     /* NOTE: If a change is made to the parameter table, make certain you change
-            NUMPARAMS (now 282; one more than last index) at the top of this file. */
+            NUMPARAMS (now 283; one more than last index) at the top of this file. */
     /* CmdType commands[] */
 }
 

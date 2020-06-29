@@ -3886,8 +3886,8 @@ int DoLsetParm (char *parmName, char *tkn)
             else
                 return (ERROR);
             }
-        /* set StatefreqModel (statefreqModel) ************************************************************/  //SK
-        else if (!strcmp(parmName, "StatefreqModel"))
+        /* set Statefrmod (statefreqModel) ************************************************************/  //SK
+        else if (!strcmp(parmName, "Statefreqmodel") || !strcmp(parmName, "Statefrmod"))
             {
             if (expecting == Expecting(EQUALSIGN))
                 expecting = Expecting(ALPHA);
@@ -3905,16 +3905,15 @@ int DoLsetParm (char *parmName, char *tkn)
                             modelParams[i].nStates = NumStates (i);
       
                             if (nApplied == 0 && numCurrentDivisions == 1) 
-                                MrBayesPrint ("%s   Setting StatefreqModel to %s\n", spacer, modelParams[i].statefreqModel);
+                                MrBayesPrint ("%s   Setting Statefrmod to %s\n", spacer, modelParams[i].statefreqModel);
                             else  
-                                MrBayesPrint ("%s   Setting StatefreqModel to %s for partition %d\n", spacer, modelParams[i].statefreqModel, i+1);
+                                MrBayesPrint ("%s   Setting Statefrmod to %s for partition %d\n", spacer, modelParams[i].statefreqModel, i+1);
       
                             if (modelParams[i].dataType != RESTRICTION && strcmp(modelParams[i].statefreqModel, "Stationary"))
                                 {     
-                                MrBayesPrint ("%s   Invalid setting for state frequency model: non-stationary models only\n", spacer);
+                                MrBayesPrint ("%s   Invalid setting for Statefrmod: non-stationary models only\n", spacer);
                                 MrBayesPrint ("%s   implemented for data type \"RESTRICTION\"\n", spacer);
                                 return (ERROR);
-
                                 }     
                             }
                         }
@@ -19714,7 +19713,7 @@ int SetModelParams (void)
                             SafeStrcat (&p->paramHeader, tempStr);
                             if (p->paramId == DIRPI_MIX)
                                 {
-                                SafeSprintf(&tempStr, &tempStrSize, "\tstatefreqmodel%s", partString);
+                                SafeSprintf(&tempStr, &tempStrSize, "\tstatefrmod%s", partString);
                                 SafeStrcat (&p->paramHeader, tempStr);
                                 }
                         }
@@ -19722,7 +19721,7 @@ int SetModelParams (void)
                             {
                             SafeStrcat (&p->paramHeader, "pi(0)\tpi(1)\trootpi(0)\trootpi(1)");
                             if (p->paramId == DIRPI_MIX)
-                                SafeStrcat(&p->paramHeader, "\tstatefreqmodel");
+                                SafeStrcat(&p->paramHeader, "\tstatefrmod");
                             }
                         }
                     }   // end nonstationary model 
@@ -22936,7 +22935,7 @@ void SetUpMoveTypes (void)
     mt = &moveTypes[i++];
     mt->name = "RJ between stationary and directional model";
     mt->shortName = "RJ_Stat-Dir";
-    mt->paramName = "StateFreqModel";
+    mt->paramName = "Statefrmod";
     mt->applicableTo[0] = DIRPI_MIX;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_Statefreqs_SplitMerge;
