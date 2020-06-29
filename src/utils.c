@@ -286,11 +286,12 @@ void CopyBits (BitsLong *dest, BitsLong *source, int length)
 
 
 /* CopyResults: copy results from one file to another up to lastGen*/
-int CopyResults (FILE *toFile, char *fromFileName, int lastGen)
+int CopyResults (FILE *toFile, char *fromFileName, long long lastGen)
 {
-    int     longestLine;
-    char    *strBuf, *strCpy, *word;
-    FILE    *fromFile;
+    int         longestLine;
+    long long   tempL;
+    char        *strBuf, *strCpy, *word;
+    FILE        *fromFile;
 
     if ((fromFile = OpenBinaryFileR(fromFileName)) == NULL)
         return ERROR;
@@ -310,8 +311,7 @@ int CopyResults (FILE *toFile, char *fromFileName, int lastGen)
         {
         strncpy (strCpy,strBuf,longestLine);
         word = strtok(strCpy," ");
-        /* atoi returns 0 when word is not integer number */
-        if (atoi(word)>lastGen)
+        if (sscanf(word, "%lli", &tempL)==1 && tempL>lastGen)
             break;
         fprintf (toFile,"%s",strBuf);
         fflush (toFile);
@@ -395,11 +395,12 @@ int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *m
 
 
 /* CopyTreeResults: copy tree results upto lastGen from one file to another. numTrees is return containing number of trees that were copied. */
-int CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *numTrees)
+int CopyTreeResults (FILE *toFile, char *fromFileName, long long lastGen, int *numTrees)
 {
-    int     longestLine;
-    char    *strBuf, *strCpy, *word;
-    FILE    *fromFile;
+    int         longestLine;
+    long long   tempL;
+    char        *strBuf, *strCpy, *word;
+    FILE        *fromFile;
     
     (*numTrees) = 0;
 
@@ -424,9 +425,8 @@ int CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *numTree
         if (strcmp(word,"tree")==0)
             {
             word = strtok(NULL," ");
-            /* atoi returns 0 when word is not integer number,
-               4 is offset to get rid of "rep." in tree name */
-            if (atoi(word+4)>lastGen)
+            /* 4 is offset to get rid of "rep." in tree name */
+            if (sscanf(word+4, "%lli", &tempL)==1 && tempL>lastGen)
                 break;
             (*numTrees)++;
             fprintf (toFile,"%s",strBuf);
