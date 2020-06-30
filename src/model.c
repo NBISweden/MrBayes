@@ -22876,7 +22876,10 @@ void SetUpMoveTypes (void)
     mt->tuningName[0] = "Dirichlet parameter";
     mt->shortTuningName[0] = "alpha";
     mt->applicableTo[0] = PI_DIR;
-    mt->nApplicable = 1;
+    mt->applicableTo[1] = DIRPI_DIRxDIR;
+    mt->applicableTo[2] = DIRPI_DIRxFIXED;
+    mt->applicableTo[3] = DIRPI_MIX;
+    mt->nApplicable = 4;
     mt->moveFxn = &Move_Statefreqs;
     mt->relProposalProb = 0.5;
     mt->numTuningParams = 1;
@@ -22895,7 +22898,10 @@ void SetUpMoveTypes (void)
     mt->tuningName[0] = "Sliding window size";
     mt->shortTuningName[0] = "delta";
     mt->applicableTo[0] = PI_DIR;
-    mt->nApplicable = 1;
+    mt->applicableTo[1] = DIRPI_DIRxDIR;
+    mt->applicableTo[2] = DIRPI_DIRxFIXED;
+    mt->applicableTo[3] = DIRPI_MIX;
+    mt->nApplicable = 4;
     mt->moveFxn = &Move_Statefreqs_Slider;
     mt->relProposalProb = 0.5;
     mt->numTuningParams = 1;

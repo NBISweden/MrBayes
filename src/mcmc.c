@@ -12903,7 +12903,7 @@ int PrintStates (int curGen, int coldId)
             {
             /* print tree lengths or heights for all trees */
             tree = GetTree (p, coldId, state[coldId]);
-            if (tree->isRooted == NO)
+            if (tree->isClock == NO)
                 {
                 SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(TreeLength(p, coldId)));
                 if (AddToPrintString (tempStr) == ERROR) goto errorExit;
