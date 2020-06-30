@@ -64,4 +64,4 @@ jobs:
 
       - name: Run test (not with Beagle for now)
         if: ${{ matrix.beagle != '--with-beagle' }}
-        run: cd examples && mpirun -np 2 -H localhost:2 ../src/mb short-test.nex
+        run: make check
