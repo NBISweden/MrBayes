@@ -17,7 +17,7 @@ for t in test[12].nex; do
 	printf 'Running test "%s"...\n' "$t"
 
 	if [ ! -f "$t".out ]; then
-		"$@" "$t" | tee "$t".out
+		"$@" "$t" >"$t".out
 	fi
 
 	printf 'Check #1:\t'
@@ -121,5 +121,5 @@ for t in test[12].nex; do
 	rm -f "@top_srcdir@"/examples/primates.nex.*
 done
 
-printf '--> %d tests failed\n' "$err"
+printf '%s %d tests failed\n' '-->' "$err"
 exit "$err"
