@@ -1,7 +1,7 @@
 #NEXUS
 begin mrbayes;
     set autoclose=yes nowarnings=yes;
-    execute primates.nex;
+    execute @abs_top_srcdir@/examples/primates.nex;
     partition test = 2: 1-400, 401-.;
     set partition=test;
     lset nst=mixed rates=invgamma;
