@@ -1175,7 +1175,7 @@ typedef struct model
 
 typedef struct chain
     {
-    int         numGen;                /* number of MCMC cycles                         */
+    long long   numGen;                /* number of MCMC cycles                         */
     int         sampleFreq;            /* frequency to sample chain                     */
     int         printFreq;             /* frequency to print chain                      */
     int         swapFreq;              /* frequency to attempt swap of states           */
@@ -1219,7 +1219,7 @@ typedef struct chain
     Tree        *dtree;                /* pointing to tree used for conv diagnostics    */
     TreeList    *treeList;             /* vector of tree lists for saving trees         */
     int         saveTrees;             /* save tree samples for later removal?          */
-    int         stopTreeGen;           /* generation after which no trees need be saved */
+    long long   stopTreeGen;           /* generation after which no trees need be saved */
     fpos_t      *tFilePos;             /* position for reading trees for removal        */
     int         printMax;              /* maximum number of chains to print             */
     int         printAll;              /* whether to print all or only cold chains      */
