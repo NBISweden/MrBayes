@@ -1,6 +1,6 @@
 #!/bin/sh
 
-case "@use_mpi@" in
+case "@TESTS_USE_MPI@" in
 	yes)
 		set -- mpirun -np 2 -H localhost:2 "@top_builddir@/src/mb"
 		;;
