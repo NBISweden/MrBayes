@@ -33,7 +33,7 @@ jobs:
 
       - name: Run test (not with Beagle for now)
         if: ${{ matrix.beagle != '--with-beagle' }}
-        run: cd examples && ../src/mb short-test.nex
+        run: make check
 
   with-mpi:
     name: Tests with MPI
