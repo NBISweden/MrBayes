@@ -231,6 +231,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SIMD_FLAGS = @SIMD_FLAGS@
 STRIP = @STRIP@
+TESTS_USE_MPI = @TESTS_USE_MPI@
 VERSION = @VERSION@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@

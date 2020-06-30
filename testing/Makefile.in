@@ -97,7 +97,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/src/config.h
-CONFIG_CLEAN_FILES = short-test.nex
+CONFIG_CLEAN_FILES = test1.nex test2.nex runtests.sh
 CONFIG_CLEAN_VPATH_FILES =
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -119,7 +119,8 @@ am__can_run_installinfo = \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
-am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/short-test.nex.in
+am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/runtests.sh.in \
+	$(srcdir)/test1.nex.in $(srcdir)/test2.nex.in
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
@@ -178,6 +179,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SIMD_FLAGS = @SIMD_FLAGS@
 STRIP = @STRIP@
+TESTS_USE_MPI = @TESTS_USE_MPI@
 VERSION = @VERSION@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
@@ -231,7 +233,13 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 EXTRA_DIST = \
-	short-test.nex
+	runtests.sh \
+	test1.nex \
+	test2.nex
+
+CLEANFILES = \
+	test1.nex.out \
+	test2.nex.out
 
 all: all-am
 
@@ -265,7 +273,11 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-short-test.nex: $(top_builddir)/config.status $(srcdir)/short-test.nex.in
+test1.nex: $(top_builddir)/config.status $(srcdir)/test1.nex.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+test2.nex: $(top_builddir)/config.status $(srcdir)/test2.nex.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+runtests.sh: $(top_builddir)/config.status $(srcdir)/runtests.sh.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 tags TAGS:
 
@@ -330,6 +342,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -420,8 +433,8 @@ uninstall-am:
 .PRECIOUS: Makefile
 
 
-check: $(top_builddir)/src/mb short-test.nex
-	$(top_builddir)/src/mb short-test.nex
+check: $(top_builddir)/src/mb $(EXTRA_DIST)
+	./runtests.sh
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
