@@ -279,5 +279,7 @@ AC_CONFIG_FILES([Makefile
                  doc/SMME_paper/Makefile
                  examples/Makefile
                  src/Makefile
+                 testing/Makefile
+                 testing/short-test.nex
 ])
 AC_OUTPUT
