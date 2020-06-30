@@ -2,7 +2,7 @@
 [Test 2. Mixed model with partitions. IGR-clock model.]
 begin mrbayes;
     set autoclose=yes nowarnings=yes;
-    execute "@top_srcdir@/examples/primates.nex;
+    execute "@top_srcdir@/examples/primates.nex";
     partition test = 2: 1-400, 401-.;
     set partition=test;
     lset nst=mixed rates=invgamma;
