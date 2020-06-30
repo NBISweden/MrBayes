@@ -5766,7 +5766,7 @@ int InitAugmentedModels (void)
 -------------------------------------------------------------------------*/
 int InitChainCondLikes (void)
 {
-    int         c, d, i, j, k, s, t, numReps, condLikesUsed, nIntNodes, nNodes, useBeagle,
+    int         c, d, i, j, k, s, t, numReps, condLikesUsed, nIntNodes, nNodes,
                 clIndex, tiIndex, scalerIndex, indexStep;
     BitsLong    *charBits;
     CLFlt       *cL;
@@ -5775,7 +5775,7 @@ int InitChainCondLikes (void)
     int         j1;
 #   endif
 #   if defined (BEAGLE_ENABLED)
-    int         useBeagleMultiPartitions, divisionOffset;
+    int         divisionOffset;
     double      *nSitesOfPat;
     MrBFlt      freq;
 #   endif
@@ -5804,9 +5804,6 @@ int InitChainCondLikes (void)
         /* figure out length of cond like array */
         if (m->dataType == STANDARD)
             {
-#   if defined (BEAGLE_ENABLED)
-            m->useBeagle = NO;
-#   endif
             for (c=0; c<m->numChars; c++)
                 {
                 numReps = m->numRateCats;
@@ -5901,17 +5898,33 @@ int InitChainCondLikes (void)
         }
 
     /* check if conditional likelihoods are needed */
+    /* set up use of beagle, if applicable         */
     if (condLikesUsed == YES)
         {
         MrBayesPrint ("%s   Initializing conditional likelihoods\n", spacer);
 
-#   if defined (BEAGLE_ENABLED)
-        useBeagleMultiPartitions = NO;
-#   endif
-
 #   if defined (BEAGLE_V3_ENABLED)
-        if (beagleResourceNumber != 0 && numCurrentDivisions > 1 && InitBeagleMultiPartitionInstance() != ERROR && m->useBeagle == YES)
-            useBeagleMultiPartitions = YES;
+        /* Try to use a multipartition instance of beagle.
+         * The call to InitBeagleMultiPartitionsInstance will detect if a division has useBeagle == NO, and
+         * will return an error if so. The function will also set the useBeagleMultiPartitions flag for all
+         * partitions if it is possible to use a multipartition instance of Beagle. We can safely ignore
+         * the ERROR returned by InitBeagleMultiPartitionsInstance as it leaves everything in the correct
+         * state if it fails to implement a multipartition instance of beagle.
+         */
+        if (beagleResourceNumber != 0 && numCurrentDivisions > 1)
+            InitBeagleMultiPartitionInstance();
+#   endif
+#   if defined (BEAGLE_ENABLED)
+        /* Try to use single-partition instances of beagle */
+        if (modelSettings[0].useBeagleMultiPartitions == NO)
+            {
+            for (d=0; d<numCurrentDivisions; d++)
+                {
+                m = &modelSettings[d];
+                if (m->useBeagle == YES && InitBeagleInstance(m, d) == ERROR)
+                    m->useBeagle = NO;
+                }
+            }
 #   endif
         }
 
@@ -5919,6 +5932,13 @@ int InitChainCondLikes (void)
     for (d=0; d<numCurrentDivisions; d++)
         {
         m = &modelSettings[d];
+
+        /* if using beagle, adjust SIMD settings */
+        if (m->useBeagle == YES)
+            {
+            m->useVec = VEC_NONE;
+            m->numFloatsPerVec = 0;
+            }
 
         /* get size of tree */
         nIntNodes = GetTree(m->brlens,0,0)->nIntNodes;
@@ -5941,7 +5961,7 @@ int InitChainCondLikes (void)
 
         /* set up indices for terminal nodes */
         clIndex = 0;
-        if (useBeagle == YES)
+        if (m->useBeagle == YES)
             indexStep = m->nCijkParts;
         else
             indexStep = 1;
@@ -5949,7 +5969,7 @@ int InitChainCondLikes (void)
             {
 #   if !defined (DEBUG_NOSHORTCUTS)
             /* TODO: Until CondLikeRoot_XXX are fixed (case 4 when one of the children is non-ambig) we allocate space for non-ambig tips. If fixed also uncomment down the function */
-            /* if (useBeagle == NO && useSSE == NO && m->isPartAmbig[i] == NO && m->dataType != STANDARD)
+            /* if (m->useBeagle == NO && m->useVec == VEC_NONE && m->isPartAmbig[i] == NO && m->dataType != STANDARD)
                 continue;
             */
 #   endif
@@ -5989,28 +6009,6 @@ int InitChainCondLikes (void)
             continue;
 
         /* allocate space for conditional likelihoods */
-        useBeagle = NO;
-#   if defined (BEAGLE_ENABLED)
-        if (m->useBeagle == YES)
-            {
-            if (useBeagleMultiPartitions == YES)
-                useBeagle = YES;
-            else if (InitBeagleInstance(m, d) != ERROR)
-                useBeagle = YES;
-            else
-                m->useBeagle = NO;
-            }
-#   endif
-#   if defined (SSE_ENABLED)
-        /*if (useBeagle == NO && m->dataType != STANDARD)
-               m->useSSE = YES;*/
-        if (useBeagle == YES)
-            {
-            m->useVec = VEC_NONE;
-            m->numFloatsPerVec = 0;
-            }
-
-#   endif
         if (m->useBeagle == NO && m->useVec == VEC_NONE)
             MrBayesPrint ("%s   Using standard non-SSE likelihood calculator for division %d (%s-precision)\n", spacer, d+1, (sizeof(CLFlt) == 4 ? "single" : "double"));
         else if (m->useBeagle == NO && m->useVec == VEC_SSE)
@@ -6025,7 +6023,7 @@ int InitChainCondLikes (void)
             return (ERROR);
             }
 
-        if (useBeagle == NO)
+        if (m->useBeagle == NO)
             {
             /* allocate cond like space */
             m->condLikes = (CLFlt**) SafeMalloc(m->numCondLikes * sizeof(CLFlt*));
@@ -6311,50 +6309,50 @@ int InitChainCondLikes (void)
             }
 
 #   if defined (BEAGLE_ENABLED)
-            /* Set up nSitesOfPat for Beagle */
-            if (m->useBeagle == YES)
+        /* Set up nSitesOfPat for Beagle */
+        if (m->useBeagle == YES)
+            {
+            if (m->useBeagleMultiPartitions == NO)
                 {
-                if (useBeagleMultiPartitions == NO)
-                    {
-                    nSitesOfPat = (double *) SafeMalloc (m->numChars * sizeof(double));
-                    for (c=0; c<m->numChars; c++)
-                        nSitesOfPat[c] = numSitesOfPat[m->compCharStart + c];
-                    beagleSetPatternWeights(m->beagleInstance,
-                                            nSitesOfPat);
-                    free (nSitesOfPat);
-                    nSitesOfPat = NULL;
-                     /* Set up scalers for Beagle */
-                    for (i=0; i<m->numScalers*m->nCijkParts; i++)
-                        beagleResetScaleFactors(m->beagleInstance, i);
-                    }
+                nSitesOfPat = (double *) SafeMalloc (m->numChars * sizeof(double));
+                for (c=0; c<m->numChars; c++)
+                    nSitesOfPat[c] = numSitesOfPat[m->compCharStart + c];
+                beagleSetPatternWeights(m->beagleInstance,
+                                        nSitesOfPat);
+                free (nSitesOfPat);
+                nSitesOfPat = NULL;
+                 /* Set up scalers for Beagle */
+                for (i=0; i<m->numScalers*m->nCijkParts; i++)
+                    beagleResetScaleFactors(m->beagleInstance, i);
+                }
 
-                /* find category frequencies */
-                if (m->pInvar == NO)
+            /* find category frequencies */
+            if (m->pInvar == NO)
+                {
+                freq =  1.0 /  m->numRateCats;
+                
+                /* set category frequencies in beagle instance */
+                if (m->numOmegaCats <= 1)
                     {
-                    freq =  1.0 /  m->numRateCats;
-                    
-                    /* set category frequencies in beagle instance */
-                    if (m->numOmegaCats <= 1)
+                    divisionOffset = 0;
+                    if (m->useBeagleMultiPartitions == YES)
+                        divisionOffset = (numLocalChains + 1) * m->nCijkParts * m->divisionIndex;
+
+                    for (i=0; i<m->numRateCats; i++)
+                        m->inWeights[i] = freq;
+                    for (i=0; i< (numLocalChains); i++)
                         {
-                        divisionOffset = 0;
-                        if (m->useBeagleMultiPartitions == YES)
-                            divisionOffset = (numLocalChains + 1) * m->nCijkParts * m->divisionIndex;
-
-                        for (i=0; i<m->numRateCats; i++)
-                            m->inWeights[i] = freq;
-                        for (i=0; i< (numLocalChains); i++)
-                            {
-                            beagleSetCategoryWeights(m->beagleInstance,
-                                                     m->cijkIndex[i] + divisionOffset,
-                                                     m->inWeights);
-                            }
                         beagleSetCategoryWeights(m->beagleInstance,
-                                                 m->cijkScratchIndex + divisionOffset,
+                                                 m->cijkIndex[i] + divisionOffset,
                                                  m->inWeights);
                         }
+                    beagleSetCategoryWeights(m->beagleInstance,
+                                             m->cijkScratchIndex + divisionOffset,
+                                             m->inWeights);
                     }
-                
                 }
+            
+            }
 #   endif
 
         /* fill in tip conditional likelihoods */
@@ -6387,7 +6385,7 @@ int InitChainCondLikes (void)
                     }
                 }
             }
-        else if (useBeagle == NO)
+        else if (m->useBeagle == NO)
             {
             if (m->gibbsGamma == YES)
                 numReps = m->numTiCats / m->numRateCats;
@@ -6501,7 +6499,7 @@ int InitChainCondLikes (void)
         }
 
 #if defined (BEAGLE_V3_ENABLED)
-    if (useBeagleMultiPartitions == YES)
+    if (modelSettings[0].useBeagleMultiPartitions == YES)
         {
         nSitesOfPat = (double *) SafeMalloc (modelSettings[0].numCharsAll * sizeof(double));
         nPartsOfPat = (int    *) SafeMalloc (modelSettings[0].numCharsAll * sizeof(int   ));
