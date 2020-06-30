@@ -76,12 +76,12 @@
     make -j2
 
     # Test MPI (parallel) version
-    mpirun --allow-run-as-root -np 1 src/mb <<< 'showb;quit'
+    mpirun --allow-run-as-root -np 1 src/mb <<< 'version;showb;quit'
 
     make clean
     ./configure --enable-doc=no
     make -j2
 
     # Test serial version
-    src/mb <<< 'showb;quit'
+    src/mb <<< 'version;showb;quit'
 
