@@ -58,12 +58,12 @@ for t in test[12].nex; do
 
 	printf 'Check #3:\t'
 	# There should be one line with "TL{all}" in the first field.
-	# The value in the last field on that lines should be in the range [0.95,1.05].
+	# The value in the last field on that lines should be in the range [0.95,1.2].
 	awk '
 	$1 == "TL{all}" {
 		count++
-		if ($NF < 0.95 || $NF > 1.05) {
-			printf "%g not in range [0.95,1.05] on line %d\n", $NF, NR
+		if ($NF < 0.95 || $NF > 1.2) {
+			printf "%g not in range [0.95,1.2] on line %d\n", $NF, NR
 			err = 1
 		}
 	}
@@ -99,12 +99,12 @@ for t in test[12].nex; do
 
 	printf 'Check #5:\t'
 	# Average PSRF for parameter values (excluding NA and >10.0) = N
-	# ... should occur once and N (a "simple" float) should lie in the range [0.95,1.05].
+	# ... should occur once and N (a "simple" float) should lie in the range [0.95,1.2].
 	awk '
 	/Average PSRF for parameter values \(excluding NA and >10.0\) = [[:digit:]]+\.[[:digit:]]+/ {
 		count++
-		if ($NF < 0.95 || $NF > 1.05) {
-			printf "%g not in range [0.95,1.05] on line %d\n", $NF, NR
+		if ($NF < 0.95 || $NF > 1.2) {
+			printf "%g not in range [0.95,1.2] on line %d\n", $NF, NR
 			err = 1
 		}
 	}
