@@ -1,0 +1,125 @@
+#!/bin/sh
+
+case "@use_mpi@" in
+	yes)
+		set -- mpirun -np 2 -H localhost:2 "@top_builddir@/src/mb"
+		;;
+	no)
+		set -- "@top_builddir@/src/mb"
+		;;
+	*)
+		printf 'use_mpi="%s" (not "yes" or "no")\n' "@use_mpi@" >&2
+		exit 1
+esac
+
+err=0
+for t in test[12].nex; do
+	printf 'Running test "%s"...\n' "$t"
+
+	if [ ! -f "$t".out ]; then
+		"$@" "$t" | tee "$t".out
+	fi
+
+	printf 'Check #1:\t'
+	# Analysis completed in N seconds
+	# ... should occur once (N is integer).
+	awk '
+	/Analysis completed in [[:digit:]]+ seconds/ {
+		count++
+	}
+	END {
+		if (count != 1) {
+			printf "Did find expected text (count = %d != 1)\n", count
+			err = 1
+		}
+		exit err
+	}' "$t".out
+	if [ "$?" -eq 0 ]; then printf 'OK\n'; else printf 'FAILED\n'; err=$(( err + 1 )); fi
+
+	printf 'Check #2:\t'
+	# Likelihood of best state for "cold" chain of run 1 was N
+	# ... should occur once, with N in the range [-5715,-5700] (N is a "simple" float).
+	awk '
+	/Likelihood of best state for "cold" chain of run 1 was [-[:digit:]]+\.[[:digit:]]+/ {
+		count++
+		if ($NF < -5715 || $NF > -5700) {
+			printf "%g not in range [-5715,-5700] on line %d\n", $NF, NR
+			err = 1
+		}
+	}
+	END {
+		if (count != 1) {
+			printf "Did find expected text (count = %d != 1)\n", count
+			err = 1
+		}
+		exit err
+	}' "$t".out
+	if [ "$?" -eq 0 ]; then printf 'OK\n'; else printf 'FAILED\n'; err=$(( err + 1 )); fi
+
+	printf 'Check #3:\t'
+	# There should be one line with "TL{all}" in the first field.
+	# The value in the last field on that lines should be in the range [0.95,1.05].
+	awk '
+	$1 == "TL{all}" {
+		count++
+		if ($NF < 0.95 || $NF > 1.05) {
+			printf "%g not in range [0.95,1.05] on line %d\n", $NF, NR
+			err = 1
+		}
+	}
+	END {
+		if (count != 1) {
+			printf "Did find expected text (count = %d != 1)\n", count
+			err = 1
+		}
+		exit err
+	}' "$t".out
+	if [ "$?" -eq 0 ]; then printf 'OK\n'; else printf 'FAILED\n'; err=$(( err + 1 )); fi
+
+	printf 'Check #4:\t'
+	# Average standard deviation of split frequencies = N
+	# ... should occur one times, where N is a "simple" float.
+	# N should be below 0.05.
+	awk '
+	/Average standard deviation of split frequencies = [[:digit:]]+\.[[:digit:]]+/ {
+		count++
+		if ($NF >= 0.05) {
+			printf "%g not below 0.05 on line %d\n", $NF, NR
+			err = 1
+		}
+	}
+	END {
+		if (count != 1) {
+			printf "Did find expected text (count = %d != 1)\n", count
+			err = 1
+		}
+		exit err
+	}' "$t".out
+	if [ "$?" -eq 0 ]; then printf 'OK\n'; else printf 'FAILED\n'; err=$(( err + 1 )); fi
+
+	printf 'Check #5:\t'
+	# Average PSRF for parameter values (excluding NA and >10.0) = N
+	# ... should occur once and N (a "simple" float) should lie in the range [0.95,1.05].
+	awk '
+	/Average PSRF for parameter values \(excluding NA and >10.0\) = [[:digit:]]+\.[[:digit:]]+/ {
+		count++
+		if ($NF < 0.95 || $NF > 1.05) {
+			printf "%g not in range [0.95,1.05] on line %d\n", $NF, NR
+			err = 1
+		}
+	}
+	END {
+		if (count != 1) {
+			printf "Did find expected text (count = %d != 2)\n", count
+			err = 1
+		}
+		exit err
+	}' "$t".out
+	if [ "$?" -eq 0 ]; then printf 'OK\n'; else printf 'FAILED\n'; err=$(( err + 1 )); fi
+
+	# Clean-up
+	rm -f "@top_srcdir@"/examples/primates.nex.*
+done
+
+printf '--> %d tests failed\n' "$err"
+exit "$err"
