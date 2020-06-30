@@ -1,6 +1,6 @@
 # Install MrBayes+Beagle3 inside an Ubuntu 20.04 Docker container
 
-- Status:
+- Status (June 2020):
     - CUDA: N/A
     - OpenCL: OK
     - OpenMPI: OK
@@ -12,6 +12,9 @@
   of MrBayes with Beagle. The installation is made inside a Docker container,
   hence, this is *not* a Dockerfile.
 
+- Instructions for Debian are identical, but you would use a Debian container
+  such as `debian:sid` instead of `ubuntu:20.04`.
+
 - We could not get beagle to work from inside MrBayes unless Beagle is
   configured using `-rpath`, or `LD_LIBRARY_PATH` is set before running
   MrBayes.
@@ -20,9 +23,6 @@
   (since we asked for not using CUDA or Java):
     - `WARNING: NVIDIA CUDA nvcc compiler not found`
     - `WARNING: JDK installation not found`
-
-- Instructions for Debian are identical, but you would use a Debian container
-  such as `debian:sid` instead of `ubuntu:20.04`.
 
 - We are not building the LaTeX version of the documentation for MrBayes. For
   building the documentation, we recommend to use the `latexmk` script.  Using
