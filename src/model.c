@@ -12676,6 +12676,7 @@ int FillTreeParams (RandLong *seed, int fromChain, int toChain)
                 
                 /* fixed topology */
                 if (p->paramId == TOPOLOGY_NCL_FIXED ||
+                    p->paramId == TOPOLOGY_RNCL_FIXED ||
                     p->paramId == TOPOLOGY_NCL_FIXED_HOMO ||
                     p->paramId == TOPOLOGY_NCL_FIXED_HETERO ||
                     p->paramId == TOPOLOGY_CL_FIXED  ||
@@ -20040,6 +20041,16 @@ int SetModelParams (void)
                    which is only possible for non-clock trees */
                 if (!strcmp(mp->topologyPr, "Speciestree"))
                     p->paramId = TOPOLOGY_SPECIESTREE;
+                else if (mp->dataType == RESTRICTION && strcmp(mp->statefreqModel, "Stationary") != 0)
+                    {
+                    /* rooted non-clock trees (directional substitution models) */
+                    if (!strcmp(mp->topologyPr, "Uniform"))
+                        p->paramId = TOPOLOGY_RNCL_UNIFORM;
+                    else if (!strcmp(mp->topologyPr, "Constraints"))
+                        p->paramId = TOPOLOGY_RNCL_CONSTRAINED;
+                    else
+                        p->paramId = TOPOLOGY_RNCL_FIXED;
+                    }
                 else if (!strcmp(mp->topologyPr, "Uniform") && nClockBrlens == 0)
                     p->paramId = TOPOLOGY_NCL_UNIFORM_HOMO;
                 else if (!strcmp(mp->topologyPr,"Constraints") && nClockBrlens == 0)
@@ -20108,6 +20119,7 @@ int SetModelParams (void)
                 p->paramId == TOPOLOGY_RCCL_FIXED ||
                 p->paramId == TOPOLOGY_CL_FIXED ||
                 p->paramId == TOPOLOGY_CCL_FIXED ||
+                p->paramId == TOPOLOGY_RNCL_FIXED ||
                 p->paramId == TOPOLOGY_NCL_FIXED ||
                 p->paramId == TOPOLOGY_PARSIMONY_FIXED)
                 p->printParam = NO;
@@ -21654,7 +21666,9 @@ void SetUpMoveTypes (void)
     mt->shortTuningName[1] = "lambda";
     mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
     mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
-    mt->nApplicable = 2;
+    mt->applicableTo[2] = TOPOLOGY_RNCL_UNIFORM;
+    mt->applicableTo[3] = TOPOLOGY_RNCL_CONSTRAINED;
+    mt->nApplicable = 4;
     mt->moveFxn = &Move_ExtSPR;
     mt->relProposalProb = 5.0;
     mt->numTuningParams = 2;
@@ -21807,7 +21821,9 @@ void SetUpMoveTypes (void)
     mt->shortTuningName[1] = "lambda";
     mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
     mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
-    mt->nApplicable = 2;
+    mt->applicableTo[2] = TOPOLOGY_RNCL_UNIFORM;
+    mt->applicableTo[3] = TOPOLOGY_RNCL_CONSTRAINED;
+    mt->nApplicable = 4;
     mt->moveFxn = &Move_ExtTBR;
     mt->relProposalProb = 5.0;
     mt->numTuningParams = 2;
@@ -22040,7 +22056,9 @@ void SetUpMoveTypes (void)
     mt->subParams = YES;
     mt->applicableTo[0] = TOPOLOGY_NCL_UNIFORM_HOMO;
     mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
-    mt->nApplicable = 2;
+    mt->applicableTo[2] = TOPOLOGY_RNCL_UNIFORM;
+    mt->applicableTo[3] = TOPOLOGY_RNCL_CONSTRAINED;
+    mt->nApplicable = 4;
     mt->moveFxn = &Move_NNI;
     mt->relProposalProb = 3.0;
     mt->numTuningParams = 0;
@@ -22378,7 +22396,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[1] = TOPOLOGY_NCL_CONSTRAINED_HOMO;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_ParsSPR;
-    mt->relProposalProb = 0.0;
+    mt->relProposalProb = 0.0;      /* other variants appear to be more efficient */
     mt->numTuningParams = 4;
     mt->tuningParam[0] = 0.1;              /* warp */
     mt->tuningParam[1] = 0.05;             /* upweight and downweight probability */
@@ -23739,6 +23757,14 @@ int ShowModel (void)
                         else if (!strcmp(modelParams[i].stateFreqPr,"Fixed") && !strcmp(modelParams[i].stateFreqsFixType,"Empirical"))
                             {
                             MrBayesPrint ("%s                     State frequencies have been fixed to the empirical frequencies in the data\n", spacer);
+                            }
+                        if (!strcmp(modelParams[i].statefreqModel,"Directional"))
+                            {
+                            MrBayesPrint ("%s                     State frequencies are different for the root (directional model)\n", spacer);
+                            }
+                        else if (!strcmp(modelParams[i].statefreqModel,"Mixed"))
+                            {
+                            MrBayesPrint ("%s                     State frequencies are potentially different for the root\n", spacer);
                             }
                         }
                     else if (modelSettings[i].dataType == PROTEIN)

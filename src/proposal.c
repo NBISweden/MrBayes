@@ -49,6 +49,7 @@
 #undef  DEBUG_ParsSPR
 #undef  DEBUG_ExtSS
 #undef  DEBUG_CSLIDER
+#undef  DEBUG_ExtSPR
 #undef  DEBUG_ExtSPRClock
 #undef  DEBUG_ParsSPRClock
 #undef  DEBUG_ExtTBR
@@ -1901,7 +1902,7 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     int         i, j, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
                 isVPriorExp, moveInRoot, isStartConstrained, isStopConstrained, tempInt;
     MrBFlt      m, x, y, tuning, maxV, minV, extensionProb, brlensExp=0.0;
-    TreeNode    *p, *q, *a, *b, *c, *d, *u, *v, *interiorRoot;
+    TreeNode    *p, *q, *a=NULL, *b=NULL, *c=NULL, *d=NULL, *u, *v, *interiorRoot;
     Tree        *t;
     ModelParams *mp;
     
@@ -1984,7 +1985,7 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         if (p->left != NULL && (p->right->isLocked == YES || p->right->left == NULL))
             j++;
         } while (i == 2 && j == 2);
-    
+ 
     /* change in root tree ? */
     if (j == 2)
         moveInRoot = YES;
@@ -2009,20 +2010,24 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     u = p->anc;
 
     /* modify length of middle branch */
-    m = v->length;
-    x = m * exp(tuning * (RandomNumber(seed) - 0.5));
-    while (x < minV || x > maxV)
+    /* test is needed to deal with rooted nonclock trees */
+    if (t->isRooted == NO || v->anc->anc != NULL)
         {
-        if (x < minV) x = minV * minV / x;
-        if (x > maxV) x = maxV * maxV / x;
+        m = v->length;
+        x = m * exp(tuning * (RandomNumber(seed) - 0.5));
+        while (x < minV || x > maxV)
+            {
+            if (x < minV) x = minV * minV / x;
+            if (x > maxV) x = maxV * maxV / x;
+            }
+        v->length = x;
+        v->upDateTi = YES;
+    
+        /* update proposal and prior ratio based on length modification */
+        (*lnProposalRatio) += log (x / m);
+        if (isVPriorExp == YES)
+            (*lnPriorRatio) += brlensExp * (m - x);
         }
-    v->length = x;
-    v->upDateTi = YES;
-
-    /* update proposal and prior ratio based on length modification */
-    (*lnProposalRatio) += log (x / m);
-    if (isVPriorExp == YES)
-        (*lnPriorRatio) += brlensExp * (m - x);
 
     /* move around in root subtree */
     if (moveInRoot == YES)
@@ -2296,7 +2301,7 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
 
     /* if tree is rooted, swap indices of former and current interior root node, if changed */ //SK
     if (t->isRooted && interiorRoot != t->root->left)
-        {   
+        {
         tempInt = interiorRoot->index;
         interiorRoot->index = t->root->left->index;
         t->root->left->index = tempInt;
@@ -2317,8 +2322,11 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     ShowNodes (t->root, 2, NO);
     getchar();
     printf ("Proposal ratio: %f\n",(*lnProposalRatio));
-    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index,
-            c->index, d->index, a->index, b->index);
+    printf ("v: %d  u: %d\n", v->index, u->index);
+    if (a) printf ("a: %d\n", a->index);
+    if (b) printf ("b: %d\n", b->index);
+    if (c) printf ("c: %d\n", c->index);
+    if (d) printf ("d: %d\n", d->index);
     printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
     printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
     printf ("Has topology changed? %d\n",topologyHasChanged);
@@ -10397,12 +10405,12 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     /* Change topology (and branch lengths) using SPR (symmetric) biased according to parsimony scores,
        controlled by a window defined by a certain node distance radius. Note: w = e^{-S} */
     
-    int         i, j, k, n, division, topologyHasChanged, moveInRoot, nNeighbor, nRoot, nCrown, iA, jC, isVPriorExp, tempInt;
+    int         i, j, k, n, division, topologyHasChanged, moveInRoot, nNeighbor, nRoot, nCrown, iA, jC, isVPriorExp;
     BitsLong    *pA, *pB, *pP, *pC, *pD, y[2];
     MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, tuning, warpFactor,
                 sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
-    TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL, *interiorRoot;
+    TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL;
     Tree        *t;
     ModelParams *mp;
     ModelInfo   *m=NULL;
@@ -10420,10 +10428,6 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     
     /* get tree */
     t = GetTree (param, chain, state[chain]);
-
-    /* for rooted (non-clock) trees, store pointer to current interior root node */ //SK
-    if (t->isRooted)
-        interiorRoot = t->root->left;
 
     /* max and min brlen */
     if (param->subParams[0]->paramId == BRLENS_UNI)
@@ -10463,11 +10467,12 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
     
     /* set topologyHasChanged to NO */
-    topologyHasChanged = NO;    /* FIXME: Not used (from clang static analyzer) */
+    topologyHasChanged = NO;
     
     /* pick a random branch */
+    /* do not choose root branch in a rooted non-clock tree */
     do  {
-        p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes -1))];
+        p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes-1))];
         q = p->anc->right;  if (q == p) q = p->anc->left;
         i = j = 0;
         if (p->left == NULL)
@@ -10552,15 +10557,8 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             
         /* get final parsimony states for the root part */
         GetParsDP (t, t->root->left, chain);
-        if (!strcmp(mp->statefreqModel,"Stationary"))
-            {
-            GetParsFP (t, t->root->left, chain);
-            }
-        else //SK: if not stationary model, but directional or RJ
-            {
-            GetParsFP (t, t->root->left->left, chain);
-            GetParsFP (t, t->root->left->right, chain);
-            }
+        GetParsFP (t, t->root->left, chain);
+
         /* get final parsimony states for the crown part */
         GetParsDP (t, v, chain);
         GetParsFP (t, v, chain);
@@ -10589,15 +10587,8 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             if (b->left == u) b->left = a;
             else             b->right = a;
             GetParsDP (t, t->root->left, chain);
-            if (!strcmp(mp->statefreqModel,"Stationary"))
-                {
-                GetParsFP (t, t->root->left, chain);
-                }
-            else //SK: if not stationary model, but directional or RJ
-                {
-                GetParsFP (t, t->root->left->left, chain);
-                GetParsFP (t, t->root->left->right, chain);
-                }
+            GetParsFP (t, t->root->left, chain);
+
             a->anc = u;  /* change back */
             if (b->left == a) b->left = u;
             else             b->right = u;
@@ -11037,14 +11028,6 @@ outLoop:;
     
     topologyHasChanged = YES;
 
-    /* if tree is rooted, swap indices of former and current interior root node, if changed */ //SK
-    if (t->isRooted && interiorRoot != t->root->left)
-    {
-        tempInt = interiorRoot->index;
-        interiorRoot->index = t->root->left->index;
-        t->root->left->index = tempInt;
-    }
-
     /* get down pass sequence if tree topology has changed */
     if (topologyHasChanged == YES)
         {
@@ -11061,7 +11044,7 @@ outLoop:;
     return (NO_ERROR);
     
 errorExit:
-    MrBayesPrint ("%s   Problem allocating memory in Move_ParsSPR\n", spacer);
+    MrBayesPrint ("%s   Problem allocating memory in Move_ParsSPR1\n", spacer);
     free (parLength); free (pRoot); free (pCrown); free (nSitesOfPat);
     
     return (ERROR);

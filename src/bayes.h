@@ -888,6 +888,9 @@ typedef struct param
 #define DIRPI_FIXEDxDIR                 158
 #define DIRPI_FIXEDxFIXED               159
 #define DIRPI_MIX                       160
+#define TOPOLOGY_RNCL_UNIFORM           161
+#define TOPOLOGY_RNCL_CONSTRAINED       162
+#define TOPOLOGY_RNCL_FIXED             163
 
 #if defined (BEAGLE_ENABLED)
 #define MB_BEAGLE_SCALE_ALWAYS          0
