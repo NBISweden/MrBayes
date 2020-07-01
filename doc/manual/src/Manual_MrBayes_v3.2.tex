@@ -1,6 +1,5 @@
 \documentclass[12pt]{book}
 \usepackage[a4paper]{geometry} %  (or letter, a4paper, a5paper...) See geometry.pdf to learn the layout options.
-%geometry{landscape}         % Activate for rotated page geometry
 \usepackage[english]{babel}   % Will manage the 90% hyphenation for us 
 \usepackage[parfill]{parskip} % Activate to begin paragraphs width empty line instead of indent
 \usepackage{graphicx}
@@ -17,7 +16,6 @@
 \usepackage{float}
 \usepackage{fancyvrb}
 
-
 % The following specifies a line spacing of 1.2 times normal
 \renewcommand{\baselinestretch}{1.2}
 
@@ -30,17 +28,27 @@
 \newcommand{\prout}[1]{\ttt{#1}}
 \newcommand{\tb}[1]{\ttt{\textbf{#1}}}
 
-%%%% JN: Draft version, June 2020
+%%%% JN: Draft version, July 2020
 %%%% JN: I (JN) have started to review the text, and added occasional comments.
 %%%% JN: Note that I use automatic text wrapping for paragraphs (in vim: `set textwidth=99`).
+%%%% JN: NOTES:
+%%%% JN: Since we are not yet ready with the text, placement of tables (figures) are
+%%%% JN: not a priority. This will have to be set at a later stage.
+%%%% JN: [X] Remove `wrapfigure`
+%%%% JN: [X] Remove left-hand space from tables
+%%%% JN: [ ] Center tables
+%%%% JN: [ ] Check consistent font sizes for verbatim lists
+%%%% JN: [ ] Check consistent font sizes for verbatim code
+%%%% JN: [ ] Consistent use of `MrBayes >`
+%%%% JN: [ ] Consistent use of `\tb{}`, `\ttt{}`, etc
 
 \begin{document}
 
 \title{MrBayes version 3.2 Manual: \\ Tutorials and Model Summaries}
 
-\date{\large Draft version, February 2020}
+\date{\large Draft version, July 2020}
 
-\author{Fredrik Ronquist, John P. Huelsenbeck, \\ Maxim Teslenko, Johan A. A. Nylander}
+\author{Fredrik Ronquist, John P. Huelsenbeck, \\ Maxim Teslenko, Chi Zhang \\ Johan A. A. Nylander}
 
 \maketitle
 
