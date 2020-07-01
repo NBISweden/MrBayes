@@ -2279,9 +2279,9 @@ int DoCitations (void)
     MrBayesPrint ("         Bull. Math. Bio. 59:581-607.                                            \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("   MrBayes implements four relaxed clock models: the Compound Poisson Process    \n");
-    MrBayesPrint ("   (CPP), the Autocorrelated Lognormal (TK02), the Independent Gamma Rates (IGR),\n");
-    MrBayesPrint ("   and the Independent Lognormal (ILN) models.                                   \n");
+    MrBayesPrint ("   MrBayes implements five relaxed clock models: the Compound Poisson Process    \n");
+    MrBayesPrint ("   (CPP), the Autocorrelated Lognormal (TK02), the White Noise (WN), the         \n");
+    MrBayesPrint ("   Independent Gamma Rates (IGR), and the Independent Lognormal (ILN) models.    \n");
     MrBayesPrint ("   The CPP model was first described by Huelsenbeck et al. (2000).  It is an     \n");
     MrBayesPrint ("   autocorrelated discrete model of rate variation over time.  Instead of        \n");
     MrBayesPrint ("   the modified gamma distribution originally proposed for the rate multipliers, \n");
@@ -2298,13 +2298,15 @@ int DoCitations (void)
     MrBayesPrint ("   branch separating the nodes (measured in terms of expected substitutions per  \n");
     MrBayesPrint ("   site at the base rate of the clock).                                          \n");
     MrBayesPrint ("                                                                                 \n");
-    MrBayesPrint ("   The final relaxed clock model is the IGR model, in which branch rates are     \n");
-    MrBayesPrint ("   modeled as being drawn independently from gamma distributions.  The model was \n");
-    MrBayesPrint ("   originally described in the literature as the 'White Noise' model by Lepage   \n");
-    MrBayesPrint ("   et al. (2007), but the original MrBayes implementation predates that paper.   \n");
-    MrBayesPrint ("   The IGR model is closely related to the uncorrelated gamma model presented    \n");
-    MrBayesPrint ("   originally by Drummond et al. (2006), but it is more elegant in that it truly \n");
-    MrBayesPrint ("   lacks time structure.  See Lepage et al. (2007) for details.                  \n");
+    MrBayesPrint ("   In the WN model, the branch rates are modeled as being drawn independently    \n");
+    MrBayesPrint ("   from gamma distributions. The distributions are not identical as the variance \n");
+    MrBayesPrint ("   is proportional to the branch length. See Lepage et al. (2007) for details.   \n");
+    MrBayesPrint ("   Note that the WN model was named 'IGR' in previous versions of MrBayes, but   \n");
+    MrBayesPrint ("   now 'IGR' refers to a slightly different model, in which the branch rates are \n");
+    MrBayesPrint ("   drawn from independent and identically distributed (i.i.d.) gamma distribs.   \n");
+    MrBayesPrint ("                                                                                 \n");
+    MrBayesPrint ("   The ILN model is analogous to IGR but differs in that the branch rates follow \n");
+    MrBayesPrint ("   i.i.d. lognormal (instead of gamma) distributions (Drummond et al. 2006).     \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("      Huelsenbeck, J. P., B. Larget, and D. Swofford. 2000. A compound Poisson   \n");
     MrBayesPrint ("         process for relaxing the molecular clock. Genetics 154: 1879-1892.      \n");
@@ -2399,7 +2401,6 @@ int DoCitations (void)
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("      Yang, Z., and B. Rannala. 2005. Branch-length prior influences Bayesian    \n");
     MrBayesPrint ("         posterior probability of phylogeny. Syst. Biol. 54:455-470.             \n");
-    MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   ---------------------------------------------------------------------------   \n");
@@ -10915,8 +10916,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    both rates. (The first number is off->on and the second      \n");
         MrBayesPrint ("                    is on->off).                                                 \n");
         MrBayesPrint ("   Symdirihyperpr - This option sets the prior for the stationary frequencies    \n");
-        MrBayesPrint ("                    of the states for morphological (standard) data. There can   \n");
-        MrBayesPrint ("                    be as many as 10 states for standard data. However, the      \n");
+        MrBayesPrint ("                    of the states for morphological (standard) data. The         \n");
         MrBayesPrint ("                    labelling of the states is somewhat arbitrary. For example,  \n");
         MrBayesPrint ("                    the state \"1\" for different characters does not have the   \n");
         MrBayesPrint ("                    same meaning. This is not true for DNA characters, for ex-   \n");
@@ -11318,9 +11318,9 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    the rate at which the variance increases with respect to the \n");
         MrBayesPrint ("                    base rate of the clock. If you have a branch of a length     \n");
         MrBayesPrint ("                    corresponding to 0.4 expected changes per site according to  \n");
-        MrBayesPrint ("                    the base rate of the clock, and the wnvar parameter has a   \n");
+        MrBayesPrint ("                    the base rate of the clock, and the wnvar parameter has a    \n");
         MrBayesPrint ("                    value of 2.0 , then the effective branch length will be drawn\n");
-        MrBayesPrint ("                    from a distribution with a variance of 0.4*2.0.              \n");
+        MrBayesPrint ("                    from a gamma distribution with a variance of 0.4*2.0.        \n");
         MrBayesPrint ("                    You can set the parameter to a fixed value, or specify that  \n");
         MrBayesPrint ("                    it is drawn from an exponential or uniform distribution:     \n");
         MrBayesPrint ("                                                                                 \n");
@@ -14857,6 +14857,62 @@ int StandID (char nuc)
         {
         return 512;
         }
+    else if (n == 'A' || n == 'a')
+        {
+        return 1024;
+        }
+    else if (n == 'B' || n == 'b')
+        {
+        return 2048;
+        }
+    else if (n == 'C' || n == 'c')
+        {
+        return 4096;
+        }
+    else if (n == 'D' || n == 'd')
+        {
+        return 8192;
+        }
+    else if (n == 'E' || n == 'e')
+        {
+        return 16384;
+        }
+    else if (n == 'F' || n == 'f')
+        {
+        return 32768;
+        }
+    else if (n == 'G' || n == 'g')
+        {
+        return 65536;
+        }
+    else if (n == 'H' || n == 'h')
+        {
+        return 131072;
+        }
+    else if (n == 'I' || n == 'i')
+        {
+        return 262144;
+        }
+    else if (n == 'J' || n == 'j')
+        {
+        return 524288;
+        }
+    else if (n == 'K' || n == 'k')
+        {
+        return 1048576;
+        }
+    else if (n == 'L' || n == 'l')
+        {
+        return 2097152;
+        }
+    else if (n == 'M' || n == 'm')
+        {
+        return 4194304;
+        }
+    else if (n == 'N' || n == 'n')
+        {
+        return 8388608;
+        }
     else if (n == missingId)
         {
         return MISSING;
@@ -15289,7 +15345,35 @@ char WhichStand (int x)
         return ('8');
     else if (x == 512)
         return ('9');
-    else if (x > 0 && x < 512)
+    else if (x == 1024)
+        return ('a');
+    else if (x == 2048)
+        return ('b');
+    else if (x == 4096)
+        return ('c');
+    else if (x == 8192)
+        return ('d');
+    else if (x == 16384)
+        return ('e');
+    else if (x == 32768)
+        return ('f');
+    else if (x == 65536)
+        return ('g');
+    else if (x == 131072)
+        return ('h');
+    else if (x == 262144)
+        return ('i');
+    else if (x == 524288)
+        return ('j');
+    else if (x == 1048576)
+        return ('k');
+    else if (x == 2097152)
+        return ('l');
+    else if (x == 4194304)
+        return ('m');
+    else if (x == 8388608)
+        return ('n');
+    else if (x > 0 && x < 8388608)
         return ('*');
     else if (x == MISSING)
         return ('?');

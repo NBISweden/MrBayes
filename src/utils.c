@@ -286,11 +286,12 @@ void CopyBits (BitsLong *dest, BitsLong *source, int length)
 
 
 /* CopyResults: copy results from one file to another up to lastGen*/
-int CopyResults (FILE *toFile, char *fromFileName, int lastGen)
+int CopyResults (FILE *toFile, char *fromFileName, long long lastGen)
 {
-    int     longestLine;
-    char    *strBuf, *strCpy, *word;
-    FILE    *fromFile;
+    int         longestLine;
+    long long   tempL;
+    char        *strBuf, *strCpy, *word;
+    FILE        *fromFile;
 
     if ((fromFile = OpenBinaryFileR(fromFileName)) == NULL)
         return ERROR;
@@ -310,8 +311,7 @@ int CopyResults (FILE *toFile, char *fromFileName, int lastGen)
         {
         strncpy (strCpy,strBuf,longestLine);
         word = strtok(strCpy," ");
-        /* atoi returns 0 when word is not integer number */
-        if (atoi(word)>lastGen)
+        if (sscanf(word, "%lli", &tempL)==1 && tempL>lastGen)
             break;
         fprintf (toFile,"%s",strBuf);
         fflush (toFile);
@@ -395,11 +395,12 @@ int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *m
 
 
 /* CopyTreeResults: copy tree results upto lastGen from one file to another. numTrees is return containing number of trees that were copied. */
-int CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *numTrees)
+int CopyTreeResults (FILE *toFile, char *fromFileName, long long lastGen, int *numTrees)
 {
-    int     longestLine;
-    char    *strBuf, *strCpy, *word;
-    FILE    *fromFile;
+    int         longestLine;
+    long long   tempL;
+    char        *strBuf, *strCpy, *word;
+    FILE        *fromFile;
     
     (*numTrees) = 0;
 
@@ -424,9 +425,8 @@ int CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *numTree
         if (strcmp(word,"tree")==0)
             {
             word = strtok(NULL," ");
-            /* atoi returns 0 when word is not integer number,
-               4 is offset to get rid of "rep." in tree name */
-            if (atoi(word+4)>lastGen)
+            /* 4 is offset to get rid of "rep." in tree name */
+            if (sscanf(word+4, "%lli", &tempL)==1 && tempL>lastGen)
                 break;
             (*numTrees)++;
             fprintf (toFile,"%s",strBuf);
@@ -1569,7 +1569,7 @@ void *SafeRealloc (void *ptr, size_t s)
 
     if (s == 0)
         {
-        //MrBayesPrint ("%s   WARNING: Reallocation of zero size attempted. This is probably a bug. Problems may follow.\n", spacer);
+        MrBayesPrint ("%s   WARNING: Reallocation of zero size attempted. This is probably a bug. Problems may follow.\n", spacer);
         free (ptr);
         return NULL;
         }
@@ -4804,19 +4804,35 @@ int IsTreeConsistent (Param *param, int chain, int state)
 
     if (tree->isRooted == NO)
         {
-        for (i=0; i<tree->nNodes-1; i++)
+        if (modelSettings[param->relParts[0]].parsModelId == YES)
             {
-            p = tree->allDownPass[i];
-            if (p->length <= 0.0)
+            for (i=0; i<tree->nNodes-1; i++)
                 {
-                if (p->length == 0.0)
-                    printf ("Node %d has zero branch length %f\n", p->index, p->length);
-                else
-                    printf ("Node %d has negative branch length %f\n", p->index, p->length);
-                return NO;
+                p = tree->allDownPass[i];
+                if (p->length != 0.0)
+                    {
+                    printf ("Node %d does has non-zero branch length %f for parsimony tree\n", p->index, p->length);
+                    return NO;
+                    }
                 }
+            return YES;
             }
-        return YES;
+        else
+            {
+            for (i=0; i<tree->nNodes-1; i++)
+                {
+                p = tree->allDownPass[i];
+                if (p->length <= 0.0)
+                    {
+                    if (p->length == 0.0)
+                        printf ("Node %d has zero branch length %f\n", p->index, p->length);
+                    else
+                        printf ("Node %d has negative branch length %f\n", p->index, p->length);
+                    return NO;
+                    }
+                }
+            return YES;
+            }
         }
 
     if (tree->isRooted == YES && tree->isClock == NO)
@@ -13178,7 +13194,7 @@ MrBFlt LogNormalRandomVariable (MrBFlt mean, MrBFlt sd, RandLong *seed)
     
     x = PointNormal(RandomNumber(seed));
 
-    x*= sd;
+    x *= sd;
     x += mean;
     
     return exp(x);
@@ -13518,6 +13534,23 @@ MrBFlt PointNormal (MrBFlt prob)
     z = y + ((((y*a4+a3)*y+a2)*y+a1)*y+a0) / ((((y*b4+b3)*y+b2)*y+b1)*y+b0);
     
     return (p<0.5 ? -z : z);
+}
+
+
+/*---------------------------------------------------------------------------------
+|
+|   NormalRandomVariable
+|
+|   Draw a random variable from a normal distribution.
+|
+---------------------------------------------------------------------------------*/
+MrBFlt NormalRandomVariable (MrBFlt mean, MrBFlt sd, RandLong *seed)
+{
+    MrBFlt      x;
+    
+    x = PointNormal(RandomNumber(seed));
+
+    return mean + x*sd;
 }
 
 

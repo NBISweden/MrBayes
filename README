@@ -20,8 +20,7 @@ Current repository directory layout:
     .
     ├── autotools      : Files relating to the build system
     ├── doc
-    │   ├── manual     : The manual
-    │   └── tutorial   : A tutorial
+    │   └── manual     : The manual
     ├── examples       : Example input data sets
     └── src            : C source code
 

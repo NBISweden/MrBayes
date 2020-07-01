@@ -56,6 +56,7 @@
 #include "SIOUX.h"
 #endif
 #include <signal.h>
+#include <limits.h>
 
 #if defined (WIN_VERSION) && !defined (__GNUC__)
 #define VISUAL
@@ -150,7 +151,7 @@ void      FlipTiProbsSpace (ModelInfo *m, int chain, int nodeIndex);
 void      FreeChainMemory (void);
 MrBFlt    GetFitchPartials (ModelInfo *m, int chain, int source1, int source2, int destination);
 void      GetStamp (void);
-void      GetSwappers (int *swapA, int *swapB, int curGen);
+void      GetSwappers (int *swapA, int *swapB, int run);
 void      GetTempDownPassSeq (TreeNode *p, int *i, TreeNode **dp);
 int       GetTotalRateShifts (Model *mp, MrBFlt *shiftTimes);
 MrBFlt    GibbsSampleGamma (int chain, int division, RandLong *seed);
@@ -192,9 +193,8 @@ int       PrintAncStates_Bin (TreeNode *p, int division, int chain);
 int       PrintAncStates_Gen (TreeNode *p, int division, int chain);
 int       PrintAncStates_NUC4 (TreeNode *p, int division, int chain);
 int       PrintAncStates_Std (TreeNode *p, int division, int chain);
-int       PrintCalTree (int curGen, Tree *tree);
 int       PrintCheckPoint (int gen);
-int       PrintMCMCDiagnosticsToFile (int curGen);
+int       PrintMCMCDiagnosticsToFile (long long curGen);
 #if defined (MPI_ENABLED)
 int       PrintMPISlaves (FILE *fp);
 #endif
@@ -202,14 +202,14 @@ void      PrintParamValues (Param *p, int chain, char *s);
 int       PrintParsMatrix (void);
 int       PrintSiteRates_Gen (TreeNode *p, int division, int chain);
 int       PrintSiteRates_Std (TreeNode *p, int division, int chain);
-int       PrintStates (int curGen, int coldId);
-int       PrintStatesToFiles (int n);
+int       PrintStates (long long curGen, int coldId);
+int       PrintStatesToFiles (long long curGen);
 int       PrintSwapInfo (void);
 int       PrintTermState (void);
 void      PrintTiProbs (CLFlt *tP, MrBFlt *bs, int nStates);
 int       PrintTopConvInfo (void);
-void      PrintToScreen (int curGen, int startGen, time_t endingT, time_t startingT);
-int       PrintTree (int curGen, Param *treeParam, int chain, int showBrlens, MrBFlt clockRate);
+void      PrintToScreen (long long curGen, long long startGen, time_t endingT, time_t startingT);
+int       PrintTree (long long curGen, Param *treeParam, int chain, int showBrlens, MrBFlt clockRate);
 MrBFlt    PropAncFossil (Param *param, int chain);
 #if defined (MPI_ENABLED)
 int       ReassembleMoveInfo (void);
@@ -344,7 +344,7 @@ FILE            *fpSS = NULL;                /* pointer to .ss file             
 static int      requestAbortRun;             /* flag for aborting mcmc analysis              */
 int             *topologyPrintIndex;         /* print file index of each topology            */
 int             *printTreeTopologyIndex;     /* topology index of each tree print file       */
-int             numPreviousGen;              /* number of generations in run to append to    */
+long long       numPreviousGen;              /* number of generations in run to append to    */
 
 #if defined (MPI_ENABLED)
 int             lowestLocalRunId;            /* lowest local run Id                          */
@@ -2502,7 +2502,7 @@ int DoMcmc (void)
                 c = fgetc(tempFile);
                 }
             temp[i] = '\0';
-            numPreviousGen = atoi(temp);
+            sscanf(temp, "%lli", &numPreviousGen);
             }
         if (chainParams.isSS==YES && c!=EOF)
             {
@@ -2536,7 +2536,7 @@ int DoMcmc (void)
             }
 #   if defined (MPI_ENABLED)
         }
-        MPI_Bcast (&numPreviousGen, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast (&numPreviousGen, 1, MPI_LONG_LONG, 0, MPI_COMM_WORLD);
 #   endif
         if (numPreviousGen == 0)
             {
@@ -2545,12 +2545,12 @@ int DoMcmc (void)
             }
         else if (numPreviousGen >= chainParams.numGen)
             {
-            MrBayesPrint ("%s   The specified number of generations (%d) was already finished in\n", spacer, chainParams.numGen);
+            MrBayesPrint ("%s   The specified number of generations (%lli) was already finished in\n", spacer, chainParams.numGen);
             MrBayesPrint ("%s   the previous run you are trying to append to.\n", spacer);
             goto errorExit;
             }
         else
-            MrBayesPrint ("%s   Using samples up to generation %d from previous analysis.\n", spacer, numPreviousGen);
+            MrBayesPrint ("%s   Using samples up to generation %lli from previous analysis.\n", spacer, numPreviousGen);
         }
     else
         {
@@ -2812,6 +2812,7 @@ int DoSsParm (char *parmName, char *tkn)
 int DoMcmcParm (char *parmName, char *tkn)
 {
     int         tempI;
+    long long   tempL;
     MrBFlt      tempD;
     char        *tempStr;
     int         tempStrSize = TEMPSTRSIZE;
@@ -2910,14 +2911,19 @@ int DoMcmcParm (char *parmName, char *tkn)
                 expecting = Expecting(NUMBER);
             else if (expecting == Expecting(NUMBER))
                 {
-                sscanf (tkn, "%d", &tempI);
-                if (tempI < 1)
+                sscanf (tkn, "%lli", &tempL);
+                if (tempL < 1)
                     {
                     MrBayesPrint ("%s   Too few generations\n", spacer);
                     return (ERROR);
                     }
-                chainParams.numGen = tempI;
-                MrBayesPrint ("%s   Setting number of generations to %d\n", spacer, chainParams.numGen);
+                if ( tempL / chainParams.sampleFreq > INT_MAX )
+                    {
+                    MrBayesPrint ("%s   Maximum %d samples allowed. Decrease 'ngen' or increase 'samplefreq'.\n", spacer, INT_MAX);
+                    return (ERROR);
+                    }
+                chainParams.numGen = tempL;
+                MrBayesPrint ("%s   Setting number of generations to %lli\n", spacer, chainParams.numGen);
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
                 }
             else
@@ -2938,6 +2944,11 @@ int DoMcmcParm (char *parmName, char *tkn)
                     {
                     MrBayesPrint ("%s   Sampling chain too infrequently\n", spacer);
                     free (tempStr);
+                    return (ERROR);
+                    }
+                if ( chainParams.numGen / tempI > INT_MAX )
+                    {
+                    MrBayesPrint ("%s   Maximum %d samples allowed. Decrease 'ngen' or increase 'samplefreq'.\n", spacer, INT_MAX);
                     return (ERROR);
                     }
                 chainParams.sampleFreq = tempI;
@@ -4055,7 +4066,7 @@ int DoSs (void)
 
     if (chainParams.numGen/chainParams.sampleFreq <= chainParams.burninSS)
         {/*Do not change print out to generations vs samples because of danger of overflow*/
-        MrBayesPrint ("%s      ERROR: Burnin %d samples is too large compared with requested total %d samples (%d generations).\n", spacer ,chainParams.burninSS, chainParams.numGen/chainParams.sampleFreq, chainParams.numGen);
+        MrBayesPrint ("%s      ERROR: Burnin %d samples is too large compared with requested total %d samples (%lli generations).\n", spacer ,chainParams.burninSS, chainParams.numGen/chainParams.sampleFreq, chainParams.numGen);
         return ERROR;
         }
 
@@ -5769,7 +5780,7 @@ int InitAugmentedModels (void)
 -------------------------------------------------------------------------*/
 int InitChainCondLikes (void)
 {
-    int         c, d, i, j, k, s, t, numReps, condLikesUsed, nIntNodes, nNodes, useBeagle,
+    int         c, d, i, j, k, s, t, numReps, condLikesUsed, nIntNodes, nNodes,
                 clIndex, tiIndex, scalerIndex, indexStep;
     BitsLong    *charBits;
     CLFlt       *cL;
@@ -5778,7 +5789,7 @@ int InitChainCondLikes (void)
     int         j1;
 #   endif
 #   if defined (BEAGLE_ENABLED)
-    int         useBeagleMultiPartitions, divisionOffset;
+    int         divisionOffset;
     double      *nSitesOfPat;
     MrBFlt      freq;
 #   endif
@@ -5807,9 +5818,6 @@ int InitChainCondLikes (void)
         /* figure out length of cond like array */
         if (m->dataType == STANDARD)
             {
-#   if defined (BEAGLE_ENABLED)
-            m->useBeagle = NO;
-#   endif
             for (c=0; c<m->numChars; c++)
                 {
                 numReps = m->numRateCats;
@@ -5866,20 +5874,15 @@ int InitChainCondLikes (void)
             m->numTiCats = 0;   /* We do not have repeated similar transition probability matrices */
             if (m->stateFreq->paramId == SYMPI_EQUAL)
                 {
-                for (k=0; k<9; k++)
+                for (k = 0; k < MAX_STD_STATES-1; k++)  /* UNORD */
                     {
                     if (m->isTiNeeded[k] == YES)
                         m->tiProbLength += (k + 2) * (k + 2) * m->numRateCats;
                     }
-                for (k=9; k<13; k++)
+                for (k = MAX_STD_STATES-1; k < 2*MAX_STD_STATES-3; k++)  /* ORD */
                     {
                     if (m->isTiNeeded[k] == YES)
-                        m->tiProbLength += (k - 6) * (k - 6) * m->numRateCats;
-                    }
-                for (k=13; k<18; k++)
-                    {
-                    if (m->isTiNeeded[k] == YES)
-                         m->tiProbLength += (k - 11) * (k - 11) * m->numRateCats;
+                        m->tiProbLength += (k-MAX_STD_STATES+4) * (k-MAX_STD_STATES+4) * m->numRateCats;
                     }
                 }
             else
@@ -5909,48 +5912,117 @@ int InitChainCondLikes (void)
         }
 
     /* check if conditional likelihoods are needed */
+    /* set up use of beagle, if applicable         */
     if (condLikesUsed == YES)
+        {
         MrBayesPrint ("%s   Initializing conditional likelihoods\n", spacer);
-    else
-        return NO_ERROR;
-
-#   if defined (BEAGLE_ENABLED)
-    useBeagleMultiPartitions = NO;
-#   endif
 
 #   if defined (BEAGLE_V3_ENABLED)
-    if (beagleResourceNumber != 0 && numCurrentDivisions > 1 && InitBeagleMultiPartitionInstance() != ERROR && m->useBeagle == YES)
-        useBeagleMultiPartitions = YES;
+        /* Try to use a multipartition instance of beagle.
+         * The call to InitBeagleMultiPartitionsInstance will detect if a division has useBeagle == NO, and
+         * will return an error if so. The function will also set the useBeagleMultiPartitions flag for all
+         * partitions if it is possible to use a multipartition instance of Beagle. We can safely ignore
+         * the ERROR returned by InitBeagleMultiPartitionsInstance as it leaves everything in the correct
+         * state if it fails to implement a multipartition instance of beagle.
+         */
+        if (beagleResourceNumber != 0 && numCurrentDivisions > 1)
+            InitBeagleMultiPartitionInstance();
 #   endif
+#   if defined (BEAGLE_ENABLED)
+        /* Try to use single-partition instances of beagle */
+        if (modelSettings[0].useBeagleMultiPartitions == NO)
+            {
+            for (d=0; d<numCurrentDivisions; d++)
+                {
+                m = &modelSettings[d];
+                if (m->useBeagle == YES && InitBeagleInstance(m, d) == ERROR)
+                    m->useBeagle = NO;
+                }
+            }
+#   endif
+        }
 
     /* allocate space and fill in info for tips */
     for (d=0; d<numCurrentDivisions; d++)
         {
         m = &modelSettings[d];
-       
-        /* allocate space for conditional likelihoods */
-        useBeagle = NO;
-#   if defined (BEAGLE_ENABLED)
+
+        /* if using beagle, adjust SIMD settings */
         if (m->useBeagle == YES)
-            {
-            if (useBeagleMultiPartitions == YES)
-                useBeagle = YES;
-            else if (InitBeagleInstance(m, d) != ERROR)
-                useBeagle = YES;
-            else
-                m->useBeagle = NO;
-            }
-#   endif
-#   if defined (SSE_ENABLED)
-        /*if (useBeagle == NO && m->dataType != STANDARD)
-            m->useSSE = YES;*/
-        if (useBeagle == YES)
             {
             m->useVec = VEC_NONE;
             m->numFloatsPerVec = 0;
             }
 
+        /* get size of tree */
+        nIntNodes = GetTree(m->brlens,0,0)->nIntNodes;
+        nNodes = GetTree(m->brlens,0,0)->nNodes;
+
+        /* allocate and set indices from tree nodes to cond like arrays */
+        /* we set them up first because they are needed also for parsimony partitions */
+        m->condLikeIndex = (int **) SafeMalloc (numLocalChains * sizeof(int *));
+        if (!m->condLikeIndex)
+            return (ERROR);
+        for (i=0; i<numLocalChains; i++)
+            {
+            m->condLikeIndex[i] = (int *) SafeMalloc (nNodes * sizeof(int));
+            if (!m->condLikeIndex[i])
+                return (ERROR);
+            }
+        for (i=0; i<numLocalChains; i++)
+            for (j=0; j<nNodes; j++)
+                m->condLikeIndex[i][j] = -1;
+
+        /* set up indices for terminal nodes */
+        clIndex = 0;
+        if (m->useBeagle == YES)
+            indexStep = m->nCijkParts;
+        else
+            indexStep = 1;
+        for (i=0; i<numLocalTaxa; i++)
+            {
+#   if !defined (DEBUG_NOSHORTCUTS)
+            /* TODO: Until CondLikeRoot_XXX are fixed (case 4 when one of the children is non-ambig) we allocate space for non-ambig tips. If fixed also uncomment down the function */
+            /* if (m->useBeagle == NO && m->useVec == VEC_NONE && m->isPartAmbig[i] == NO && m->dataType != STANDARD)
+                continue;
+            */
 #   endif
+            for (j=0; j<numLocalChains; j++)
+                m->condLikeIndex[j][i] = clIndex;
+            clIndex += 1; /* even for multiple omega cat we need only one set of conditional likelihoods  for terminals for all chains.*/
+            }
+
+        /* reserve private space for parsimony-based moves if parsimony model is used */
+        if (m->parsModelId == YES && m->parsimonyBasedMove == YES)
+            clIndex += nIntNodes;
+
+        /* set up indices for internal nodes */
+        for (j=0; j<numLocalChains; j++)
+            {
+            for (i=0; i<nIntNodes; i++)
+                {
+                m->condLikeIndex[j][i+numLocalTaxa] = clIndex;
+                clIndex += indexStep;
+                }
+            }
+
+        /* allocate and set up scratch cond like indices */
+        m->condLikeScratchIndex = (int *) SafeMalloc (nNodes * sizeof(int));
+        if (!m->condLikeScratchIndex)
+            return (ERROR);
+        for (i=0; i<nNodes; i++)
+            m->condLikeScratchIndex[i] = -1;
+        for (i=0; i<nIntNodes; i++)
+            {
+            m->condLikeScratchIndex[i+numLocalTaxa] = clIndex;
+            clIndex += indexStep;
+            }
+
+        /* parsimony models need nothing of the below */
+        if (m->parsModelId == YES)
+            continue;
+
+        /* allocate space for conditional likelihoods */
         if (m->useBeagle == NO && m->useVec == VEC_NONE)
             MrBayesPrint ("%s   Using standard non-SSE likelihood calculator for division %d (%s-precision)\n", spacer, d+1, (sizeof(CLFlt) == 4 ? "single" : "double"));
         else if (m->useBeagle == NO && m->useVec == VEC_SSE)
@@ -5965,7 +6037,7 @@ int InitChainCondLikes (void)
             return (ERROR);
             }
 
-        if (useBeagle == NO)
+        if (m->useBeagle == NO)
             {
             /* allocate cond like space */
             m->condLikes = (CLFlt**) SafeMalloc(m->numCondLikes * sizeof(CLFlt*));
@@ -6119,69 +6191,6 @@ int InitChainCondLikes (void)
                 }
             }
 
-        /* get size of tree */
-        nIntNodes = GetTree(m->brlens,0,0)->nIntNodes;
-        nNodes = GetTree(m->brlens,0,0)->nNodes;
-
-        /* allocate and set indices from tree nodes to cond like arrays */
-        m->condLikeIndex = (int **) SafeMalloc (numLocalChains * sizeof(int *));
-        if (!m->condLikeIndex)
-            return (ERROR);
-        for (i=0; i<numLocalChains; i++)
-            {
-            m->condLikeIndex[i] = (int *) SafeMalloc (nNodes * sizeof(int));
-            if (!m->condLikeIndex[i])
-                return (ERROR);
-            }
-        for (i=0; i<numLocalChains; i++)
-            for (j=0; j<nNodes; j++)
-                m->condLikeIndex[i][j] = -1;
-
-        /* set up indices for terminal nodes */
-        clIndex = 0;
-        if (useBeagle == YES)
-            indexStep = m->nCijkParts;
-        else
-            indexStep = 1;
-        for (i=0; i<numLocalTaxa; i++)
-            {
-#   if !defined (DEBUG_NOSHORTCUTS)
-            /* TODO: Until CondLikeRoot_XXX are fixed (case 4 when one of the children is non-ambig) we allocate space for non-ambig tips. If fixed also uncomment down the function */
-            /* if (useBeagle == NO && useSSE == NO && m->isPartAmbig[i] == NO && m->dataType != STANDARD)
-                continue;
-            */
-#   endif
-            for (j=0; j<numLocalChains; j++)
-                m->condLikeIndex[j][i] = clIndex;
-            clIndex += 1; /* even for multiple omega cat we need only one set of conditional likelihoods  for terminals for all chains.*/
-            }
-
-        /* reserve private space for parsimony-based moves if parsimony model is used */
-        if (m->parsModelId == YES && m->parsimonyBasedMove == YES)
-            clIndex += nIntNodes;
-
-        /* set up indices for internal nodes */
-        for (j=0; j<numLocalChains; j++)
-            {
-            for (i=0; i<nIntNodes; i++)
-                {
-                m->condLikeIndex[j][i+numLocalTaxa] = clIndex;
-                clIndex += indexStep;
-                }
-            }
-
-        /* allocate and set up scratch cond like indices */
-        m->condLikeScratchIndex = (int *) SafeMalloc (nNodes * sizeof(int));
-        if (!m->condLikeScratchIndex)
-            return (ERROR);
-        for (i=0; i<nNodes; i++)
-            m->condLikeScratchIndex[i] = -1;
-        for (i=0; i<nIntNodes; i++)
-            {
-            m->condLikeScratchIndex[i+numLocalTaxa] = clIndex;
-            clIndex += indexStep;
-            }
-
         /* allocate and set indices from tree edges to ti prob arrays */
         m->tiProbsIndex = (int **) SafeMalloc (numLocalChains * sizeof(int *));
         if (!m->tiProbsIndex)
@@ -6314,50 +6323,50 @@ int InitChainCondLikes (void)
             }
 
 #   if defined (BEAGLE_ENABLED)
-            /* Set up nSitesOfPat for Beagle */
-            if (m->useBeagle == YES)
+        /* Set up nSitesOfPat for Beagle */
+        if (m->useBeagle == YES)
+            {
+            if (m->useBeagleMultiPartitions == NO)
                 {
-                if (useBeagleMultiPartitions == NO)
-                    {
-                    nSitesOfPat = (double *) SafeMalloc (m->numChars * sizeof(double));
-                    for (c=0; c<m->numChars; c++)
-                        nSitesOfPat[c] = numSitesOfPat[m->compCharStart + c];
-                    beagleSetPatternWeights(m->beagleInstance,
-                                            nSitesOfPat);
-                    free (nSitesOfPat);
-                    nSitesOfPat = NULL;
-                     /* Set up scalers for Beagle */
-                    for (i=0; i<m->numScalers*m->nCijkParts; i++)
-                        beagleResetScaleFactors(m->beagleInstance, i);
-                    }
+                nSitesOfPat = (double *) SafeMalloc (m->numChars * sizeof(double));
+                for (c=0; c<m->numChars; c++)
+                    nSitesOfPat[c] = numSitesOfPat[m->compCharStart + c];
+                beagleSetPatternWeights(m->beagleInstance,
+                                        nSitesOfPat);
+                free (nSitesOfPat);
+                nSitesOfPat = NULL;
+                 /* Set up scalers for Beagle */
+                for (i=0; i<m->numScalers*m->nCijkParts; i++)
+                    beagleResetScaleFactors(m->beagleInstance, i);
+                }
 
-                /* find category frequencies */
-                if (m->pInvar == NO)
+            /* find category frequencies */
+            if (m->pInvar == NO)
+                {
+                freq =  1.0 /  m->numRateCats;
+                
+                /* set category frequencies in beagle instance */
+                if (m->numOmegaCats <= 1)
                     {
-                    freq =  1.0 /  m->numRateCats;
-                    
-                    /* set category frequencies in beagle instance */
-                    if (m->numOmegaCats <= 1)
+                    divisionOffset = 0;
+                    if (m->useBeagleMultiPartitions == YES)
+                        divisionOffset = (numLocalChains + 1) * m->nCijkParts * m->divisionIndex;
+
+                    for (i=0; i<m->numRateCats; i++)
+                        m->inWeights[i] = freq;
+                    for (i=0; i< (numLocalChains); i++)
                         {
-                        divisionOffset = 0;
-                        if (m->useBeagleMultiPartitions == YES)
-                            divisionOffset = (numLocalChains + 1) * m->nCijkParts * m->divisionIndex;
-
-                        for (i=0; i<m->numRateCats; i++)
-                            m->inWeights[i] = freq;
-                        for (i=0; i< (numLocalChains); i++)
-                            {
-                            beagleSetCategoryWeights(m->beagleInstance,
-                                                     m->cijkIndex[i] + divisionOffset,
-                                                     m->inWeights);
-                            }
                         beagleSetCategoryWeights(m->beagleInstance,
-                                                 m->cijkScratchIndex + divisionOffset,
+                                                 m->cijkIndex[i] + divisionOffset,
                                                  m->inWeights);
                         }
+                    beagleSetCategoryWeights(m->beagleInstance,
+                                             m->cijkScratchIndex + divisionOffset,
+                                             m->inWeights);
                     }
-                
                 }
+            
+            }
 #   endif
 
         /* fill in tip conditional likelihoods */
@@ -6390,7 +6399,7 @@ int InitChainCondLikes (void)
                     }
                 }
             }
-        else if (useBeagle == NO)
+        else if (m->useBeagle == NO)
             {
             if (m->gibbsGamma == YES)
                 numReps = m->numTiCats / m->numRateCats;
@@ -6504,7 +6513,7 @@ int InitChainCondLikes (void)
         }
 
 #if defined (BEAGLE_V3_ENABLED)
-    if (useBeagleMultiPartitions == YES)
+    if (modelSettings[0].useBeagleMultiPartitions == YES)
         {
         nSitesOfPat = (double *) SafeMalloc (modelSettings[0].numCharsAll * sizeof(double));
         nPartsOfPat = (int    *) SafeMalloc (modelSettings[0].numCharsAll * sizeof(int   ));
@@ -7211,7 +7220,7 @@ int InitPrintParams (void)
             /* always print parsimony topology (printParam == YES), otherwise */
             /* print topology only if brlens never requested (nPrintSubParams == 0)*/
             if (p->printParam == YES || p->nPrintSubParams == 0)
-                numPrintTreeParams++;
+                printTreeParam[k++] = p;
             }
         else if (p->paramType == P_BRLENS)
             {
@@ -11274,7 +11283,7 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 int PrintCheckPoint (int gen)
 {
     int         i, j, k, k1, nErrors=0, run, chn, nValues, tempStrSize = TEMPSTRSIZE,
-                hasEvents, *intValue, id, oldPrecision;
+                hasEvents, *intValue, oldPrecision;
     char        bkupFileName[220], oldBkupFileName[220], ckpFileName[220], *tempString=NULL;
     MrBFlt      *value, clockRate;
     Param       *p = NULL, *subParm = NULL;
@@ -11442,13 +11451,7 @@ if (proc_id == 0)
                                          subParm->paramType == P_IGRBRANCHRATES || subParm->paramType == P_ILNBRANCHRATES ||
                                          subParm->paramType == P_MIXEDBRCHRATES || subParm->paramType == P_WNBRANCHRATES))
                         {
-                        if (subParm->paramType == P_MIXEDBRCHRATES)
-                            {
-                            id = *GetParamIntVals(subParm, j, state[j]);
-                            if (SafeSprintf (&tempString, &tempStrSize, " [&B %s %d]", subParm->name, id) == ERROR) nErrors++;
-                            }
-                        else
-                            if (SafeSprintf (&tempString, &tempStrSize, " [&B %s]", subParm->name) == ERROR) nErrors++;
+                        if (SafeSprintf (&tempString, &tempStrSize, " [&B %s]", subParm->name) == ERROR) nErrors++;
                         if (nErrors == 0 && AddToPrintString (tempString) == ERROR) nErrors++;
                         }
                     }
@@ -11851,7 +11854,7 @@ errorExit:
 |      frequencies, and convergence diagnostics to file.
 |
 ------------------------------------------------------------------------*/
-int PrintMCMCDiagnosticsToFile (int curGen)
+int PrintMCMCDiagnosticsToFile (long long curGen)
 {
     int         i, j, n;
     MCMCMove    *theMove;
@@ -11995,7 +11998,7 @@ int PrintMCMCDiagnosticsToFile (int curGen)
         return (NO_ERROR);
 #endif
 
-    MrBayesPrintf (fpMcmc, "%d", curGen);
+    MrBayesPrintf (fpMcmc, "%lli", curGen);
 
     for (n=0; n<chainParams.numRuns; n++)
         {
@@ -12045,7 +12048,7 @@ int PrintMCMCDiagnosticsToFile (int curGen)
         {
         for (n=0; n<numTopologies; n++)
             {
-            if (chainParams.relativeBurnin == NO && curGen < chainParams.chainBurnIn * chainParams.sampleFreq)
+            if (chainParams.relativeBurnin == NO && curGen < (long long)(chainParams.chainBurnIn) * chainParams.sampleFreq)
                 MrBayesPrintf (fpMcmc, "\tNA");
             else
                 {
@@ -12060,7 +12063,7 @@ int PrintMCMCDiagnosticsToFile (int curGen)
                     {
                     for (j=i+1; j<chainParams.numRuns; j++)
                         {
-                        if (chainParams.relativeBurnin == NO && curGen < chainParams.chainBurnIn * chainParams.sampleFreq)
+                        if (chainParams.relativeBurnin == NO && curGen < (long long)(chainParams.chainBurnIn) * chainParams.sampleFreq)
                             MrBayesPrintf (fpMcmc, "\tNA");
                         else if (chainParams.diagnStat == AVGSTDDEV)
                             MrBayesPrintf (fpMcmc, "\t%.6f", chainParams.stat[n].pair[i][j] / chainParams.stat[n].pair[j][i]);
@@ -12507,7 +12510,7 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
 }
 
 
-int PrintStates (int curGen, int coldId)
+int PrintStates (long long curGen, int coldId)
 {
     int             d, i, j, k, k1, compressedCharPosition, *printedChar=NULL, origAlignmentChars[3], modelIndex;
     char            *partString=NULL, stateString[4];
@@ -12889,7 +12892,7 @@ int PrintStates (int curGen, int coldId)
         }
         
     /* now print parameter values */
-    SafeSprintf (&tempStr, &tempStrSize, "%d", curGen);
+    SafeSprintf (&tempStr, &tempStrSize, "%lli", curGen);
     if (AddToPrintString (tempStr) == ERROR) goto errorExit;
     SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(curLnL[coldId]));
     if (AddToPrintString (tempStr) == ERROR) goto errorExit;
@@ -13267,7 +13270,7 @@ int PrintStates (int curGen, int coldId)
 |      or this is the last cycle of the chain.
 |
 ------------------------------------------------------------------------*/
-int PrintStatesToFiles (int curGen)
+int PrintStatesToFiles (long long curGen)
 {
     int             i, j, chn, coldId, runId;
     MrBFlt          clockRate;
@@ -13328,7 +13331,7 @@ int PrintStatesToFiles (int curGen)
                     {
                     if (chainParams.mcmcDiagn == YES && chainParams.numRuns > 1)
                         {
-                        if (chainParams.relativeBurnin == YES || curGen >= chainParams.chainBurnIn * chainParams.sampleFreq)
+                        if (chainParams.relativeBurnin == YES || curGen >= (long long)(chainParams.chainBurnIn) * chainParams.sampleFreq)
                             {
                             if (AddTreeToPartitionCounters (tree, j, runId) == ERROR)
                                 return ERROR;
@@ -13610,7 +13613,7 @@ int PrintStatesToFiles (int curGen)
                     {
                     if (chainParams.numRuns > 1 && chainParams.mcmcDiagn == YES)
                         {
-                        if (chainParams.relativeBurnin == YES || curGen >= chainParams.chainBurnIn * chainParams.sampleFreq)
+                        if (chainParams.relativeBurnin == YES || curGen >= (long long)(chainParams.chainBurnIn) * chainParams.sampleFreq)
                             {
                             char *s = NULL;
                             StripComments (printString);
@@ -14026,7 +14029,7 @@ int PrintTopConvInfo (void)
 }
 
 
-void PrintToScreen (int curGen, int startGen, time_t endingT, time_t startingT)
+void PrintToScreen (long long curGen, long long startGen, time_t endingT, time_t startingT)
 {
     int         i, chn, nHours, nMins, nSecs;
     MrBFlt      timePerGen;
@@ -14045,9 +14048,9 @@ void PrintToScreen (int curGen, int startGen, time_t endingT, time_t startingT)
                 MrBayesPrint ("%s   Using an absolute burnin of %d samples for diagnostics\n", spacer, chainParams.chainBurnIn);
             }
         MrBayesPrint ("\n");
-        MrBayesPrint ("%s   Chain results (%d generations requested):\n\n", spacer, chainParams.numGen);
+        MrBayesPrint ("%s   Chain results (%lli generations requested):\n\n", spacer, chainParams.numGen);
         }
-    MrBayesPrint ("%s   %4d -- ", spacer, curGen);
+    MrBayesPrint ("%s   %4lli -- ", spacer, curGen);
     numLocalColdChains = numFirstAndLastCold = 0;
     for (chn=0; chn<numLocalChains; chn++)
         {
@@ -14124,9 +14127,9 @@ void PrintToScreen (int curGen, int startGen, time_t endingT, time_t startingT)
                 MrBayesPrint ("%s   Using an absolute burnin of %d samples for diagnostics\n", spacer, chainParams.chainBurnIn);
             }
         MrBayesPrint ("\n");
-        MrBayesPrint ("%s   Chain results (%d generations requested):\n\n", spacer, chainParams.numGen);
+        MrBayesPrint ("%s   Chain results (%lli generations requested):\n\n", spacer, chainParams.numGen);
         }
-    MrBayesPrint ("%s   %5d -- ", spacer, curGen);
+    MrBayesPrint ("%s   %5lli -- ", spacer, curGen);
     if (numLocalChains == 1)
         MrBayesPrint ("%1.3lf ", curLnL[0]);
     else
@@ -14184,7 +14187,7 @@ void PrintToScreen (int curGen, int startGen, time_t endingT, time_t startingT)
 }
 
 
-int PrintTree (int curGen, Param *treeParam, int chain, int showBrlens, MrBFlt clockRate)
+int PrintTree (long long curGen, Param *treeParam, int chain, int showBrlens, MrBFlt clockRate)
 {
     int             i, tempStrSize;
     char            *tempStr;
@@ -14303,7 +14306,7 @@ int PrintTree (int curGen, Param *treeParam, int chain, int showBrlens, MrBFlt c
         }
     
     /* write the tree preamble */
-    if (SafeSprintf (&tempStr, &tempStrSize, "   tree gen.%d", curGen) == ERROR) return (ERROR);
+    if (SafeSprintf (&tempStr, &tempStrSize, "   tree gen.%lli", curGen) == ERROR) return (ERROR);
     if (AddToPrintString (tempStr) == ERROR) return(ERROR);
     if (treeParam->paramType == P_BRLENS && treeParam->nSubParams > 0)
         {
@@ -15797,23 +15800,24 @@ void ResetFlips (int chain)
         if (m->upDateCl != YES)
             continue;
         
+        if (m->parsModelId == NO)
+            {
 #if defined (BEAGLE_ENABLED)
-        if (m->useBeagle == NO || 
-            beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ||
-            m->rescaleBeagleAll == YES)
+            if (m->useBeagle == NO || 
+                beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ||
+                m->rescaleBeagleAll == YES)
                 {
                 FlipSiteScalerSpace (m, chain);
                 if (m->useBeagle == YES && m->rescaleBeagleAll == YES)
                     m->rescaleFreq[chain] = m->rescaleFreqOld;
                 }
 #else
-        FlipSiteScalerSpace (m, chain);
+            FlipSiteScalerSpace (m, chain);
 #endif
-            
-        
-        if (m->upDateCijk == YES && m->nCijkParts > 0)
-            FlipCijkSpace (m, chain);
-        
+            if (m->upDateCijk == YES && m->nCijkParts > 0)
+                FlipCijkSpace (m, chain);
+            }
+ 
         /* cycle over tree */
         tree = GetTree (m->brlens, chain, state[chain]);
         for (i=0; i<tree->nNodes; i++)
@@ -15826,15 +15830,19 @@ void ResetFlips (int chain)
                 if (p->upDateCl == YES)
                     {
                     FlipCondLikeSpace (m, chain, p->index);
+                    if (m->parsModelId == NO)
+                        {
 #if defined (BEAGLE_ENABLED)
-                    if (m->useBeagle == NO || 
-                        beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ||
-                        (m->rescaleBeagleAll == YES && isScalerNode[p->index] == YES))
-                        FlipNodeScalerSpace (m, chain, p->index);
+                        if (m->useBeagle == NO || 
+                            beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ||
+                            (m->rescaleBeagleAll == YES && isScalerNode[p->index] == YES))
+                            FlipNodeScalerSpace (m, chain, p->index);
 #else
-                    FlipNodeScalerSpace (m, chain, p->index);
+                        FlipNodeScalerSpace (m, chain, p->index);
 #endif
+                        }
                     }
+
 #if defined (BEAGLE_ENABLED)
                 else if (m->rescaleBeagleAll == YES)
                     {
@@ -16100,7 +16108,8 @@ int ReusePreviousResults (int *numSamples, int steps)
 
 int RunChain (RandLong *seed)
 {
-    int         i, j, n, chn, swapA=0, swapB=0, whichMove, acceptMove;
+    int         i, j, k, chn, swapA=0, swapB=0, whichMove, acceptMove;
+    long long   n, numGenOld, lastStepEndSS=0, numGenInStepSS=0, numGenInStepBurninSS=0;
     int         lastDiagnostics;    // the sample no. when last diagnostic was performed
     int         removeFrom, removeTo=0;
     int         stopChain, nErrors;
@@ -16112,7 +16121,7 @@ int RunChain (RandLong *seed)
     struct timespec tw1, tw2;
 #   endif
     /* Stepping-stone sampling variables */
-    int         run, samplesCountSS=0, stepIndexSS=0, numGenInStepSS=0, numGenOld, lastStepEndSS=0, numGenInStepBurninSS=0;
+    int         run, samplesCountSS=0, stepIndexSS=0;
     MrBFlt      stepLengthSS=0, meanSS, varSS, *tempX;
     char        ckpFileName[220], bkupFileName[234];
 
@@ -16241,13 +16250,13 @@ int RunChain (RandLong *seed)
         }
     else
         {
-        for (n=0; n<chainParams.numRuns; n++)
+        for (k=0; k<chainParams.numRuns; k++)
             {
-            swapInfo[n] = AllocateSquareIntegerMatrix (chainParams.numChains);
-            if (!swapInfo[n])
+            swapInfo[k] = AllocateSquareIntegerMatrix (chainParams.numChains);
+            if (!swapInfo[k])
                 {
-                MrBayesPrint ("%s   Problem allocating swapInfo[%d]\n", spacer, n);
-                for (i=0; i<n; i++)
+                MrBayesPrint ("%s   Problem allocating swapInfo[%d]\n", spacer, k);
+                for (i=0; i<k; i++)
                     free (swapInfo[i]);
                 free (swapInfo);
                 nErrors++;
@@ -16268,10 +16277,10 @@ int RunChain (RandLong *seed)
         return ERROR;
 #   endif
 
-    for (n=0; n<chainParams.numRuns; n++)
+    for (k=0; k<chainParams.numRuns; k++)
         for (i=0; i<chainParams.numChains; i++)
             for (j=0; j<chainParams.numChains; j++)
-                swapInfo[n][i][j] = 0;
+                swapInfo[k][i][j] = 0;
 
     /* set up counters for topological convergence diagnostics */
     /* allocate tree used for some topological convergence diagnostics */
@@ -16299,7 +16308,7 @@ int RunChain (RandLong *seed)
                 if (nErrors == 0)
                     memAllocs[ALLOC_TREELIST] = YES;
                 if (noWarn == YES)
-                    chainParams.stopTreeGen = (int) (chainParams.numGen * chainParams.burninFraction);
+                    chainParams.stopTreeGen = (long long) (chainParams.numGen * chainParams.burninFraction);
                 else
                     chainParams.stopTreeGen = chainParams.numGen;
                 }
@@ -16436,20 +16445,20 @@ int RunChain (RandLong *seed)
     /* All steps are assumed to have the same length. */
     if (chainParams.isSS == YES)
         {
-        numGenInStepSS = (chainParams.numGen - chainParams.burninSS*chainParams.sampleFreq)/ chainParams.numStepsSS;
+        numGenInStepSS = (chainParams.numGen - (long long)(chainParams.burninSS)*chainParams.sampleFreq)/ chainParams.numStepsSS;
         numGenInStepSS = chainParams.sampleFreq*(numGenInStepSS/chainParams.sampleFreq); /*make muliple of chainParams.sampleFreq*/
         numGenOld = chainParams.numGen;
-        chainParams.numGen = (chainParams.burninSS * chainParams.sampleFreq + chainParams.numStepsSS*numGenInStepSS) ; 
+        chainParams.numGen = ((long long)(chainParams.burninSS)*chainParams.sampleFreq + chainParams.numStepsSS*numGenInStepSS) ; 
         if (stepRelativeBurninSS==YES)
-            numGenInStepBurninSS = ((int)(numGenInStepSS*chainParams.burninFraction / chainParams.sampleFreq))*chainParams.sampleFreq;
+            numGenInStepBurninSS = ((long long)(numGenInStepSS*chainParams.burninFraction / chainParams.sampleFreq))*chainParams.sampleFreq;
         else
-            numGenInStepBurninSS = chainParams.chainBurnIn * chainParams.sampleFreq;
+            numGenInStepBurninSS = (long long)(chainParams.chainBurnIn) * chainParams.sampleFreq;
         MrBayesPrint ("\n");
         MrBayesPrint ("%s   Starting stepping-stone sampling to estimate marginal likelihood.         \n", spacer);
-        MrBayesPrint ("%s   %d steps will be used with %d generations (%d samples) within each step.  \n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq);
-        MrBayesPrint ("%s   Total of %d generations (%d samples) will be collected while first        \n", spacer, chainParams.numGen, chainParams.numGen/chainParams.sampleFreq);
+        MrBayesPrint ("%s   %d steps will be used with %lli generations (%d samples) within each step.  \n", spacer, chainParams.numStepsSS, numGenInStepSS, (int)(numGenInStepSS/chainParams.sampleFreq));
+        MrBayesPrint ("%s   Total of %lli generations (%d samples) will be collected while first        \n", spacer, chainParams.numGen, (int)(chainParams.numGen/chainParams.sampleFreq));
         MrBayesPrint ("%s   %d generations (%d samples) will be discarded as initial burnin.          \n", spacer, chainParams.burninSS*chainParams.sampleFreq, chainParams.burninSS);
-        MrBayesPrint ("%s   Additionally at the beginning of each step %d generations (%d samples)     \n", spacer, numGenInStepBurninSS, numGenInStepBurninSS/chainParams.sampleFreq);
+        MrBayesPrint ("%s   Additionally at the beginning of each step %lli generations (%d samples)     \n", spacer, numGenInStepBurninSS, (int)(numGenInStepBurninSS/chainParams.sampleFreq));
         MrBayesPrint ("%s   will be discarded as burnin.  \n", spacer);
         if (chainParams.startFromPriorSS==YES)
             MrBayesPrint ("%s   Sampling from prior to posterior, i.e. first step samples from prior.   \n", spacer);
@@ -16461,8 +16470,8 @@ int RunChain (RandLong *seed)
         if (numGenOld != chainParams.numGen)
             {
             MrBayesPrint ("%s   NOTE: Number of generation of each step is reduced to the closest multi-\n", spacer);
-            MrBayesPrint ("%s   ple of sampling frequency. That is why, in total it will be taken %d    \n", spacer, chainParams.numGen);
-            MrBayesPrint ("%s   generations instead of requested %d.                                    \n", spacer, numGenOld);
+            MrBayesPrint ("%s   ple of sampling frequency. That is why, in total it will be taken %lli    \n", spacer, chainParams.numGen);
+            MrBayesPrint ("%s   generations instead of requested %lli.                                    \n", spacer, numGenOld);
             }
         MrBayesPrint ("\n");
         if ((numGenInStepSS-numGenInStepBurninSS)/chainParams.sampleFreq < 1)
@@ -16474,10 +16483,10 @@ int RunChain (RandLong *seed)
             }
         if (numPreviousGen==0 || numPreviousGen < chainParams.burninSS * chainParams.sampleFreq)
             {
-            lastStepEndSS = chainParams.burninSS * chainParams.sampleFreq;
+            lastStepEndSS = (long long)(chainParams.burninSS) * chainParams.sampleFreq;
             stepIndexSS = chainParams.numStepsSS-1;
             if (numPreviousGen != 0)
-                removeTo=(numPreviousGen/chainParams.sampleFreq)+1;
+                removeTo=(int)((numPreviousGen/chainParams.sampleFreq))+1;
             if (chainParams.startFromPriorSS==YES)
                 {
                 // powerSS = BetaQuantile (chainParams.alphaSS, 1.0, (MrBFlt)(chainParams.numStepsSS-1-stepIndexSS)/(MrBFlt)chainParams.numStepsSS);
@@ -16493,11 +16502,11 @@ int RunChain (RandLong *seed)
             }
         else
             {
-            stepIndexSS     = (numPreviousGen-chainParams.burninSS * chainParams.sampleFreq)/numGenInStepSS; /* for now it holds number of steps we fully completed*/
-            lastStepEndSS   = chainParams.burninSS * chainParams.sampleFreq + stepIndexSS*numGenInStepSS;
-            removeTo        = chainParams.burninSS + (stepIndexSS*numGenInStepSS+numGenInStepBurninSS)/chainParams.sampleFreq + 1;
-            if (numPreviousGen < (removeTo-1)*chainParams.sampleFreq)
-                removeTo=numPreviousGen/chainParams.sampleFreq+1;
+            stepIndexSS     = (int)((numPreviousGen-(long long)(chainParams.burninSS) * chainParams.sampleFreq)/numGenInStepSS); /* for now it holds number of steps we fully completed*/
+            lastStepEndSS   = (long long)(chainParams.burninSS) * chainParams.sampleFreq + (long long)(stepIndexSS)*numGenInStepSS;
+            removeTo        = chainParams.burninSS + (int)(((long long)(stepIndexSS)*numGenInStepSS+numGenInStepBurninSS)/chainParams.sampleFreq) + 1;
+            if (numPreviousGen < (long long)((removeTo-1))*chainParams.sampleFreq)
+                removeTo=(int)(numPreviousGen/chainParams.sampleFreq+1);
             stepIndexSS     = chainParams.numStepsSS-1-stepIndexSS;
             if (chainParams.startFromPriorSS==YES)
                 {
@@ -16510,15 +16519,15 @@ int RunChain (RandLong *seed)
                 stepLengthSS    = BetaQuantile (chainParams.alphaSS, 1.0, (MrBFlt)(stepIndexSS+1)/(MrBFlt)chainParams.numStepsSS)-powerSS;
                 }
 #   ifdef SAMPLE_ALL_SS
-            samplesCountSS  = (numPreviousGen-lastStepEndSS-numGenInStepBurninSS);
+            samplesCountSS  = (int)((numPreviousGen-lastStepEndSS-numGenInStepBurninSS));
 #   else
-            samplesCountSS  = (numPreviousGen-lastStepEndSS-numGenInStepBurninSS)/chainParams.sampleFreq;
+            samplesCountSS  = (int)((numPreviousGen-lastStepEndSS-numGenInStepBurninSS)/chainParams.sampleFreq);
 #   endif
             if (samplesCountSS < 0)
                 samplesCountSS=0;
 
             MrBayesPrint("%s   Continue sampling step %d out of %d steps...\n",spacer, chainParams.numStepsSS-stepIndexSS, chainParams.numStepsSS);
-            /*marginalLnLSS will be read from file and distributed to other MPI_proc later. stepScalerSS, stepAcumulatorSS are lready red and if (samplesCountSS!=0) they will be redistributed. */
+            /*marginalLnLSS will be read from file and distributed to other MPI_proc later. stepScalerSS, stepAcumulatorSS are already read and if (samplesCountSS!=0) they will be redistributed. */
             }
 
         if (samplesCountSS == 0) /* in appended case it also can happen */
@@ -16559,10 +16568,10 @@ int RunChain (RandLong *seed)
                     {
                     MrBayesPrint ("%s   1. Use the same sampling frequency as in the previous run to use relative burnin.\n", spacer);
                     MrBayesPrint ("%s   2. Check (and modify) the number in [generation: number] at line 3 of the .ckp file\n", spacer);
-                    MrBayesPrint ("%s      to match the previous number of generations in all the .p and .t files. This may\n", spacer);
-                    MrBayesPrint ("%s      happen if checkfreq was smaller than samplefreq.\n", spacer);
+                    MrBayesPrint ("%s      to match the previous number of generations in all the .p and .t files. Such deviations\n", spacer);
+                    MrBayesPrint ("%s      may happen if checkfreq was smaller than samplefreq.\n", spacer);
                     MrBayesPrint ("%s   3. Rarely, delete the last sample/line in the .p and .t files to achieve 2. above.\n", spacer);
-                    MrBayesPrint ("%s      This may happen if ngen was not divisible by samplefreq.\n", spacer);
+                    MrBayesPrint ("%s      Such deviations may happen if ngen was not divisible by samplefreq.\n", spacer);
                     nErrors++;
                     }
                 if (chainParams.isSS == NO)
@@ -16570,7 +16579,7 @@ int RunChain (RandLong *seed)
                     if (noWarn == YES)
                         {
                         /* We definitely know the final number of generations */
-                        j = (chainParams.numGen/chainParams.sampleFreq)+1;
+                        j = (int)((chainParams.numGen/chainParams.sampleFreq)+1);
                         j = (int) (j*chainParams.burninFraction);
                         }
                     else /* User may extend chain so save all trees if saving trees */
@@ -16608,7 +16617,7 @@ int RunChain (RandLong *seed)
                     MrBayesPrint ("%s   Using an absolute burnin of %d samples for diagnostics\n", spacer, chainParams.chainBurnIn);
                 }
             MrBayesPrint ("\n");
-            MrBayesPrint ("%s   Chain results (continued from previous run; %d generations requested):\n\n", spacer, chainParams.numGen);
+            MrBayesPrint ("%s   Chain results (continued from previous run; %lli generations requested):\n\n", spacer, chainParams.numGen);
             }
 #   if defined (MPI_ENABLED)
         }
@@ -17117,8 +17126,8 @@ int RunChain (RandLong *seed)
                                              || (chainParams.isSS == YES && (n-lastStepEndSS) % numGenInStepSS == 0)))
             {
             if (chainParams.numRuns > 1 &&
-                ((n > 0 && chainParams.relativeBurnin == YES && (chainParams.isSS == NO || (n > chainParams.burninSS * chainParams.sampleFreq && (n-lastStepEndSS) > numGenInStepBurninSS)))
-                 || (n >= chainParams.chainBurnIn * chainParams.sampleFreq && chainParams.relativeBurnin == NO)))
+                ((n > 0 && chainParams.relativeBurnin == YES && (chainParams.isSS == NO || (n > (long long)(chainParams.burninSS) * chainParams.sampleFreq && (n-lastStepEndSS) > numGenInStepBurninSS)))
+                 || (n >= (long long)(chainParams.chainBurnIn) * chainParams.sampleFreq && chainParams.relativeBurnin == NO)))
                 {
                 /* we need some space for coming output */
                 MrBayesPrint ("\n");
@@ -17616,7 +17625,7 @@ int RunChain (RandLong *seed)
         {
         MrBayesPrint ("\n");
         MrBayesPrint ("%s   Marginal likelihood (in natural log units) estimated using stepping-stone sampling based on\n", spacer);
-        MrBayesPrint ("%s   %d steps with %d generations (%d samples) within each step. \n\n", spacer, chainParams.numStepsSS, numGenInStepSS, numGenInStepSS/chainParams.sampleFreq);
+        MrBayesPrint ("%s   %d steps with %lli generations (%d samples) within each step. \n\n", spacer, chainParams.numStepsSS, numGenInStepSS, (int)(numGenInStepSS/chainParams.sampleFreq));
         MrBayesPrint ("%s       Run   Marginal likelihood (ln)\n",spacer);
         MrBayesPrint ("%s       ------------------------------\n",spacer);
         for (j=0; j<chainParams.numRuns; j++)
@@ -17781,6 +17790,7 @@ int RunChain (RandLong *seed)
             MrBayesPrint ("%s   cies larger than 0.10 (%1.2lf)). MrBayes suggests that you run the ana-   \n", spacer, f);
             MrBayesPrint ("%s   lysis longer or try to improve the MCMC sampling efficiency by fine-      \n", spacer);
             MrBayesPrint ("%s   tuning MCMC proposal or heating parameters.                               \n", spacer);
+            MrBayesPrint ("\n");
             }
         }
     

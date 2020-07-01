@@ -653,7 +653,7 @@ int Move_ClockRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             q = oldT->allDownPass[j];
             p->nodeDepth *= factor; /* no harm done if nodeDepth==0.0 (undated tips) */
             p->length *= factor;    /* no harm done if length==0.0 (root or fossil ancestors)*/
-            if (p->length < 0.0 || p->length > BRLENS_MAX ||
+            if (p->length < 0.0 ||
                 (q->length > BRLENS_MIN && p->length < BRLENS_MIN) ||
                 (q->length < TIME_MIN   && p->length > TIME_MIN))
                 {  /* consider ancestral fossil (brl=0) in fossilized bd tree */
@@ -16454,7 +16454,7 @@ int Move_StatefreqsSymDirMultistate (Param *param, int chain, RandLong *seed, Mr
        but we do not have the mechanism for doing that in the current version of mrbayes, so
        take the hit of updating all chars of the morph partition(s). */
     int     i, nStates, charIndex;
-    MrBFlt  dirichletParameters[10], symDirAlphai, *newPi, *oldPi, sum, alphaPi, x, y;
+    MrBFlt  dirichletParameters[MAX_STD_STATES], symDirAlphai, *newPi, *oldPi, sum, alphaPi, x, y;
     Model   *mp;
 
     /* tuning parameters */

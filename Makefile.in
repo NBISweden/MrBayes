@@ -188,7 +188,7 @@ am__define_uniq_tagged_files = \
 ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
-DIST_SUBDIRS = src examples doc
+DIST_SUBDIRS = src examples testing doc
 am__DIST_COMMON = $(srcdir)/Makefile.in \
 	$(top_srcdir)/autotools/compile \
 	$(top_srcdir)/autotools/config.guess \
@@ -297,6 +297,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SIMD_FLAGS = @SIMD_FLAGS@
 STRIP = @STRIP@
+TESTS_USE_MPI = @TESTS_USE_MPI@
 VERSION = @VERSION@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
@@ -340,6 +341,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -350,7 +352,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 dist_doc_DATA = COPYING README NEWS
 EXTRA_DIST = INSTALL
-SUBDIRS = src examples $(am__append_1)
+SUBDIRS = src examples testing $(am__append_1)
 all: all-recursive
 
 .SUFFIXES:
