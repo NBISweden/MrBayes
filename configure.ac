@@ -241,6 +241,7 @@ AS_IF([test "x$use_mpi" = "xno"],
 AC_CHECK_HEADERS([float.h limits.h memory.h stdlib.h string.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
+AC_CHECK_TYPE([long long])
 AC_TYPE_SIZE_T
 AC_CHECK_HEADER_STDBOOL
 
