@@ -40,9 +40,6 @@
 %%%% JN: [ ] Check consistent font sizes for verbatim code
 %%%% JN: [ ] Consistent use of `MrBayes >`
 %%%% JN: [ ] Consistent use of `\tb{}`, `\ttt{}`, etc
-%%%% JN: [ ] Change [h] to [ht] following LaTeX
-%%%% JN: [ ] Undefined reference(s)
-%%%% JN: [ ] Reference `tablebftable' on page 56 undefined on input line 2432
 
 \begin{document}
 
@@ -161,7 +158,9 @@ and MCMC methods include \citet{gilks96a}, \citet{carlin00}, \citet{gelman03}, a
 
 Throughout the document, we use \ttt{typewriter font} for things you see on screen or in a data
 file, and \tb{bold typewriter font} for things you should type in. Alternative commands, options,
-file names, etc are also given in \ttt{typewriter font}.
+file names, etc are also given in \ttt{typewriter font}. Furthermore, a ``\ttt{MrBayes >}'' will
+indicate the prompt in MrBayes, while the ``\ttt{\$}'' indicates your computer prompt (inside your
+shell/Terminal).
 
 
 \section{Acquiring and Installing MrBayes}
@@ -208,9 +207,7 @@ more about how to set up various types of analyses based on these example data f
 Start MrBayes by double-clicking the application icon (or typing \tb{./mb} or simply \tb{mb}
 depending on your system) and you will see the following information:
 
-\begin{figure}[h]
-\singlespacing
-\footnotesize
+\begin{figure}[h]\singlespacing\footnotesize
 \centering
 \begin{BVerbatim}
                       MrBayes v3.2.7
