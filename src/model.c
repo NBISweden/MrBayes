@@ -4824,14 +4824,14 @@ int DoPrsetParm (char *parmName, char *tkn)
                     }
                 else if (!strcmp(tempStr,"Fixed"))
                     {
-                    if (tempD > KAPPA_MAX)
+                    if (tempD > RATE_MAX)
                         {
-                        MrBayesPrint ("%s   Rate value cannot be greater than %1.2lf\n", spacer, KAPPA_MAX);
+                        MrBayesPrint ("%s   Rate value cannot be greater than %1.2le\n", spacer, RATE_MAX);
                         return (ERROR);
                         }
                     if (tempD < 0.0001)
                         {
-                        MrBayesPrint ("%s   Rate value cannot be less than %1.2lf\n", spacer, 0.0001);
+                        MrBayesPrint ("%s   Rate value cannot be less than %1.2le\n", spacer, RATE_MIN);
                         return (ERROR);
                         }
                     }
@@ -4948,25 +4948,25 @@ int DoPrsetParm (char *parmName, char *tkn)
                     {
                     if (tempD > ALPHA_MAX)
                         {
-                        MrBayesPrint ("%s   Dirichlet parameter cannot be greater than %1.2lf\n", spacer, ALPHA_MAX);
+                        MrBayesPrint ("%s   Dirichlet parameter cannot be greater than %1.2le\n", spacer, ALPHA_MAX);
                         return (ERROR);
                         }
                     if (tempD < ALPHA_MIN)
                         {
-                        MrBayesPrint ("%s   Dirichlet parameter cannot be less than %1.2lf\n", spacer, ALPHA_MIN);
+                        MrBayesPrint ("%s   Dirichlet parameter cannot be less than %1.2le\n", spacer, ALPHA_MIN);
                         return (ERROR);
                         }
                     }
                 else if (!strcmp(tempStr,"Fixed"))
                     {
-                    if (tempD > KAPPA_MAX)
+                    if (tempD > AA_RATE_MAX)
                         {
-                        MrBayesPrint ("%s   Rate value cannot be greater than %1.2lf\n", spacer, KAPPA_MAX);
+                        MrBayesPrint ("%s   Rate value cannot be greater than %1.2le\n", spacer, AA_RATE_MAX);
                         return (ERROR);
                         }
-                    if (tempD < 0.0001)
+                    if (tempD < AA_RATE_MIN)
                         {
-                        MrBayesPrint ("%s   Rate value cannot be less than %1.2lf\n", spacer, 0.0001);
+                        MrBayesPrint ("%s   Rate value cannot be less than %1.2le\n", spacer, AA_RATE_MIN);
                         return (ERROR);
                         }
                     }
@@ -4987,7 +4987,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                 nApplied = NumActiveParts ();
                 for (i=0; i<numCurrentDivisions; i++)
                     {
-                    if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType == PROTEIN)
+                    if ((activeParts[i] == YES || nApplied == 0) && modelSettings[i].dataType == PROTEIN)
                         {
                         if (!strcmp(modelParams[i].aaRevMatPr,"Dirichlet"))
                             {
@@ -5060,7 +5060,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                     if (AreDoublesEqual(modelParams[i].aaRevMatFix[0], modelParams[i].aaRevMatFix[j], 0.00001) == NO)
                                         break;
                                 if (j == 190)
-                                    MrBayesPrint ("%s   Setting Aarevmatpr to Fixed(%1.2lf,%1.2lf,...)\n", spacer, modelParams[i].aaRevMatFix[0],
+                                    MrBayesPrint ("%s   Setting Aarevmatpr to Fixed(%1.2le,%1.2le,...)\n", spacer, modelParams[i].aaRevMatFix[0],
                                         modelParams[i].aaRevMatFix[0]);
                                 else
                                     {
@@ -5069,7 +5069,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                         {
                                         if (j % 10 == 0)
                                             MrBayesPrint ("%s      ", spacer);
-                                        MrBayesPrint ("%1.2lf", modelParams[i].aaRevMatFix[j]);
+                                        MrBayesPrint ("%1.2le", modelParams[i].aaRevMatFix[j]);
                                         if (j == 189)
                                             MrBayesPrint (")\n");
                                         else if ((j+1) % 10 == 0)
@@ -5085,7 +5085,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                     if (AreDoublesEqual(modelParams[i].aaRevMatFix[0], modelParams[i].aaRevMatFix[j], 0.00001) == NO)
                                         break;
                                 if (j == 190)
-                                    MrBayesPrint ("%s   Setting Aarevmatpr to Fixed(%1.2lf,%1.2lf,...) for partition %d\n", spacer,
+                                    MrBayesPrint ("%s   Setting Aarevmatpr to Fixed(%1.2le,%1.2le,...) for partition %d\n", spacer,
                                         modelParams[i].aaRevMatFix[0], modelParams[i].aaRevMatFix[0], i+1);
                                 else
                                     {
@@ -5094,7 +5094,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                         {
                                         if (j % 10 == 0)
                                             MrBayesPrint ("%s      ", spacer);
-                                        MrBayesPrint ("%1.2lf", modelParams[i].aaRevMatFix[j]);
+                                        MrBayesPrint ("%1.2le", modelParams[i].aaRevMatFix[j]);
                                         if (j == 189)
                                             MrBayesPrint (")\n");
                                         else if ((j+1) % 10 == 0)
@@ -23163,7 +23163,7 @@ int ShowModel (void)
                                     break;
                             if (j == 190)
                                 {
-                                MrBayesPrint ("%s                     Substitution rates are fixed to (%1.1lf,%1.1lf,...)\n",
+                                MrBayesPrint ("%s                     Substitution rates are fixed to (%1.1le,%1.1le,...)\n",
                                     spacer, modelParams[i].aaRevMatFix[0], modelParams[i].aaRevMatFix[0]);
                                 }
                             else
@@ -23173,9 +23173,9 @@ int ShowModel (void)
                                     {
                                     if (j % 10 == 0)
                                         MrBayesPrint ("%s                        ", spacer);
-                                    MrBayesPrint ("%1.1lf", modelParams[i].aaRevMatFix[j]);
+                                    MrBayesPrint ("%1.1le", modelParams[i].aaRevMatFix[j]);
                                     if (j == 189)
-                                        MrBayesPrint (") prior\n");
+                                        MrBayesPrint (")\n");
                                     else if ((j+1) % 10 == 0)
                                         MrBayesPrint (",\n");
                                     else
