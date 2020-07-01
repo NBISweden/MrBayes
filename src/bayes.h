@@ -366,6 +366,11 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define POSREAL_MIN             1E-25f
 #define POSREAL_MAX             1E25f
 
+/* SK:
+ * Used when doing reversible jump over stationary and directional
+ * model: root frequencies are not used when in stationary model. */
+#define NOT_APPLICABLE -9999.0
+
 #define CMD_STRING_LENGTH       100000
 
 #define pos(i,j,n)              ((i)*(n)+(j))
@@ -879,6 +884,14 @@ typedef struct param
 #define GENETREERATEMULT_FIX            153
 #define REVMAT_MIX                      154
 #define MIXTURE_RATES                   155
+#define DIRPI_DIRxDIR                   156
+#define DIRPI_DIRxFIXED                 157
+#define DIRPI_FIXEDxDIR                 158
+#define DIRPI_FIXEDxFIXED               159
+#define DIRPI_MIX                       160
+#define TOPOLOGY_RNCL_UNIFORM           161
+#define TOPOLOGY_RNCL_CONSTRAINED       162
+#define TOPOLOGY_RNCL_FIXED             163
 
 #if defined (BEAGLE_ENABLED)
 #define MB_BEAGLE_SCALE_ALWAYS          0
@@ -988,9 +1001,10 @@ typedef struct model
     int         codon[64];         /* gives protein ID for each codon              */
     int         codonNucs[64][3];  /* gives triplet for each codon                 */
     int         codonAAs[64];      /* gives protein ID for implemented code        */
-    
+
     char        nucModel[100];     /* nucleotide model used                        */
     char        nst[100];          /* number of substitution types                 */
+    char        statefreqModel[100];/* stationary or directional Markov model      */  //SK
     char        parsModel[100];    /* use the (so-called) parsimony model          */
     char        geneticCode[100];  /* genetic code used                            */
     int         coding;            /* type of patterns encoded                     */
@@ -1051,6 +1065,10 @@ typedef struct model
     MrBFlt      stateFreqsDir[200];
     char        stateFreqsFixType[100];
     int         numDirParams;
+    char        rootFreqPr[100];    /* prior for root state frequencies (dir model)*/ //SK
+    MrBFlt      rootFreqsFix[200];
+    MrBFlt      rootFreqsDir[200];
+    int         numDirParamsRoot;
     char        shapePr[100];      /* prior for gamma/lnorm shape parameter        */
     MrBFlt      shapeFix;
     MrBFlt      shapeUni[2];
@@ -1254,6 +1272,8 @@ typedef struct modelinfo
     Param       *revMat;                    /* ptr to revMat used in model              */
     Param       *omega;                     /* ptr to omega used in model               */
     Param       *stateFreq;                 /* ptr to statFreq used in model            */
+                                            /* SK: same pointer (stateFreq) also
+                                             * used for the stationary-root freq vector */
     Param       *mixtureRates;              /* ptr to site rate mixture used in model   */
     Param       *shape;                     /* ptr to shape used in model               */
     Param       *pInvar;                    /* ptr to pInvar used in model              */

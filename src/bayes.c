@@ -684,6 +684,7 @@ int InitializeMrBayes (void)
         defaultModel.aaModelPrProbs[i] = 0.0;
     strcpy(defaultModel.aaModel, "Poisson");            /* amino acid model                             */
     strcpy(defaultModel.parsModel, "No");               /* do not use parsimony model                   */
+    strcpy(defaultModel.statefreqModel, "Stationary");  /* use stationary model                         */ //SK
     strcpy(defaultModel.geneticCode, "Universal");      /* genetic code                                 */
     strcpy(defaultModel.ploidy, "Diploid");             /* ploidy level                                 */
     strcpy(defaultModel.omegaVar, "Equal");             /* omega variation                              */
@@ -708,6 +709,11 @@ int InitializeMrBayes (void)
         }
     defaultModel.revMatSymDir = 1.0;                    /* default prior for GTR mixed model            */
     strcpy (defaultModel.aaRevMatPr, "Dirichlet");      /* prior for GTR model (proteins)               */
+
+    /* Prior for state frequencies at the root.  Not really necessary,
+     * as statefreqModel is set to "Stationary" by default" */  //SK
+    strcpy(defaultModel.rootFreqPr, "Dirichlet");       /* prior for root freq (not really necessary)   */
+
     for (i=0; i<190; i++)
         {
         defaultModel.aaRevMatFix[i] = 1.0;

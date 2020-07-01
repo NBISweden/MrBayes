@@ -69,6 +69,7 @@ int      IsSectionEmpty (BitsLong *bitField1, BitsLong *bitField2, int length);
 int      IsUnionEqThird (BitsLong *bitField1, BitsLong *bitField2, BitsLong *bitField3, int length);
 long     LastBlock (FILE *fp, char *lineBuf, int longestLine);
 int      LineTermType (FILE *fp);
+MrBFlt   LnDirichlet (MrBFlt *alphai, MrBFlt *xi, int lengthi);
 int      LongestLine (FILE *fp);
 void     LowerUpperMedian (MrBFlt *vals, int nVals, MrBFlt *lower, MrBFlt *upper, MrBFlt *median);
 void     LowerUpperMedianHPD (MrBFlt *vals, int nVals, MrBFlt *lower, MrBFlt *upper, MrBFlt *median);

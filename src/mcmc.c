@@ -2593,12 +2593,15 @@ int DoMcmc (void)
         if (UpdateClockRate(0.0, j) == ERROR) 
             goto errorExit;
         }
-    /*
+
+#ifndef NDEBUG
+    /* checking tree consistency for debug purposes */
     for (i=0; i<numParams; i++)
         {
         for (j=0; j<numGlobalChains; j++)
             assert (IsTreeConsistent(&params[i], j, 0) == YES);
-        }  */
+        }
+#endif
 
     /* Initialize vectors of print parameters */
     if (InitPrintParams () == ERROR)
@@ -7604,12 +7607,18 @@ MrBFlt LogDirPrior (Tree *t, ModelParams *mp, int PV)
     /* ln prior prob. under Dirichlet priors and twoExp prior
      //chi */
 
-    int    i, nb[2] = {0,0};
+    int    i, numBranches, nb[2] = {0,0};
     MrBFlt lnprior = 0.0, tb[2] = {0,0}, treeL = 0.0;
     MrBFlt aT, bT, a, c;
     TreeNode  *p;
+
+    /* Make sure this works for both rooted and non-rooted non-clock trees */
+    /* For rooted trees, the last two nodes do not have branches under them; for unrooted
+     * trees, it is only the last node that does not have a branch.
+     */
+    numBranches = (t->isRooted == YES? t->nNodes - 2 : t->nNodes - 1);
     
-    /* Not safe, should define Marcos. YES or NO should never be defined to 2 or 3 or 4! */
+    /* Not safe, should define Macros. YES or NO should never be defined to 2 or 3 or 4! */
     /* PV is 2 or 3: Dirichlet priors */    
     if (PV == 2 || PV == 3)
         {
@@ -7619,15 +7628,12 @@ MrBFlt LogDirPrior (Tree *t, ModelParams *mp, int PV)
         a  = mp->brlensDir[2];
         c  = mp->brlensDir[3];
     
-        for (i = 0; i < t->nNodes; i++)
+        for (i = 0; i < numBranches; i++)
             {
             p = t->allDownPass[i];
-            if (p->anc != NULL)
-                {
-                treeL += p->length;
-                nb[IsTip(p)]++;
-                tb[IsTip(p)] += log(p->length);
-                }
+            treeL += p->length;
+            nb[IsTip(p)]++;
+            tb[IsTip(p)] += log(p->length);
             }
         lnprior += (a-1)*tb[1] + (a*c -1)*tb[0];
         if (PV == 2)
@@ -7638,13 +7644,11 @@ MrBFlt LogDirPrior (Tree *t, ModelParams *mp, int PV)
     /* or 4: twoExp prior */
     else if (PV == 4)
         {
-        for (i = 0; i < t->nNodes; i++) {
+        for (i = 0; i < numBranches; i++)
+            {
             p = t->allDownPass[i];
-            if (p->anc != NULL)
-                {
-                nb[IsTip(p)]++;
-                tb[IsTip(p)] += p->length;
-                }
+            nb[IsTip(p)]++;
+            tb[IsTip(p)] += p->length;
             }
         for (i = 0; i < 2; i++)
             lnprior += nb[i] * log(mp->brlens2Exp[i]) - tb[i] * (mp->brlens2Exp[i]);
@@ -7656,7 +7660,7 @@ MrBFlt LogDirPrior (Tree *t, ModelParams *mp, int PV)
 
 MrBFlt LogPrior (int chain)
 {
-    int             i, j, c, n, nStates, *nEvents, sumEvents, *ist, nRates, nParts[6];
+    int             i, j, c, n, nStates, *nEvents, sumEvents, *ist, nRates, nParts[6], numBranches;
     const int       *rateCat;
     MrBFlt          *st, *sst, lnPrior, sum, x=0.0, clockRate, theta, popSize, growth, *alphaDir, newProp[190],
                     sF, *sR, *eR, *fR,  freq, pInvar, lambda, sigma, nu, var, **rateMultiplier;
@@ -7820,15 +7824,21 @@ MrBFlt LogPrior (int chain)
             if (p->paramId == PI_DIR)
                 {
                 nStates = p->nSubValues;
-                sum = 0.0;
-                for (i=0; i<nStates; i++)
-                    sum += st[i];
-                x = LnGamma(sum);
-                for (i=0; i<nStates; i++)
-                    x -= LnGamma(st[i]);
-                for (i=0; i<nStates; i++)
-                    x += (st[i] - 1.0)*log(sst[i]);
-                lnPrior += x;
+                lnPrior += LnDirichlet(st, sst, nStates);
+                }
+            else if (strcmp(mp->statefreqModel,"Stationary") != 0)
+                {
+                /* now for directional evolution: first process states */
+                nStates = m->numModelStates;
+                if (p->paramId == DIRPI_DIRxDIR || p->paramId == DIRPI_DIRxFIXED || p->paramId == DIRPI_MIX)
+                    {
+                    lnPrior += LnDirichlet(st, sst, nStates);
+                    }
+                /* now same for the respective values of root frequencies */
+                if (p->paramId == DIRPI_DIRxDIR || p->paramId == DIRPI_FIXEDxDIR || (p->paramId == DIRPI_MIX && sst[nStates] != NOT_APPLICABLE)) //SK todo: check if this works! 
+                    {
+                    lnPrior += LnDirichlet(&st[nStates], &sst[nStates], nStates);
+                    }
                 }
             else if (p->paramId == SYMPI_EXP || p->paramId == SYMPI_EXP_MS)
                 {
@@ -8095,22 +8105,25 @@ MrBFlt LogPrior (int chain)
                 }
             else
                 {
+                /* compute the number of branches depending on whether the tree is rooted */
+                if (t->isRooted == YES)
+                    numBranches = t->nNodes - 2;
+                else
+                    numBranches = t->nNodes - 1;
                 if (p->paramId == BRLENS_UNI)
                     {
-                    for (i=0; i<t->nNodes; i++)
+                    for (i=0; i<numBranches; i++)
                         {
                         branch = t->allDownPass[i];
-                        if (branch->anc != NULL)
-                            lnPrior += log(1.0) - log(mp->brlensUni[1] - BRLENS_MIN);
+                        lnPrior += log(1.0) - log(mp->brlensUni[1] - BRLENS_MIN);
                         }
                     }
                 else if (p->paramId == BRLENS_EXP)
                     {
-                    for (i=0; i<t->nNodes; i++)
+                    for (i=0; i<numBranches; i++)
                         {
                         branch = t->allDownPass[i];
-                        if (branch->anc != NULL)
-                            lnPrior += log(mp->brlensExp) - mp->brlensExp * branch->length;
+                        lnPrior += log(mp->brlensExp) - mp->brlensExp * branch->length;
                         }
                     }
                 /* Dirichlet priors */
@@ -8118,15 +8131,15 @@ MrBFlt LogPrior (int chain)
                     {
                     lnPrior += LogDirPrior(t, mp, 2);
                     lnPrior += (mp->brlensDir[0]) * log(mp->brlensDir[1]) - LnGamma(mp->brlensDir[0])
-                                + LnGamma (mp->brlensDir[2] * numTaxa + mp->brlensDir[2] * mp->brlensDir[3] * (numTaxa-3))
-                                - numTaxa * LnGamma(mp->brlensDir[2]) - (numTaxa-3) * LnGamma(mp->brlensDir[2] * mp->brlensDir[3]);
+                                + LnGamma (mp->brlensDir[2] * numTaxa + mp->brlensDir[2] * mp->brlensDir[3] * (numBranches-numTaxa))
+                                - numTaxa * LnGamma(mp->brlensDir[2]) - (numBranches-numTaxa) * LnGamma(mp->brlensDir[2] * mp->brlensDir[3]);
                     } 
                 else if (p->paramId == BRLENS_iGmDir)
                     {
                     lnPrior += LogDirPrior(t, mp, 3);
                     lnPrior += (mp->brlensDir[0]) * log(mp->brlensDir[1]) - LnGamma(mp->brlensDir[0])
-                                + LnGamma (mp->brlensDir[2] * numTaxa + mp->brlensDir[2] * mp->brlensDir[3] * (numTaxa-3))
-                                - numTaxa * LnGamma(mp->brlensDir[2]) - (numTaxa-3) * LnGamma(mp->brlensDir[2] * mp->brlensDir[3]);
+                                + LnGamma (mp->brlensDir[2] * numTaxa + mp->brlensDir[2] * mp->brlensDir[3] * (numBranches-numTaxa))
+                                - numTaxa * LnGamma(mp->brlensDir[2]) - (numBranches-numTaxa) * LnGamma(mp->brlensDir[2] * mp->brlensDir[3]);
                     }
                 /* twoExp prior */
                 else if (p->paramId == BRLENS_twoExp)
@@ -11445,7 +11458,7 @@ if (proc_id == 0)
                 }
 
             if (t->isRooted == YES && t->isClock == NO)
-                SafeSprintf (&tempString, &tempStrSize, " = ");
+                SafeSprintf (&tempString, &tempStrSize, " = [&D] ");
             else if (t->isRooted == YES && t->isClock == YES)
                 {
                 clockRate = *GetParamVals(modelSettings[p->relParts[0]].clockRate, j, state[j]);
@@ -12499,7 +12512,7 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
 
 int PrintStates (long long curGen, int coldId)
 {
-    int             d, i, j, k, k1, compressedCharPosition, *printedChar=NULL, origAlignmentChars[3];
+    int             d, i, j, k, k1, compressedCharPosition, *printedChar=NULL, origAlignmentChars[3], modelIndex;
     char            *partString=NULL, stateString[4];
     MrBFlt          *st, *sst, sum;
     Param           *p;
@@ -12578,7 +12591,7 @@ int PrintStates (long long curGen, int coldId)
                 {
                 /* print tree lengths or heights for all trees */
                 tree = GetTree (p, coldId, state[coldId]);
-                if (tree->isRooted == YES)
+                if (tree->isClock == YES)
                     {
                     if (FillRelPartsString(p, &partString) == YES)
                         SafeSprintf (&tempStr, &tempStrSize, "\tTH%s\tTL%s", partString, partString);
@@ -12893,7 +12906,7 @@ int PrintStates (long long curGen, int coldId)
             {
             /* print tree lengths or heights for all trees */
             tree = GetTree (p, coldId, state[coldId]);
-            if (tree->isRooted == NO)
+            if (tree->isClock == NO)
                 {
                 SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(TreeLength(p, coldId)));
                 if (AddToPrintString (tempStr) == ERROR) goto errorExit;
@@ -12969,6 +12982,15 @@ int PrintStates (long long curGen, int coldId)
                 SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(sst[j]));
                 if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                 }
+            if (!strcmp(mp->statefreqModel, "Mixed")) //SK
+                {
+                if (sst[m->numModelStates] == NOT_APPLICABLE)
+                    modelIndex = 0;
+                else
+                    modelIndex = 1;
+                SafeSprintf (&tempStr, &tempStrSize, "\t%d", modelIndex);
+                if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+                }     
             }
         else if (p->paramType == P_TRATIO && !strcmp(mp->tratioFormat,"Dirichlet"))
             {

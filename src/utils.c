@@ -4802,7 +4802,7 @@ int IsTreeConsistent (Param *param, int chain, int state)
         return NO;
         }
 
-    if (tree->isClock == NO)
+    if (tree->isRooted == NO)
         {
         if (modelSettings[param->relParts[0]].parsModelId == YES)
             {
@@ -4835,7 +4835,26 @@ int IsTreeConsistent (Param *param, int chain, int state)
             }
         }
 
+    if (tree->isRooted == YES && tree->isClock == NO)
+        {
+        for (i=0; i<tree->nNodes-2; i++)
+            {
+            p = tree->allDownPass[i];
+            if (p->length <= 0.0)
+                {
+                if (p->length == 0.0)
+                    printf ("Node %d has zero branch length %f\n", p->index, p->length);
+                else
+                    printf ("Node %d has negative branch length %f\n", p->index, p->length);
+                return NO;
+                }
+            }
+        return YES;
+        }
+
+
     /* Clock trees */
+    /* tree->isRooted == YES && tree->isClock == YES */
 
     /* Check that lengths and depths are consistent */
     for (i=0; i<tree->nNodes-2; i++) {
@@ -10432,6 +10451,36 @@ void DirichletRandomVariable (MrBFlt *alp, MrBFlt *z, int n, RandLong *seed)
         }
     for (i=0; i<n; i++)
         z[i] /= sum;
+}
+
+
+/*---------------------------------------------------------------------------------
+ |
+ |   LnDirichlet
+ |
+ |   Calculates the log density of the Dirichlet distribution. //SK
+ |
+ |
+ ---------------------------------------------------------------------------------*/
+MrBFlt LnDirichlet (MrBFlt *alphai, MrBFlt *xi, int lengthi)
+{
+    MrBFlt sum = 0.0;
+    MrBFlt dirprob;
+    int i;
+
+    for (i=0; i<lengthi; i++)
+        sum += alphai[i];
+
+    dirprob = LnGamma(sum);
+
+    for (i=0; i<lengthi; i++)
+        dirprob -= LnGamma(alphai[i]);
+
+    for (i=0; i<lengthi; i++)
+        dirprob += (alphai[i] - 1.0)*log(xi[i]);
+
+    return (dirprob);
+
 }
 
 

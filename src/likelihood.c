@@ -7269,10 +7269,12 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
     int             c, k;
     MrBFlt          *bs, freq, like, pUnobserved, pObserved;
     CLFlt           *clPtr, **clP, *lnScaler, *nSitesOfPat;
+    ModelParams     *mp;
     ModelInfo       *m;
 
     
     m = &modelSettings[division];
+    mp = &modelParams[division];
 
     /* find conditional likelihood pointer */
     clPtr = m->condLikes[m->condLikeIndex[chain][p->index]];
@@ -7284,7 +7286,17 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
         }
 
     /* find base frequencies */
+    /* modified to deal with directional model by SK and FR */
     bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
+    if (!strcmp(mp->statefreqModel,"Directional"))
+        {
+        bs += m->numModelStates;
+        }
+    else if (!strcmp(mp->statefreqModel,"Mixed"))
+        {
+        if (bs[m->numModelStates] != NOT_APPLICABLE)
+            bs += m->numModelStates;
+        }
 
     /* find category frequencies */
     freq =  1.0 /  m->numRateCats;
@@ -7366,9 +7378,11 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     __m128          *clPtr, **clP;
     __m128          m1, mA, mB, mFreq, mLike;
     ModelInfo       *m;
+    ModelParams     *mp;
 
     /* find model settings and pInvar, invar cond likes */
     m = &modelSettings[division];
+    mp = &modelParams[division];
 
     /* find conditional likelihood pointers */
     clPtr = (__m128 *) (m->condLikes[m->condLikeIndex[chain][p->index]]);
@@ -7381,7 +7395,18 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     lnL_Vec  = m->lnL_Vec;
     
     /* find base frequencies */
+    /* modified to deal with directonal models by SK and FR */
     bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
+    if (!strcmp(mp->statefreqModel,"Directional"))
+        {
+        bs += m->numModelStates;
+        }
+    else if (!strcmp(mp->statefreqModel,"Mixed"))
+        {
+        if (bs[m->numModelStates] != NOT_APPLICABLE)
+            bs += m->numModelStates;
+        }
+
     mA = _mm_set1_ps ((CLFlt)(bs[0]));
     mB = _mm_set1_ps ((CLFlt)(bs[1]));
 

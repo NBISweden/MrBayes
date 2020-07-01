@@ -49,6 +49,7 @@
 #undef  DEBUG_ParsSPR
 #undef  DEBUG_ExtSS
 #undef  DEBUG_CSLIDER
+#undef  DEBUG_ExtSPR
 #undef  DEBUG_ExtSPRClock
 #undef  DEBUG_ParsSPRClock
 #undef  DEBUG_ExtTBR
@@ -1899,9 +1900,9 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
        Pick either external or internal branches instead of just internal branches. */
     
     int         i, j, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
-                isVPriorExp, moveInRoot, isStartConstrained, isStopConstrained;
+                isVPriorExp, moveInRoot, isStartConstrained, isStopConstrained, tempInt;
     MrBFlt      m, x, y, tuning, maxV, minV, extensionProb, brlensExp=0.0;
-    TreeNode    *p, *q, *a, *b, *c, *d, *u, *v;
+    TreeNode    *p, *q, *a=NULL, *b=NULL, *c=NULL, *d=NULL, *u, *v, *interiorRoot;
     Tree        *t;
     ModelParams *mp;
     
@@ -1914,6 +1915,10 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     /* get tree */
     t = GetTree (param, chain, state[chain]);
 
+    /* for rooted (non-clock) trees, store pointer to current interior root node */ //SK
+    if (t->isRooted)
+        interiorRoot = t->root->left;
+    
     /* get model params */
     mp = &modelParams[param->relParts[0]];
     
@@ -1980,7 +1985,7 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         if (p->left != NULL && (p->right->isLocked == YES || p->right->left == NULL))
             j++;
         } while (i == 2 && j == 2);
-    
+ 
     /* change in root tree ? */
     if (j == 2)
         moveInRoot = YES;
@@ -2005,20 +2010,24 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     u = p->anc;
 
     /* modify length of middle branch */
-    m = v->length;
-    x = m * exp(tuning * (RandomNumber(seed) - 0.5));
-    while (x < minV || x > maxV)
+    /* test is needed to deal with rooted nonclock trees */
+    if (t->isRooted == NO || v->anc->anc != NULL)
         {
-        if (x < minV) x = minV * minV / x;
-        if (x > maxV) x = maxV * maxV / x;
+        m = v->length;
+        x = m * exp(tuning * (RandomNumber(seed) - 0.5));
+        while (x < minV || x > maxV)
+            {
+            if (x < minV) x = minV * minV / x;
+            if (x > maxV) x = maxV * maxV / x;
+            }
+        v->length = x;
+        v->upDateTi = YES;
+    
+        /* update proposal and prior ratio based on length modification */
+        (*lnProposalRatio) += log (x / m);
+        if (isVPriorExp == YES)
+            (*lnPriorRatio) += brlensExp * (m - x);
         }
-    v->length = x;
-    v->upDateTi = YES;
-
-    /* update proposal and prior ratio based on length modification */
-    (*lnProposalRatio) += log (x / m);
-    if (isVPriorExp == YES)
-        (*lnPriorRatio) += brlensExp * (m - x);
 
     /* move around in root subtree */
     if (moveInRoot == YES)
@@ -2290,6 +2299,14 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         p = p->anc;
         }
 
+    /* if tree is rooted, swap indices of former and current interior root node, if changed */ //SK
+    if (t->isRooted && interiorRoot != t->root->left)
+        {
+        tempInt = interiorRoot->index;
+        interiorRoot->index = t->root->left->index;
+        t->root->left->index = tempInt;
+        }
+
     /* get down pass sequence if tree topology has changed */
     if (topologyHasChanged == YES)
         {
@@ -2305,8 +2322,11 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     ShowNodes (t->root, 2, NO);
     getchar();
     printf ("Proposal ratio: %f\n",(*lnProposalRatio));
-    printf ("v: %d  u: %d  c: %d  d: %d  a: %d  b: %d\n",v->index, u->index,
-            c->index, d->index, a->index, b->index);
+    printf ("v: %d  u: %d\n", v->index, u->index);
+    if (a) printf ("a: %d\n", a->index);
+    if (b) printf ("b: %d\n", b->index);
+    if (c) printf ("c: %d\n", c->index);
+    if (d) printf ("d: %d\n", d->index);
     printf ("No. nodes moved in root subtree: %d\n",nRootNodes);
     printf ("No. nodes moved in crown subtree: %d\n",nCrownNodes);
     printf ("Has topology changed? %d\n",topologyHasChanged);
@@ -2323,9 +2343,9 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     /* Pick only internal branches. For a description, see Lakner et al. (2008). */
     
     int         i, j, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
-                isVPriorExp, moveInRoot, isStartConstrained, isStopConstrained;
+                isVPriorExp, moveInRoot, isStartConstrained, isStopConstrained, tempInt;
     MrBFlt      m, x, y, tuning, maxV, minV, extensionProb, brlensExp=0.0;
-    TreeNode    *p, *a, *b, *c, *d, *u, *v, *brlenNode[7];
+    TreeNode    *p, *a, *b, *c, *d, *u, *v, *brlenNode[7], *interiorRoot;
     Tree        *t;
     ModelParams *mp;
     
@@ -2340,7 +2360,11 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 
     /* get model params */
     mp = &modelParams[param->relParts[0]];
-    
+   
+    /* for rooted (non-clock) trees, store pointer to current interior root node */ //SK
+    if (t->isRooted)
+       interiorRoot = t->root->left;
+
     /* max and min brlen */
     if (param->subParams[0]->paramId == BRLENS_UNI)
         {
@@ -2823,6 +2847,14 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         {
         p->upDateCl = YES;
         p = p->anc;
+        }
+
+    /* if tree is rooted, swap indices of former and current interior root node, if changed */ //SK
+    if (t->isRooted && interiorRoot != t->root->left)
+        {
+            tempInt = interiorRoot->index;
+            interiorRoot->index = t->root->left->index;
+            t->root->left->index = tempInt;
         }
 
     /* get down pass sequence if tree topology has changed */
@@ -3912,7 +3944,6 @@ int Move_ExtSPRClock_Fossil (Param *param, int chain, RandLong *seed, MrBFlt *ln
             numMovableNodesNew++;
         }
     
-    
     if (numMovableNodesNew!=numMovableNodesOld)
         {
         /* FIXME: numMovableNodesNew may be zero (from clang static analyzer) */
@@ -3949,9 +3980,9 @@ int Move_ExtSS (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
        */
     
     int         i, numFree, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
-                isVPriorExp, moveInRoot;
+                isVPriorExp, moveInRoot, tempInt;
     MrBFlt      m, x, tuning, maxV, minV, extensionProb, brlensExp=0.0;
-    TreeNode    *p, *q, *a, *b, *c, *d, *u, *v;
+    TreeNode    *p, *q, *a, *b, *c, *d, *u, *v, *interiorRoot;
     Tree        *t;
     ModelParams *mp;
 
@@ -3960,13 +3991,17 @@ int Move_ExtSS (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     /* these parameters should be possible to set by user */
     extensionProb = mvp[0]; /* extension probability */
     tuning = mvp[1];        /* Larget & Simon's tuning parameter lambda */
-    
+
     /* get tree */
     t = GetTree (param, chain, state[chain]);
 
     /* get model params */
     mp = &modelParams[param->relParts[0]];
-    
+
+    /* for rooted (non-clock) trees, store pointer to current interior root node */ //SK
+    if (t->isRooted)
+        interiorRoot = t->root->left;
+ 
     /* max and min brlen */
     if (param->subParams[0]->paramId == BRLENS_UNI)
         {
@@ -4393,6 +4428,14 @@ int Move_ExtSS (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
             p->upDateCl = YES;
             p = p->anc;
             }
+        }
+
+    /* if tree is rooted, swap indices of former and current interior root node, if changed */ //SK
+    if (t->isRooted && interiorRoot != t->root->left)
+        {   
+        tempInt = interiorRoot->index;
+        interiorRoot->index = t->root->left->index;
+        t->root->left->index = tempInt;
         }
 
     /* get down pass sequence if tree topology has changed */
@@ -4863,9 +4906,9 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
        constrained and unconstrained trees */
     
     int         i, j, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
-                isVPriorExp, alwaysMoveRoot, isCrownStartConstrained, isRootStartConstrained, isStopConstrained;
+                isVPriorExp, alwaysMoveRoot, isCrownStartConstrained, isRootStartConstrained, isStopConstrained, tempInt;
     MrBFlt      m, x, y, tuning, maxV, minV, extensionProb, brlensExp=0.0;
-    TreeNode    *p, *a, *b, *c, *d, *u, *v;
+    TreeNode    *p, *a, *b, *c, *d, *u, *v, *interiorRoot;
     Tree        *t;
     ModelParams *mp;
 
@@ -4880,7 +4923,11 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
 
     /* get model params */
     mp = &modelParams[param->relParts[0]];
-    
+
+    /* for rooted (non-clock) trees, store pointer to current interior root node */ //SK
+    if (t->isRooted)
+        interiorRoot = t->root->left;
+
     /* max and min brlen */
     if (param->subParams[0]->paramId == BRLENS_UNI)
         {
@@ -5293,6 +5340,14 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         {
         p->upDateCl = YES;
         p = p->anc;
+        }
+
+    /* if tree is rooted, swap indices of former and current interior root node, if changed */ //SK
+    if (t->isRooted && interiorRoot != t->root->left)
+        {
+        tempInt = interiorRoot->index;
+        interiorRoot->index = t->root->left->index;
+        t->root->left->index = tempInt;
         }
 
     /* get down pass sequence if tree topology has changed */
@@ -9868,13 +9923,13 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 {
     /* Change topology (and branch lengths) using SPR (asymmetric) biased according to parsimony scores. */
 
-    int         i, j, n, division, topologyHasChanged, isVPriorExp;
+    int         i, j, n, division, topologyHasChanged, isVPriorExp, tempInt;
     BitsLong    *pA, *pV, *pP, y[2];
     MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0,
                 cumulativeProb, warpFactor, ran, tuning, increaseProb, decreaseProb,
                 divFactor, nStates, rateMult, v_typical, sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
-    TreeNode    *p, *q, *a, *b, *u, *v, *c=NULL, *d;
+    TreeNode    *p, *q, *a, *b, *u, *v, *c=NULL, *d, *interiorRoot;
     Tree        *t;
     ModelParams *mp;
     ModelInfo   *m = NULL;
@@ -9892,6 +9947,10 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     
     /* get tree */
     t = GetTree (param, chain, state[chain]);
+
+    /* for rooted (non-clock) trees, store pointer to current interior root node */ //SK
+    if (t->isRooted)
+        interiorRoot = t->root->left;
 
     /* max and min brlen */
     if (param->subParams[0]->paramId == BRLENS_UNI)
@@ -9977,7 +10036,15 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 
     /* get final parsimony states for the root part */
     GetParsDP (t, t->root->left, chain);
-    GetParsFP (t, t->root->left, chain);
+    if (!strcmp(mp->statefreqModel,"Stationary"))
+        {
+        GetParsFP (t, t->root->left, chain);
+        }
+    else //SK: if not stationary model, but directional or RJ
+        {
+        GetParsFP (t, t->root->left->left, chain);
+        GetParsFP (t, t->root->left->right, chain);
+        }
 
     /* get downpass parsimony states for the crown part */
     GetParsDP (t, v, chain);
@@ -10297,6 +10364,14 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         p = p->anc;
         }
 
+    /* if tree is rooted, swap indices of former and current interior root node, if changed */ //SK
+    if (t->isRooted && interiorRoot != t->root->left)
+    {   
+        tempInt = interiorRoot->index;
+        interiorRoot->index = t->root->left->index;
+        t->root->left->index = tempInt;
+    }
+
     /* get down pass sequence if tree topology has changed */
     if (topologyHasChanged == YES)
         {
@@ -10353,7 +10428,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     
     /* get tree */
     t = GetTree (param, chain, state[chain]);
-    
+
     /* max and min brlen */
     if (param->subParams[0]->paramId == BRLENS_UNI)
         {
@@ -10392,11 +10467,12 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
     
     /* set topologyHasChanged to NO */
-    topologyHasChanged = NO;    /* FIXME: Not used (from clang static analyzer) */
+    topologyHasChanged = NO;
     
     /* pick a random branch */
+    /* do not choose root branch in a rooted non-clock tree */
     do  {
-        p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes -1))];
+        p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes-1))];
         q = p->anc->right;  if (q == p) q = p->anc->left;
         i = j = 0;
         if (p->left == NULL)
@@ -10482,6 +10558,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         /* get final parsimony states for the root part */
         GetParsDP (t, t->root->left, chain);
         GetParsFP (t, t->root->left, chain);
+
         /* get final parsimony states for the crown part */
         GetParsDP (t, v, chain);
         GetParsFP (t, v, chain);
@@ -10511,6 +10588,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             else             b->right = a;
             GetParsDP (t, t->root->left, chain);
             GetParsFP (t, t->root->left, chain);
+
             a->anc = u;  /* change back */
             if (b->left == a) b->left = u;
             else             b->right = u;
@@ -10966,7 +11044,7 @@ outLoop:;
     return (NO_ERROR);
     
 errorExit:
-    MrBayesPrint ("%s   Problem allocating memory in Move_ParsSPR\n", spacer);
+    MrBayesPrint ("%s   Problem allocating memory in Move_ParsSPR1\n", spacer);
     free (parLength); free (pRoot); free (pCrown); free (nSitesOfPat);
     
     return (ERROR);
@@ -10978,12 +11056,12 @@ int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     /* Change topology (and branch lengths) using SPR (symmetric) biased according to parsimony scores,
        controlled by a window defined by a certain node distance radius. Note: S/N */
     
-    int         i, j, k, n, division, topologyHasChanged, moveInRoot, nNeighbor, nRoot, nCrown, iA, jC, isVPriorExp;
+    int         i, j, k, n, division, topologyHasChanged, moveInRoot, nNeighbor, nRoot, nCrown, iA, jC, isVPriorExp, tempInt;
     BitsLong    *pA, *pB, *pP, *pC, *pD, y[2];
     MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, tuning, warpFactor,
                 v_typical, divFactor, nStates, sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
-    TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL;
+    TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL, *interiorRoot;
     Tree        *t;
     ModelParams *mp;
     ModelInfo   *m=NULL;
@@ -11002,6 +11080,10 @@ int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     
     /* get tree */
     t = GetTree (param, chain, state[chain]);
+
+    /* for rooted (non-clock) trees, store pointer to current interior root node */ //SK
+    if (t->isRooted)
+        interiorRoot = t->root->left;
     
     /* max and min brlen */
     if (param->subParams[0]->paramId == BRLENS_UNI)
@@ -11146,7 +11228,15 @@ int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             
         /* get final parsimony states for the root part */
         GetParsDP (t, t->root->left, chain);
-        GetParsFP (t, t->root->left, chain);
+        if (!strcmp(mp->statefreqModel,"Stationary"))
+            {
+            GetParsFP (t, t->root->left, chain);
+            }
+        else //SK: if not stationary model, but directional or RJ
+            {
+            GetParsFP (t, t->root->left->left, chain);
+            GetParsFP (t, t->root->left->right, chain);
+            }
         /* get final parsimony states for the crown part */
         GetParsDP (t, v, chain);
         GetParsFP (t, v, chain);
@@ -11175,7 +11265,15 @@ int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
             if (b->left == u) b->left = a;
             else             b->right = a;
             GetParsDP (t, t->root->left, chain);
-            GetParsFP (t, t->root->left, chain);
+            if (!strcmp(mp->statefreqModel,"Stationary"))
+                {
+                GetParsFP (t, t->root->left, chain);
+                }
+            else //SK: if not stationary model, but directional or RJ
+                {
+                GetParsFP (t, t->root->left->left, chain);
+                GetParsFP (t, t->root->left->right, chain);
+                }
             a->anc = u;  /* change back */
             if (b->left == a) b->left = u;
             else             b->right = u;
@@ -11621,6 +11719,14 @@ outLoop:;
         }
     
     topologyHasChanged = YES;
+
+    /* if tree is rooted, swap indices of former and current interior root node, if changed */ //SK
+    if (t->isRooted && interiorRoot != t->root->left)
+    {
+        tempInt = interiorRoot->index;
+        interiorRoot->index = t->root->left->index;
+        t->root->left->index = tempInt;
+    }
 
     /* get down pass sequence if tree topology has changed */
     if (topologyHasChanged == YES)
@@ -12978,12 +13084,12 @@ int Move_ParsTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     /* Change topology and map branch lengths using TBR-type move biased according to parsimony scores,
        controlled by a window defined by a certain node distance radius. */
     
-    int         i, j, k, n, division, topologyHasChanged, nNeighbor, nRoot, nCrown, iA, jC, isVPriorExp;
+    int         i, j, k, n, division, topologyHasChanged, nNeighbor, nRoot, nCrown, iA, jC, isVPriorExp, tempInt;
     BitsLong    *pA, *pB, *pC, *pD, y[2];
     MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, tuning, warpFactor,
                 sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
-    TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL;
+    TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL, *interiorRoot;
     Tree        *t;
     ModelParams *mp;
     ModelInfo   *m=NULL;
@@ -13001,7 +13107,11 @@ int Move_ParsTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     
     /* get tree */
     t = GetTree (param, chain, state[chain]);
-    
+
+    /* for rooted (non-clock) trees, store pointer to current interior root node */ //SK
+    if (t->isRooted)
+        interiorRoot = t->root->left;
+
     /* max and min brlen */
     if (param->subParams[0]->paramId == BRLENS_UNI)
         {
@@ -13143,7 +13253,15 @@ int Move_ParsTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 
     /* get final parsimony state sets for the root part */
     GetParsDP (t, t->root->left, chain);
-    GetParsFP (t, t->root->left, chain);
+    if (!strcmp(mp->statefreqModel,"Stationary"))
+        {
+        GetParsFP (t, t->root->left, chain);
+        }
+    else //SK: if not stationary model, but directional or RJ
+        {
+        GetParsFP (t, t->root->left->left, chain);
+        GetParsFP (t, t->root->left->right, chain);
+        }
     /* get final parsimony state sets for the crown part */
     GetParsDP (t, c, chain);
     GetParsDP (t, d, chain);
@@ -13460,6 +13578,14 @@ outLoop:;
         p->upDateCl = YES;
         p = p->anc;
         }
+
+    /* if tree is rooted, swap indices of former and current interior root node, if changed */ //SK
+    if (t->isRooted && interiorRoot != t->root->left)
+    {
+        tempInt = interiorRoot->index;
+        interiorRoot->index = t->root->left->index;
+        t->root->left->index = tempInt;
+    }
     
     /* get down pass sequence if tree topology has changed */
     if (topologyHasChanged == YES)
@@ -13489,12 +13615,12 @@ int Move_ParsTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     /* Change topology and map branch lengths using TBR-type move biased according to parsimony scores,
        controlled by a window defined by a certain node distance radius. */
     
-    int         i, j, k, n, division, topologyHasChanged, nNeighbor, nRoot, nCrown, iA, jC, isVPriorExp;
+    int         i, j, k, n, division, topologyHasChanged, nNeighbor, nRoot, nCrown, iA, jC, isVPriorExp, tempInt;
     BitsLong    *pA, *pB, *pC, *pD, y[2];
     MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, tuning, warpFactor,
                 v_typical, divFactor, nStates, sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
-    TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL;
+    TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL, *interiorRoot;
     Tree        *t;
     ModelParams *mp;
     ModelInfo   *m=NULL;
@@ -13513,7 +13639,11 @@ int Move_ParsTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     
     /* get tree */
     t = GetTree (param, chain, state[chain]);
-    
+
+    /* for rooted (non-clock) trees, store pointer to current interior root node */ //SK
+    if (t->isRooted)
+        interiorRoot = t->root->left;
+
     /* max and min brlen */
     if (param->subParams[0]->paramId == BRLENS_UNI)
         {
@@ -13655,7 +13785,15 @@ int Move_ParsTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 
     /* get final parsimony state sets for the root part */
     GetParsDP (t, t->root->left, chain);
-    GetParsFP (t, t->root->left, chain);
+    if (!strcmp(mp->statefreqModel,"Stationary"))
+        {
+        GetParsFP (t, t->root->left, chain);
+        }
+    else //SK: if not stationary model, but directional or RJ
+        {
+        GetParsFP (t, t->root->left->left, chain);
+        GetParsFP (t, t->root->left->right, chain);
+        }
     /* get final parsimony state sets for the crown part */
     GetParsDP (t, c, chain);
     GetParsDP (t, d, chain);
@@ -13981,6 +14119,14 @@ outLoop:;
         p->upDateCl = YES;
         p = p->anc;
         }
+
+    /* if tree is rooted, swap indices of former and current interior root node, if changed */ //SK
+    if (t->isRooted && interiorRoot != t->root->left)
+    {
+        tempInt = interiorRoot->index;
+        interiorRoot->index = t->root->left->index;
+        t->root->left->index = tempInt;
+    }
     
     /* get down pass sequence if tree topology has changed */
     if (topologyHasChanged == YES)
@@ -15801,9 +15947,12 @@ int Move_Statefreqs (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     /* change pi */
     int         i, nStates, isValid;
     MrBFlt      dirichletParameters[64], *newPi, *oldPi, *priorAlpha, sum, alphaPi, x, y;
+    ModelInfo *m;                            //added by SK to account for DIRPI parameters
+
+    m = &modelSettings[param->relParts[0]];
 
     /* get the values we need */
-    nStates = param->nSubValues;
+    nStates = m->numModelStates;
     priorAlpha = GetParamVals(param, chain, state[chain]);
     newPi = GetParamSubVals (param, chain, state[chain]);
     oldPi = GetParamSubVals (param, chain, state[chain] ^ 1);
@@ -15887,9 +16036,12 @@ int Move_Statefreqs_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnP
 {
     int         i, j, nStates, isValid;
     MrBFlt      delta, *newPi, *oldPi, *priorAlpha, x, y, sum, min, max;
+    ModelInfo *m;                            //added by SK to account for DIRPI parameters
+
+    m = &modelSettings[param->relParts[0]];
 
     /* get the values we need */
-    nStates = param->nSubValues;
+    nStates = m->numModelStates;
     priorAlpha = GetParamVals(param, chain, state[chain]);
     newPi = GetParamSubVals (param, chain, state[chain]);
     oldPi = GetParamSubVals (param, chain, state[chain] ^ 1);
@@ -15954,6 +16106,344 @@ int Move_Statefreqs_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnP
         modelSettings[param->relParts[i]].upDateCijk = YES;
 
     return (NO_ERROR);
+}
+
+
+/*----------------------------------------------------------------
+ |
+ |	Move_StatefreqsRoot: Change the frequencies at the root in a
+ |       directional model of evolution. Move mechanism is the same
+ |       as for stationary state frequencies. //SK
+ |
+ ----------------------------------------------------------------*/
+int Move_StatefreqsRoot (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+
+{
+	/* change pi */
+	int			i, nStates, isValid;
+	MrBFlt		dirichletParameters[64], *newPi, *oldPi, *priorAlpha, *temp, alphaPi, x, y;
+    ModelInfo *m;                            
+
+    m = &modelSettings[param->relParts[0]];
+    
+	/* get the values we need */
+	nStates = m->numModelStates;
+        
+    /* get pointers to root frequencies */
+    priorAlpha = GetParamVals(param, chain, state[chain]) +nStates;
+    newPi = GetParamSubVals (param, chain, state[chain]) +nStates;
+    oldPi = GetParamSubVals (param, chain, state[chain] ^ 1) +nStates;        
+
+	if (param->paramId == DIRPI_MIX && oldPi[0] < 0.0) /* abort move if we are in RJ mode and currently in stationary model */
+		{
+        abortMove = YES;
+        return (NO_ERROR);
+		}
+
+    temp = (MrBFlt *) SafeCalloc(nStates, sizeof (MrBFlt));
+	if (!temp)
+    {
+		free (temp);
+		return (ERROR);
+    }
+
+    
+    /* tuning parameter */
+    alphaPi = mvp[0]*nStates;
+    
+    /* multiply old values with some large number to get Dirichlet parameters that result in new values close to the old ones */
+	for (i=0; i<nStates; i++)
+		dirichletParameters[i] = oldPi[i] * alphaPi;
+    
+    do {
+        DirichletRandomVariable (dirichletParameters, newPi, nStates, seed);
+        isValid = YES;
+        for (i=0; i<nStates; i++)
+        {
+		    if (newPi[i] < PI_MIN)
+            {
+                isValid = NO;
+                break;
+            }
+        }
+    } while (isValid == NO);
+    
+	/* get proposal ratio */
+	for (i=0; i<nStates; i++)
+		temp [i] = newPi[i] * alphaPi;
+    x = LnDirichlet(temp, oldPi, nStates);
+
+	for (i=0; i<nStates; i++)
+		temp [i] = oldPi[i] * alphaPi;
+    y = LnDirichlet(temp, newPi, nStates);
+    
+    (*lnProposalRatio) = x - y;
+    
+	/* get prior ratio */
+	y = x = 0.0;					/* the Gamma part of the prior is the same */
+	for (i=0; i<nStates; i++)
+		x += (priorAlpha[i] - 1.0) * log(newPi[i]);
+	for (i=0; i<nStates; i++)
+		y += (priorAlpha[i] - 1.0) * log(oldPi[i]);
+	(*lnPriorRatio) = x - y;
+      
+    free (temp);
+    
+	return (NO_ERROR);
+	
+}
+
+
+/*----------------------------------------------------------------
+ |
+ |	Move_StatefreqsRoot_Slider: Change state frequencies using Slider proposal
+ |       mechanism. See Move_Statefreqs_Slider for details. Here adapted to
+ |       state frequencies at root in directional model. //SK
+ |
+ ----------------------------------------------------------------*/
+int Move_StatefreqsRoot_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+	int			i, j, nStates, isValid;
+	MrBFlt		delta, *newPi, *oldPi, *priorAlpha, x, y, sum, min, max;
+    ModelInfo *m;                            
+	
+    m = &modelSettings[param->relParts[0]];    
+    
+	/* get the values we need */
+	nStates = m->numModelStates;
+	priorAlpha = GetParamVals(param, chain, state[chain]) + nStates;
+	newPi = GetParamSubVals (param, chain, state[chain]) + nStates;
+	oldPi = GetParamSubVals (param, chain, state[chain] ^ 1) + nStates;
+    
+	if (param->paramId == DIRPI_MIX && oldPi[0] < 0.0) /* abort move if we are in RJ mode and currently in stationary model */
+		{
+        abortMove = YES;
+        return (NO_ERROR);
+		}
+
+	/* get window size */
+	delta = mvp[0];
+    
+	/* choose a pair to change */ 
+	i = (int) (RandomNumber(seed) * nStates);
+    j = (int) (RandomNumber(seed) * (nStates-1));
+    if (i == j)
+        j = nStates-1;
+    
+    /* find new proportion */
+    sum = oldPi[i] + oldPi[j];
+    
+    /* reflect */
+    isValid = NO;
+    min = PI_MIN / sum;
+    max = 1.0 - min;
+    
+	x   = oldPi[i] / sum;
+	if( delta > max-min ) /* we do it to avoid following long while loop in case if delta is high */
+    {
+		delta = max-min;
+    }
+    y = x + delta * (RandomNumber(seed) - 0.5);
+    
+	do {
+		if (y < min)
+			y = 2.0 * min - y;
+		else if (y > max)
+            y = 2.0 * max - y;
+        else
+			isValid = YES;
+    } while (isValid == NO);
+    
+	/* set the new values */
+    newPi[i] = y * sum;
+    newPi[j] = sum - newPi[i];
+    
+	/* get proposal ratio */
+	*lnProposalRatio = 0.0;
+    
+	/* get prior ratio */
+	/* (the Gamma part of the prior is the same) */
+	x = (priorAlpha[i] - 1.0) * log(newPi[i]);
+	x += (priorAlpha[j] - 1.0) * log(newPi[j]);
+	y = (priorAlpha[i] - 1.0) * log(oldPi[i]);
+	y += (priorAlpha[j] - 1.0) * log(oldPi[j]);
+	(*lnPriorRatio) = x - y;
+    
+    /* no flags need to be set up for this move */
+    
+	return (NO_ERROR);
+    
+}
+
+
+/*----------------------------------------------------------------
+ |
+ |	Move_Statefreqs_SplitMerge: Jumps between the stationary and
+ |       directional model of evolution.
+ |       The move either reduces the model to a stationary one by
+ |       removing the root frequencies and drawing the new stationary
+ |       freqs from a Beta (or Dirichlet) distribution centered on
+ |       the average of the previous stationary and root frequencies
+ |       (merge move). In the split move, it expands to the
+ |       directional model by picking the new values from a
+ |       Beta centered on the previous stationary frequency.
+ |       The Jacobian of both split and merge moves is 1.
+ |       We assume equal prior probabilities of the two models. //SK
+ |
+ ----------------------------------------------------------------*/
+int Move_Statefreqs_SplitMerge (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+	/* switch between stationary and directional model of evolution */
+	int			i, nStates, isValid, inStationary;
+	MrBFlt		dirichletParameters[64], *newPi, *oldPi, *priorAlpha, *newPiRoot, *oldPiRoot, *priorAlphaRoot, *temp, alphaPi, x, y;
+    
+    ModelInfo *m;                            
+	m = &modelSettings[param->relParts[0]];
+    
+	/* get the values and pointers we need */
+	nStates = m->numModelStates;
+    
+    /* get pointers to stationary and root frequencies */
+    priorAlpha = GetParamVals(param, chain, state[chain]);
+    newPi = GetParamSubVals (param, chain, state[chain]);
+    oldPi = GetParamSubVals (param, chain, state[chain] ^ 1);        
+    priorAlphaRoot = GetParamVals(param, chain, state[chain]) +nStates;
+    newPiRoot = GetParamSubVals (param, chain, state[chain]) +nStates;
+    oldPiRoot = GetParamSubVals (param, chain, state[chain] ^ 1) +nStates;        
+        
+    /* check which model we are currently in */
+    if (oldPiRoot[0] == NOT_APPLICABLE) //SK: root PI are set to NOT_APPLICABLE (-9999) when in stationary model
+        inStationary = 1;
+    else 
+        inStationary = 0;
+
+	/* allocate vec to hold state freqs * tuning parameter */
+    temp = (MrBFlt *) SafeCalloc(nStates, sizeof (MrBFlt));
+	if (!temp)
+		{
+		free (temp);
+		return (ERROR);
+		}
+    
+    /* tuning parameter */
+    alphaPi = mvp[0]*nStates;
+    
+    /* merge move */
+    if (!inStationary) 
+        {
+		/* multiply old values with some large number to get Dirichlet parameters that result in new values close to the old ones */
+		for (i=0; i<nStates; i++)
+			{
+			dirichletParameters[i] = ((oldPi[i] + oldPiRoot[i]) / 2.0) * alphaPi;
+			}
+		/* choose new stationary frequencies from a corresponding Dirichlet (or Beta for 2 states) */
+		do {
+			DirichletRandomVariable (dirichletParameters, newPi, nStates, seed);
+			isValid = YES;
+			for (i=0; i<nStates; i++)
+				{
+				if (newPi[i] < PI_MIN)
+					{
+					isValid = NO;
+					break;
+					}
+				}
+			} while (isValid == NO);
+
+		/* set frequencies at root to NOT_APPLICABLE (-9999.0) in when moving to stationary model */
+        for (i=0; i<nStates; i++) 
+            {
+            newPiRoot[i] = NOT_APPLICABLE;                          
+            }
+            
+        /* get prior ratio */
+        x = LnDirichlet(priorAlpha, newPi, nStates);
+        y = LnDirichlet(priorAlpha, oldPi, nStates);
+        y += LnDirichlet(priorAlphaRoot, oldPiRoot, nStates);
+        (*lnPriorRatio) = x - y;
+            
+		/* get proposal ratio */
+		for (i=0; i<nStates; i++)
+			temp [i] = newPi[i] * alphaPi;
+		x = LnDirichlet(temp, oldPi, nStates);
+		x += LnDirichlet(temp, oldPiRoot, nStates);
+
+		for (i=0; i<nStates; i++)
+			temp [i] = ((oldPi[i] + oldPiRoot[i]) / 2.0) * alphaPi;
+		y = LnDirichlet(temp, newPi, nStates);
+    
+		(*lnProposalRatio) = x - y;
+    
+        }
+    else /* split move */ 
+        { //SK: this is currently only working for 2 states! -> restriction data type
+		/* multiply old values with some large number to get Dirichlet parameters that result in new values close to the old ones */
+		for (i=0; i<nStates; i++)
+			{
+			dirichletParameters[i] = oldPi[i] * alphaPi;
+			}
+		/* choose new stationary and root frequencies from a corresponding Dirichlet (or Beta for 2 states) */
+		do {
+			DirichletRandomVariable (dirichletParameters, newPi, nStates, seed);
+			isValid = YES;
+			for (i=0; i<nStates; i++)
+				{
+				if (newPi[i] < PI_MIN)
+					{
+					isValid = NO;
+					break;
+					}
+				}
+			} while (isValid == NO);
+
+		do {
+			DirichletRandomVariable (dirichletParameters, newPiRoot, nStates, seed);
+			isValid = YES;
+			for (i=0; i<nStates; i++)
+				{
+				if (newPi[i] < PI_MIN)
+					{
+					isValid = NO;
+					break;
+					}
+				}
+			} while (isValid == NO);
+         
+        /* get prior ratio */
+        x = LnDirichlet(priorAlpha, newPi, nStates);
+        x += LnDirichlet(priorAlpha, newPiRoot, nStates);
+        y = LnDirichlet(priorAlpha, oldPi, nStates);
+        (*lnPriorRatio) = x - y;
+            
+		/* get proposal ratio */
+		for (i=0; i<nStates; i++)
+			temp [i] = ((newPi[i] + newPiRoot[i]) / 2.0) * alphaPi;
+		x = LnDirichlet(temp, oldPi, nStates);
+
+		for (i=0; i<nStates; i++)
+			temp [i] = oldPi[i] * alphaPi;
+		y = LnDirichlet(temp, newPi, nStates);		
+		y += LnDirichlet(temp, newPiRoot, nStates);
+		    
+		(*lnProposalRatio) = x - y;
+            
+        }
+    
+    /* Touch the entire tree, as stationary freqs were changed*/
+    for (i=0; i<param->nRelParts; i++)
+		TouchAllTreeNodes(&modelSettings[param->relParts[i]],chain);
+    
+	/* Set update flags for cijks for all affected partitions. If this is a simple 4 X 4 model,
+     we don't take any hit, because we will never go into a general transition probability
+     calculator. However, for many models we do want to update the cijk flag, as the transition
+     probability matrices require diagonalizing the rate matrix. */
+	for (i=0; i<param->nRelParts; i++)
+		modelSettings[param->relParts[i]].upDateCijk = YES;
+
+    free (temp); 
+	
+    return (NO_ERROR);
+	
 }
 
 
@@ -16460,7 +16950,7 @@ int Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     /* get tree */
     t = GetTree (param, chain, state[chain]);
 
-    assert (t->isRooted == NO);
+    assert (t->isClock == NO);
 
     /* Dirichlet or twoExp prior */
     if (isVPriorExp > 1)
@@ -16476,16 +16966,22 @@ int Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         p = t->allDownPass[i];
         if (p->anc != NULL)
             {
-            if (p->length*treescaler < minV || p->length*treescaler > maxV)
+            if (t->isRooted == NO || p->anc->anc != NULL) //SK: additional condition for rooted trees
                 {
-                abortMove = YES;
-                return NO_ERROR;
-                }
-            begin_tl += p->length;
-            branch_counter++;               
+                if (p->length*treescaler < minV || p->length*treescaler > maxV)
+                    {
+                    abortMove = YES;
+                    return NO_ERROR;
+                    }
+                begin_tl += p->length;
+                branch_counter++;
+                }              
             }
         }
-    assert (branch_counter==t->nNodes-1);
+    if (t->isRooted == NO)
+        assert(branch_counter==t->nNodes-1);
+    else
+        assert(branch_counter==t->nNodes-2); //SK: added assert for rooted tree
     
     /* iterate scaling over all branches */
     for (i=0; i < t->nNodes; i++)
@@ -16493,12 +16989,15 @@ int Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         p = t->allDownPass[i];
         if (p->anc != NULL)
             {
-            /* set new length */
-            p->length *= treescaler;
+            if (t->isRooted == NO || p->anc->anc != NULL) //SK: additional condition for rooted trees
+                {
+                /* set new length */
+                p->length *= treescaler;
 
-            /* set flags for update of transition probabilities at p */
-            p->upDateTi = YES;
-            p->anc->upDateCl = YES; 
+                /* set flags for update of transition probabilities at p */
+                p->upDateTi = YES;
+                p->anc->upDateCl = YES;
+                }
             }
         }
 
