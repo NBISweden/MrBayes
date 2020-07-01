@@ -14,11 +14,18 @@ esac
 
 err=0
 for t in test[12].nex; do
-	printf 'Running test "%s"...\n' "$t"
+	printf 'Producing test output for "%s"...\n' "$t"
 
-	if [ ! -f "$t".out ]; then
-		"$@" "$t" >"$t".out
+	"$@" "$t" |
+	if [ -t 1 ]; then
+		tee "$t".out
+	else
+		cat >"$t".out
 	fi
+done
+
+for t in test[12].nex; do
+	printf 'Running checks for "%s"...\n' "$t"
 
 	printf 'Check #1:\t'
 	# Analysis completed in N seconds
