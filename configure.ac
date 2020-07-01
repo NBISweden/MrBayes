@@ -134,6 +134,8 @@ AX_PROG_CC_MPI([test "x$with_mpi" != "xno"],
         [AC_MSG_ERROR([--with-mpi was given, but test for MPI failed])
     ]) dnl AS_IF
 ]) dnl AX_PROG_CC_MPI
+TESTS_USE_MPI=$use_mpi
+AC_SUBST([TESTS_USE_MPI])
 
 # Checks for libraries.
 AC_CHECK_LIB([m], [sqrt])
@@ -276,9 +278,13 @@ AC_CHECK_FUNCS([floor memset pow sqrt strchr])
 
 AC_CONFIG_FILES([Makefile
                  doc/Makefile
-                 doc/manual/Makefile
                  doc/SMME_paper/Makefile
+                 doc/manual/Makefile
                  examples/Makefile
                  src/Makefile
+                 testing/Makefile
+                 testing/test1.nex
+                 testing/test2.nex
 ])
+AC_CONFIG_FILES([testing/runtests.sh], [chmod +x testing/runtests.sh])
 AC_OUTPUT
