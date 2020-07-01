@@ -1562,7 +1562,7 @@ simply associates a name with a set of characters. For instance, the character s
 defined to include characters 167 to 1244. The next step is to define a partition of the data
 according to genes and morphology. This is accomplished with the line:
 
-\begin{figure}[h]\singlespacing\footnotesize
+\begin{figure}[h]\singlespacing\small
 \begin{BVerbatim}
 partition favored = 5: morphology, COI, EF1a, LWRh, 28S;
 \end{BVerbatim}
@@ -1582,7 +1582,7 @@ being the COI gene, etc. Exit your text editor, launch MrBayes and type \tb{exec
 to read in your data and the variables. The final step is to tell MrBayes that we want to work with
 this partitioning of the data instead of the default partitioning. We do this using \ttt{set}:
 
-\begin{figure}[h]\singlespacing\footnotesize
+\begin{figure}[h]\singlespacing\small
 \begin{BVerbatim}
 set partition = favored;
 \end{BVerbatim}
@@ -1712,6 +1712,7 @@ file. For instance, if you wish to name the output files from one analysis using
 analysis in a separate directory, in which case the naming of the output files will not be an
 issue.
 
+
 \chapter{More Tutorials}
 \label{tutorialAdvanced}
 
@@ -1789,16 +1790,18 @@ commands. The output of the \texttt{sump} command will include a table giving th
 probabilities of the amino acid models:
 
 \begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
 Model probabilities above 0.050
 Estimates saved to file "avian_ovomucoids.nex.mstat".
 
-                      Posterior     Standard        Min.           Max.   
+                      Posterior     Standard        Min.           Max.
   Model              Probability    Deviation    Probability    Probability
   -------------------------------------------------------------------------
   aamodel[Jones]        1.000         0.000         1.000          1.000
   -------------------------------------------------------------------------
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 This particular dataset overwhelmingly supports the Jones model, so this may be the only model
 sampled after the burn-in phase. This means that the move mechanism trying to change the amino acid
@@ -1883,8 +1886,7 @@ parameters benefits considerably from the heated chains in this case, so we will
 Our results indicate that it is possible to get decent if not perfect convergence within about
 10,000 generations, so let us try that:
 
-\begin{singlespacing}
-\small
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > mcmcp printfreq=20 samplefreq=20 diagnfreq=500
 MrBayes > mcmc ngen=10000
@@ -1897,8 +1899,9 @@ long table summarizing the estimates of the posterior distributions of the model
 including the probabilities of sites being in the positively selected class, and the weighted site
 omega values (dN/dS ratios):
 
-\begin{figure}[h]\singlespacing\scriptsize
-\begin{verbatim}
+\begin{figure}[H]\singlespacing\footnotesize
+\centering
+\begin{BVerbatim}
                                          95% HPD Interval
                                        -------------------
 Parameter         Mean      Variance    Lower      Upper       Median   min ESS*  avg ESS   PSRF+ 
@@ -1923,7 +1926,8 @@ omega(4,5,6)    0.071107    0.000195   0.048813   0.097142    0.069085     6.47 
 omega(7,8,9)    0.070189    0.000188   0.048528   0.096028    0.068360     6.46      7.48    1.046
 ...
 --------------------------------------------------------------------------------------------------
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 First, note that the effective sample size (ESS) is still somewhat low for many parameters. The
 total ESS across the two runs is the double of the average ESS (avg ESS). The total in this
@@ -2000,11 +2004,12 @@ convergence by making sure that these probabilities are the same across independ
 sample table from an analysis using two independent runs on the tutorial data set:
 
 \begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
 Model probabilities above 0.050
 Estimates saved to file "primates.nex.mstat".
 
-                         Posterior     Standard        Min.          Max.   
+                         Posterior     Standard        Min.          Max.
 Model                   Probability    Deviation    Probability   Probability
 -----------------------------------------------------------------------------
 gtrsubmodel[121123]        0.196         0.015         0.186         0.207
@@ -2014,7 +2019,8 @@ gtrsubmodel[121324]        0.063         0.013         0.054         0.072
 gtrsubmodel[121323]        0.062         0.008         0.057         0.068
 gtrsubmodel[123323]        0.055         0.004         0.053         0.058
 -----------------------------------------------------------------------------
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 The models are labeled using a so-called restricted growth function. The six different substitution
 rates are given in the order $r_{AC}$, $r_{AG}$, $r_{AT}$, $r_{CG}$, $r_{CT}$, $r_{GT}$. The first rate is
@@ -2095,7 +2101,8 @@ In the output from the \ttt{sump} command, focus on the table summarizing the li
 MCMC samples:
 
 \begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
 Estimated marginal likelihoods for runs sampled in files
    "primates.nex.run1.p" and "primates.nex.run2.p":
    (Use the harmonic mean for Bayes factor comparisons of models)
@@ -2109,7 +2116,8 @@ Run   Arithmetic mean   Harmonic mean
 --------------------------------------
  TOTAL  -5719.94     -5730.84
 --------------------------------------
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 It is the harmonic mean that we will use as the initial estimate of the model likelihood. The
 estimate of the logarithm of the model likelihood is $-5730.84$, with a little bit of heterogeneity
@@ -2125,10 +2133,11 @@ Mrbayes > sump
 \end{verbatim}
 \normalsize\end{singlespacing}
 
-Our run produced the following estimates of the log of the model likelihoods:~$\rightarrow$
+Our run produced the following estimates of the log of the model likelihoods:
 
 \begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
 Run   Arithmetic mean   Harmonic mean
 --------------------------------------
    1    -5726.95     -5735.94
@@ -2136,7 +2145,8 @@ Run   Arithmetic mean   Harmonic mean
 --------------------------------------
  TOTAL  -5727.22     -5737.59
 --------------------------------------
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 The harmonic mean estimate for this model is $-5737.59$ in log units, which is about 6 log units
 worse than the previous model---wich gives us a $2logB_{12} = 13.5$. A value $10$ is typically
@@ -2196,7 +2206,8 @@ The output from the \ttt{ss} command will include the following table, which is 
 first model:
 
 \begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
 Marginal likelihood (in natural log units) estimated using stepping-stone sampling based on
 49 steps with 6000 generations (12 samples) within each step.
 
@@ -2206,20 +2217,22 @@ Marginal likelihood (in natural log units) estimated using stepping-stone sampli
       2     -5795.82
     -----------------------------
     Mean:   -5796.26
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 In our run, the second model produced the following version of the same table:
-%%%% JN: TODO: Need to place this table here
 
-\begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\begin{figure}[H]\singlespacing\footnotesize
+\centering
+\begin{BVerbatim}
     Run   Marginal likelihood (ln)
     -----------------------------
       1     -5805.21
       2     -5807.67
     -----------------------------
     Mean:   -5805.82
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 The model likelihoods are thus $-5796.26$ for the first model,and $-5805.82$ for the second (in
 natural log units). We first note that both likelihoods are considerably smaller than the
@@ -2231,13 +2244,14 @@ upwards in practice.
 We also note that the more accurate model likelihoods suggest a larger difference between the two
 models, about 9 log likelihood units (with a $2*logB_{12} = 19,12$). Thus, we conclude that the
 better model (humans and chimps do form a monophyletic group) is very strongly supported by the
-Bayes factor.\newpage
+Bayes factor.
 
 Finally, let us examine one of the convergence diagnostics plots from one of our stepping-stone
 analyses:
 
-\begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\begin{figure}[H]\singlespacing\footnotesize
+\centering
+\begin{BVerbatim}
 Plot of average standard deviation of split frequencies across steps.
 Points at -1.0 (y-axis) indicate that there were no splits
 above minimum frequency for corresponding step.
@@ -2260,7 +2274,8 @@ above minimum frequency for corresponding step.
  +------+-----+-----+-----+-----+-----+-----+-----+-----+-----+ 0.000
  ^                                                            ^
  1                                                           49
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 Here, we see the expected pattern of low average standard deviation of split frequencies in the
 early steps of the algorithm (to the left in the diagram), and difficulties of sampling across
@@ -2318,7 +2333,8 @@ MrBayes > sump
 \normalsize
 
 \begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
 Run   Arithmetic mean   Harmonic mean
 --------------------------------------
   1      -5720.09         -5732.97
@@ -2326,13 +2342,15 @@ Run   Arithmetic mean   Harmonic mean
 --------------------------------------
 TOTAL    -5719.58         -5732.35
 --------------------------------------
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 In the \texttt{sump} output, we focus on the table summarizing the means of the likelihoods of the
 MCMC samples obtained after the burn-in.
 
 \begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
 Run   Arithmetic mean   Harmonic mean
 --------------------------------------
   1      -5720.09         -5732.97
@@ -2340,8 +2358,9 @@ Run   Arithmetic mean   Harmonic mean
 --------------------------------------
 TOTAL    -5719.58         -5732.35
 --------------------------------------
-\end{verbatim}\end{figure}
- 
+\end{BVerbatim}
+\end{figure}
+
 The harmonic mean suggests that the marginal likelihood of the standard non-clock model is
 $-5732.35$ log units. Notice, however, some heterogeneity between the runs.
 
@@ -2357,7 +2376,8 @@ Mrbayes > sump
 \end{verbatim}
 
 \begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
 Run   Arithmetic mean   Harmonic mean
 --------------------------------------
   1      -5719.56         -5729.48
@@ -2365,12 +2385,14 @@ Run   Arithmetic mean   Harmonic mean
 --------------------------------------
 TOTAL    -5719.32         -5730.67
 --------------------------------------
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 Again, we focus on the table summarizing the means of the likelihoods of the MCMC samples.
 
 \begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
 Run   Arithmetic mean   Harmonic mean
 --------------------------------------
   1      -5719.56         -5729.48
@@ -2378,7 +2400,8 @@ Run   Arithmetic mean   Harmonic mean
 --------------------------------------
 TOTAL    -5719.32         -5730.67
 --------------------------------------
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 The harmonic mean is lower for the strict-clock model than for the non-clock model, the log values
 being $-5730.67$ and $-5732.35$, respectively. This is as we suspected, but the difference is small
@@ -2387,41 +2410,43 @@ undoubtedly need the increased accuracy of the stepping-stone sampling method.
 
 Before moving on to the stepping-stone analysis, first compute a summary of the tree samples using
 the \tb{sumt} command. Now focus on the phylogram, the second tree, in the output from this
-command. It should look something like the figure in page~\pageref{phylomediannode}:
+command. It should look something like this:
 
-\begin{figure}[h]\singlespacing\footnotesize\label{phylomediannode}
-\begin{verbatim}
+\begin{figure}[H]\singlespacing\footnotesize
+\centering
+\begin{BVerbatim}
 Phylogram (based on median node depths):
 
                /------------------------------------------- Tarsius_syrichta (1)
-/--------------+                                                                
+/--------------+
 |              \------------------------------------------- Lemur_catta (2)
-|                                                                               
+|
 |                                                    /----- Homo_sapiens (3)
-|                                                  /-+                          
+|                                                  /-+
 |                                                  | \----- Pan (4)
-|                                          /-------+                            
+|                                          /-------+
 |                                          |       \------- Gorilla (5)
-|                                      /---+                                    
+|                                      /---+
 +                                      |   \--------------- Pongo (6)
-|                        /-------------+                                        
+|                        /-------------+
 |                        |             \------------------- Hylobates (7)
-|                        |                                                      
+|                        |
 |                        |                              /-- Macaca_fuscata (8)
-|            /-----------+                           /--+                       
+|            /-----------+                           /--+
 |            |           |                           |  \-- M_mulatta (9)
-|            |           |                        /--+                          
+|            |           |                        /--+
 |            |           |                        |  \----- M_fascicularis (10)
-\------------+           \------------------------+                             
+\------------+           \------------------------+
              |                                    \-------- M_sylvanus (11)
-             |                                                                  
+             |
              \--------------------------------------------- Saimiri_sciure~ (12)
-                                                                                   
---|---------|--------|--------|---------|--------|--------|                     
+
+--|---------|--------|--------|---------|--------|--------|
   0.60      0.50     0.40     0.30      0.20     0.10     0.00                    
 
  [Expected changes per site]
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 We briefly want to point out two things. First, all tips in the tree have the same distance to the
 root in the consensus phylogram, the summary tree that is based on branch lengths. This is because
@@ -2468,14 +2493,17 @@ The estimated marginal likelihoods are found in a table printed by the \ttt{ss} 
 analysis is completed. Here are the estimates from our run:
 
 \begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
+
 Run   Marginal likelihood (ln)
 ------------------------------
   1     -5798.62
   2     -5799.24
 ------------------------------
 Mean:   -5798.88
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 We now run the same analysis on the strict clock model:
 
@@ -2488,16 +2516,17 @@ MrBayes > ss ngen=255000 diagnfreq=2500
 \normalsize
 
 We got the following estimates of the marginal model likelihoods:
-
 \begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
 Run   Marginal likelihood (ln)
 ------------------------------
   1     -5783.66
   2     -5784.14
 ------------------------------
 Mean:   -5783.87
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 First we note that there is good agreement between the two independent analyses for both models,
 indicating that we now have more accurate estimates of the marginal model likelihoods. If we
@@ -2648,45 +2677,41 @@ MrBayes > mcmc ngen=100000
 We can now verify using the \tb{sumt} command that the tree is rooted correctly and that it
 looks reasonable. We focus on the phylogram, the second tree to be displayed:
 
-\begin{figure}[h!]\singlespacing\label{phylogrammediannode}
-\footnotesize
-\begin{verbatim}
+%\begin{figure}[h!]\singlespacing\label{phylogrammediannode}
+\begin{figure}[H]\singlespacing\footnotesize
+\centering
+\begin{BVerbatim}
 Phylogram (based on median node depths):
 
-\end{verbatim}
-\scriptsize
-\begin{verbatim}
 /---------------------------------------------------------- Lemur_catta (2)
-|                                                                               
+|
 |/--------------------------------------------------------- Tarsius_syrichta (1)
-||                                                                              
+||
 ||                                                   /----- Homo_sapiens (3)
-||                                                 /-+                          
+||                                                 /-+
 +|                                                 | \----- Pan (4)
-||                                         /-------+                            
+||                                         /-------+
 ||                                         |       \------- Gorilla (5)
-||                                     /---+                                    
+||                                     /---+
 ||                                     |   \--------------- Pongo (6)
-\+                        /------------+                                        
+\+                        /------------+
  |                        |            \------------------- Hylobates (7)
- |                        |                                                     
+ |                        |
  |                        |                             /-- Macaca_fuscata (8)
- |             /----------+                         /---+                       
+ |             /----------+                         /---+
  |             |          |                         |   \-- M_mulatta (9)
- |             |          |                      /--+                           
+ |             |          |                      /--+
  |             |          |                      |  \------ M_fascicularis (10)
- \-------------+          \----------------------+                              
+ \-------------+          \----------------------+
                |                                 \--------- M_sylvanus (11)
-               |                                                                
+               |
                \------------------------------------------- Saimiri_sciure~ (12)
-                                                                               
- ----------|---------|--------|---------|---------|--------|                     
-           0.50      0.40     0.30      0.20      0.10     0.00 
-\end{verbatim}
-\footnotesize
-\begin{verbatim}
+
+ ----------|---------|--------|---------|---------|--------|
+           0.50      0.40     0.30      0.20      0.10     0.00
    [Expected changes per site]
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 Note that the strict clock tree that we obtained in the previous analysis was rooted differently,
 with \textit{Lemur} and \textit{Tarsius} together forming the sister group of the remaining
@@ -2756,7 +2781,8 @@ which is critical to interpreting where the different parameters belong.
 The key consists of two parts. First a list of the taxon labels with their corresponding number:
 
 \begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
 List of taxa in bipartitions:                                                 
                                                                                 
    1 -- Tarsius_syrichta
@@ -2771,40 +2797,42 @@ List of taxa in bipartitions:
   10 -- M_fascicularis
   11 -- M_sylvanus
   12 -- Saimiri_sciureus
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 The second part consists of a "dot-and-star"-table, indicating which taxa that belong to which
 partition. For example ID 17 describes a partition that divides taxa nr 3 and 4 against the rest.
-
-\begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
-   ID -- Partition
-   ------------------
-    0 -- ************
-    1 -- *...........
-    2 -- .*..........
-    3 -- ..*.........
-    4 -- ...*........
-    5 -- ....*.......
-    6 -- .....*......
-    7 -- ......*.....
-    8 -- .......*....
-    9 -- ........*...
-   10 -- .........*..
-   11 -- ..........*.
-   12 -- ...........*
-   13 -- .......****.
-   14 -- .......***..
-   15 -- ..*********.
-   16 -- ..**********
-   17 -- ..**........
-   18 -- .......**...
-   19 -- ..***.......
-   20 -- *.**********
-   21 -- ..*****.....
-   22 -- ..****......
-   ------------------
-\end{verbatim}\end{figure}
+\begin{figure}[H]\singlespacing\footnotesize
+\centering
+\begin{BVerbatim}
+ID -- Partition
+------------------
+ 0 -- ************
+ 1 -- *...........
+ 2 -- .*..........
+ 3 -- ..*.........
+ 4 -- ...*........
+ 5 -- ....*.......
+ 6 -- .....*......
+ 7 -- ......*.....
+ 8 -- .......*....
+ 9 -- ........*...
+10 -- .........*..
+11 -- ..........*.
+12 -- ...........*
+13 -- .......****.
+14 -- .......***..
+15 -- ..*********.
+16 -- ..**********
+17 -- ..**........
+18 -- .......**...
+19 -- ..***.......
+20 -- *.**********
+21 -- ..*****.....
+22 -- ..****......
+------------------
+\end{BVerbatim}
+\end{figure}
 
 We first identify the taxon ID of \textit{Lemur} and find that it is 2. Now we 
 find the partition ID that has a single star in the second position; it is the
@@ -2822,8 +2850,9 @@ Now we examine the posterior distribution of WN branch rates for these taxon bip
 clock is accelerated, the branch rate should be above $1.0$; if the rate is decelerated, the branch
 rate should be below $1.0$. The relevant rows of the table are:
 
-\begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\begin{figure}[H]\singlespacing\footnotesize
+\centering
+\begin{BVerbatim}
                                         95% HPD Interval
                                        ------------------
 Parameter           Mean     Variance   Lower     Upper     Median   PSRF+ Nruns
@@ -2834,7 +2863,8 @@ WNBrlens_rate[2]   0.929211  0.007155  0.758538  1.053767  0.938230  1.044   2
 WNBrlens_rate[16]  1.117410  0.065654  0.808765  1.595881  1.064906  1.018   2
 ...
 WNBrlens_rate[20]  0.765294  0.301914  0.020191  1.648757  0.743613  1.000   2
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 We see that there is considerable uncertainty about the branch rates but some of our predictions
 may have some support. The evolutionary rate seems slightly decelerated in the lineage leading to
@@ -2868,7 +2898,8 @@ The results summarized by the \texttt{ss} command are shown here, with the relax
 first (upper table), followed by the strict clock model (lower table).
 
 \begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
 Run   Marginal likelihood (ln)
  ------------------------------
    1     -6357.90
@@ -2883,7 +2914,8 @@ Run   Marginal likelihood (ln)
    2     -6372.22
  ------------------------------
  Mean:   -6372.08
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 By comparing the model likelihoods we see that the relaxed clock model is a better explanation of
 the data. The difference is almost 14 log units, which is considered very strong evidence in favor
