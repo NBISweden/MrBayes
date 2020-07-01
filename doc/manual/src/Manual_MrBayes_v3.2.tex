@@ -1529,12 +1529,13 @@ First, open up the Nexus data file in a text editor. The \texttt{DATA} block of 
 look familiar but there are some differences compared to the \texttt{primates.nex} file in the format
 statement:
 
-\begin{singlespacing}\footnotesize
-\begin{verbatim}
+\begin{figure}[h]\singlespacing\footnotesize
+\centering
+\begin{BVerbatim}
 Format datatype=mixed(Standard:1-166,DNA:167-3246) interleave=yes gap=- missing=?;
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+\end{BVerbatim}
+\end{figure}
+
 
 First, the datatype is given as mixed followed by a specification of the content of the matrix: it
 contains standard (morphology) characters in columns 1--166 and DNA characters in the remaining
@@ -1561,13 +1562,11 @@ simply associates a name with a set of characters. For instance, the character s
 defined to include characters 167 to 1244. The next step is to define a partition of the data
 according to genes and morphology. This is accomplished with the line:
 
-\begin{singlespacing}
-\footnotesize
-\begin{verbatim}
+\begin{figure}[h]\singlespacing\footnotesize
+\begin{BVerbatim}
 partition favored = 5: morphology, COI, EF1a, LWRh, 28S;
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+\end{BVerbatim}
+\end{figure}
 
 The elements of the \ttt{partition} command are: (1) the name of the partitioning scheme
 (\texttt{favored}); (2) an equal sign ($=$); (3) the number of character divisions in the scheme
@@ -1583,12 +1582,11 @@ being the COI gene, etc. Exit your text editor, launch MrBayes and type \tb{exec
 to read in your data and the variables. The final step is to tell MrBayes that we want to work with
 this partitioning of the data instead of the default partitioning. We do this using \ttt{set}:
 
-\begin{singlespacing}\footnotesize
-\begin{verbatim}
+\begin{figure}[h]\singlespacing\footnotesize
+\begin{BVerbatim}
 set partition = favored;
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+\end{BVerbatim}
+\end{figure}
 
 
 \section{Specifying a Partitioned Model}
@@ -1597,7 +1595,8 @@ Before starting to specify the partitioned model, it is useful to examine the de
 \tb{showmodel} and you should get this table as part of the output: 
 
 \begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
 Active parameters:
 
                   Partition(s)
@@ -1608,7 +1607,8 @@ Active parameters:
  Topology         4  4  4  4  4
  Brlens           5  5  5  5  5
  ------------------------------
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 There is a lot of other useful information in the output of \texttt{showmodel} but this table is the
 key to the partitioned model. We can see that there are five partitions in the model and five
@@ -1627,7 +1627,8 @@ we type \tb{lset applyto=(2,3,4,5) nst=6 rates=invgamma}. This will produce the 
 when \tb{showmodel} is invoked:
 
 \begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
 Active parameters:
  
                 Partition(s)
@@ -1641,7 +1642,8 @@ Ratemultiplier  6  6  6  6  6
 Topology        7  7  7  7  7
 Brlens          8  8  8  8  8
 -----------------------------
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 As you can see, all molecular partitions now evolve under the correct model but all parameters
 (\texttt{statefreq}, \texttt{revmat}, \texttt{shape}, \texttt{pinvar}) are shared across partitions. 
@@ -1665,7 +1667,8 @@ setting using \texttt{lset coding}. We will leave the \texttt{coding} setting at
 is \texttt{variable} for standard (morphology) data. Now, \tb{showmodel} should produce this table:
 
 \begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
 Active parameters:
 
                   Partition(s)
@@ -1679,8 +1682,8 @@ Active parameters:
  Topology        20 20 20 20 20
  Brlens          21 21 21 21 21
  ------------------------------
-\end{verbatim}\end{figure}
-
+\end{BVerbatim}
+\end{figure}
 
 \section{Running the Analysis}
 
