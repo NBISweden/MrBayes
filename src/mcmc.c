@@ -5837,7 +5837,12 @@ int InitChainCondLikes (void)
                     {
                     MrBayesPrint ("%s   Non-beagle version of conditional likelihood calculator will be used for division %d due to\n", spacer, d+1);
                     MrBayesPrint ("%s   request of reporting 'ancestral states', 'site rates', 'pos selection' or 'site omegas'.\n", spacer);
-                    }                
+                    }
+                else if (m->switchRates != NULL)
+                    {
+                    MrBayesPrint ("%s   Non-beagle version of conditional likelihood calculator will be used for division %d due to\n", spacer, d+1);
+                    MrBayesPrint ("%s   the covarion model not being supported in the current beagle implementation in MrBayes.\n", spacer);
+                    }
                 else if (m->gibbsGamma == NO)
                     m->useBeagle = YES;
                 }
