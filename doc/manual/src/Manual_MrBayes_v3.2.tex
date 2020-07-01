@@ -561,12 +561,10 @@ and we will not change any of them for now. By typing \tb{help prset} you can ob
 default settings for the parameters in your model. The table at the end of the help information
 reads:
 
+%%%% JN: Better not to place this as a figure float. And, lines are just wide enough to fit
+%%%% JN: the page width.
 \begin{singlespacing}
 \footnotesize
-%\scriptsize
-%\begin{verbatim}
-%\begin{figure}[h]\singlespacing\footnotesize
-%\centering
 \begin{verbatim}
 Model settings for partition 1:
 Parameter        Options                      Current Setting
@@ -617,8 +615,7 @@ Generatepr       Fixed/Variable=Dirichlet     Fixed
 
 ------------------------------------------------------------------
 \end{verbatim}
-%\end{figure}
-%\normalsize
+\normalsize
 \end{singlespacing}
 
 We need to focus on \ttt{Revmatpr} (for the six substitution rates of the GTR rate matrix),
@@ -682,6 +679,8 @@ More details can be found in build in help documentation (by issuing \tb{help pr
 To check the model before we start the analysis, type \tb{showmodel}. This will give an
 overview of the model settings. In our case, the output will be as follows:
 
+%%%% JN: Better not to place this as a figure float. And, lines are just wide enough to fit
+%%%% JN: the page width.
 \begin{singlespacing}
 \footnotesize
 \begin{verbatim}
@@ -762,11 +761,11 @@ The analysis is started by issuing the \ttt{mcmc} command. However, before doing
 that you review the run settings by typing \tb{help mcmc}. In our case, we will get the following
 table at the bottom of the output:
 
-\begin{singlespacing}
-\footnotesize
-\begin{verbatim}
+\begin{figure}[H]\singlespacing\footnotesize
+\centering
+\begin{BVerbatim}
 Parameter       Options               Current Setting
------------------------------------------------------
+--------------------------------------------------------
 Ngen            <number>              1000000
 Nruns           <number>              2
 Nchains         <number>              4
@@ -803,10 +802,9 @@ Append          Yes/No                No
 Autotune        Yes/No                Yes
 Tunefreq        <number>              100
 
----------------------------------------------------------------------------
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+--------------------------------------------------------
+\end{BVerbatim}
+\end{figure}
 
 The \ttt{Ngen} setting is the number of generations for which the analysis will be run. It is
 useful to run a small number of generations first to make sure the analysis is correctly set up and
@@ -899,9 +897,9 @@ Finally, we are ready to start the analysis. Type \tb{mcmc}. MrBayes will first 
 about the model and then list the proposal mechanisms that will be used in sampling from the
 posterior distribution. In our case, the proposals are the following:
 
-\begin{singlespacing}
-\footnotesize
-\begin{verbatim}
+\begin{figure}[h]\singlespacing\footnotesize
+\centering
+\begin{BVerbatim}
 The MCMC sampler will use the following moves:
    With prob.  Chain will use move
       0.93 %   Dirichlet(Revmat)
@@ -917,9 +915,8 @@ The MCMC sampler will use the following moves:
      37.04 %   Multiplier(V)
      12.96 %   Nodeslider(V)
       5.56 %   TLMultiplier(V)
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+\end{BVerbatim}
+\end{figure}
 
 The exact set of proposals and their relative probabilities may differ depending on the exact
 version of the program that you are using. Note that MrBayes will spend most of its effort changing
@@ -930,39 +927,75 @@ tuning parameters can be changed with the \ttt{Propset} command, but be warned t
 changes of these settings may destroy any hopes of achieving convergence.
 
 After the initial log likelihoods, MrBayes will print the state of the chains every 100th
-generation, like this:
+generation, like this (with a 13 column output. Here we show 11 for readability):
+
+
+%Chain results (20000 generations requested):
+%
+%    0 -- [-8849.255] (-8762.724) (-8987.103) (-8764.951) * [-8802.317] (-8424.093) (-8889.702) (-8566.483) 
+%  100 -- (-6964.051) [-6564.318] (-6585.769) (-7091.917) * (-6978.196) (-6959.121) [-6832.584] (-6918.296) -- 0:00:00
+%  200 -- (-6331.866) (-6429.968) [-6064.254] (-6553.628) * (-6373.717) (-6481.652) [-6370.470] (-6395.154) -- 0:00:00
+%  300 -- (-6244.179) (-6321.599) [-6025.263] (-6348.894) * (-6300.468) (-6276.345) [-6164.928] (-6257.516) -- 0:00:00
+%  400 -- (-6206.423) (-6220.442) [-5983.629] (-6294.857) * (-6161.822) (-6151.696) (-6121.981) [-6110.477] -- 0:00:00
+%  500 -- (-6186.992) (-6143.353) [-5976.339] (-6255.509) * (-6093.662) (-6136.777) [-6071.812] (-6099.497) -- 0:00:00
+%  600 -- (-6176.634) (-6139.131) [-5960.670] (-6214.204) * (-6091.991) (-6129.092) [-6049.816] (-6075.710) -- 0:00:00
+%  700 -- (-6112.019) (-6103.034) [-5944.847] (-6145.807) * (-6026.301) (-6075.044) [-5986.287] (-6069.480) -- 0:00:27
+%  800 -- (-6082.030) (-6049.371) [-5952.450] (-6076.208) * (-6029.975) (-6031.923) [-5984.259] (-6052.163) -- 0:00:24
+%  900 -- (-6071.824) (-6040.252) [-5931.429] (-6040.448) * (-6011.106) (-6022.905) [-5976.582] (-6051.125) -- 0:00:21
+% 1000 -- (-6018.607) (-5969.229) [-5921.752] (-6031.270) * (-6006.262) (-6021.765) [-5942.360] (-6039.305) -- 0:00:19
+%
+%Average standard deviation of split frequencies: 0.028570
+%
+% 1100 -- (-6002.039) (-5931.818) [-5903.026] (-6030.727) * (-6012.134) (-5993.487) [-5908.674] (-6040.577) -- 0:00:17
+% ...
+% 19100 -- (-5723.134) (-5728.224) [-5724.674] (-5722.268) * (-5729.337) (-5732.352) [-5723.627] (-5728.838) -- 0:00:00
+% 19200 -- (-5724.510) (-5726.167) [-5727.321] (-5726.341) * (-5732.863) (-5732.101) [-5724.573] (-5727.017) -- 0:00:00
+% 19300 -- (-5723.553) (-5729.459) [-5725.622] (-5728.011) * (-5726.456) (-5734.877) [-5725.750] (-5723.521) -- 0:00:00
+% 19400 -- (-5726.202) (-5729.561) [-5726.133] (-5737.466) * [-5726.154] (-5735.261) (-5725.677) (-5725.421) -- 0:00:00
+% 19500 -- [-5720.607] (-5730.406) (-5729.461) (-5725.360) * [-5721.939] (-5736.619) (-5717.324) (-5726.372) -- 0:00:00
+% 19600 -- (-5717.783) (-5732.331) (-5725.260) [-5727.780] * [-5727.295] (-5742.071) (-5722.216) (-5727.507) -- 0:00:00
+% 19700 -- [-5717.220] (-5726.029) (-5723.541) (-5727.178) * (-5729.795) (-5737.784) [-5728.311] (-5724.124) -- 0:00:00
+% 19800 -- [-5723.804] (-5719.361) (-5721.537) (-5731.023) * (-5727.843) (-5737.280) (-5727.455) [-5723.834] -- 0:00:00
+% 19900 -- (-5725.641) (-5726.235) [-5725.040] (-5723.821) * (-5728.999) (-5734.996) [-5727.100] (-5730.544) -- 0:00:00
+% 20000 -- (-5731.566) (-5723.933) [-5726.992] (-5727.836) * (-5728.071) (-5734.746) (-5722.002) [-5728.053] -- 0:00:00
+%
+% Average standard deviation of split frequencies: 0.000520
+%
+% Continue with analysis? (yes/no): 
+
+
 
 \begin{singlespacing}
-\tiny
+\footnotesize
 \begin{verbatim}
 Chain results (20000 generations requested):
 
-    0 -- [-8849.255] (-8762.724) (-8987.103) (-8764.951) * [-8802.317] (-8424.093) (-8889.702) (-8566.483) 
-  100 -- (-6964.051) [-6564.318] (-6585.769) (-7091.917) * (-6978.196) (-6959.121) [-6832.584] (-6918.296) -- 0:00:00
-  200 -- (-6331.866) (-6429.968) [-6064.254] (-6553.628) * (-6373.717) (-6481.652) [-6370.470] (-6395.154) -- 0:00:00
-  300 -- (-6244.179) (-6321.599) [-6025.263] (-6348.894) * (-6300.468) (-6276.345) [-6164.928] (-6257.516) -- 0:00:00
-  400 -- (-6206.423) (-6220.442) [-5983.629] (-6294.857) * (-6161.822) (-6151.696) (-6121.981) [-6110.477] -- 0:00:00
-  500 -- (-6186.992) (-6143.353) [-5976.339] (-6255.509) * (-6093.662) (-6136.777) [-6071.812] (-6099.497) -- 0:00:00
-  600 -- (-6176.634) (-6139.131) [-5960.670] (-6214.204) * (-6091.991) (-6129.092) [-6049.816] (-6075.710) -- 0:00:00
-  700 -- (-6112.019) (-6103.034) [-5944.847] (-6145.807) * (-6026.301) (-6075.044) [-5986.287] (-6069.480) -- 0:00:27
-  800 -- (-6082.030) (-6049.371) [-5952.450] (-6076.208) * (-6029.975) (-6031.923) [-5984.259] (-6052.163) -- 0:00:24
-  900 -- (-6071.824) (-6040.252) [-5931.429] (-6040.448) * (-6011.106) (-6022.905) [-5976.582] (-6051.125) -- 0:00:21
- 1000 -- (-6018.607) (-5969.229) [-5921.752] (-6031.270) * (-6006.262) (-6021.765) [-5942.360] (-6039.305) -- 0:00:19
+    0 -- [-8849.255] (-8762.724) (-8987.103) (-8764.951) * [-8802.317] ...  
+  100 -- (-6964.051) [-6564.318] (-6585.769) (-7091.917) * (-6978.196) ... -- 0:00:00
+  200 -- (-6331.866) (-6429.968) [-6064.254] (-6553.628) * (-6373.717) ... -- 0:00:00
+  300 -- (-6244.179) (-6321.599) [-6025.263] (-6348.894) * (-6300.468) ... -- 0:00:00
+  400 -- (-6206.423) (-6220.442) [-5983.629] (-6294.857) * (-6161.822) ... -- 0:00:00
+  500 -- (-6186.992) (-6143.353) [-5976.339] (-6255.509) * (-6093.662) ... -- 0:00:00
+  600 -- (-6176.634) (-6139.131) [-5960.670] (-6214.204) * (-6091.991) ... -- 0:00:00
+  700 -- (-6112.019) (-6103.034) [-5944.847] (-6145.807) * (-6026.301) ... -- 0:00:27
+  800 -- (-6082.030) (-6049.371) [-5952.450] (-6076.208) * (-6029.975) ... -- 0:00:24
+  900 -- (-6071.824) (-6040.252) [-5931.429] (-6040.448) * (-6011.106) ... -- 0:00:21
+ 1000 -- (-6018.607) (-5969.229) [-5921.752] (-6031.270) * (-6006.262) ... -- 0:00:19
 
 Average standard deviation of split frequencies: 0.028570
 
- 1100 -- (-6002.039) (-5931.818) [-5903.026] (-6030.727) * (-6012.134) (-5993.487) [-5908.674] (-6040.577) -- 0:00:17
+ 1100 -- (-6002.039) (-5931.818) [-5903.026] (-6030.727) * (-6012.134) ... -- 0:00:17
  ...
- 19100 -- (-5723.134) (-5728.224) [-5724.674] (-5722.268) * (-5729.337) (-5732.352) [-5723.627] (-5728.838) -- 0:00:00
- 19200 -- (-5724.510) (-5726.167) [-5727.321] (-5726.341) * (-5732.863) (-5732.101) [-5724.573] (-5727.017) -- 0:00:00
- 19300 -- (-5723.553) (-5729.459) [-5725.622] (-5728.011) * (-5726.456) (-5734.877) [-5725.750] (-5723.521) -- 0:00:00
- 19400 -- (-5726.202) (-5729.561) [-5726.133] (-5737.466) * [-5726.154] (-5735.261) (-5725.677) (-5725.421) -- 0:00:00
- 19500 -- [-5720.607] (-5730.406) (-5729.461) (-5725.360) * [-5721.939] (-5736.619) (-5717.324) (-5726.372) -- 0:00:00
- 19600 -- (-5717.783) (-5732.331) (-5725.260) [-5727.780] * [-5727.295] (-5742.071) (-5722.216) (-5727.507) -- 0:00:00
- 19700 -- [-5717.220] (-5726.029) (-5723.541) (-5727.178) * (-5729.795) (-5737.784) [-5728.311] (-5724.124) -- 0:00:00
- 19800 -- [-5723.804] (-5719.361) (-5721.537) (-5731.023) * (-5727.843) (-5737.280) (-5727.455) [-5723.834] -- 0:00:00
- 19900 -- (-5725.641) (-5726.235) [-5725.040] (-5723.821) * (-5728.999) (-5734.996) [-5727.100] (-5730.544) -- 0:00:00
- 20000 -- (-5731.566) (-5723.933) [-5726.992] (-5727.836) * (-5728.071) (-5734.746) (-5722.002) [-5728.053] -- 0:00:00
+ 19100 -- (-5723.134) (-5728.224) [-5724.674] (-5722.268) * (-5729.337) ... -- 0:00:00
+ 19200 -- (-5724.510) (-5726.167) [-5727.321] (-5726.341) * (-5732.863) ... -- 0:00:00
+ 19300 -- (-5723.553) (-5729.459) [-5725.622] (-5728.011) * (-5726.456) ... -- 0:00:00
+ 19400 -- (-5726.202) (-5729.561) [-5726.133] (-5737.466) * [-5726.154] ... -- 0:00:00
+ 19500 -- [-5720.607] (-5730.406) (-5729.461) (-5725.360) * [-5721.939] ... -- 0:00:00
+ 19600 -- (-5717.783) (-5732.331) (-5725.260) [-5727.780] * [-5727.295] ... -- 0:00:00
+ 19700 -- [-5717.220] (-5726.029) (-5723.541) (-5727.178) * (-5729.795) ... -- 0:00:00
+ 19800 -- [-5723.804] (-5719.361) (-5721.537) (-5731.023) * (-5727.843) ... -- 0:00:00
+ 19900 -- (-5725.641) (-5726.235) [-5725.040] (-5723.821) * (-5728.999) ... -- 0:00:00
+ 20000 -- (-5731.566) (-5723.933) [-5726.992] (-5727.836) * (-5728.071) ... -- 0:00:00
 
  Average standard deviation of split frequencies: 0.000520
 
@@ -988,12 +1021,13 @@ inefficient. The analysis may then have to be run longer. You can also try to re
 temperature difference between chains, which may increase the efficiency of the Metropolis
 coupling.
 
-The star column separates the two different runs. The last column gives the time left to completion
-of the specified number of generations. This analysis approximately takes 1 second per 1,000
-generations. Because different moves are used in each generation, the exact time varies somewhat
-for each set of 100 generations, and the predicted time to completion will be unstable in the
-beginning of the run. After a while, the predictions will become more accurate and the estimated
-remaining time will decrease more evenly between generations.
+The star column separates the two different runs (with four log-likelihood columns each). The last
+column gives the time left to completion of the specified number of generations. This analysis
+approximately takes 1 second per 1,000 generations. Because different moves are used in each
+generation, the exact time varies somewhat for each set of 100 generations, and the predicted time
+to completion will be unstable in the beginning of the run. After a while, the predictions will
+become more accurate and the estimated remaining time will decrease more evenly between
+generations.
 
 \subsection{When to Stop the Analysis}
 
@@ -1045,9 +1079,9 @@ During the run, samples of the substitution model parameters have been written t
 files every \ttt{samplefreq} generation. These files are tab-delimited text files that look
 something like this:
 
-%% PV: removed white spaces at the left to reduce the effect of long lines extending beyond textwidth
 \begin{figure}[h]\singlespacing\scriptsize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
 [ID: 0184438524]
 Gen   LnL           LnPr         TL           r(A<->C)     ... pi(T)        alpha        pinvar
 0     -8.849255e+03 4.262056e+01 4.200000e-01 1.666667e-01 ... 2.500000e-01 1.000000e+00 0.000000e+00
@@ -1055,7 +1089,8 @@ Gen   LnL           LnPr         TL           r(A<->C)     ... pi(T)        alph
  ...
 19900 -5.725040e+03 4.019204e+00 2.936465e+00 4.674104e-02 ... 2.517984e-01 4.555687e-01 8.178856e-02
 20000 -5.726992e+03 2.358156e+00 3.184675e+00 4.674104e-02 ... 2.517984e-01 4.689211e-01 4.150474e-02
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 The first number, in square brackets, is a randomly generated ID number that lets you identify the
 analysis from which the samples come. The next line contains the column headers, and is followed by
@@ -1085,7 +1120,8 @@ noise'', that is, there should be no tendency of increase or decrease over time.
 look something like this:
 
 \begin{figure}[h]\singlespacing\footnotesize
-\begin{verbatim}
+\centering
+\begin{BVerbatim}
 +------------------------------------------------------------+ -5718.97
 |     2                                                      |
 |         1  21         2 11     2  2 1            2         |
@@ -1105,7 +1141,8 @@ look something like this:
 +------+-----+-----+-----+-----+-----+-----+-----+-----+-----+ -5734.79
 ^                                                            ^
 5000                                                         20000
-\end{verbatim}\end{figure}
+\end{BVerbatim}
+\end{figure}
 
 If you see an obvious trend in your plot, either increasing or decreasing, you very likely need to
 run the analysis longer to get an adequate sample from the posterior probability distribution.
@@ -1116,9 +1153,9 @@ might require longer runs.
 At the bottom of the \ttt{sump} output, there is a table summarizing the samples of the parameter
 values:
 
-\begin{singlespacing}
-\scriptsize
-\begin{verbatim}
+\begin{figure}[h]\singlespacing\scriptsize
+\centering
+\begin{BVerbatim}
                                     95% HPD Interval
                                     --------------------
 Parameter      Mean      Variance     Lower       Upper       Median    min ESS*  avg ESS    PSRF+ 
@@ -1137,9 +1174,8 @@ pi(T)       0.241985    0.000119    0.223346    0.265659    0.241647     21.20  
 alpha       0.533518    0.024674    0.329657    0.817921    0.488774     61.71     94.24    1.030
 pinvar      0.111808    0.005969    0.001041    0.252672    0.103843     71.95     95.00    1.018
 --------------------------------------------------------------------------------------------------
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+\end{BVerbatim}
+\end{figure}
 
 For each parameter, the table lists the mean and variance of the sampled values, the lower and
 upper boundaries of the 95 \% credibility interval, and the median of the sampled values. The
@@ -1167,9 +1203,9 @@ for all parameters in the model in larger and more complicated analyses.
 Trees and branch lengths are printed to the \ttt{.t} files. These files are Nexus-formatted tree
 files with a structure like this:
 
-\begin{singlespacing}
-\footnotesize
-\begin{verbatim}
+\begin{figure}[h]\singlespacing\footnotesize
+\centering
+\begin{BVerbatim}
 #NEXUS
 [ID: 0184438524]
 [Param: tree]
@@ -1191,9 +1227,8 @@ begin trees;
    ...
    tree gen.20000 = [&U] ((((7:1.869397e-01,(6:1.712180e-01,...
 end;
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+\end{BVerbatim}
+\end{figure}
 
 To summarize the tree and branch length information, while using the same burnin as above when
 summarizing the other model parameters, type \tb{sumt}.
@@ -1206,9 +1241,9 @@ side. For instance, the 14th partition (ID 14) in the output below represents th
 \textit{Homo} (taxon 3) and \textit{Pan} (taxon 4), since there are stars in the third and fourth
 positions and a dot in all other positions.
 
-\begin{singlespacing}
-\footnotesize
-\begin{verbatim}
+\begin{figure}[H]\singlespacing\footnotesize
+\centering
+\begin{BVerbatim}
 List of taxa in bipartitions:
 
    1 -- Tarsius_syrichta
@@ -1250,9 +1285,8 @@ ID -- Partition
 20 -- ..***.......
 21 -- .......***..
 ------------------
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+\end{BVerbatim}
+\end{figure}
 
 Then it gives a table over the informative bipartitions (the ones with more than one taxon
 included), specifying the number of times the partition was sampled (\ttt{\#obs}), the probability
@@ -1262,9 +1296,10 @@ and finally the number of runs in which the partition was encountered. In our an
 overwhelming support for a single tree, so all partitions in this tree have a posterior probability
 of $1.0$ (or very close to $1.0$).
 
-\begin{singlespacing}
-\footnotesize
-\begin{verbatim}
+%%%% JN: This table needs to be placed accurately
+\begin{figure}[H]\singlespacing\footnotesize
+\centering
+\begin{BVerbatim}
 Summary statistics for informative taxon bipartitions
    (saved to file "primates.nex.tstat"):
 
@@ -1280,21 +1315,16 @@ ID   #obs    Probab.     Sd(s)+      Min(s)      Max(s)   Nruns
 20   302    1.000000    0.000000    1.000000    1.000000    2
 21   301    0.996689    0.004683    0.993377    1.000000    2
 ----------------------------------------------------------------
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+\end{BVerbatim}
+\end{figure}
 
 We then get a table summarizing branch and node parameters, in our case the branch lengths. The
-indices in this table refer to the key to partitions. For instance, \ttt{length[14]} is the length
-of the branch corresponding to partition ID 14. As we noted above, this is the branch grouping
-humans and chimps. The meaning of most of the values in this table is obvious. The last two columns
-give a convergence diagnostic, the Potential Scale Reduction Factor (PSRF), and the number of runs
-in which the partition was encountered. The PSRF diagnostic is the same used for the regular
-parameter samples, and it should approach $1.0$ as runs converge.
+indices in this table refer to the key to partitions.
 
-\begin{singlespacing}
-\scriptsize
-\begin{verbatim}
+%%%% JN: This table needs to be placed accurately
+\begin{figure}[H]\singlespacing\scriptsize
+\centering
+\begin{BVerbatim}
 Summary statistics for branch and node parameters
    (saved to file "primates.nex.vstat"):
 
@@ -1324,74 +1354,141 @@ length[19]    0.036908    0.000128    0.016550    0.057338    0.035712    1.002 
 length[20]    0.088113    0.000594    0.038292    0.129339    0.085182    0.998    2
 length[21]    0.047375    0.000386    0.012946    0.087369    0.047096    1.000    2
 --------------------------------------------------------------------------------------
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+\end{BVerbatim}
+\end{figure}
+
+For instance, \ttt{length[14]} is the length of the branch corresponding to partition ID 14. As we
+noted above, this is the branch grouping humans and chimps. The meaning of most of the values in
+this table is obvious. The last two columns give a convergence diagnostic, the Potential Scale
+Reduction Factor (PSRF), and the number of runs in which the partition was encountered. The PSRF
+diagnostic is the same used for the regular parameter samples, and it should approach $1.0$ as runs
+converge.
 
 This table is followed by two trees. The clade credibility tree (upper tree) gives the probability
-of each partition or clade in the tree, and the phylogram (lower tree) gives the branch lengths
-measured in expected substitutions per site:
+of each partition or clade in the tree:
 
-\begin{singlespacing}
-\scriptsize
-\begin{verbatim}
+%%%% JN: This table needs to be placed accurately
+
+%Clade credibility values:
+%
+%/---------------------------------------------------------- Tarsius_syrichta (1)
+%|                                                                               
+%|---------------------------------------------------------- Lemur_catta (2)
+%|                                                                               
+%|                                                 /-------- Homo_sapiens (3)
+%|                                        /---100--+                             
+%|                                        |        \-------- Pan (4)
+%|                                /--100--+                                      
+%|                                |       \----------------- Gorilla (5)
+%|                        /--100--+                                              
+%+                        |       \------------------------- Pongo (6)
+%|                /--100--+                                                      
+%|                |       \--------------------------------- Hylobates (7)
+%|                |                                                              
+%|                |                                /-------- Macaca_fuscata (8)
+%|       /---100--+                       /---100--+                             
+%|       |        |                       |        \-------- M_mulatta (9)
+%|       |        |               /--100--+                                      
+%|       |        |               |       \----------------- M_fascicularis (10)
+%\--100--+        \------100------+                                              
+%        |                        \------------------------- M_sylvanus (11)
+%        |                                                                       
+%        \-------------------------------------------------- Saimiri_sciure~ (12)
+%                                                                                
+%
+%Phylogram (based on average branch lengths):
+%
+%/--------------------------------------- Tarsius_syrichta (1)
+%|                                                                               
+%|--------------------------- Lemur_catta (2)
+%|                                                                               
+%|                                                     /---- Homo_sapiens (3)
+%|                                                   /-+                         
+%|                                                   | \----- Pan (4)
+%|                                            /------+                           
+%|                                            |      \---- Gorilla (5)
+%|                                        /---+                                  
+%+                                        |   \----------- Pongo (6)
+%|                              /---------+                                      
+%|                              |         \------------- Hylobates (7)
+%|                              |                                                
+%|                              |                          /- Macaca_fuscata (8)
+%|                     /--------+                       /--+                     
+%|                     |        |                       |  \- M_mulatta (9)
+%|                     |        |                   /---+                        
+%|                     |        |                   |   \---- M_fascicularis (10)
+%\---------------------+        \-------------------+                            
+%                      |                            \------ M_sylvanus (11)
+%                      |                                                         
+%                      \---------------------------------- Saimiri_sciure~ (12)
+%                                                                                
+%|-------------| 0.200 expected changes per site
+\begin{figure}[H]\singlespacing\scriptsize
+\centering
+\begin{BVerbatim}
 Clade credibility values:
 
 /---------------------------------------------------------- Tarsius_syrichta (1)
-|                                                                               
+|
 |---------------------------------------------------------- Lemur_catta (2)
-|                                                                               
+|
 |                                                 /-------- Homo_sapiens (3)
-|                                        /---100--+                             
+|                                        /---100--+
 |                                        |        \-------- Pan (4)
-|                                /--100--+                                      
+|                                /--100--+
 |                                |       \----------------- Gorilla (5)
-|                        /--100--+                                              
+|                        /--100--+
 +                        |       \------------------------- Pongo (6)
-|                /--100--+                                                      
+|                /--100--+
 |                |       \--------------------------------- Hylobates (7)
-|                |                                                              
+|                |
 |                |                                /-------- Macaca_fuscata (8)
-|       /---100--+                       /---100--+                             
+|       /---100--+                       /---100--+
 |       |        |                       |        \-------- M_mulatta (9)
-|       |        |               /--100--+                                      
+|       |        |               /--100--+
 |       |        |               |       \----------------- M_fascicularis (10)
-\--100--+        \------100------+                                              
+\--100--+        \------100------+
         |                        \------------------------- M_sylvanus (11)
-        |                                                                       
+        |
         \-------------------------------------------------- Saimiri_sciure~ (12)
-                                                                                
 
+\end{BVerbatim}
+\end{figure}
+
+The phylogram (lower tree) gives the branch lengths measured in expected substitutions per site:
+
+\begin{figure}[H]\singlespacing\scriptsize
+\centering
+\begin{BVerbatim}
 Phylogram (based on average branch lengths):
 
 /--------------------------------------- Tarsius_syrichta (1)
-|                                                                               
+|
 |--------------------------- Lemur_catta (2)
-|                                                                               
+|
 |                                                     /---- Homo_sapiens (3)
-|                                                   /-+                         
+|                                                   /-+
 |                                                   | \----- Pan (4)
-|                                            /------+                           
+|                                            /------+
 |                                            |      \---- Gorilla (5)
-|                                        /---+                                  
+|                                        /---+
 +                                        |   \----------- Pongo (6)
-|                              /---------+                                      
+|                              /---------+
 |                              |         \------------- Hylobates (7)
-|                              |                                                
+|                              |
 |                              |                          /- Macaca_fuscata (8)
-|                     /--------+                       /--+                     
+|                     /--------+                       /--+
 |                     |        |                       |  \- M_mulatta (9)
-|                     |        |                   /---+                        
+|                     |        |                   /---+
 |                     |        |                   |   \---- M_fascicularis (10)
-\---------------------+        \-------------------+                            
+\---------------------+        \-------------------+
                       |                            \------ M_sylvanus (11)
-                      |                                                         
+                      |
                       \---------------------------------- Saimiri_sciure~ (12)
-                                                                                
+
 |-------------| 0.200 expected changes per site
-\end{verbatim}
-\normalsize
-\end{singlespacing}
+\end{BVerbatim}
+\end{figure}
 
 In the background, the \ttt{sumt} command creates five additional files. The first is a
 \ttt{.parts} file, which contains the key to taxon bipartitions. The second and third are the
