@@ -16122,9 +16122,9 @@ int Move_StatefreqsRoot (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
 	/* change pi */
 	int			i, nStates, isValid;
 	MrBFlt		dirichletParameters[64], *newPi, *oldPi, *priorAlpha, *temp, alphaPi, x, y;
-    
     ModelInfo *m;                            
-	m = &modelSettings[param->relParts[0]];
+
+    m = &modelSettings[param->relParts[0]];
     
 	/* get the values we need */
 	nStates = m->numModelStates;
@@ -16205,9 +16205,9 @@ int Move_StatefreqsRoot_Slider (Param *param, int chain, RandLong *seed, MrBFlt 
 {
 	int			i, j, nStates, isValid;
 	MrBFlt		delta, *newPi, *oldPi, *priorAlpha, x, y, sum, min, max;
-    
     ModelInfo *m;                            
-	m = &modelSettings[param->relParts[0]];    
+	
+    m = &modelSettings[param->relParts[0]];    
     
 	/* get the values we need */
 	nStates = m->numModelStates;

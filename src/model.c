@@ -22915,8 +22915,8 @@ void SetUpMoveTypes (void)
 
     /* Move_StatefreqsRoot */
     mt = &moveTypes[i++];
-    mt->name = "Dirichlet proposal";
-    mt->shortName = "Dirichlet";
+    mt->name = "Dirichlet proposal (root)";
+    mt->shortName = "Dirichlet_root";
     mt->tuningName[0] = "Dirichlet parameter";
     mt->shortTuningName[0] = "alpha";
     mt->applicableTo[0] = DIRPI_DIRxDIR;
@@ -22936,8 +22936,8 @@ void SetUpMoveTypes (void)
 
     /* Move_StatefreqsRoot_Slider */
     mt = &moveTypes[i++];
-    mt->name = "Sliding window";
-    mt->shortName = "Slider";
+    mt->name = "Sliding window (root)";
+    mt->shortName = "Slider_root";
     mt->tuningName[0] = "Sliding window size";
     mt->shortTuningName[0] = "delta";
     mt->applicableTo[0] = DIRPI_DIRxDIR;
@@ -23758,15 +23758,25 @@ int ShowModel (void)
                             }
                         else if (!strcmp(modelParams[i].stateFreqPr,"Fixed") && !strcmp(modelParams[i].stateFreqsFixType,"User"))
                             {
+                            MrBayesPrint ("%s                     State frequencies are fixed(%1.2lf,%1.2lf)\n", spacer,
+                                modelParams[i].stateFreqsFix[0], modelParams[i].stateFreqsFix[1]);
                             MrBayesPrint ("%s                     State frequencies have been fixed by the user\n", spacer);
                             }
                         else if (!strcmp(modelParams[i].stateFreqPr,"Fixed") && !strcmp(modelParams[i].stateFreqsFixType,"Empirical"))
                             {
+                            MrBayesPrint ("%s                     State frequencies are fixed(%1.2lf,%1.2lf)\n", spacer,
+                                modelParams[i].stateFreqsFix[0], modelParams[i].stateFreqsFix[1]);
                             MrBayesPrint ("%s                     State frequencies have been fixed to the empirical frequencies in the data\n", spacer);
                             }
-                        if (!strcmp(modelParams[i].statefreqModel,"Directional"))
+                        if (!strcmp(modelParams[i].statefreqModel,"Directional") || !strcmp(modelParams[i].statefreqModel,"Mixed"))
                             {
-                            MrBayesPrint ("%s                     State frequencies are different for the root (directional model)\n", spacer);
+                            MrBayesPrint ("%s                     State frequencies are potentially different for the root (directional model)\n", spacer);
+                            if (!strcmp(modelParams[i].statefreqModel,"Directional") && !strcmp(modelParams[i].rootFreqPr,"Fixed"))
+                                MrBayesPrint ("%s                     Root state frequencies are fixed(%1.2lf,%1.2lf)\n", spacer,
+                                    modelParams[i].rootFreqsFix[0], modelParams[i].rootFreqsFix[1]);
+                            else if (!strcmp(modelParams[i].statefreqModel,"Directional") && !strcmp(modelParams[i].rootFreqPr,"Dirichlet"))
+                                MrBayesPrint ("%s                     Root state frequencies have a Dirichlet (%1.2lf,%1.2lf) prior\n", spacer,
+                                    modelParams[i].rootFreqsDir[0], modelParams[i].rootFreqsDir[1]);
                             }
                         else if (!strcmp(modelParams[i].statefreqModel,"Mixed"))
                             {

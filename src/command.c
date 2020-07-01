@@ -10567,7 +10567,12 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                state frequencies at the root are allowed to differ from the     \n");
         MrBayesPrint ("                equilibrium frequencies. The directional and mixed models are    \n");
         MrBayesPrint ("                currently only implemented for restriction data. Note that       \n");
-        MrBayesPrint ("                directional evolution requires the tree to be rooted.            \n");
+        MrBayesPrint ("                directional evolution means that the rooting of the tree matters.\n");
+        MrBayesPrint ("                Thus, although the tree is not a clock tree, it will have a root \n");
+        MrBayesPrint ("                under a directional model. When \"mixed\" is chosen, the chain   \n");
+        MrBayesPrint ("                samples the stationary state frequency model, with statefrmod=0  \n");
+        MrBayesPrint ("                indicating the stationary model and statefrmod=1 indicating the  \n");
+        MrBayesPrint ("                directional model.                                               \n");
         MrBayesPrint ("   Parsmodel -- This forces calculation under the so-called parsimony model      \n");
         MrBayesPrint ("                described by Tuffley and Steel (1998). The options are \"yes\"   \n");
         MrBayesPrint ("                or \"no\". Note that the biological assumptions of this model    \n");
