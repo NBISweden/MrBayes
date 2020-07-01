@@ -333,7 +333,9 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define GROWTH_MIN              0.000001f
 #define GROWTH_MAX              1000000.0f
 #define RATE_MIN                0.000001f
-#define RATE_MAX                100.0f
+#define RATE_MAX                1000.0f
+#define AA_RATE_MIN             1.0E-15f
+#define AA_RATE_MAX             1.0E5f
 #define CPPRATEMULTIPLIER_MIN   0.001f
 #define CPPRATEMULTIPLIER_MAX   1000.0f
 #define SYMPI_MIN               0.000001f
