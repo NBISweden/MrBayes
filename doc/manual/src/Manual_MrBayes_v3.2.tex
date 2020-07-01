@@ -12,9 +12,8 @@
 \usepackage{booktabs}
 \usepackage[linktoc=all,colorlinks=true,citecolor=darkgray,filecolor=black,linkcolor=blue,urlcolor=purple]{hyperref}
 
-%\usepackage{wrapfig}
-\usepackage{float}
-\usepackage{fancyvrb}
+\usepackage{float}    % provides [H] placement
+\usepackage{fancyvrb} % provides BVerbatim
 
 % The following specifies a line spacing of 1.2 times normal
 \renewcommand{\baselinestretch}{1.2}
@@ -41,6 +40,9 @@
 %%%% JN: [ ] Check consistent font sizes for verbatim code
 %%%% JN: [ ] Consistent use of `MrBayes >`
 %%%% JN: [ ] Consistent use of `\tb{}`, `\ttt{}`, etc
+%%%% JN: [ ] Change [h] to [ht] following LaTeX
+%%%% JN: [ ] Undefined reference(s)
+%%%% JN: [ ] Reference `tablebftable' on page 56 undefined on input line 2432
 
 \begin{document}
 
@@ -205,26 +207,6 @@ more about how to set up various types of analyses based on these example data f
 
 Start MrBayes by double-clicking the application icon (or typing \tb{./mb} or simply \tb{mb}
 depending on your system) and you will see the following information:
-
-%\begin{figure}[h]\singlespacing\footnotesize
-%\centering
-%\begin{verbatim}
-%                      MrBayes v3.2.7
-%
-%             (Bayesian Analysis of Phylogeny)
-%
-%     Distributed under the GNU General Public License
-%
-%
-%      Type "help" or "help <command>" for information
-%            on the commands that are available.
-%
-%          Type "about" for authorship and general
-%              information about the program.
-%
-%
-%MrBayes >
-%\end{verbatim}\end{figure}
 
 \begin{figure}[h]
 \singlespacing
@@ -2430,7 +2412,7 @@ include such samples, so the harmonic mean estimate is often considerably inflat
 We also see that the strict-clock model is now almost $15$ log likelihood units better than the
 non-clock model. A difference exceeding 5 log likelihood units is usually considered very strong
 evidence in favor of the better model \citep{kass95} (see also Table \ref{table:bftable} on 
-page~\pageref{tablebftable}). If you are familiar with likelihood ratio tests, it may seem 
+page~\pageref{table:bftable}). If you are familiar with likelihood ratio tests, it may seem 
 counter-intuitive that the strict clock model can be so strongly preferred. After all, the strict
 clock is just a special case of the non-clock model, so the (maximum) likelihood \emph{must} 
 necessarily be  higher, or at least as high, for the latter. How can the strict-clock model still 
