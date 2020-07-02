@@ -14,6 +14,10 @@
 
 \usepackage{float}    % provides [H] placement
 \usepackage{fancyvrb} % provides BVerbatim
+\usepackage{etoolbox} % Try to reduce vertical space around verbatim
+\makeatletter
+\preto{\@verbatim}{\topsep=0pt \partopsep=0pt }
+\makeatother
 
 % The following specifies a line spacing of 1.2 times normal
 \renewcommand{\baselinestretch}{1.2}
@@ -57,6 +61,7 @@
 
 \frontmatter
 
+%%%% JN: CHAPTER Preface
 \chapter{Preface}
 \label{preface}
 
@@ -119,6 +124,7 @@ November, 2011\hfill\\
 
 \mainmatter
 
+%%%% JN: CHAPTER 1
 \chapter{Introduction}
 \label{intro}
 MrBayes 3 is a program for Bayesian inference and model choice across a large space of phylogenetic
@@ -153,7 +159,6 @@ by MrBayes was introduced by \citet{geyer91}. Some recent general textbooks on B
 and MCMC methods include \citet{gilks96a}, \citet{carlin00}, \citet{gelman03}, and
 \citet{gamerman06}.
 
-
 \section{Conventions Used in this Manual}
 
 Throughout the document, we use \ttt{typewriter font} for things you see on screen or in a data
@@ -161,7 +166,6 @@ file, and \tb{bold typewriter font} for things you should type in. Alternative c
 file names, etc are also given in \ttt{typewriter font}. Furthermore, a ``\ttt{MrBayes >}'' will
 indicate the prompt in MrBayes, while the ``\ttt{\$}'' indicates your computer prompt (inside your
 shell/Terminal).
-
 
 \section{Acquiring and Installing MrBayes}
 
@@ -201,7 +205,6 @@ analyses you can perform with the program, and you can use them as templates for
 In the tutorials given in chapters \ref{tutorialSimple} to \ref{tutorialAdvanced}, you can learn
 more about how to set up various types of analyses based on these example data files.
 
-
 \section{Getting Started}
 
 Start MrBayes by double-clicking the application icon (or typing \tb{./mb} or simply \tb{mb}
@@ -227,8 +230,6 @@ depending on your system) and you will see the following information:
 MrBayes >
 \end{BVerbatim}
 \end{figure}
-
-
 
 Note the \ttt{MrBayes >} prompt at the bottom, which tells you that MrBayes is ready for your
 commands.
@@ -314,10 +315,9 @@ If you wish to cite the program, you can simply refer to the most recent release
 
 \begin{singlespacing}
 \footnotesize
-Ronquist, F., M. Teslenko, P. van der Mark, D. Ayres, A. Darling, S. H\"{o}hna,
-B. Larget, L. Liu, M. A. Suchard, and J. P. Huelsenbeck. 2012. MrBayes 3.2:
-efficient Bayesian phylogenetic inference and model choice across a large model
-space. Systematic Biology 61:539--542.
+Ronquist, F., M. Teslenko, P. van der Mark, D. Ayres, A. Darling, S. H\"{o}hna, B. Larget, L. Liu,
+M. A. Suchard, and J. P. Huelsenbeck. 2012. MrBayes 3.2: efficient Bayesian phylogenetic
+inference and model choice across a large model space. Systematic Biology 61:539--542.
 \normalsize
 \end{singlespacing}
 
@@ -334,7 +334,7 @@ Ronquist, F., J. P. Huelsenbeck, M. Teslenko, C, Zhang, and J. A. A Nylander (20
 For more tips on citations, you can run the \ttt{citations} command in the program, which will give
 you a number of other relevant citations for the program and its models and algorithms.
 
-
+%%%% JN: CHAPTER 2
 \chapter{Tutorial: A Simple Analysis}
 \label{tutorialSimple}
 This section walks you through a simple MrBayes example analysis to get you started. It is based on
@@ -561,8 +561,8 @@ and we will not change any of them for now. By typing \tb{help prset} you can ob
 default settings for the parameters in your model. The table at the end of the help information
 reads:
 
-%%%% JN: Better not to place this as a figure float. And, lines are just wide enough to fit
-%%%% JN: the page width.
+%%%% JN: Better not to place this as a figure float.
+%%%% JN: And, lines are just wide enough to fit the page width.
 \begin{singlespacing}
 \footnotesize
 \begin{verbatim}
@@ -672,7 +672,6 @@ puts a prior on the total length on the tree, and then assigns prior lengths on 
 by dividing the tree length using a Dirichlet prior.
 %%%% JN: Add text here
 More details can be found in build in help documentation (by issuing \tb{help prset}).
-
 
 \subsection{Checking the Model}
 
@@ -928,7 +927,6 @@ changes of these settings may destroy any hopes of achieving convergence.
 After the initial log likelihoods, MrBayes will print the state of the chains every 100th
 generation, like this (with a 13 column output. Here we show 11 for readability):
 
-
 %Chain results (20000 generations requested):
 %
 %    0 -- [-8849.255] (-8762.724) (-8987.103) (-8764.951) * [-8802.317] (-8424.093) (-8889.702) (-8566.483) 
@@ -962,10 +960,8 @@ generation, like this (with a 13 column output. Here we show 11 for readability)
 %
 % Continue with analysis? (yes/no): 
 
-
-
 \begin{singlespacing}
-\footnotesize
+\scriptsize
 \begin{verbatim}
 Chain results (20000 generations requested):
 
@@ -1118,7 +1114,7 @@ the data (the log likelihood values). If we are at stationarity, this plot shoul
 noise'', that is, there should be no tendency of increase or decrease over time. The plot should
 look something like this:
 
-\begin{figure}[h]\singlespacing\footnotesize
+\begin{figure}[h]\singlespacing\scriptsize
 \centering
 \begin{BVerbatim}
 +------------------------------------------------------------+ -5718.97
@@ -1513,6 +1509,7 @@ contains the most probable trees up to an accumulated posterior probability of 9
 this file will only contain one tree, but data sets with more topological uncertainty can produce
 long lists of trees in the \ttt{.trprobs} files.
 
+%%%% JN: CHAPTER 3
 \chapter{Tutorial: A Partitioned Analysis}
 \label{tutorialPartitioned}
 MrBayes handles a wide variety of data types and models, as well as any mix of these models. In
@@ -1521,7 +1518,6 @@ data from four genes and morphology for 30 taxa of gall wasps and outgroups. A s
 be used, e.g., to set up a partitioned analysis of molecular data coming from different genes. The
 data set for this tutorial is found in the file \texttt{cynmix.nex}. 
 
-
 \section{Getting Mixed Data into MrBayes}
 
 First, open up the Nexus data file in a text editor. The \texttt{DATA} block of the Nexus file
@@ -1529,12 +1525,10 @@ should look familiar but there are some differences compared to the \texttt{prim
 the format statement:
 
 \begin{figure}[h]\singlespacing\footnotesize
-\centering
 \begin{BVerbatim}
 Format datatype=mixed(Standard:1-166,DNA:167-3246) interleave=yes gap=- missing=?;
 \end{BVerbatim}
 \end{figure}
-
 
 First, the datatype is given as mixed followed by a specification of the content of the matrix: it
 contains standard (morphology) characters in columns 1--166 and DNA characters in the remaining
@@ -1544,7 +1538,6 @@ It may not be compatible with other phylogenetics programs.
 Second, the matrix is specified to be interleaved. It is often convenient to specify mixed data in
 interleaved format, with each block consisting of a natural subset of the matrix, such as the
 morphological data or one of the gene regions.
-
 
 \section{Dividing the Data into Partitions}
 
@@ -1587,7 +1580,6 @@ this partitioning of the data instead of the default partitioning. We do this us
 set partition = favored;
 \end{BVerbatim}
 \end{figure}
-
 
 \section{Specifying a Partitioned Model}
 
@@ -1712,7 +1704,7 @@ file. For instance, if you wish to name the output files from one analysis using
 analysis in a separate directory, in which case the naming of the output files will not be an
 issue.
 
-
+%%%% JN: CHAPTER 4
 \chapter{More Tutorials}
 \label{tutorialAdvanced}
 
@@ -1899,7 +1891,7 @@ long table summarizing the estimates of the posterior distributions of the model
 including the probabilities of sites being in the positively selected class, and the weighted site
 omega values (dN/dS ratios):
 
-\begin{figure}[H]\singlespacing\footnotesize
+\begin{figure}[H]\singlespacing\scriptsize
 \centering
 \begin{BVerbatim}
                                          95% HPD Interval
@@ -1965,7 +1957,6 @@ are most likely to be experiencing positive selection (a high value for \texttt{
 % (\ttt{pr+(292,293,294) = 0.998}, \ttt{omega(292,293,294) = 1.21}).
 %%%% JN: My rerun using 3.2.7 did not find any pr+ value > 0.282567,
 %%%% JN: and for site (292,293,294), I get pr+(292,293,294) = 0.000015, omega(292,293,294) = 0.070020
-
 
 \section{Sampling Across the GTR Model Space}
 \label{sampleGTR}
@@ -2042,7 +2033,6 @@ To assess convergence when you sample across the GTR substitution model space, f
 variation across runs in estimated model probabilities. The table gives the standard deviation as
 well as the range of estimated values across runs. Here, we see some heterogeneity across runs in
 model probabilities, but most models receive similar probabilities in the two independent runs.
-
 
 \section{Testing a Topological Hypothesis}
 
@@ -2249,7 +2239,7 @@ Bayes factor.
 Finally, let us examine one of the convergence diagnostics plots from one of our stepping-stone
 analyses:
 
-\begin{figure}[H]\singlespacing\footnotesize
+\begin{figure}[H]\singlespacing\scriptsize
 \centering
 \begin{BVerbatim}
 Plot of average standard deviation of split frequencies across steps.
@@ -2291,7 +2281,6 @@ perhaps with slightly different settings, to look for robustness. In the case of
 command, one might also use the parameter \texttt{fromprior=yes}, which starts from the prior and
 goes towards the posterior (the opposite direction from the default settings). The two approaches
 should, in theory, give the same estimate (plus/minus the MCMC error).
-
 
 \section{Testing the Strict Molecular Clock}
 \label{strictClock}
@@ -2409,10 +2398,17 @@ and there is overlap between the estimates obtained in individual runs. In this 
 undoubtedly need the increased accuracy of the stepping-stone sampling method.
 
 Before moving on to the stepping-stone analysis, first compute a summary of the tree samples using
-the \tb{sumt} command. Now focus on the phylogram, the second tree, in the output from this
-command. It should look something like this:
+the \texttt{sumt} command:
 
-\begin{figure}[H]\singlespacing\footnotesize
+\singlespacing\small
+\begin{verbatim}
+Mrbayes > prset sumt
+\end{verbatim}
+
+Now focus on the phylogram, the second tree, in the output from this command. It should look
+something like this:
+
+\begin{figure}[H]\singlespacing\scriptsize
 \centering
 \begin{BVerbatim}
 Phylogram (based on median node depths):
@@ -2563,7 +2559,6 @@ space. This is what happens here, resulting in a strong preference for the stric
 
 For a brief discussion on convergence diagnostics and the plot printed by the \texttt{ss} command,
 see the previous tutorial.
-
 
 \section{Using a Relaxed Clock Model}
 \label{relaxedClock}
@@ -2933,11 +2928,15 @@ Rate dating and node dating will be demonstrated on a small data set, \ttt{prima
 been analyzed in several previous tutorials, while a much larger data set, \ttt{hymfossil.nex} will
 be used to demonstrate total-evidence dating and node dating in a more typical setting.
 
-We begin by reading in the smaller data set using the command
+We begin by reading in the smaller data set using the command \texttt{execute} (we also use
+\texttt{set autoclose=yes nowarnings=yes} for allowing execution without being prompted for
+answering \texttt{yes/no} between steps):
+
 
 \small
 \begin{singlespacing}
 \begin{verbatim}
+MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > execute primates.nex
 \end{verbatim}
 \end{singlespacing}
@@ -2997,7 +2996,9 @@ For instance, we might want to modify the prior so that it has the same effect o
 measured in substitution units. In our case, we want to change the default prior, with expected
 mean $1.0$, to one with expected mean $1.0 / 0.01 = 100$, that is, the original value divided by
 the expected clock rate. 
-%Since the expectation of the exponential distribution is the same as the inverse of the rate parameter, we thus need to modify the tree age prior to an exponential distribution with the rate $0.01$. 
+%Since the expectation of the exponential distribution is the same as the inverse of the rate
+% parameter, we thus need to modify the tree age prior to an exponential distribution with the
+% rate $0.01$. 
 Here we specify a gamma distribution with mean 100 and standard deviation 50.
 We do this using the following command line.
 
@@ -3009,8 +3010,8 @@ MrBayes > prset treeagepr=gamma(100,50)
 \end{singlespacing}
 \normalsize
 
-Now let us run a short MCMC analysis using 100,000 generations and the default settings. After
-that, we use the \ttt{sumt} command to examine the calibrated tree:
+Now let us run a short MCMC analysis using 100,000 generations and the default settings. After that
+we use the \ttt{sumt} command to examine the calibrated tree:
 
 \small
 \begin{singlespacing}
@@ -3023,50 +3024,92 @@ MrBayes > sumt
 
 The resulting dated phylogram should look something like this:
 
-\scriptsize
-\begin{singlespacing}
-\begin{verbatim}
+\begin{figure}[H]\singlespacing\scriptsize
+\centering
+\begin{BVerbatim}
                                                      /----- Homo_sapiens (3)
-                                                   /-+                          
+                                                   /-+
                                                    | \----- Pan (4)
-                                           /-------+                            
+                                           /-------+
                                            |       \------- Gorilla (5)
-                                      /----+                                    
+                                      /----+
                                       |    \--------------- Pongo (6)
-                        /-------------+                                         
+                        /-------------+
                         |             \-------------------- Hylobates (7)
-                        |                                                       
+                        |
                         |                               /-- Macaca_fuscata (8)
-             /----------+                           /---+                       
+             /----------+                           /---+
              |          |                           |   \-- M_mulatta (9)
-             |          |                        /--+                           
+             |          |                        /--+
              |          |                        |  \------ M_fascicularis (10)
-/------------+          \------------------------+                              
+/------------+          \------------------------+
 |            |                                   \--------- M_sylvanus (11)
-|            |                                                                  
+|            |
 +            \--------------------------------------------- Saimiri_sciure~ (12)
-|                                                                               
+|
 |              /------------------------------------------- Tarsius_syrichta (1)
-\--------------+                                                                
+\--------------+
                \------------------------------------------- Lemur_catta (2)
-                                                                                
----|----------|----------|----------|----------|----------|                     
+
+---|----------|----------|----------|----------|----------|
  50.0       40.0       30.0       20.0       10.0        0.0                    
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+\end{BVerbatim}
+\end{figure}
 
-The phylogram gives the median age estimates for all nodes in the tree in user- defined time units,
+The phylogram gives the median age estimates for all nodes in the tree in user-defined time units,
 which is million years in our case. For instance, the analysis dates the oldest split in the tree
-at around 53 Ma (million years ago), and the split between humans and chimps (\textit{Pan}) at
-about 5 Ma. If we are interested in a more detailed summary of the age estimates, we need to go
-into the parameter summary table printed above the trees. Before doing that, however, we need to
-identify the bipartition IDs that we are interested in. We do that by referring to the bipartition
-table:
+at around 53 Ma (million years ago), and the split between humans (\textit{Homo sapiens}) and
+chimps (\textit{Pan}) at about 5 Ma. If we are interested in a more detailed summary of the age
+estimates, we need to go into the parameter summary table printed above the trees. Before doing
+that, however, we need to identify the bipartition IDs that we are interested in. We do that by
+referring to the bipartition table:
+%List of taxa in bipartitions:
+%
+%   1 -- Tarsius_syrichta
+%   2 -- Lemur_catta
+%   3 -- Homo_sapiens
+%   4 -- Pan
+%   5 -- Gorilla
+%   6 -- Pongo
+%   7 -- Hylobates
+%   8 -- Macaca_fuscata
+%   9 -- M_mulatta
+%  10 -- M_fascicularis
+%  11 -- M_sylvanus
+%  12 -- Saimiri_sciureus
+%
+%Key to taxon bipartitions (saved to file "primates.nex.parts"):
+%
+%ID -- Partition
+%------------------
+% 0 -- ************
+% 1 -- *...........
+% 2 -- .*..........
+% 3 -- ..*.........
+% 4 -- ...*........
+% 5 -- ....*.......
+% 6 -- .....*......
+% 7 -- ......*.....
+% 8 -- .......*....
+% 9 -- ........*...
+%10 -- .........*..
+%11 -- ..........*.
+%12 -- ...........*
+%13 -- ..***.......
+%14 -- ..**********
+%15 -- ..****......
+%16 -- .......**...
+%17 -- ..*********.
+%18 -- ..*****.....
+%19 -- .......****.
+%20 -- ..**........
+%21 -- .......***..
+%22 -- **..........
+%------------------
 
-\footnotesize
-\begin{singlespacing}
-\begin{verbatim}
+\begin{figure}[H]\singlespacing\footnotesize
+\centering
+\begin{BVerbatim}
 List of taxa in bipartitions:
 
    1 -- Tarsius_syrichta
@@ -3081,7 +3124,11 @@ List of taxa in bipartitions:
   10 -- M_fascicularis
   11 -- M_sylvanus
   12 -- Saimiri_sciureus
-
+\end{BVerbatim}
+\end{figure}
+\begin{figure}[H]\singlespacing\footnotesize
+\centering
+\begin{BVerbatim}
 Key to taxon bipartitions (saved to file "primates.nex.parts"):
 
 ID -- Partition
@@ -3110,23 +3157,22 @@ ID -- Partition
 21 -- .......***..
 22 -- **..........
 ------------------
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+\end{BVerbatim}
+\end{figure}
 
 For instance, assume that we are interested in the age of the oldest split in the tree, and the
 split between humans and chimps. The oldest split in the tree corresponds to the partition
-description with all stars, that is, partition ID 0. Humans (\textit{Homo sapiens}) have taxon ID 3
-and chimps (\textit{Pan}) the taxon ID 4. The partition description corresponding to the
-human--chimp split thus should have stars in positions 3 and 4, and dots in all other positions.
-This is partition ID 20. In your analysis, the partition IDs may be different.
+description with all stars, that is, partition ID 0. Humans have taxon ID 3 and chimps the taxon ID
+4. The partition description corresponding to the human--chimp split thus should have stars in
+positions 3 and 4, and dots in all other positions.  This is partition ID 20. In your analysis, the
+partition IDs may be different.
 
 Now we go into the table of node and branch parameter estimates, and find the corresponding age
 estimates. Here are the relevant rows in this table in our analysis:
 
-\footnotesize
-\begin{singlespacing}
-\begin{verbatim}
+\begin{figure}[H]\singlespacing\scriptsize
+\centering
+\begin{BVerbatim}
                                         95% HPD Interval
                                       --------------------
 Parameter      Mean       Variance     Lower       Upper       Median     PSRF+  Nruns
@@ -3134,16 +3180,15 @@ Parameter      Mean       Variance     Lower       Upper       Median     PSRF+ 
 age[0]       59.590844  588.972831   26.805076  114.390416   52.435516    0.999    2
 age[20]       5.361829    4.555993    2.300513   10.178956    4.955494    1.000    2
 --------------------------------------------------------------------------------------
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+\end{BVerbatim}
+\end{figure}
 
 For instance, we see that the posterior distribution of the age of the human--chimp split has a
 mean of $5.4$ Ma, a median of $5.0$ Ma, and a 95\% HPD ranging from $2.3$ to $10.2$ Ma. By default,
 the \ttt{sumt} command will print all the summaries of node and branch parameters to the tree in
-the file with the ending \ttt{.con.tre} in a format that can be understood by FigTree. When you
-open the file in FigTree, you will have access to a range of options for visualizing the parameter
-summaries of your interest.
+the file with the ending \ttt{.con.tre} in a format that can be understood by the program FigTree.
+When you open the file in FigTree, you will have access to a range of options for visualizing the
+parameter summaries of your interest.
 
 We now turn our attention to dating of the tree using node calibrations (node dating). Assume, for
 instance, that we have independent evidence suggesting that the human--chimp split occurred at
@@ -3160,7 +3205,7 @@ constraint for the node of interest. Second, we associate the node with a calibr
 Third, we enforce the constrained nodes. Fourth, we enforce node ages to obey calibrations.
 Specifically, the MrBayes commands are:
 
-\begin{singlespacing}
+\begin{singlespacing}\small
 \begin{verbatim}
 MrBayes > constraint humanchimp = Homo_sapiens Pan
 MrBayes > calibrate humanchimp=uniform(5,7)
@@ -3172,38 +3217,37 @@ MrBayes > prset nodeagepr=calibrated
 After running the analysis and summarizing the tree samples, we can examine the resulting
 phylogram. It should look something like this:
 
-\scriptsize
-\begin{singlespacing}
-\begin{verbatim}
+\begin{figure}[h]\singlespacing\scriptsize
+\centering
+\begin{BVerbatim}
               /-------------------------------------------- Tarsius_syrichta (1)
-/-------------+                                                                 
+/-------------+
 |             \-------------------------------------------- Lemur_catta (2)
-|                                                                               
+|
 |                                                    /----- Homo_sapiens (3)
-|                                                  /-+                          
+|                                                  /-+
 |                                                  | \----- Pan (4)
-|                                          /-------+                            
+|                                          /-------+
 |                                          |       \------- Gorilla (5)
-|                                      /---+                                    
+|                                      /---+
 +                                      |   \--------------- Pongo (6)
-|                        /-------------+                                        
+|                        /-------------+
 |                        |             \------------------- Hylobates (7)
-|                        |                                                      
+|                        |
 |                        |                              /-- Macaca_fuscata (8)
-|            /-----------+                           /--+                       
+|            /-----------+                           /--+
 |            |           |                           |  \-- M_mulatta (9)
-|            |           |                       /---+                          
+|            |           |                       /---+
 |            |           |                       |   \----- M_fascicularis (10)
-\------------+           \-----------------------+                              
+\------------+           \-----------------------+
              |                                   \--------- M_sylvanus (11)
-             |                                                                  
+             |
              \--------------------------------------------- Saimiri_sciure~ (12)
-                                                                                
--------|--------|-------|--------|-------|--------|-------|                     
-     60.0     50.0    40.0     30.0    20.0     10.0     0.0                    
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+
+-------|--------|-------|--------|-------|--------|-------|
+     60.0     50.0    40.0     30.0    20.0     10.0     0.0
+\end{BVerbatim}
+\end{figure}
 
 If we look at the detailed summary of the age estimate of the human--chimp split, we now see that
 the distribution has a mean and a median of $6.0$, and the HPD interval ranges from $5.0$ to $6.9$
@@ -3219,14 +3263,17 @@ to consider the priors on the clock tree parameters (such as the tree age for th
 the node ages and the clock rate carefully. It is good practice to examine the influence of these
 priors on the dating results.
 
-%%%% JN: HymFossil
-%%%% JN: The two analyses are NOT described in the MrBayes/examples/hymfossil.nex file.
-%%%% JN: Text AND nexus file needs to be updated.
+%%%% JN: The two analyses are NOT described in the MrBayes/examples/hymfossil.nex file!
+%%%% JN: Text AND nexus file needs to be updated!
+%%%% JN: Furthermore, the file "hym.nex" -- a "truncated" hymfossil.nex, and referred to in
+%%%% JN: Chi's document "https://arxiv.org/pdf/1603.05707.pdf" -- is no longer included in MrBayes.
+%%%% JN: Hence, this section is currently not correct, and the steps can not be replicated.
 Now we turn our attention to a larger data set, and more complex dating scenarios. The data set,
 \ttt{hymfossil.nex}, is from a study of the early radiation of the Hymenoptera \citep{ronquist12b},
 and includes 68 recent taxa and 45 fossil taxa. The data matrix comprises about 5 kb data from
 seven molecular markers for recent taxa, and about 350 morphological characters coded for both
 recent and fossil taxa.
+
 At the end of the data file, in the \ttt{MRBAYES} block, you will find two dating analyses
 specified. The first is based on the standard node dating approach, in which the fossil record is
 used to derive calibration points that can help date the tree of extant taxa. The second uses
@@ -3253,31 +3300,27 @@ needed in setting up the node dating and total-evidence dating analyses.
 
 The block starts out by defining a number of character sets. Then there is a set of lines that
 define the model for the morphological partition. It first defines a set of morphological
-characters to be ordered (\ttt{morphOrdered}), and then a set of morphological characters to be
-excluded (\ttt{morphExcluded}). Then these characters are ordered and excluded with the following
+characters to be ordered (\texttt{morph\_ordered}), and then a set of morphological characters to be
+excluded (\texttt{morph\_excluded}). Then these characters are ordered and excluded with the following
 two lines:
 
-\small
-\begin{singlespacing}
-\begin{verbatim}
-ctype ordered : morphOrdered;
-exclude morphExcluded;
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+\begin{figure}[h]\singlespacing\footnotesize
+\begin{BVerbatim}
+ctype ordered: morph_ordered;
+exclude morph_excluded;
+\end{BVerbatim}
+\end{figure}
 
 The next set of lines define the partitioning of the data:
 
-\small
-\begin{singlespacing}
-\begin{verbatim}
+\begin{figure}[h]\singlespacing\footnotesize
+\begin{BVerbatim}
 partition without_CO1_3 = 7: MV MS, 12S 16S, 18S, 28S,
     CO1_12 CO1_3, Ef1aF1_12 Ef1aF2_12, Ef1aF1_3 Ef1aF2_3;
 exclude CO1_3;
 set partition=without_CO1_3;
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+\end{BVerbatim}
+\end{figure}
 
 Note that the morphological data (sets \ttt{MV} and \ttt{MS}) are lumped into one partition, as are
 the 12S and 16S sequences (because these are very short sequences). The protein-coding CO1, Ef1aF1,
@@ -3300,26 +3343,24 @@ used in drawing trees from unrooted non-clock analyses. This line is irrelevant 
 analyses, since they produce rooted trees. The next line defines a set of taxa including the
 fossils, called \ttt{fossils}:
 
-\small
-\begin{verbatim}
+\begin{figure}[h]\singlespacing\footnotesize
+\begin{BVerbatim}
 taxset fossils= Triassoxyela Asioxyela ...
-\end{verbatim}
-\normalsize
+\end{BVerbatim}
+\end{figure}
 
 This will be convenient when we want to exclude the fossils from the node dating analysis. Finally,
 all the constraints corresponding to the calibration nodes are defined:
 
-\small
-\begin{singlespacing}
-\begin{verbatim}
+\begin{figure}[h]\singlespacing\footnotesize
+\begin{BVerbatim}
 constraint root = 1-.;
-constraint hymenoptera = 10-69;
-constraint holometabola = 3-69;
-constraint holometabola_withFossils = 3-.;
+constraint Hymenoptera = 10-69;
+constraint Holometabola = 3-69;
+constraint HolometabolaWithFossils = 3-114;
 ...
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+\end{BVerbatim}
+\end{figure}
 
 Note that the file uses two versions of the holometabola constraint, one with the fossils for the
 total-evidence analysis and one without for the node dating analysis. Strictly speaking, this is
@@ -3329,15 +3370,13 @@ second version of the constraint would have been adequate for both analyses.
 We now come to the specification of the two dating analyses. The first is the total-evidence
 analysis, which starts out by specifying the date of all fossil taxa:
 
-\small
-\begin{singlespacing}
-\begin{verbatim}
+\begin{figure}[h]\singlespacing\footnotesize
+\begin{BVerbatim}
 calibrate Triassoxyela=Fixed(235)
     Asioxyela=Fixed(235)
 ...
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+\end{BVerbatim}
+\end{figure}
 
 Here, we assume that the uncertainty concerning the age of each fossil is negligible compared to
 other sources of uncertainty, so we simply fix the age of each fossil instead of associating it
@@ -3346,15 +3385,13 @@ with a prior probability distribution.
 The next three lines set up an WN relaxed clock model. You should recognize the commands from the
 tutorial in section \ref{relaxedClock}.
 
-\small
-\begin{singlespacing}
-\begin{verbatim}
+\begin{figure}[h]\singlespacing\footnotesize
+\begin{BVerbatim}
 prset brlenspr=clock:uniform;
 prset clockvarpr=wn;
 prset wnvarpr=exp(37);
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+\end{BVerbatim}
+\end{figure}
 
 An appropriate prior for the \ttt{wnvarpr} parameter, the variance increase parameter of the WN
 model, was found by simulations. Specifically, strict-clock and non-clock branch lengths were
@@ -3365,17 +3402,15 @@ WN model matched these data better than the TK02 relaxed clock model provided by
 The final five lines define a prior on the clock rate and sets the two outgroup calibration points
 using the same commands discussed previously in this tutorial:
 
-\small
-\begin{singlespacing}
-\begin{verbatim}
+\begin{figure}[h]\singlespacing\footnotesize
+\begin{BVerbatim}
 prset clockratepr=lognorm(-7.1,0.5);
 calibrate root=offsetexp(315,396);
 calibrate holometabola_withFossils=offsetexp(302,396);
 prset topologypr=constraints(root,holometabola_withFossils);
 prset nodeagepr=calibrated;
-\end{verbatim}
-\end{singlespacing}
-\normalsize
+\end{BVerbatim}
+\end{figure}
 
 Note that a tree age prior is not used here; instead, we define a root calibration point. MrBayes
 will use the root calibration as your tree age prior if you provide one; otherwise, it is the
@@ -3387,11 +3422,11 @@ This completes the definition of the total-evidence analysis. Let us now turn ou
 node-dating analysis. It starts out by deleting the fossils from the analysis, using the previously
 defined taxon set called \ttt{fossils}:
 
-\small
-\begin{verbatim}
+\begin{figure}[h]\singlespacing\footnotesize
+\begin{BVerbatim}
 delete fossils
-\end{verbatim}
-\normalsize
+\end{BVerbatim}
+\end{figure}
 
 It then continues by defining the relaxed clock model in the same way as the total-evidence
 analysis. This is followed by a specification of the clock rate prior and then the specification of
@@ -3399,11 +3434,11 @@ the two outgroup and seven ingroup calibration points. The commands are essentia
 in the total-evidence analysis. Note that all nine constraints have to be enforced when specifying
 the topology prior:
 
-\small
-\begin{verbatim}
-    prset topologypr=constraints(root,holometabola,hymenoptera,...,Vespina);
-\end{verbatim}
-\normalsize
+\begin{figure}[h]\singlespacing\footnotesize
+\begin{BVerbatim}
+prset topologypr=constraints(root,holometabola,hymenoptera,...,Vespina);
+\end{BVerbatim}
+\end{figure}
 
 This completes the description of the analysis specifications. As you will notice, the file ends by
 setting up some \ttt{mcmc} parameters using the \ttt{mcmcp} command but it leaves it up to you to
@@ -3412,7 +3447,6 @@ actually start the analysis.
 Another total-evidence dating tutorial using the Hymenoptera data (truncated) is provided by
 Zhang (\url{https://arxiv.org/abs/1603.05707}). It uses the fossilized 
 birth-death model \citep{Stadler:2010fn,Heath:2014hn,Zhang:2016kf} as a tree prior.
-
 
 \section{Inferring Ancestral States}
 
@@ -3693,7 +3727,7 @@ that the species tree is very shallow, so the sequences are quite similar to eac
 partition tables printed above the trees, it is possible to find the posterior probability for each
 of the individual clades found in the tree samples.
 
-
+%%%% JN: CHAPTER 5
 \chapter{Working with MrBayes}
 \label{advancedTopics}
 
@@ -5159,7 +5193,7 @@ character matrix.
 For more information on how to use MrBayes, turn to the MrBayes web site
 (\ttt{www.mrbayes.net}).
 
-
+%%%% JN: CHAPTER 6
 \chapter{Evolutionary Models in MrBayes}
 \label{evolutionaryModels}
 
@@ -6248,6 +6282,8 @@ to estimate each parameter is good practice. Over-parameterized models often res
 with convergence in addition to the excessive variance seen in the parameter estimates.
 
 \appendix
+
+%%%% JN: CHAPTER A
 \chapter{Overview of Models and Moves}\label{appendixOverview}
 \addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
 \hspace{-12mm}\includegraphics[width=0.85\textheight]{Appendix_Fig1.pdf}\newpage
