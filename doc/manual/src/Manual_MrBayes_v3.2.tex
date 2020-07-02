@@ -325,8 +325,8 @@ This manual should be cited as an online publication, for example:
 
 \begin{singlespacing}
 \footnotesize
-Ronquist, F., J. P. Huelsenbeck, M. Teslenko, C, Zhang, and J. A. A Nylander (2020) MrBayes version 3.2 manual:
-tutorials and model summaries. Distributed with the software from
+Ronquist, F., J. P. Huelsenbeck, M. Teslenko, C, Zhang, and J. A. A Nylander (2020) MrBayes version
+3.2 manual: tutorials and model summaries. Distributed with the software from
 \url{https://github.com/NBISweden/MrBayes}
 \normalsize
 \end{singlespacing}
@@ -859,14 +859,13 @@ a long time to converge, you may even want to sample less frequently than the de
 end up with very large files containing tree and parameter samples.
 
 When the chain is sampled, the current values of the model parameters are printed to file. The
-substitution model parameters are printed to a \ttt{.p} file; a tab delimited text file that can be 
+substitution model parameters are printed to a \ttt{.p} file; a tab delimited text file that can be
 imported into most statistics and graphing programs~\footnote{In our case, there will be one file
 for each independent analysis, and they will be called \ttt{primates.nex.run1.p} and
-\ttt{primates.nex.run2.p}}. The topology and branch lengths are printed to a
-\ttt{.t} file; a Nexus tree file that can be imported into
-programs like PAUP* \citep{swofford98}, Mesquite, and FigTree~\footnote{In our case, \ttt{primates.nex.run1.t} and
-\ttt{primates.nex.run2.t}}. The root of the \ttt{.p} and
-\ttt{.t} file names can be altered using the \ttt{Filename} setting.
+\ttt{primates.nex.run2.p}}. The topology and branch lengths are printed to a \ttt{.t} file; a Nexus
+tree file that can be imported into programs like PAUP* \citep{swofford98}, Mesquite, and
+FigTree~\footnote{In our case, \ttt{primates.nex.run1.t} and \ttt{primates.nex.run2.t}}. The root
+of the \ttt{.p} and \ttt{.t} file names can be altered using the \ttt{Filename} setting.
 
 The \ttt{Printfreq} parameter controls the frequency with which brief info about the analysis is
 printed to screen. The default value is 1,000. Let us change it to match the sample frequency by
@@ -1367,7 +1366,7 @@ converge.
 This table is followed by two trees. The clade credibility tree (upper tree) gives the probability
 of each partition or clade in the tree:
 
-%%%% JN: This table needs to be placed accurately
+%%%% JN: This figure needs to be placed accurately
 
 %Clade credibility values:
 %
@@ -1525,9 +1524,9 @@ data set for this tutorial is found in the file \texttt{cynmix.nex}.
 
 \section{Getting Mixed Data into MrBayes}
 
-First, open up the Nexus data file in a text editor. The \texttt{DATA} block of the Nexus file should
-look familiar but there are some differences compared to the \texttt{primates.nex} file in the format
-statement:
+First, open up the Nexus data file in a text editor. The \texttt{DATA} block of the Nexus file
+should look familiar but there are some differences compared to the \texttt{primates.nex} file in
+the format statement:
 
 \begin{figure}[h]\singlespacing\footnotesize
 \centering
@@ -1553,9 +1552,10 @@ By default, MrBayes partitions the data according to data type. There are only t
 the matrix, so the default model will include only a morphology (standard) and a DNA partition. To
 divide the DNA partition into gene regions or other appropriate subsets, it is convenient to first
 specify character sets. In principle, this can be done from the command line but it is easier to do
-it in a \texttt{MRBAYES} block in the data file. At the end of the \texttt{cynmix.nex}, there is such a
-block (starting with \texttt{begin mrbayes;}). Any text between square brackets (\texttt{[]}) are
-comments and ignored by MrBayes. Note also that each command ends with a semicolon.
+it in a \texttt{MRBAYES} block in the data file. At the end of the \texttt{cynmix.nex}, there is
+such a block (starting with \texttt{begin mrbayes;}). Any text between square brackets
+(\texttt{[]}) are comments and ignored by MrBayes. Note also that each command ends with a
+semicolon.
 
 The relevant lines for setting up partitions starts with the command \texttt{charset}. That command
 simply associates a name with a set of characters. For instance, the character set \texttt{COI} is
@@ -1621,10 +1621,10 @@ Now, assume we want a separate GTR + I + $\Gamma$ model for each gene partition.
 should be estimated separately for the individual genes. Assume further that we want the overall
 evolutionary rate to be (potentially) different across partitions, and that we want to assume
 gamma-shaped rate variation for the morphological data. We can obtain this model by using
-\texttt{lset} and \texttt{prset} with the \texttt{applyto} mechanism, which allows us to apply the settings
-to specific partitions. For instance, to apply a GTR + I + $\Gamma$ model to the molecular partitions,
-we type \tb{lset applyto=(2,3,4,5) nst=6 rates=invgamma}. This will produce the following table
-when \tb{showmodel} is invoked:
+\texttt{lset} and \texttt{prset} with the \texttt{applyto} mechanism, which allows us to apply the
+settings to specific partitions. For instance, to apply a GTR + I + $\Gamma$ model to the molecular
+partitions, we type \tb{lset applyto=(2,3,4,5) nst=6 rates=invgamma}. This will produce the
+following table when \tb{showmodel} is invoked:
 
 \begin{figure}[h]\singlespacing\footnotesize
 \centering
@@ -1646,25 +1646,25 @@ Brlens          8  8  8  8  8
 \end{figure}
 
 As you can see, all molecular partitions now evolve under the correct model but all parameters
-(\texttt{statefreq}, \texttt{revmat}, \texttt{shape}, \texttt{pinvar}) are shared across partitions. 
-To unlink them such that each partition has its own set of parameters, type: \tb{unlink revmat=(all)}
-\tb{pinvar=(all)} \tb{shape=(all)} \tb{statefreq=(all)}. Gamma-shaped rate variation for the morphological
-data is enforced by typing \tb{lset applyto=(1) rates=gamma}. The trickiest part is to allow the overall
-rate to be different across partitions. This is achieved using the \texttt{ratepr} parameter of the
-\ttt{prset} command. By default, \texttt{ratepr} is set to \texttt{fixed}, meaning that all partitions
-have the same overall rate. By changing this to \texttt{variable}, the rates are allowed to vary under
-a flat Dirichlet prior. To allow all our partitions to evolve under different rates, type \tb{prset
-applyto=(all) ratepr=variable}.
+(\texttt{statefreq}, \texttt{revmat}, \texttt{shape}, \texttt{pinvar}) are shared across
+partitions.  To unlink them such that each partition has its own set of parameters, type:
+\tb{unlink revmat=(all)} \tb{pinvar=(all)} \tb{shape=(all)} \tb{statefreq=(all)}. Gamma-shaped rate
+variation for the morphological data is enforced by typing \tb{lset applyto=(1) rates=gamma}. The
+trickiest part is to allow the overall rate to be different across partitions. This is achieved
+using the \texttt{ratepr} parameter of the \ttt{prset} command. By default, \texttt{ratepr} is set
+to \texttt{fixed}, meaning that all partitions have the same overall rate. By changing this to
+\texttt{variable}, the rates are allowed to vary under a flat Dirichlet prior. To allow all our
+partitions to evolve under different rates, type \tb{prset applyto=(all) ratepr=variable}.
 
 The model is now essentially complete but there is one final thing to consider. Typically
 morphological data matrices do not include all types of characters. Specifically, morphological
 data matrices do not usually include any constant (invariable) characters. Sometimes,
 autapomorphies are not included either, and the matrix is restricted to parsimony-informative
-characters. For MrBayes to calculate the probability of the data correctly, we need 
- to inform it of this ascertainment (coding) bias. By default, MrBayes assumes that standard 
-data sets include all variable characters but no constant characters. If necessary, one can change this 
-setting using \texttt{lset coding}. We will leave the \texttt{coding} setting at the default, though, which 
-is \texttt{variable} for standard (morphology) data. Now, \tb{showmodel} should produce this table:
+characters. For MrBayes to calculate the probability of the data correctly, we need to inform it of
+this ascertainment (coding) bias. By default, MrBayes assumes that standard data sets include all
+variable characters but no constant characters. If necessary, one can change this setting using
+\texttt{lset coding}. We will leave the \texttt{coding} setting at the default, though, which is
+\texttt{variable} for standard (morphology) data. Now, \tb{showmodel} should produce this table:
 
 \begin{figure}[h]\singlespacing\footnotesize
 \centering
@@ -2023,20 +2023,20 @@ gtrsubmodel[123323]        0.055         0.004         0.053         0.058
 \end{figure}
 
 The models are labeled using a so-called restricted growth function. The six different substitution
-rates are given in the order $r_{AC}$, $r_{AG}$, $r_{AT}$, $r_{CG}$, $r_{CT}$, $r_{GT}$. The first rate is
-labeled ``1''. The next rate is labeled with the next higher, unused integer if it is different,
-and otherwise with the same integer as the partition it belongs to. For instance,
-\texttt{gtrsubmodel[111111]} refers to the Jukes--Cantor or F81 model, \texttt{gtrsubmodel[123456]} to
-the GTR model, and \texttt{gtrsubmodel[121121]} to the HKY model, and so on.
+rates are given in the order $r_{AC}$, $r_{AG}$, $r_{AT}$, $r_{CG}$, $r_{CT}$, $r_{GT}$. The first
+rate is labeled ``1''. The next rate is labeled with the next higher, unused integer if it is
+different, and otherwise with the same integer as the partition it belongs to. For instance,
+\texttt{gtrsubmodel[111111]} refers to the Jukes--Cantor or F81 model, \texttt{gtrsubmodel[123456]}
+to the GTR model, and \texttt{gtrsubmodel[121121]} to the HKY model, and so on.
 
 For this particular data set, we observe that there is considerable uncertainty concerning the
 correct substitution model. The model with the highest posterior probability is
-\texttt{gtrsubmodel[121123]}, which differs from the HKY model only in that the G--T substitution rate
-is different from the other transversion rates, presumably lower. The HKY model has the second best
-posterior probability of all the models reaching above the reporting threshold of $0.050$. All other
-estimates of model parameters derived from this analysis, the topology estimate for instance, will
-be based on an average across the sampled substitution models, each one weighted according to its
-posterior probability.
+\texttt{gtrsubmodel[121123]}, which differs from the HKY model only in that the G--T substitution
+rate is different from the other transversion rates, presumably lower. The HKY model has the second
+best posterior probability of all the models reaching above the reporting threshold of $0.050$. All
+other estimates of model parameters derived from this analysis, the topology estimate for instance,
+will be based on an average across the sampled substitution models, each one weighted according to
+its posterior probability.
 
 To assess convergence when you sample across the GTR substitution model space, focus on the
 variation across runs in estimated model probabilities. The table gives the standard deviation as
@@ -2161,10 +2161,10 @@ this tree groups chimps (\textit{Pan}) and gorillas (\textit{Gorilla}) together,
 \textit{Homo sapiens} being just outside, as one might have expected.
 
 Let us now repeat the comparison using the more accurate stepping-stone sampling approach. Instead
-of using the \texttt{mcmc} command followed by the \texttt{sump} command, we simply use the \texttt{ss}
-command instead, which will produce the estimated model likelihood directly. The stepping-stone
-analysis moves from the posterior to the prior through a number of steps (MCMC analyses) in which
-the sampled distribution is a mixture of varying proportions of the two.
+of using the \texttt{mcmc} command followed by the \texttt{sump} command, we simply use the
+\texttt{ss} command instead, which will produce the estimated model likelihood directly. The
+stepping-stone analysis moves from the posterior to the prior through a number of steps (MCMC
+analyses) in which the sampled distribution is a mixture of varying proportions of the two.
 
 Ideally, one would like to see evidence of convergence among independent runs in each of the steps
 of the stepping-stone sampling algorithm. As the algorithm moves close to the prior, however, we
@@ -2174,18 +2174,18 @@ of trees with similar probability will become huge for any reasonably-sized set 
 To help you monitor convergence during stepping-stone sampling, MrBayes will print the average
 standard deviation of split frequencies across runs if you use at least two independent, parallel
 runs. Each step in the algorithm is treated as an independent MCMC sampling problem, and where most
-of the parameters in the \texttt{mcmcp} and \texttt{mcmc} commands are applicable to the MCMC analysis 
-in each step. For example, the \texttt{samplefreq} and the \texttt{burnin} parameters, respectively, 
-are used for setting sampling frequency and burnin behaviour within each step. In addition, the
-\texttt{ss} command also uses its own burnin parameter, \texttt{Burninss}, for specifying the number of
-samples to be discarded before sampling of the first step starts. The length of the initial burn-in
-can be specified either in terms of the number of samples to be discarded (positive numbers) or in
-terms of step lengths (negative numbers). By default, the initial burn-in phase is as long as one
-of the subsequent steps in the algorithm, that is, \texttt{burninss=-1}. For example, assume that
-\texttt{Burninss} is set to $-1$, \texttt{Nsteps} to $49$, \texttt{Ngen} to $300000$ and 
-\texttt{samplefreq} to $500$. The algorithm will then run 49 steps, each with 6,000 generations 
-($Ngen/Nsteps+1$), which is the number of generations per step left---after a burnin of (the 
-length of) one step is removed.
+of the parameters in the \texttt{mcmcp} and \texttt{mcmc} commands are applicable to the MCMC
+analysis in each step. For example, the \texttt{samplefreq} and the \texttt{burnin} parameters,
+respectively, are used for setting sampling frequency and burnin behaviour within each step. In
+addition, the \texttt{ss} command also uses its own burnin parameter, \texttt{Burninss}, for
+specifying the number of samples to be discarded before sampling of the first step starts. The
+length of the initial burn-in can be specified either in terms of the number of samples to be
+discarded (positive numbers) or in terms of step lengths (negative numbers). By default, the
+initial burn-in phase is as long as one of the subsequent steps in the algorithm, that is,
+\texttt{burninss=-1}. For example, assume that \texttt{Burninss} is set to $-1$, \texttt{Nsteps} to
+$49$, \texttt{Ngen} to $300000$ and \texttt{samplefreq} to $500$. The algorithm will then run 49
+steps, each with 6,000 generations ($Ngen/Nsteps+1$), which is the number of generations per step
+left---after a burnin of (the length of) one step is removed.
 
 To obtain an adequate sample from most of the steps in the algorithm, we will use the settings
 given above. To monitor convergence, twice during each step, we set the diagnostics frequency to
@@ -2319,9 +2319,9 @@ MrBayes > lset nst=6 rates=invgamma
 To estimate marginal likelihoods of the two models using harmonic means of the likelihoods of the
 MCMC samples, we simply run an ordinary MCMC analysis and obtain the appropriate values using the
 standard \texttt{sump} command. Specifically, we first run the standard non-clock model for 100,000
-generations and summarize the obtained samples using \texttt{sump} (we also use \ttt{set autoclose=yes
-nowarnings=yes} for allowing execution without being prompted for answering \texttt{yes/no}
-between steps):
+generations and summarize the obtained samples using \texttt{sump} (we also use \ttt{set
+autoclose=yes nowarnings=yes} for allowing execution without being prompted for answering
+\texttt{yes/no} between steps):
 
 \begin{singlespacing}\small
 \begin{verbatim}
@@ -2568,23 +2568,23 @@ see the previous tutorial.
 \section{Using a Relaxed Clock Model}
 \label{relaxedClock}
 
-In this analysis, we will set up a relaxed clock model for the same data set, \texttt{primates.nex},
-used in the previous tutorials. A relaxed clock model is intermediate between a strict clock model
-and a non-clock model. It has one or a few more parameters than a strict clock model, but much
-fewer than a non-clock model. Unlike a non-clock model, it produces a rooted tree, but the
-information about the position of the root is not as strong as in a non-clock analysis. Because the
-information about the position of the root might be weak, it is often beneficial to add a rooting
-constraint to a relaxed clock analysis. It can help a relaxed clock analysis correctly infer rate
-variation close to the base of the tree, variation that might otherwise cause rooting artifacts. It
-can also help speed up convergence, since it may be difficult for an MCMC analysis to mix
-adequately across multiple alternative root positions in a relaxed clock tree; this is going to be
-the case for this data set. To speed up convergence, and to show you how to set up a rooting
-constraint, we will choose the rooting option for this tutorial. Specifically, we will accept the
-common view that lemurs form the sister group of other primates.
+In this analysis, we will set up a relaxed clock model for the same data set,
+\texttt{primates.nex}, used in the previous tutorials. A relaxed clock model is intermediate
+between a strict clock model and a non-clock model. It has one or a few more parameters than a
+strict clock model, but much fewer than a non-clock model. Unlike a non-clock model, it produces a
+rooted tree, but the information about the position of the root is not as strong as in a non-clock
+analysis. Because the information about the position of the root might be weak, it is often
+beneficial to add a rooting constraint to a relaxed clock analysis. It can help a relaxed clock
+analysis correctly infer rate variation close to the base of the tree, variation that might
+otherwise cause rooting artifacts. It can also help speed up convergence, since it may be difficult
+for an MCMC analysis to mix adequately across multiple alternative root positions in a relaxed
+clock tree; this is going to be the case for this data set. To speed up convergence, and to show
+you how to set up a rooting constraint, we will choose the rooting option for this tutorial.
+Specifically, we will accept the common view that lemurs form the sister group of other primates.
 
-As usual, we first read in the data, and then we specify a GTR + I + $\Gamma$ model (we also use 
-\texttt{set autoclose=yes nowarnings=yes} for allowing execution without being prompted for answering
-\texttt{yes/no} between steps):
+As usual, we first read in the data, and then we specify a GTR + I + $\Gamma$ model (we also use
+\texttt{set autoclose=yes nowarnings=yes} for allowing execution without being prompted for
+answering \texttt{yes/no} between steps):
 
 \begin{singlespacing}\small
 \begin{verbatim}
@@ -2608,9 +2608,9 @@ MrBayes > constraint ingroup partial = 1 3-. : 2
 \end{singlespacing}
 \normalsize
 
-The \texttt{constraint} command first gives the name of the constraint (`ingroup'), then the type of
-constraint (`partial'). The list of taxa are given after the equal sign using a list of taxa, where
-the taxa can be specified using either their index in the matrix (1, 2, etc) or their name. A
+The \texttt{constraint} command first gives the name of the constraint (`ingroup'), then the type
+of constraint (`partial'). The list of taxa are given after the equal sign using a list of taxa,
+where the taxa can be specified using either their index in the matrix (1, 2, etc) or their name. A
 period is synonymous with the last taxon in the matrix, and a range is indicated using a dash. In
 our case, we constrain taxon 2 (\textit{Lemur catta}) to always be outside taxa number 1, and 3 to
 12, in a rooted tree. See section \ref{unconstrainedAndConstrainedTopology} for more information of
@@ -2640,16 +2640,18 @@ MrBayes > prset brlenspr=clock:uniform
 Other options include the coalescent and the birth-death models. 
 
 In the next step, we are going to ``relax'' the strict clock assumption by selecting a model for
-the variation of the clock rate across lineages. MrBayes offers five relaxed clock models: the 
-Thorne--Kishino 2002 (TK02) \citep{thorne02}, the compound poisson process (CPP) \citep{huelsenbeck00a}, 
-the white noise (WN) \citep{lepage07}, the independent gamma rates (IGR), and independent lognormal 
-(ILN) \citep{drummond06} models. We note here that, since version 3.2.8, the name `WN' is used to 
-refer to `IGR' in old versions, while `IGR' is used to refer to a different model. In the new IGR model, 
-the rates are i.i.d. gamma distributions across branches and the variance does not dependent on branch lengths
-as in the WN model. The ILN model differs from IGR in that the rate variation follows i.i.d. lognormal 
-distributions instead of gamma distributions.
+the variation of the clock rate across lineages. MrBayes offers five relaxed clock models: the
+Thorne--Kishino 2002 (TK02) \citep{thorne02}, the compound poisson process (CPP)
+\citep{huelsenbeck00a}, the white noise (WN) \citep{lepage07}, the independent gamma rates (IGR),
+and independent lognormal (ILN) \citep{drummond06} models. We note here that, since version 3.2.8,
+the name `WN' is used to refer to `IGR' in old versions, while `IGR' is used to refer to a
+different model. In the new IGR model, the rates are i.i.d. gamma distributions across branches and
+the variance does not dependent on branch lengths as in the WN model. The ILN model differs from
+IGR in that the rate variation follows i.i.d. lognormal distributions instead of gamma
+distributions.
 
-Let us use the WN model, which is a continuous uncorrelated model of rate variation across lineages. We invoke this model using:
+Let us use the WN model, which is a continuous uncorrelated model of rate variation across
+lineages. We invoke this model using:
 
 \begin{singlespacing}\small
 \begin{verbatim}
@@ -2659,10 +2661,11 @@ MrBayes > prset clockvarpr=wn
 \normalsize
 
 Each relaxed clock model has one or more additional parameters. In the case of the WN model, it is
-the rate at which the variance of the effective branch length increases over time, \texttt{WNvarpr}.
-Because the strict clock model fits this data set so well (see previous tutorial), we do not expect
-the variance to increase much over time. The default prior for this parameter, an exponential
-distribution with rate $10.0$, should be more than generous enough for our analysis.
+the rate at which the variance of the effective branch length increases over time,
+\texttt{WNvarpr}.  Because the strict clock model fits this data set so well (see previous
+tutorial), we do not expect the variance to increase much over time. The default prior for this
+parameter, an exponential distribution with rate $10.0$, should be more than generous enough for
+our analysis.
 
 To check the model settings, it is wise to first run the \tb{showmodel} command. Once you are
 convinced that the model settings are OK, run the analysis for 100,000 generation using:
@@ -2715,21 +2718,18 @@ Phylogram (based on median node depths):
 
 Note that the strict clock tree that we obtained in the previous analysis was rooted differently,
 with \textit{Lemur} and \textit{Tarsius} together forming the sister group of the remaining
-primates. The reason that the strict clock analysis prefers to put the root there can be understood
-by going back to the non-clock tree (see chapter \ref{tutorialSimple}). By placing the root in this
-position, we minimize the difference between the non-clock and strict clock branch lengths.
+primates. The reason that the strict clock analysis prefers to put the root there can be
+understood by going back to the non-clock tree (see chapter \ref{tutorialSimple}). By placing
+the root in this position, we minimize the difference between the non-clock and strict clock
+branch lengths.
 
-%% PV: complex figure arrangement starting here. We need to reduce and rearrange some paragraphs
-%% in order to be able to display the figure correctly. We will split the figure also in two parts.
-If our rooting assumption is correct, then there must have been some changes in
-the evolutionary rate close to the root. Specifically, we should see a deceleration in the
-\textit{Lemur} and \textit{Tarsius} lineages, or an acceleration in their sister lineages.
+If our rooting assumption is correct, then there must have been some changes in the evolutionary
+rate close to the root. Specifically, we should see a deceleration in the \textit{Lemur} and
+\textit{Tarsius} lineages, or an acceleration in their sister lineages.
 
 We can look for this pattern in the summary statistics for the branch and node parameters, output
 by \texttt{sumt} before the trees. The table is preceded by a key to the taxon bipartitions,
 which is critical to interpreting where the different parameters belong.
-
-%%%% JN: TODO: Fix the placement of this figure without wrapfigure
 
 %\begin{figure}[h!]\singlespacing\footnotesize
 %\begin{verbatim}
@@ -2834,17 +2834,15 @@ ID -- Partition
 \end{BVerbatim}
 \end{figure}
 
-We first identify the taxon ID of \textit{Lemur} and find that it is 2. Now we 
-find the partition ID that has a single star in the second position; it is the
-bipartition that separates \textit{Lemur catta} from all other taxa. Not surprisingly, the
-bipartition ID is 2. The sister lineage of \textit{L. catta} includes all taxa except itself.
+We first identify the taxon ID of \textit{Lemur} and find that it is 2. Now we find the partition
+ID that has a single star in the second position; it is the bipartition that separates
+\textit{Lemur catta} from all other taxa. Not surprisingly, the bipartition ID is 2. The sister
+lineage of \textit{L. catta} includes all taxa except itself.
 
-To find the corresponding bipartition ID, we need to find the ID that has a partition 
-descriptor with a single dot in the second position; all other positions should be filled
-with stars. This bipartition has ID 20. Similarly, we find that the bipartition IDs of
-\textit{Tarsius syrichta} and its sister lineage are 1 and 16, respectively.
-%% PV: Widow fixed. Clearing some repetition also. This page must end there so we need to place a:
-%\clearpage
+To find the corresponding bipartition ID, we need to find the ID that has a partition descriptor
+with a single dot in the second position; all other positions should be filled with stars. This
+bipartition has ID 20. Similarly, we find that the bipartition IDs of \textit{Tarsius syrichta} and
+its sister lineage are 1 and 16, respectively.
 
 Now we examine the posterior distribution of WN branch rates for these taxon bipartitions. If the
 clock is accelerated, the branch rate should be above $1.0$; if the rate is decelerated, the branch
@@ -2870,13 +2868,13 @@ We see that there is considerable uncertainty about the branch rates but some of
 may have some support. The evolutionary rate seems slightly decelerated in the lineage leading to
 \textit{Lemur catta}, with bipartition ID 2, but no evidence about a decelerated in the
 \textit{Tarsius syrichta} lineage. On the other hand, there seems to be an acceleration in the
-sister lineage to \textit{T. syrichta} with bipartition ID 16, which would be in
-accordance with our predictions.
+sister lineage to \textit{T. syrichta} with bipartition ID 16, which would be in accordance with
+our predictions.
 
-To help you visualize parameters such as branch rates inferred by a relaxed clock model, \texttt{sumt} 
-produces a \texttt{.con.tre} file that contains summaries of all branch and node
-parameter samples in a format that the program FigTree can display. This allows you, for
-instance, to color branches according to inferred evolutionary rates.
+To help you visualize parameters such as branch rates inferred by a relaxed clock model,
+\texttt{sumt} produces a \texttt{.con.tre} file that contains summaries of all branch and node
+parameter samples in a format that the program FigTree can display. This allows you, for instance,
+to color branches according to inferred evolutionary rates.
 
 If you performed the Bayes factor comparison between the strict clock and non-clock models for this
 data set in the previous tutorial, you may wonder how the relaxed clock model stacks up. To make
@@ -2894,7 +2892,7 @@ MrBayes > ss
   \normalsize
 \end{singlespacing}
 
-The results summarized by the \texttt{ss} command are shown here, with the relaxed clock model 
+The results summarized by the \texttt{ss} command are shown here, with the relaxed clock model
 first (upper table), followed by the strict clock model (lower table).
 
 \begin{figure}[h]\singlespacing\footnotesize
