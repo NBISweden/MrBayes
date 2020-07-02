@@ -1,7 +1,7 @@
 \documentclass[12pt]{book}
 \usepackage[a4paper]{geometry}
 \usepackage[english]{babel}   % Will manage the 90% hyphenation for us 
-\usepackage[parfill]{parskip} % Activate to begin paragraphs width empty line instead of indent
+%\usepackage[parfill]{parskip} % Activate to begin paragraphs width empty line instead of indent
 \usepackage{graphicx}
 \usepackage{amssymb,amsmath}
 \usepackage{setspace}
@@ -198,12 +198,14 @@ analyses you can perform with the program, and you can use them as templates for
 In the tutorials given in chapters \ref{tutorialSimple} to \ref{tutorialAdvanced}, you can learn
 more about how to set up various types of analyses based on these example data files.
 
+\newpage
+
 \section{Getting Started}
 
 Start MrBayes by double-clicking the application icon (or typing \tb{./mb} or simply \tb{mb}
 depending on your system) and you will see the following information:
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
                       MrBayes v3.2.7
@@ -513,7 +515,6 @@ for single nucleotide models. We will use neither the parsimony model nor the co
 our data, so we will leave these settings at their default values. If you type \tb{help lset} now
 to verify that the model is correctly set, the table should look like this:
 
-%%%% JN: TODO: place this figure correctly
 \begin{figure}[H]
 \centering
 \begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
@@ -745,9 +746,10 @@ The analysis is started by issuing the \texttt{mcmc} command. However, before do
 recommend that you review the run settings by typing \tb{help mcmc}. In our case, we will get the
 following table at the bottom of the output:
 
-\begin{figure}[H]
-\centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+%\begin{figure}[H]
+%\centering
+%\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{Verbatim}[baselinestretch=0.8,xleftmargin=15mm,fontsize=\footnotesize]
 Parameter       Options               Current Setting
 --------------------------------------------------------
 Ngen            <number>              1000000
@@ -787,8 +789,9 @@ Autotune        Yes/No                Yes
 Tunefreq        <number>              100
 
 --------------------------------------------------------
-\end{BVerbatim}
-\end{figure}
+\end{Verbatim}
+%\end{BVerbatim}
+%\end{figure}
 
 The \texttt{Ngen} setting is the number of generations for which the analysis will be run. It is
 useful to run a small number of generations first to make sure the analysis is correctly set up and
@@ -1219,9 +1222,10 @@ side. For instance, the 14th partition (ID 14) in the output below represents th
 \textit{Homo} (taxon 3) and \textit{Pan} (taxon 4), since there are stars in the third and fourth
 positions and a dot in all other positions.
 
-\begin{figure}[H]
-\centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+%\begin{figure}[H]
+%\centering
+%\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{Verbatim}[baselinestretch=0.8,xleftmargin=15mm,fontsize=\footnotesize]
 List of taxa in bipartitions:
 
    1 -- Tarsius_syrichta
@@ -1263,8 +1267,9 @@ ID -- Partition
 20 -- ..***.......
 21 -- .......***..
 ------------------
-\end{BVerbatim}
-\end{figure}
+\end{Verbatim}
+%\end{BVerbatim}
+%\end{figure}
 
 Then it gives a table over the informative bipartitions (the ones with more than one taxon
 included), specifying the number of times the partition was sampled (\texttt{\#obs}), the
@@ -1272,7 +1277,7 @@ probability of the partition (\texttt{Probab.}), the standard deviation of the p
 (\texttt{Sd(s)}) across runs, the min and max of the standard deviation across runs
 (\texttt{Min(s)} and \texttt{Max(s)}) and finally the number of runs in which the partition was
 encountered. In our analysis, there is overwhelming support for a single tree, so all partitions in
-this tree have a posterior probability of $1.0$ (or very close to $1.0$).
+this tree have a posterior probability of $1.0$ (or very close to $1.0$):
 
 %%%% JN: This table needs to be placed accurately
 \begin{figure}[H]
@@ -1300,9 +1305,10 @@ We then get a table summarizing branch and node parameters, in our case the bran
 indices in this table refer to the key to partitions.
 
 %%%% JN: This table needs to be placed accurately
-\begin{figure}[H]
-\centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\scriptsize]
+%\begin{figure}[H]
+%\centering
+%\begin{BVerbatim}[baselinestretch=0.8,fontsize=\scriptsize]
+\begin{Verbatim}[baselinestretch=0.8,fontsize=\footnotesize]
 Summary statistics for branch and node parameters
    (saved to file "primates.nex.vstat"):
 
@@ -1332,8 +1338,9 @@ length[19]    0.036908    0.000128    0.016550    0.057338    0.035712    1.002 
 length[20]    0.088113    0.000594    0.038292    0.129339    0.085182    0.998    2
 length[21]    0.047375    0.000386    0.012946    0.087369    0.047096    1.000    2
 --------------------------------------------------------------------------------------
-\end{BVerbatim}
-\end{figure}
+\end{Verbatim}
+%\end{BVerbatim}
+%\end{figure}
 
 For instance, \texttt{length[14]} is the length of the branch corresponding to partition ID 14. As
 we noted above, this is the branch grouping humans and chimps. The meaning of most of the values in
@@ -1558,7 +1565,7 @@ read in your data and the variables. The final step is to tell MrBayes that we w
 this partitioning of the data instead of the default partitioning. We do this using \texttt{set}:
 
 \begin{figure}[h]
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
 set partition = favored;
 \end{BVerbatim}
 \end{figure}
@@ -1600,7 +1607,7 @@ settings to specific partitions. For instance, to apply a GTR + I + $\Gamma$ mod
 partitions, we type \tb{lset applyto=(2,3,4,5) nst=6 rates=invgamma}. This will produce the
 following table when \tb{showmodel} is invoked:
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
 Active parameters:
@@ -1640,9 +1647,9 @@ variable characters but no constant characters. If necessary, one can change thi
 \texttt{lset coding}. We will leave the \texttt{coding} setting at the default, though, which is
 \texttt{variable} for standard (morphology) data. Now, \tb{showmodel} should produce this table:
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}[baselinestretch=0.8,fontsize=\small]
 Active parameters:
 
                   Partition(s)
@@ -1940,7 +1947,7 @@ parameter samples, including the probabilities of the sampled substitution model
 convergence by making sure that these probabilities are the same across independent runs. This is a
 sample table from an analysis using two independent runs on the tutorial data set:
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
 Model probabilities above 0.050
@@ -2921,53 +2928,8 @@ chimps (\textit{Pan}) at about 5 Ma. If we are interested in a more detailed sum
 estimates, we need to go into the parameter summary table printed above the trees. Before doing
 that, however, we need to identify the bipartition IDs that we are interested in. We do that by
 referring to the bipartition table:
-%List of taxa in bipartitions:
-%
-%   1 -- Tarsius_syrichta
-%   2 -- Lemur_catta
-%   3 -- Homo_sapiens
-%   4 -- Pan
-%   5 -- Gorilla
-%   6 -- Pongo
-%   7 -- Hylobates
-%   8 -- Macaca_fuscata
-%   9 -- M_mulatta
-%  10 -- M_fascicularis
-%  11 -- M_sylvanus
-%  12 -- Saimiri_sciureus
-%
-%Key to taxon bipartitions (saved to file "primates.nex.parts"):
-%
-%ID -- Partition
-%------------------
-% 0 -- ************
-% 1 -- *...........
-% 2 -- .*..........
-% 3 -- ..*.........
-% 4 -- ...*........
-% 5 -- ....*.......
-% 6 -- .....*......
-% 7 -- ......*.....
-% 8 -- .......*....
-% 9 -- ........*...
-%10 -- .........*..
-%11 -- ..........*.
-%12 -- ...........*
-%13 -- ..***.......
-%14 -- ..**********
-%15 -- ..****......
-%16 -- .......**...
-%17 -- ..*********.
-%18 -- ..*****.....
-%19 -- .......****.
-%20 -- ..**........
-%21 -- .......***..
-%22 -- **..........
-%------------------
 
-\begin{figure}[H]
-\centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{Verbatim}[baselinestretch=0.8,xleftmargin=15mm,fontsize=\footnotesize]
 List of taxa in bipartitions:
 
    1 -- Tarsius_syrichta
@@ -2982,12 +2944,7 @@ List of taxa in bipartitions:
   10 -- M_fascicularis
   11 -- M_sylvanus
   12 -- Saimiri_sciureus
-\end{BVerbatim}
-\end{figure}
 
-\begin{figure}[H]
-\centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
 Key to taxon bipartitions (saved to file "primates.nex.parts"):
 
 ID -- Partition
@@ -3016,8 +2973,61 @@ ID -- Partition
 21 -- .......***..
 22 -- **..........
 ------------------
-\end{BVerbatim}
-\end{figure}
+\end{Verbatim}
+%\begin{figure}[H]
+%\centering
+%\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+%List of taxa in bipartitions:
+%
+%   1 -- Tarsius_syrichta
+%   2 -- Lemur_catta
+%   3 -- Homo_sapiens
+%   4 -- Pan
+%   5 -- Gorilla
+%   6 -- Pongo
+%   7 -- Hylobates
+%   8 -- Macaca_fuscata
+%   9 -- M_mulatta
+%  10 -- M_fascicularis
+%  11 -- M_sylvanus
+%  12 -- Saimiri_sciureus
+%\end{BVerbatim}
+%\end{figure}
+%
+%\begin{figure}[H]
+%\centering
+%\begin{BVerbatim}[baselinestretch=0.8,xleftmargin=15mm,fontsize=\footnotesize]
+%Key to taxon bipartitions (saved to file "primates.nex.parts"):
+%
+%ID -- Partition
+%------------------
+% 0 -- ************
+% 1 -- *...........
+% 2 -- .*..........
+% 3 -- ..*.........
+% 4 -- ...*........
+% 5 -- ....*.......
+% 6 -- .....*......
+% 7 -- ......*.....
+% 8 -- .......*....
+% 9 -- ........*...
+%10 -- .........*..
+%11 -- ..........*.
+%12 -- ...........*
+%13 -- ..***.......
+%14 -- ..**********
+%15 -- ..****......
+%16 -- .......**...
+%17 -- ..*********.
+%18 -- ..*****.....
+%19 -- .......****.
+%20 -- ..**........
+%21 -- .......***..
+%22 -- **..........
+%------------------
+%\end{Verbatim}
+%\end{BVerbatim}
+%\end{figure}
 
 For instance, assume that we are interested in the age of the oldest split in the tree, and the
 split between humans and chimps. The oldest split in the tree corresponds to the partition
@@ -3031,7 +3041,7 @@ estimates. Here are the relevant rows in this table in our analysis:
 
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\scriptsize]
+\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
                                         95% HPD Interval
                                       --------------------
 Parameter      Mean       Variance     Lower       Upper       Median     PSRF+  Nruns
@@ -3358,6 +3368,7 @@ in the parameter table from our analysis (they are found at the bottom of the ta
 run of 1 M generations:
 
 \begin{figure}[h]
+\centering
 \begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
 Parameter           Mean      Variance     min ESS*  avg ESS  PSRF+
 --------------------------------------------------------------------
