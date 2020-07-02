@@ -213,7 +213,7 @@ depending on your system) and you will see the following information:
 
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
                       MrBayes v3.2.7
 
              (Bayesian Analysis of Phylogeny)
@@ -258,7 +258,7 @@ you will also see a list of the current settings at the end. Try, for instance, 
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Parameter    Options                               Current Setting
 ------------------------------------------------------------------
 Nucmodel     4by4/Doublet/Codon/Protein              4by4
@@ -456,7 +456,7 @@ should look like this:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Model settings for partition 1:
 
 Parameter    Options                               Current Setting
@@ -523,7 +523,7 @@ to verify that the model is correctly set, the table should look like this:
 
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Model settings for partition 1:
 
 Parameter    Options                               Current Setting
@@ -562,7 +562,7 @@ reads:
 
 %%%% JN: Better not to place this as a figure float.
 %%%% JN: And, lines are just wide enough to fit the page width.
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{Verbatim}[fontsize=\footnotesize]
 Model settings for partition 1:
 Parameter        Options                      Current Setting
 ------------------------------------------------------------------
@@ -675,7 +675,7 @@ overview of the model settings. In our case, the output will be as follows:
 
 %%%% JN: Better not to place this as a figure float. And, lines are just wide enough to fit
 %%%% JN: the page width.
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{Verbatim}[fontsize=\footnotesize]
 Model settings:
 
    Data not partitioned --
@@ -754,8 +754,8 @@ following table at the bottom of the output:
 
 %\begin{figure}[H]
 %\centering
-%\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
-\begin{Verbatim}[baselinestretch=0.8,xleftmargin=15mm,fontsize=\footnotesize]
+%\begin{BVerbatim}
+\begin{Verbatim}[xleftmargin=15mm,fontsize=\footnotesize]
 Parameter       Options               Current Setting
 --------------------------------------------------------
 Ngen            <number>              1000000
@@ -893,7 +893,7 @@ posterior distribution. In our case, the proposals are the following:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 The MCMC sampler will use the following moves:
    With prob.  Chain will use move
       0.93 %   Dirichlet(Revmat)
@@ -956,7 +956,7 @@ generation, like this (with a 13 column output. Here we show 11 for readability)
 %
 % Continue with analysis? (yes/no): 
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\scriptsize]
+\begin{Verbatim}[fontsize=\scriptsize]
 Chain results (20000 generations requested):
 
     0 -- [-8849.255] (-8762.724) (-8987.103) (-8764.951) * [-8802.317] ...  
@@ -1068,7 +1068,7 @@ something like this:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\scriptsize]
+\begin{BVerbatim}[fontsize=\scriptsize]
 [ID: 0184438524]
 Gen   LnL           LnPr         TL           r(A<->C)     ... pi(T)        alpha        pinvar
 0     -8.849255e+03 4.262056e+01 4.200000e-01 1.666667e-01 ... 2.500000e-01 1.000000e+00 0.000000e+00
@@ -1108,7 +1108,7 @@ should look something like this:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\scriptsize]
+\begin{BVerbatim}[fontsize=\scriptsize]
 +------------------------------------------------------------+ -5718.97
 |     2                                                      |
 |         1  21         2 11     2  2 1            2         |
@@ -1142,7 +1142,7 @@ parameter values:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\scriptsize]
+\begin{BVerbatim}[fontsize=\scriptsize]
                                     95% HPD Interval
                                     --------------------
 Parameter      Mean      Variance     Lower       Upper       Median    min ESS*  avg ESS    PSRF+ 
@@ -1192,7 +1192,7 @@ files with a structure like this:
 
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 #NEXUS
 [ID: 0184438524]
 [Param: tree]
@@ -1230,8 +1230,8 @@ positions and a dot in all other positions.
 
 %\begin{figure}[H]
 %\centering
-%\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
-\begin{Verbatim}[baselinestretch=0.8,xleftmargin=15mm,fontsize=\footnotesize]
+%\begin{BVerbatim}
+\begin{Verbatim}[xleftmargin=15mm,fontsize=\footnotesize]
 List of taxa in bipartitions:
 
    1 -- Tarsius_syrichta
@@ -1288,7 +1288,7 @@ this tree have a posterior probability of $1.0$ (or very close to $1.0$):
 %%%% JN: This table needs to be placed accurately
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Summary statistics for informative taxon bipartitions
    (saved to file "primates.nex.tstat"):
 
@@ -1313,8 +1313,8 @@ indices in this table refer to the key to partitions.
 %%%% JN: This table needs to be placed accurately
 %\begin{figure}[H]
 %\centering
-%\begin{BVerbatim}[baselinestretch=0.8,fontsize=\scriptsize]
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+%\begin{BVerbatim}[fontsize=\scriptsize]
+\begin{Verbatim}[fontsize=\footnotesize]
 Summary statistics for branch and node parameters
    (saved to file "primates.nex.vstat"):
 
@@ -1416,7 +1416,7 @@ of each partition or clade in the tree:
 %|-------------| 0.200 expected changes per site
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\scriptsize]
+\begin{BVerbatim}[fontsize=\scriptsize]
 Clade credibility values:
 
 /---------------------------------------------------------- Tarsius_syrichta (1)
@@ -1450,7 +1450,7 @@ The phylogram (lower tree) gives the branch lengths measured in expected substit
 
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\scriptsize]
+\begin{BVerbatim}[fontsize=\scriptsize]
 Phylogram (based on average branch lengths):
 
 /--------------------------------------- Tarsius_syrichta (1)
@@ -1520,7 +1520,7 @@ should look familiar but there are some differences compared to the \texttt{prim
 the format statement:
 
 \begin{figure}[h]
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Format datatype=mixed(Standard:1-166,DNA:167-3246) interleave=yes gap=- missing=?;
 \end{BVerbatim}
 \end{figure}
@@ -1551,7 +1551,7 @@ defined to include characters 167 to 1244. The next step is to define a partitio
 according to genes and morphology. This is accomplished with the line:
 
 \begin{figure}[h]
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{BVerbatim}[fontsize=\small]
 partition favored = 5: morphology, COI, EF1a, LWRh, 28S;
 \end{BVerbatim}
 \end{figure}
@@ -1571,7 +1571,7 @@ read in your data and the variables. The final step is to tell MrBayes that we w
 this partitioning of the data instead of the default partitioning. We do this using \texttt{set}:
 
 \begin{figure}[h]
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 set partition = favored;
 \end{BVerbatim}
 \end{figure}
@@ -1583,7 +1583,7 @@ Before starting to specify the partitioned model, it is useful to examine the de
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Active parameters:
 
                   Partition(s)
@@ -1615,7 +1615,7 @@ following table when \tb{showmodel} is invoked:
 
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Active parameters:
  
                 Partition(s)
@@ -1655,7 +1655,7 @@ variable characters but no constant characters. If necessary, one can change thi
 
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{BVerbatim}[fontsize=\small]
 Active parameters:
 
                   Partition(s)
@@ -1712,7 +1712,7 @@ You may wish to start each tutorial by switching off warnings and asking MrBayes
 each analysis after the requested number of generations, without asking you if you want to extend
 the analysis. You can accomplish this with:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > set autoclose=yes nowarn=yes
 \end{Verbatim}
 
@@ -1733,13 +1733,13 @@ we will ask MrBayes to integrate over a predetermined set of fixed rate matrices
 repeat the analysis using a fixed rate matrix. To start the tutorial, first read in the amino acid
 data:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > execute avian_ovomucoids.nex
 \end{Verbatim}
 
 To ask MrBayes to sample across fixed amino acid rate matrices, we use the \texttt{prset} command:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > prset aamodelpr=mixed
 \end{Verbatim}
 
@@ -1753,7 +1753,7 @@ the fly. For the dataset in this tutorial, our previous results indicate that ab
 generations are sufficient for decent topological convergence. Run 300,000 generations without
 heating using the command:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > mcmc nchains=1 ngen=300000
 \end{Verbatim}
 
@@ -1763,7 +1763,7 @@ posterior probabilities of the amino acid models:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Model probabilities above 0.050
 Estimates saved to file "avian_ovomucoids.nex.mstat".
 
@@ -1790,7 +1790,7 @@ If desired, it is possible to run the same data set under another amino acid mod
 the Dayhoff model, by fixing the rate matrix. Do this by running the analysis with the following
 commands:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > prset aamodelpr=fixed(dayhoff)
 MrBayes > mcmc nchains=1 ngen=300000
 \end{Verbatim}
@@ -1810,7 +1810,7 @@ codons to amino acids, generating relevant ambiguous amino acid state sets when 
 running the analysis. For instance, we would run a mixed amino acid model analysis on the
 protein-coding viral sequences in the \texttt{replicase.nex} data set using:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > execute replicase.nex
 MrBayes > lset nucmodel=protein
 MrBayes > prset aamodelpr=mixed
@@ -1824,14 +1824,14 @@ sequence. We will use the data in the file \texttt{replicase.nex}.
 
 First, we read in the data:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > execute replicase.nex
 \end{Verbatim}
 
 Then we specify that we want to use a codon model with omega variation across sites, and that we
 want MrBayes to report positive selection probabilities and site omega values (dN/dS ratios):
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > lset nucmodel=codon omegavar=ny98
 MrBayes > report possel=yes siteomega=yes
 \end{Verbatim}
@@ -1846,7 +1846,7 @@ parameters benefits considerably from the heated chains in this case, so we will
 Our results indicate that it is possible to get decent if not perfect convergence within about
 10,000 generations, so let us try that:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > mcmcp printfreq=20 samplefreq=20 diagnfreq=500
 MrBayes > mcmc ngen=10000
 \end{Verbatim}
@@ -1858,7 +1858,7 @@ omega values (dN/dS ratios):
 
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\scriptsize]
+\begin{BVerbatim}[fontsize=\scriptsize]
                                          95% HPD Interval
                                        -------------------
 Parameter         Mean      Variance    Lower      Upper       Median   min ESS*  avg ESS   PSRF+ 
@@ -1937,14 +1937,14 @@ across the entire general time reversible (GTR) model space. We will use the dat
 
 First, we read in the data:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > execute primates.nex
 \end{Verbatim}
 
 Then we specify that we want to use a gamma model of rate variation across sites, and that we want
 to sample across the GTR model space:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > lset nst=mixed rates=gamma
 \end{Verbatim}
 
@@ -1955,7 +1955,7 @@ sample table from an analysis using two independent runs on the tutorial data se
 
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Model probabilities above 0.050
 Estimates saved to file "primates.nex.mstat".
 
@@ -2006,7 +2006,7 @@ data in favor of model 1 over model 2 \citep{kass95} (see also section \ref{baye
 We will use the data in the file \texttt{primates.nex} for the analysis. First, read in the data 
 and then specify a GTR + I + $\Gamma$ model: %% PV: I need to save some lines here for later
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > execute primates.nex
 MrBayes > lset nst=6 rates=invgamma
 \end{Verbatim}
@@ -2016,7 +2016,7 @@ The hard constraint will allow us to force a partition to always be present in t
 The negative constraint will allow us to sample across all trees that do not contain the specified
 partition. Specify the constraints using the following commands:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > constraint humanchimp = Homo_sapiens Pan
 MrBayes > constraint nohumanchimp negative = Homo_sapiens Pan
 \end{Verbatim}
@@ -2030,7 +2030,7 @@ MCMC analysis with 100,000 generations, and use \texttt{sump} to get the harmoni
 also use \texttt{set autoclose=yes nowarnings=yes} for allowing execution without being prompted
 for answering \texttt{yes/no} between steps):
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > prset topologypr=constraints(humanchimp)
 MrBayes > mcmc ngen=100000
@@ -2042,7 +2042,7 @@ MCMC samples:
 
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Estimated marginal likelihoods for runs sampled in files
    "primates.nex.run1.p" and "primates.nex.run2.p":
    (Use the harmonic mean for Bayes factor comparisons of models)
@@ -2065,7 +2065,7 @@ between the runs.
 
 Now we enforce the negative constraint, and repeat the procedure using:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 Mrbayes > prset topologypr=constraints(nohumanchimp)
 Mrbayes > mcmc ngen=100000
 Mrbayes > sump
@@ -2075,7 +2075,7 @@ Our run produced the following estimates of the log of the model likelihoods:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Run   Arithmetic mean   Harmonic mean
 --------------------------------------
    1    -5726.95     -5735.94
@@ -2130,7 +2130,7 @@ given above. To monitor convergence, twice during each step, we set the diagnost
 once every 3,000 generations. Stepping-stone analysis under the two models using these settings
 will be generated by the following commands:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > prset topologypr=constraints(humanchimp)
 MrBayes > ss ngen=300000 diagnfreq=3000
 MrBayes > prset topologypr=constraints(nohumanchimp)
@@ -2142,7 +2142,7 @@ the first model:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Marginal likelihood (in natural log units) estimated using stepping-stone sampling based on
 49 steps with 6000 generations (12 samples) within each step.
 
@@ -2159,7 +2159,7 @@ In our run, the second model produced the following version of the same table:
 
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
     Run   Marginal likelihood (ln)
     -----------------------------
       1     -5805.21
@@ -2186,7 +2186,7 @@ analyses:
 
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\scriptsize]
+\begin{BVerbatim}[fontsize=\scriptsize]
 Plot of average standard deviation of split frequencies across steps.
 Points at -1.0 (y-axis) indicate that there were no splits
 above minimum frequency for corresponding step.
@@ -2241,7 +2241,7 @@ accurate stepping-stone method. We will use both in this tutorial and compare th
 
 As usual, we first read in the data and then we specify a GTR + I + $\Gamma$ model:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > execute primates.nex
 MrBayes > lset nst=6 rates=invgamma
 \end{Verbatim}
@@ -2253,7 +2253,7 @@ generations and summarize the obtained samples using \texttt{sump} (we also use 
 autoclose=yes nowarnings=yes} for allowing execution without being prompted for answering
 \texttt{yes/no} between steps):
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > mcmc ngen=100000
 MrBayes > sump
@@ -2261,7 +2261,7 @@ MrBayes > sump
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Run   Arithmetic mean   Harmonic mean
 --------------------------------------
   1      -5720.09         -5732.97
@@ -2277,7 +2277,7 @@ MCMC samples obtained after the burn-in.
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Run   Arithmetic mean   Harmonic mean
 --------------------------------------
   1      -5720.09         -5732.97
@@ -2295,7 +2295,7 @@ Now we repeat the procedure under the strict clock model. To enforce branch leng
 strict clock, we choose one of the clock priors for the branch lengths. Specifically, we are going
 to use the uniform prior on clock trees. The other commands are the same as those used previously:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 Mrbayes > prset brlenspr=clock:uniform
 Mrbayes > mcmc ngen=100000
 Mrbayes > sump
@@ -2305,7 +2305,7 @@ Again, we focus on the table summarizing the means of the likelihoods of the MCM
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Run   Arithmetic mean   Harmonic mean
 --------------------------------------
   1      -5719.56         -5729.48
@@ -2324,7 +2324,7 @@ undoubtedly need the increased accuracy of the stepping-stone sampling method.
 Before moving on to the stepping-stone analysis, first compute a summary of the tree samples using
 the \texttt{sumt} command:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 Mrbayes > prset sumt
 \end{Verbatim}
 
@@ -2333,7 +2333,7 @@ something like this:
 
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\scriptsize]
+    \begin{BVerbatim}[fontsize=\scriptsize]
 Phylogram (based on median node depths):
 
                /------------------------------------------- Tarsius_syrichta (1)
@@ -2400,7 +2400,7 @@ alternative way of resetting the model to the default is to execute the data set
 choose that alternative, do not forget to specify the GTR + I + $\Gamma$ model before running the
 stepping-stone method.
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > prset brlenspr=unconstrained:exp(10.0)
 MrBayes > ss ngen=255000 diagnfreq=2500
 \end{Verbatim}
@@ -2410,7 +2410,7 @@ the analysis is completed. Here are the estimates from our run:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 
 Run   Marginal likelihood (ln)
 ------------------------------
@@ -2423,7 +2423,7 @@ Mean:   -5798.88
 
 We now run the same analysis on the strict clock model:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > prset brlenspr=clock:uniform
 MrBayes > ss ngen=255000 diagnfreq=2500
 \end{Verbatim}
@@ -2432,7 +2432,7 @@ We got the following estimates of the marginal model likelihoods:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Run   Marginal likelihood (ln)
 ------------------------------
   1     -5783.66
@@ -2498,7 +2498,7 @@ As usual, we first read in the data, and then we specify a GTR + I + $\Gamma$ mo
 \texttt{set autoclose=yes nowarnings=yes} for allowing execution without being prompted for
 answering \texttt{yes/no} between steps):
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}[fontsize=\small]
 MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > execute primates.nex
 MrBayes > lset nst=6 rates=invgamma
@@ -2510,7 +2510,7 @@ their names. We can do this by looking into the data file or by printing the mat
 \textit{Lemur catta}, is taxon number 2. To specify a constraint that includes all taxa but the
 single taxon 2, we need to use the following command:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > constraint ingroup partial = 1 3-. : 2
 \end{Verbatim}
 
@@ -2524,7 +2524,7 @@ using constraints.
 
 To enforce the constraint, we also need to set the topology prior using:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > prset topologypr=constraints(ingroup)
 \end{Verbatim}
 
@@ -2533,7 +2533,7 @@ separated by a comma. We are now ready to specify the relaxed clock model, which
 steps. First, we select an underlying strict clock model. Let us use the simple uniform clock
 model, which would be specified with the command:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > prset brlenspr=clock:uniform
 \end{Verbatim}
 
@@ -2553,7 +2553,7 @@ distributions.
 Let us use the WN model, which is a continuous uncorrelated model of rate variation across
 lineages. We invoke this model using:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > prset clockvarpr=wn
 \end{Verbatim}
 
@@ -2567,7 +2567,7 @@ our analysis.
 To check the model settings, it is wise to first run the \tb{showmodel} command. Once you are
 convinced that the model settings are OK, run the analysis for 100,000 generation using:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > mcmc ngen=100000
 \end{Verbatim}
 
@@ -2576,7 +2576,7 @@ looks reasonable. We focus on the phylogram, the second tree to be displayed:
 
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Phylogram (based on median node depths):
 
 /---------------------------------------------------------- Lemur_catta (2)
@@ -2625,7 +2625,7 @@ by \texttt{sumt} before the trees. The table is preceded by a key to the taxon b
 which is critical to interpreting where the different parameters belong.
 
 %\begin{figure}[H]
-%\begin{Verbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+%\begin{Verbatim}[fontsize=\footnotesize]
 %List of taxa in bipartitions:                                                 
 %                                                                                
 %   1 -- Tarsius_syrichta
@@ -2676,7 +2676,7 @@ The key consists of two parts. First a list of the taxon labels with their corre
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 List of taxa in bipartitions:                                                 
                                                                                 
    1 -- Tarsius_syrichta
@@ -2698,7 +2698,7 @@ The second part consists of a "dot-and-star"-table, indicating which taxa that b
 partition. For example ID 17 describes a partition that divides taxa nr 3 and 4 against the rest.
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 ID -- Partition
 ------------------
  0 -- ************
@@ -2744,7 +2744,7 @@ rate should be below $1.0$. The relevant rows of the table are:
 
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
                                         95% HPD Interval
                                        ------------------
 Parameter           Mean     Variance   Lower     Upper     Median   PSRF+ Nruns
@@ -2777,7 +2777,7 @@ rooting constraint that we enforced above. To get an accurate comparison, we run
 sampling method. We refer to the previous two tutorials for details, but briefly give the commands
 here for the two stepping-stone analyses that are required for this comparison:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > ss ngen=500000 diagnfreq=2500
 MrBayes > prset clockvarpr=strict
 MrBayes > ss
@@ -2788,7 +2788,7 @@ first (upper table), followed by the strict clock model (lower table).
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Run   Marginal likelihood (ln)
  ------------------------------
    1     -6357.90
@@ -2828,14 +2828,14 @@ We begin by reading in the smaller data set using the command \texttt{execute} (
 \texttt{set autoclose=yes nowarnings=yes} for allowing execution without being prompted for
 answering \texttt{yes/no} between steps):
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > execute primates.nex
 \end{Verbatim}
 
 Next, we set the substitution model to GTR + I + $\Gamma$:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > lset nst=6 rates=invgamma
 \end{Verbatim}
 
@@ -2843,7 +2843,7 @@ We know from previous tutorials (see sections \ref{strictClock} and \ref{relaxed
 strict clock model provides a good fit to the data set. Specifically, we choose a strict clock
 model with uniform branch lengths using the command:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > prset brlenspr=clock:uniform
 \end{Verbatim}
 
@@ -2857,7 +2857,7 @@ millions of years as the unit, the resulting tree will be calibrated in millions
 
 Setting the prior on the clock rate is thus achieved with
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > prset clockratepr=normal(0.01,0.005)
 \end{Verbatim}
 
@@ -2881,14 +2881,14 @@ the expected clock rate.
 Here we specify a gamma distribution with mean 100 and standard deviation 50.
 We do this using the following command line.
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > prset treeagepr=gamma(100,50)
 \end{Verbatim}
 
 Now let us run a short MCMC analysis using 100,000 generations and the default settings. After that
 we use the \texttt{sumt} command to examine the calibrated tree:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > mcmc ngen=100000
 MrBayes > sumt
 \end{Verbatim}
@@ -2897,7 +2897,7 @@ The resulting dated phylogram should look something like this:
 
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\scriptsize]
+\begin{BVerbatim}[fontsize=\scriptsize]
                                                      /----- Homo_sapiens (3)
                                                    /-+
                                                    | \----- Pan (4)
@@ -2935,7 +2935,7 @@ estimates, we need to go into the parameter summary table printed above the tree
 that, however, we need to identify the bipartition IDs that we are interested in. We do that by
 referring to the bipartition table:
 
-\begin{Verbatim}[baselinestretch=0.8,xleftmargin=15mm,fontsize=\footnotesize]
+\begin{Verbatim}[xleftmargin=15mm,fontsize=\footnotesize]
 List of taxa in bipartitions:
 
    1 -- Tarsius_syrichta
@@ -3047,7 +3047,7 @@ estimates. Here are the relevant rows in this table in our analysis:
 
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
                                         95% HPD Interval
                                       --------------------
 Parameter      Mean       Variance     Lower       Upper       Median     PSRF+  Nruns
@@ -3080,7 +3080,7 @@ constraint for the node of interest. Second, we associate the node with a calibr
 Third, we enforce the constrained nodes. Fourth, we enforce node ages to obey calibrations.
 Specifically, the MrBayes commands are:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > constraint humanchimp = Homo_sapiens Pan
 MrBayes > calibrate humanchimp=uniform(5,7)
 MrBayes > prset topologypr=constraints(humanchimp)
@@ -3092,7 +3092,7 @@ phylogram. It should look something like this:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\scriptsize]
+\begin{BVerbatim}[fontsize=\scriptsize]
               /-------------------------------------------- Tarsius_syrichta (1)
 /-------------+
 |             \-------------------------------------------- Lemur_catta (2)
@@ -3179,14 +3179,14 @@ characters to be ordered (\texttt{morph\_ordered}), and then a set of morphologi
 be excluded (\texttt{morph\_excluded}). Then these characters are ordered and excluded with the
 following two lines:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 ctype ordered: morph_ordered;
 exclude morph_excluded;
 \end{Verbatim}
 
 The next set of lines define the partitioning of the data:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 partition without_CO1_3 = 7: MV MS, 12S 16S, 18S, 28S,
     CO1_12 CO1_3, Ef1aF1_12 Ef1aF2_12, Ef1aF1_3 Ef1aF2_3;
 exclude CO1_3;
@@ -3214,14 +3214,14 @@ used in drawing trees from unrooted non-clock analyses. This line is irrelevant 
 analyses, since they produce rooted trees. The next line defines a set of taxa including the
 fossils, called \texttt{fossils}:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 taxset fossils= Triassoxyela Asioxyela ...
 \end{Verbatim}
 
 This will be convenient when we want to exclude the fossils from the node dating analysis. Finally,
 all the constraints corresponding to the calibration nodes are defined:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 constraint root = 1-.;
 constraint Hymenoptera = 10-69;
 constraint Holometabola = 3-69;
@@ -3237,7 +3237,7 @@ second version of the constraint would have been adequate for both analyses.
 We now come to the specification of the two dating analyses. The first is the total-evidence
 analysis, which starts out by specifying the date of all fossil taxa:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 calibrate Triassoxyela=Fixed(235)
     Asioxyela=Fixed(235)
 ...
@@ -3250,7 +3250,7 @@ with a prior probability distribution.
 The next three lines set up an WN relaxed clock model. You should recognize the commands from the
 tutorial in section \ref{relaxedClock}.
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 prset brlenspr=clock:uniform;
 prset clockvarpr=wn;
 prset wnvarpr=exp(37);
@@ -3265,7 +3265,7 @@ WN model matched these data better than the TK02 relaxed clock model provided by
 The final five lines define a prior on the clock rate and sets the two outgroup calibration points
 using the same commands discussed previously in this tutorial:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 prset clockratepr=lognorm(-7.1,0.5);
 calibrate root=offsetexp(315,396);
 calibrate holometabola_withFossils=offsetexp(302,396);
@@ -3283,7 +3283,7 @@ This completes the definition of the total-evidence analysis. Let us now turn ou
 node-dating analysis. It starts out by deleting the fossils from the analysis, using the previously
 defined taxon set called \texttt{fossils}:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 delete fossils
 \end{Verbatim}
 
@@ -3293,7 +3293,7 @@ the two outgroup and seven ingroup calibration points. The commands are essentia
 in the total-evidence analysis. Note that all nine constraints have to be enforced when specifying
 the topology prior:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 prset topologypr=constraints(root,holometabola,hymenoptera,...,Vespina);
 \end{Verbatim}
 
@@ -3316,7 +3316,7 @@ all other model parameters, including the topology of other parts of the tree. W
 First, we read in the data (and use \texttt{set autoclose=yes nowarnings=yes} for allowing
 execution without being prompted for answering \texttt{yes/no} between steps):
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > execute cynmix.nex
 \end{Verbatim}
@@ -3333,7 +3333,7 @@ the states of all other morphological characters, we will treat it in a separate
 Otherwise, we will use the same partitioned model as in chapter \ref{tutorialPartitioned}. To set
 up the model, we need to type in the following lines:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 Mrbayes > partition ancstates = 6: 1,2-166,COI,EF1a,LWRh,28S
 Mrbayes > set partition=ancstates
 Mrbayes > lset applyto=(2) rates=gamma
@@ -3347,7 +3347,7 @@ MrBayes to report ancestral states for that node and the relevant partition. We 
 corresponding to the Cynipidae to always be present in the sampled trees by first defining and then
 enforcing the constraint:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > constraint cynipidae=1-29
 MrBayes > prset topologypr=constraints(cynipidae)
 \end{Verbatim}
@@ -3355,7 +3355,7 @@ MrBayes > prset topologypr=constraints(cynipidae)
 To ask MrBayes to report ancestral states for the first partition, which contains only the first
 morphological character, we use:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > report applyto=(1) ancstates=yes
 \end{Verbatim}
 
@@ -3363,7 +3363,7 @@ We now run the analysis, say for 30,000 generations, which is barely enough to g
 convergence. After the analysis is completed, we summarize the parameter samples, including those
 of the ancestral state probabilities, using \texttt{sump}:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > mcmc ngen=30000
 MrBayes > sump
 \end{Verbatim}
@@ -3375,7 +3375,7 @@ run of 1 M generations:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Parameter           Mean      Variance     min ESS*  avg ESS  PSRF+
 --------------------------------------------------------------------
 
@@ -3408,7 +3408,7 @@ for a set of four individuals belonging to four different species. As usual, we 
 data (we also use \texttt{set autoclose=yes nowarnings=yes} for allowing execution without being
 prompted for answering \texttt{yes/no} between steps):
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > execute finch.nex
 \end{Verbatim}
@@ -3416,7 +3416,7 @@ MrBayes > execute finch.nex
 The data file contains a \texttt{MRBAYES} block, with commands to define a partition that divides
 the data into the 30 separate genes. Lets start by making sure this partition is used:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > set partition = genes
 \end{Verbatim}
 
@@ -3425,7 +3425,7 @@ different sequenced individuals belong. This is done using the \texttt{speciespa
 By default, it is assumed that each individual belongs to a separate species, which is the case we
 are dealing with, but let us nevertheless be explicit:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > speciespartition species=SpeciesA:1,SpeciesB:2,
                                    SpeciesC:3,SpeciesD:4
 MrBayes > set speciespartition=species
@@ -3442,7 +3442,7 @@ row index in the data matrix.
 We now need to unlink the topology parameter of the 30 gene partitions, which is done using the
 \texttt{unlink} command:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > unlink topology=(all)
 \end{Verbatim}
 
@@ -3450,7 +3450,7 @@ To set the multi-species coalescent as the prior for each of the gene trees, we 
 that the branch lengths should come from a coalescent process within a species tree,and that the
 topology should be constrained by the species tree. This is achieved using the following commands:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > prset topologypr=speciestree
 MrBayes > prset brlenspr=clock:speciestree
 \end{Verbatim}
@@ -3464,7 +3464,7 @@ model parameters by using the \tb{showmodel} command to verify this.
 We now turn our attention to the substitution model. Assume that we would like to use an HKY model
 with site rates modeled using a discrete gamma. This would be accomplished using the line:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > lset nst=2 rates=gamma
 \end{Verbatim}
 
@@ -3475,7 +3475,7 @@ lognormal distribution with the mean on the log scale being equal to a populatio
 the standard deviation on the log scale being equal to 10. Since the natural log of 100 is about
 $4.6$, and the natural log of 10 is about $2.3$, this would be achieved using the lines:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > prset popvarpr=variable
 MrBayes > prset popsizepr=lognormal(4.6,2.3)
 \end{Verbatim}
@@ -3487,7 +3487,7 @@ We do that by setting the number of chains to one, \texttt{nchains=1}. Under the
 run seemed to produce an adequate sample within 1 M generations. To run an analysis of this length
 without Metropolis coupling, use:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > mcmc ngen=1000000 nchains=1
 \end{Verbatim}
 
@@ -3497,7 +3497,7 @@ trees. This is a sample output from our analysis:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Average standard deviation of split frequencies for gene tree 1: 0.007974
 Average standard deviation of split frequencies for gene tree 2: 0.016684
 Average standard deviation of split frequencies for gene tree 3: 0.015212
@@ -3513,7 +3513,7 @@ should look something like this:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\scriptsize]
+\begin{BVerbatim}[fontsize=\scriptsize]
 Clade credibility values:
 
  /------------------------------------------------------------------ SpeciesA (1)
@@ -3617,7 +3617,7 @@ matches those in the data matrix.
 Here is an example of a simple Nexus file containing a \texttt{TREES} block with a single tree in
 it:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 #NEXUS
 begin trees;
     tree mytree = [&R] ((SpeciesA:0.15,SpeciesB:0.20):0.10,SpeciesC:0.25);
@@ -3710,7 +3710,7 @@ examples, we assume that the gene sequence starts with the first character being
 first codon position.  Comments are given in square brackets; they are ignored by MrBayes when the
 data file is processed.
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 charset COI = 1-756; [Identify a gene using a range]
 charset COI_2nd = 2-756; \ 3 [Identify second codon position sites]
 taxaset fossils = 10-30; [Create set with taxon 10 through 30]
@@ -3728,7 +3728,7 @@ and would like to run an analysis on only recent taxa. We can do this by definin
 called \texttt{fossils} and then exclude it from the analysis by using the following pattern (given
 here as lines in a data file, with an ending semicolon):
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 taxaset fossils = 10-30;
 delete fossils;
 \end{Verbatim}
@@ -3736,7 +3736,7 @@ delete fossils;
 For a second example, consider a mix of three genes: the mitochondrial gene COI and the nuclear
 genes Ef1a and CAD. First, let us set up a partition by gene:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 charset COI = 1-756;
 charset Ef1a = 757-1785;
 charset CAD = 1786-.;
@@ -3750,7 +3750,7 @@ allow parts in a data partition to be empty, so this would clash with the partit
 \texttt{genes}.  We first need to set up an appropriate partition that will not have any empty
 parts after COI has been excluded. The following pattern is one possibility:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 partition nuclear_genes = 2:Ef1a COI,CAD;
 set partition=nuclear_genes;
 exclude COI;
@@ -3990,7 +3990,7 @@ this table is for two runs):
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Estimated marginal likelihoods for runs sampled in files
    "replicase.nex.run1.p", "replicase.nex.run2.p", etc:
    (Use the harmonic mean for Bayes factor comparisons of models)
@@ -4048,7 +4048,7 @@ possible time-reversible rate matrices according to their posterior probability
 \citep{huelsenbeck04d}. This can be accomplished simply by using the option \texttt{mixed} for the
 \texttt{Nst} parameter in the \texttt{lset} command. For example:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > lset applyto=(all) nst=mixed
 \end{Verbatim}
 
@@ -4063,7 +4063,7 @@ according to its probability. Currently, ten different rate matrices will be sam
 the \texttt{mixed} option for \texttt{Aamodelpr} parameter in the \texttt{prset} command. For
 example:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > prset applyto=(all) aamodelpr=mixed
 \end{Verbatim}
 
@@ -4074,14 +4074,14 @@ MrBayes > prset applyto=(all) aamodelpr=mixed
 % One can change the default, or current, starting values for parameters in a model using the command
 % \texttt{startvals}. The basic format is:                                                          
 % 
-% \begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+% \begin{Verbatim}
 % startvals <param>=(<value_1>,<value_2>,...,<value_n>)                      
 % \end{Verbatim}
 % 
 % for all substitution model parameters. The format is slightly different for parameters that are
 % written to a tree file:                                   
 % 
-% \begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+% \begin{Verbatim}
 % startvals <param>=<tree_name>                                              
 % \end{Verbatim}
 % 
@@ -4173,7 +4173,7 @@ that the \texttt{nruns} parameter for the \texttt{mcmc} command is $>1$) and rep
 (ASDSF), or maximum standard deviation of split frequencies at regular intervals. For example
 (command given on several lines for readability):
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > mcmcp nruns=2 mcmcdiagn=yes diagnfreq=5000
 MrBayes > mcmcp diagnstat=avgstddev minpartfreq=0.10
 MrBayes > mcmcp relburnin=yes burninfrac=0.25 savetrees=no
@@ -4199,7 +4199,7 @@ If one wishes to rely on the ASDSF as the crucial statistic for deciding when to
 MrBayes provides a convenient ``automatic stopping rule''. For example (note that other default
 values are omitted):
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > mcmc stoprule=yes stopval=0.01
 \end{Verbatim}
 
@@ -4255,7 +4255,7 @@ looks like this (you find the critical values in a different format in the \text
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
         1     2     3     4 
   --------------------------
 1 |        0.53  0.26  0.12 
@@ -4356,7 +4356,7 @@ of the cases it does not have to be more complicated than that. For example, if 
 estimate marginal likelihood of a model which is setup in file \texttt{primates.nex} then you may
 issue the commands:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > execute primates.nex
 MrBayes > ss ngen=1000000 samplefreq=1000
 \end{Verbatim}
@@ -4366,7 +4366,7 @@ with the mean value:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Marginal likelihood (in natural log units) estimated using stepping-stone sampling based on
 50 steps with 196000 generations (196 samples) within each step.
 
@@ -4392,7 +4392,7 @@ at is the graph plotted below the table with marginal likelihood estimates:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\scriptsize]
+\begin{BVerbatim}[fontsize=\scriptsize]
 Plot of average standard deviation of split frequencies across steps.
 Points at -1.0 (y-axis) indicate that there were no splits
 above minimum frequency for corresponding step.
@@ -4548,7 +4548,7 @@ given below:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{BVerbatim}[fontsize=\small]
 begin mrbayes;
    set autoclose=yes nowarnings=yes;
    execute primates.nex;
@@ -4586,7 +4586,7 @@ both angle brackets are essential and must be included in the command line) with
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{BVerbatim}[fontsize=\small]
 set autoclose=yes nowarnings=yes
 execute primates.nex
 lset nst=6 rates=gamma
@@ -4626,7 +4626,7 @@ calculators, and to set various BEAGLE-related options. Before looking into that
 be a good idea to examine the available BEAGLE CPU and GPU resources. You can find out by using the
 following command:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > showbeagle
 \end{Verbatim}
 
@@ -4635,7 +4635,7 @@ machine with an available GPU detected by BEAGLE:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Available resources reported by beagle library:
  Resource 0:
  Name: CPU
@@ -4663,7 +4663,7 @@ settings included:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{BVerbatim}
 Parameter          Options               Current Setting
 --------------------------------------------------------
 Usebeagle          Yes/No                No             
@@ -4681,7 +4681,7 @@ If you run BEAGLE on the CPU, then your best option (when these lines are writte
 the double-precision SSE code with dynamic scaling. This would be requested with the following
 lines:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > set usebeagle=yes beagledevice=cpu beagleprecision=double
 MrBayes > set beaglescaling=dynamic beaglesse=yes
 \end{Verbatim}
@@ -4697,7 +4697,7 @@ To use the GPU, you simply switch from CPU to GPU (if you have an available GPU)
 fastest option should be the single-precision code with dynamic scaling. The SSE option is not
 applicable in the GPU case. The fastest GPU option should therefore be:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > set usebeagle=yes beagledevice=gpu
 MrBayes > set beagleprecision=single beaglescaling=dynamic
 \end{Verbatim}
@@ -4797,7 +4797,7 @@ How you run the MPI version depends on your system. Some implementations of MPI 
 invoke a daemon or virtual machine to set up the MPI execution environment. Once the MPI
 environment is ready, a parallel MrBayes job is typically started with a line such as
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 $ mpirun -np 4 mb batch.nex > log.txt &
 \end{Verbatim}
 
@@ -4837,7 +4837,7 @@ If you decide you want to go ahead, the first step is to download (clone) the co
 MrBayes from GitHub. On a Unix system with \texttt{git} installed, this is accomplished using the
 command line:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 $ git clone --depth=1 https://github.com/NBISweden/MrBayes.git
 \end{Verbatim}
 
@@ -5657,7 +5657,7 @@ partitioning scheme using the following lines in a MrBayes block:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{BVerbatim}[fontsize=\small]
 charset pos1 = 1-.\3;
 charset pos2 = 2-.\3;
 charset pos3 = 3-.\3;
@@ -5814,14 +5814,14 @@ constraints (<list of constraints>)}.
 
 Examples:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > constraint myclade = Homo Pan Gorilla
 \end{Verbatim}
 
 Defines a hard constraint forcing \textit{Homo}, \textit{Pan}, and \textit{Gorilla} to form a
 monophyletic group or a split that does not include any other taxa.
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > constraint forbiddenclade negative = Homo Pan Gorilla
 \end{Verbatim}
 
@@ -5829,7 +5829,7 @@ Defines a negative constraint that associates all trees where \textit{Homo}, \te
 \textit{Gorilla} form a monophyletic group with zero posterior probability. In other words, such
 trees will not be sampled during MCMC.
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 MrBayes > constraint backbone partial = Homo Gorilla : Mus
 \end{Verbatim}
 
@@ -5933,7 +5933,7 @@ is to define character sets first using the \texttt{charset} command. For instan
 have concatenated nucleotide sequences from three genes in your data set of length 1962, 1050, and
 2082 sites, respectively. Then you create character sets for those three genes using
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 charset gene1 = 1-1962;
 charset gene2 = 1963-3012;
 charset gene3 = 3013-.;
@@ -5945,7 +5945,7 @@ range of characters (see the description of the site-specific rate model above).
 sets are defined, the partitioning scheme based on the genes is defined with the \texttt{partition}
 command and selected using the \texttt{set} command:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 partition by_gene = 3:gene1,gene2,gene3;
 set partition = by_gene;
 \end{Verbatim}
@@ -5956,7 +5956,7 @@ in each partition. Note that MrBayes requires the partitioning scheme to include
 Say, for instance, that you wanted to run an analysis with only gene 1 and gene 2. Then define a
 two-partition scheme and exclude the characters represented by gene 3:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 partition genes_1_2 = 2:gene1,gene2 gene3;
 exclude gene3;
 set partition = genes_1_2;
@@ -5972,7 +5972,7 @@ partition (partition 2), and want to apply a GTR model to the nucleotide data, g
 variation to both partitions, and allow the partition rates to be different. Then we would use the
 commands
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 lset applyto=(2) nst=6;
 lset applyto=(all) rates=gamma;
 prset applyto=(all) ratepr=variable;
@@ -5985,7 +5985,7 @@ we want to unlink the shape parameter across the partitions discussed above (aft
 the standard data and the molecular data have the same distribution of rates across sites?). This
 would be achieved using
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{Verbatim}
 unlink shape=(all);
 \end{Verbatim}
 
