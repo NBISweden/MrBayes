@@ -1827,7 +1827,7 @@ MrBayes > execute replicase.nex
 \end{Verbatim}
 
 Then we specify that we want to use a codon model with omega variation across sites, and that we
-want MrBayes to report positive selection probabilities and site omega values (dN/dS ratios).
+want MrBayes to report positive selection probabilities and site omega values (dN/dS ratios):
 
 \begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
 MrBayes > lset nucmodel=codon omegavar=ny98
@@ -2038,7 +2038,7 @@ MrBayes > sump
 In the output from the \texttt{sump} command, focus on the table summarizing the likelihoods of the
 MCMC samples:
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
 Estimated marginal likelihoods for runs sampled in files
@@ -2300,20 +2300,7 @@ Mrbayes > mcmc ngen=100000
 Mrbayes > sump
 \end{Verbatim}
 
-\begin{figure}[h]
-\centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
-Run   Arithmetic mean   Harmonic mean
---------------------------------------
-  1      -5719.56         -5729.48
-  2      -5719.12         -5731.20
---------------------------------------
-TOTAL    -5719.32         -5730.67
---------------------------------------
-\end{BVerbatim}
-\end{figure}
-
-Again, we focus on the table summarizing the means of the likelihoods of the MCMC samples.
+Again, we focus on the table summarizing the means of the likelihoods of the MCMC samples:
 
 \begin{figure}[h]
 \centering
@@ -2841,7 +2828,7 @@ We begin by reading in the smaller data set using the command \texttt{execute} (
 \texttt{set autoclose=yes nowarnings=yes} for allowing execution without being prompted for
 answering \texttt{yes/no} between steps):
 
-\begin{Verbatim}[fbaselinestretch=0.8,ontsize=\small]
+\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
 MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > execute primates.nex
 \end{Verbatim}
@@ -3416,7 +3403,7 @@ set of four individuals belonging to four different species. As usual, we first 
 (we also use \texttt{set autoclose=yes nowarnings=yes} for allowing execution without being prompted
 for answering \texttt{yes/no} between steps):
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
 MrBayes > set autoclose=yes nowarnings=yes
 MrBayes > execute finch.nex
 \end{Verbatim}
@@ -3424,7 +3411,7 @@ MrBayes > execute finch.nex
 The data file contains a \texttt{MRBAYES} block, with commands to define a partition that divides the
 data into the 30 separate genes. Lets start by making sure this partition is used:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\footnotesize]
+\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
 MrBayes > set partition = genes
 \end{Verbatim}
 
@@ -4330,10 +4317,11 @@ tree; this is requested using \texttt{mcmcp nperts=<integer\_value>}.
 
 If you are running a long analysis and want to extend it, or if there is a risk that a long
 analysis will be inadvertently interrupted by hardware failure or other factors that are out of
-your control, checkpointing will come handy. The option \texttt{checkpoint} for the \texttt{mcmc} command
-will create a check-pointing file contaning all the current parameter values of all chains. This
-is done on a regular interval as set by the \texttt{checkfreq} option (units are MCMC generations).
-The check-point file is written in the current directory with file suffix \texttt{.ckp}.
+your control, checkpointing will come handy. The option \texttt{checkpoint} for the \texttt{mcmc}
+command will create a check-pointing file contaning all the current parameter values of all chains.
+This is done on a regular interval as set by the \texttt{checkfreq} option (units are MCMC
+generations).  The check-point file is written in the current directory with file suffix
+\texttt{.ckp}.
 
 To start from an existing \texttt{.ckp} file, you need to use the \texttt{append=yes} option when
 starting a new (continued) MCMC analysis using the \texttt{mcmc} command. Also make sure that the
@@ -4365,12 +4353,12 @@ MrBayes > execute primates.nex
 MrBayes > ss ngen=1000000 samplefreq=1000
 \end{Verbatim}
 
-That will start MCMC-like run. Once completed, a table containing estimate of marginal likelihood
-for each run is printed along with the mean value:
+Once completed, a table containing estimate of marginal likelihood for each run is printed along
+with the mean value:
 
 \begin{figure}[h]
 \centering
-\begin{BVerbatim}[baselinestretch=0.8,fontsize=\scriptsize]
+\begin{BVerbatim}[baselinestretch=0.8,fontsize=\footnotesize]
 Marginal likelihood (in natural log units) estimated using stepping-stone sampling based on
 50 steps with 196000 generations (196 samples) within each step.
 
@@ -4439,42 +4427,42 @@ the prior ($\beta$ = 0).
 
 The power posterior distributions are sampled using MCMC. First, we start a standard MCMC chain on
 the posterior distribution, and let it run until we have reached the criterion specified by the
-\texttt{burninss} option. After this, we step through the power posterior distributions until we reach
-the prior distribution. In each of the \texttt{nsteps} steps, we sample from a new power posterior
-distribution with a distinct $\beta$ value. The $\beta$ values correspond to \texttt{nsteps} evenly
-spaced quantiles in a Beta(\texttt{alpha},1.0) distribution. For the first sampling step, the $\beta$
-value is equal to the last quantile, i.e., it is close to $1.0$. For each successive step, the
-$\beta$ value takes on the value of the next quantile, in decreasing order, until it reaches the
-value of $0.0$.
+\texttt{burninss} option. After this, we step through the power posterior distributions until we
+reach the prior distribution. In each of the \texttt{nsteps} steps, we sample from a new power
+posterior distribution with a distinct $\beta$ value. The $\beta$ values correspond to
+\texttt{nsteps} evenly spaced quantiles in a Beta(\texttt{alpha},1.0) distribution. For the first
+sampling step, the $\beta$ value is equal to the last quantile, i.e., it is close to $1.0$. For
+each successive step, the $\beta$ value takes on the value of the next quantile, in decreasing
+order, until it reaches the value of $0.0$.
 
 %%%% JN: Check if this applies: "However, the \texttt{mcmc} burnin parameters are ignored."
-The \texttt{ss} procedure uses the same machinery as the standard \texttt{mcmc} algorithm, and shares
-most of its parameters with the \texttt{mcmc} and \texttt{mcmcp} commands. All \texttt{mcmc} parameters,
-except those related to burnin, have the same meaning and usage in the \texttt{ss} command as they
-have in the \texttt{mcmc} command. However, the \texttt{mcmc} burnin parameters are ignored. Instead, the
-\texttt{ss} command uses its own burnin parameter, \texttt{burninss}. The \texttt{ss} command also has its
-own parameters for specifying the number of steps and the shape of the Beta distribution from which
-the $\beta$ values are computed.
+The \texttt{ss} procedure uses the same machinery as the standard \texttt{mcmc} algorithm, and
+shares most of its parameters with the \texttt{mcmc} and \texttt{mcmcp} commands. All \texttt{mcmc}
+parameters, except those related to burnin, have the same meaning and usage in the \texttt{ss}
+command as they have in the \texttt{mcmc} command. However, the \texttt{mcmc} burnin parameters are
+ignored. Instead, the \texttt{ss} command uses its own burnin parameter, \texttt{burninss}. The
+\texttt{ss} command also has its own parameters for specifying the number of steps and the shape of
+the Beta distribution from which the $\beta$ values are computed.
 
-Note that the \texttt{ngen} parameter of \texttt{mcmc} is used to set the maximum number of generations
-processed, including both the burnin and the following steps in the stepping-stone sampling phase.
-For instance, assume that \texttt{burninss} is set to $-1$, \texttt{Nsteps} to $49$, \texttt{ngen} to
-$1000000$ and \texttt{Samplefreq} to $1000$. We will then get 1,000 samples in total (1,000,000 /
-1,000). These will fall into 50 bins, one of which represents the burnin and is discarded. Each
-step in the algorithm will thus be represented by 20 samples.
+Note that the \texttt{ngen} parameter of \texttt{mcmc} is used to set the maximum number of
+generations processed, including both the burnin and the following steps in the stepping-stone
+sampling phase.  For instance, assume that \texttt{burninss} is set to $-1$, \texttt{Nsteps} to
+$49$, \texttt{ngen} to $1000000$ and \texttt{Samplefreq} to $1000$. We will then get 1,000 samples
+in total (1,000,000/1,000). These will fall into 50 bins, one of which represents the burnin and
+is discarded. Each step in the algorithm will thus be represented by 20 samples.
 
 The marginal likelihood estimated by SS is the multiplication of the ratios obtained from each
 step. Information about value of the ratio estimated at each step and run could be found in a file
-with \texttt{.ss} extension created during SS analyses. Since each ratio is stored in log units, the
-marginal likelihood in log units is obtained simply by summing of the log ratios across all steps.
-Examining the values of ratio estimates allows you to asses there quality and judge convergence of
-different runs for specific steps. If you observe huge differences among estimates for the same
-step then the runs did not converge for the step. If you observe poor convergence for later steps
-then in your next SS analyzes, you may consider reducing \texttt{alpha} to increase skewness of the
-$\beta$ values. If you have diagnostic turned on, the file contains information about standard
-deviation of split frequencies for each step. So, instead of looking at the graph with split
-frequencies plotted at the end of SS analyzes, you may examine the \texttt{.ss} file to analyze
-precise values. If you have dataset with many taxa ($>20$) you should not worry if standard
+with \texttt{.ss} extension created during SS analyses. Since each ratio is stored in log units,
+the marginal likelihood in log units is obtained simply by summing of the log ratios across all
+steps.  Examining the values of ratio estimates allows you to asses there quality and judge
+convergence of different runs for specific steps. If you observe huge differences among estimates
+for the same step then the runs did not converge for the step. If you observe poor convergence for
+later steps then in your next SS analyzes, you may consider reducing \texttt{alpha} to increase
+skewness of the $\beta$ values. If you have diagnostic turned on, the file contains information
+about standard deviation of split frequencies for each step. So, instead of looking at the graph
+with split frequencies plotted at the end of SS analyzes, you may examine the \texttt{.ss} file to
+analyze precise values. If you have dataset with many taxa ($>20$) you should not worry if standard
 deviation of split frequencies is poor, or even can not be evaluated for later steps.
 
 %%%% JN: Sections planned, but not started:
@@ -4529,9 +4517,9 @@ The convergence diagnostics provided by MrBayes are quite powerful (see section
 will read MrBayes output files and will provide you with a number of additional ways in which you
 can examine the output from your analysis. Two of the most popular tools are Tracer
 \citep{rambaut18} for the parameter (\texttt{.p}) files, and AWTY \citep{nylander07} for the tree
-(\texttt{.t}, \texttt{.con.tre}) files. Among other things, they provide nice graphical representations
-of the output from MCMC analyses. Another set of tools is provided by the CODA \citep{plummer06}
-and RWTY \citep{warren17} packages for R \citep{rcoreteam18}.
+(\texttt{.t}, \texttt{.con.tre}) files. Among other things, they provide nice graphical
+representations of the output from MCMC analyses. Another set of tools is provided by the CODA
+\citep{plummer06} and RWTY \citep{warren17} packages for R \citep{rcoreteam18}.
 
 %%%% JN: Planned sections but not started:
 % \subsection{Plotting}
@@ -4546,10 +4534,13 @@ instead of typing all commands at the prompt. This is done by adding a \texttt{M
 Nexus file, either the same file containing the \texttt{DATA} block or a separate Nexus file. The
 \texttt{MRBAYES} block simply contains the commands as you would have given them from the command
 line, with the difference that each command line is ended with a semi-colon. For instance, a
-\texttt{MRBAYES} block that performs three single-run analyses of the data set in \texttt{primates.nex}
-under the GTR + $\Gamma$ model and stores each result in a separate file is given below:
+\texttt{MRBAYES} block that performs three single-run analyses of the data set in
+\texttt{primates.nex} under the GTR + $\Gamma$ model and stores each result in a separate file is
+given below:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{figure}[h]
+\centering
+\begin{BVerbatim}[baselinestretch=0.8,fontsize=\small]
 begin mrbayes;
    set autoclose=yes nowarnings=yes;
    execute primates.nex;
@@ -4558,33 +4549,36 @@ begin mrbayes;
    mcmc file=primates.nex2;
    mcmc file=primates.nex3;
 end;
-\end{Verbatim}
+\end{BVerbatim}
+\end{figure}
 
 Since this file contains the \texttt{execute} command, it must be in a file separate from the
 \texttt{primates.nex} file. You start the analysis simply by typing \tb{execute <filename>}, where
 filename is the name of the file containing the \texttt{MRBAYES} block. The \texttt{set} command is
 needed to change the behavior of MrBayes such that it is appropriate for batch mode. When
-\texttt{autoclose=yes}, MrBayes will finish the MCMC analysis without asking you whether you want to
-add more generations. When \texttt{nowarnings=yes}, MrBayes will overwrite existing files without
-warning you, so make sure that your batch file does not inadvertently cause the deletion of
+\texttt{autoclose=yes}, MrBayes will finish the MCMC analysis without asking you whether you want
+to add more generations. When \texttt{nowarnings=yes}, MrBayes will overwrite existing files
+without warning you, so make sure that your batch file does not inadvertently cause the deletion of
 previous result files that should be saved for future reference.
 
 The Unix version of MrBayes can execute batch files in the background from the command prompt. Just
-type \tb{mb <file> > log.txt \&} at the Unix prompt, where \texttt{<file>} is the name of your Nexus
-batch file, to have MrBayes run in the background, logging its output to the file \texttt{log.txt}. If
-you want MrBayes to process more than one file, just list the files one after the other with space
-between them, before the output redirection sign (\texttt{>}). When MrBayes is run in this way, it
-will quit automatically when it has processed all files; it will also terminate with an error
-signal if it encounters an error.
+type \tb{mb <filename> > log.txt \&} at the Unix prompt, where \texttt{<file>} is the name of your
+Nexus batch file, to have MrBayes run in the background, logging its output to the file
+\texttt{log.txt}. If you want MrBayes to process more than one file, just list the files one after
+the other with space between them, before the output redirection sign (\texttt{>}). When MrBayes is
+run in this way, it will quit automatically when it has processed all files; it will also terminate
+with an error signal if it encounters an error.
 
 Alternatively, the Unix version of MrBayes can also be run in batch mode using input redirection.
 For that you need a text file containing the commands exactly as you would have typed them from the
-command line. For instance, assume that your data set is in \texttt{primates.nex} and that you want to
-perform the same analyses specified above. Then type \tb{mb < batch.txt > log.txt \&} (note that
+command line. For instance, assume that your data set is in \texttt{primates.nex} and that you want
+to perform the same analyses specified above. Then type \tb{mb < batch.txt > log.txt \&} (note that
 both angle brackets are essential and must be included in the command line) with the
 \texttt{batch.txt} file containing this text:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{figure}[h]
+\centering
+\begin{BVerbatim}[baselinestretch=0.8,fontsize=\small]
 set autoclose=yes nowarnings=yes
 execute primates.nex
 lset nst=6 rates=gamma
@@ -4592,7 +4586,8 @@ mcmc ngen=10000 savebrlens=yes file=primates.nex1
 mcmc file=primates.nex2
 mcmc file=primates.nex3
 quit
-\end{Verbatim}
+\end{BVerbatim}
+\end{figure}
 
 The \texttt{quit} command forces MrBayes to terminate.
 
@@ -4600,12 +4595,6 @@ The \texttt{quit} command forces MrBayes to terminate.
 % \subsection{Running MrBayes on a Cluster}
 
 \subsection{Turbo-charging MrBayes with BEAGLE and MPI}
-
-\vspace{5 pt}
-{\large Please note that the instructions in these sections are not up to date
-(Feb 2019). Please refer to the GitHub pages \url{https://github.com/NBISweden/MrBayes}
-for further details.}
-\vspace{5 pt}
 
 To speed up MrBayes analyses, you can try using the BEAGLE library or the MPI version of MrBayes.
 Let us start by examining the options provided by BEAGLE. This is a library that contains code for
@@ -4967,18 +4956,18 @@ your data.
 
 MrBayes implements a large number of DNA substitution models. These models are of three different
 types. The ``\texttt{4by4}'' models are the usual simple models of nucleotide evolution. The
-``\texttt{Doublet}'' model is intended for stem regions of ribosomal DNA, where nucleotides evolve in
-pairs. Finally, the ``\texttt{Codon}'' models group the nucleotides in triplets and model evolution
-based on these. The type of nucleotide model is set in MrBayes with \texttt{lset nucmodel}; for
-instance, if you want to use the doublet model, the command is \tb{lset nucmodel=doublet}. The
-default setting is \texttt{4by4}.
+``\texttt{Doublet}'' model is intended for stem regions of ribosomal DNA, where nucleotides evolve
+in pairs. Finally, the ``\texttt{Codon}'' models group the nucleotides in triplets and model
+evolution based on these. The type of nucleotide model is set in MrBayes with \texttt{lset
+nucmodel}; for instance, if you want to use the doublet model, the command is \texttt{lset
+nucmodel=doublet}. The default setting is \texttt{4by4}.
 
 In addition to these model types, MrBayes also supports translation of protein-coding nucleotide
 data to amino acids before analysis, effectively treating the nucleotide data as if it were amino
-acid data. To request this, use the command \tb{lset nucmodel=aa}. The translation uses the current
-setting of the genetic code. The default code is the universal genetic code; several others can be
-selected using \texttt{lset code}; for instance, if you want to use the metazoan mitochondrial code,
-specify \tb{lset code=metmt}.
+acid data. To request this, use the command \texttt{lset nucmodel=aa}. The translation uses the
+current setting of the genetic code. The default code is the universal genetic code; several others
+can be selected using \texttt{lset code}; for instance, if you want to use the metazoan
+mitochondrial code, specify \texttt{lset code=metmt}.
 
 The translation takes ambiguities into account. For instance, assume that the observed codon is
 \texttt{A?A}, that is, the second codon site is completely ambiguous. Then each of the possible
@@ -4991,10 +4980,11 @@ the analysis proceeds as if you had started with amino acid data. See section
 
 There has been more work based on the simple four by four nucleotide models than on any other type
 of evolutionary model for molecular data. MrBayes 3 implements three main types of models; you
-select among those by setting the number of substitution types using \texttt{lset nst} to 1, 2, or 6.
-The widely used General Time Reversible (GTR) model has six substitution types (\tb{lset nst=6}),
-one for each pair of nucleotides. The (unscaled) instantaneous rate matrix for the GTR model is
-(note that we order the rows and columns alphabetically -- A, C, G, T -- unlike some other authors)
+select among those by setting the number of substitution types using \texttt{lset nst} to 1, 2, or
+6.  The widely used General Time Reversible (GTR) model has six substitution types (\texttt{lset
+nst=6}), one for each pair of nucleotides. The (unscaled) instantaneous rate matrix for the GTR
+model is (note that we order the rows and columns alphabetically -- A, C, G, T -- unlike some other
+authors)
 \[ Q=\begin{bmatrix}
     & [A] & [C] & [G] & [T]\\
     [A]& - & \pi_C r_{AC} & \pi_G r_{AG} & \pi_T r_{AT}\\
@@ -5014,10 +5004,10 @@ well for most analyses.
 
 During the analysis, both the stationary state frequencies and substitution rates are estimated. If
 you want to fix the stationary state frequencies or substitution rates, you can do that by using
-the \texttt{prset} command. For instance, assume that we want to fix the stationary state frequencies
-to be equal, converting the GTR model to the so-called SYM model. This is achieved by \tb{prset
-statefreqpr=fixed(0.25,0.25,0.25,0.25)} or, more conveniently, \tb{prset statefreqpr=fixed(equal)}.
-The substitution rate matrix now becomes
+the \texttt{prset} command. For instance, assume that we want to fix the stationary state
+frequencies to be equal, converting the GTR model to the so-called SYM model. This is achieved by
+\texttt{prset statefreqpr = fixed(0.25,0.25,0.25,0.25)} or, more conveniently, \texttt{prset
+statefreqpr = fixed(equal)}. The substitution rate matrix now becomes
 \[ Q=\begin{bmatrix}
     & [A] & [C] & [G] & [T]\\
  [A]& - & 0.25 r_{AC} & 0.25 r_{AG} & 0.25 r_{AT}\\
@@ -5028,19 +5018,19 @@ The substitution rate matrix now becomes
 \]
 and the stationary state frequencies are no longer estimated during the analysis.
 
-Similarly, it is possible to fix the substitution rates of the GTR model using \tb{prset
+Similarly, it is possible to fix the substitution rates of the GTR model using \texttt{prset
 revmatpr=fixed}. Assume, for instance, that we want to fix the substitution rates to be ($r_{AC}$ =
 0.11, $r_{AG}$ = 0.22, $r_{AT}$ = 0.12, $r_{CG}$ = 0.14, $r_{CT}$ = 0.35, $r_{GT}$ = 0.06). Then
-the correct statement would be \tb{prset revmatpr=fixed(0.11,0.22,0.12,0.14,0.35,0.06)}. Note the
-order of the rates. The substitution rates can be given either as percentages of the rate sum, as
-here, or they can be scaled to the $r_{GT}$ rate. The former representation is the simplex
+the correct statement would be \texttt{prset revmatpr = fixed(0.11,0.22,0.12,0.14,0.35,0.06)}. Note
+the order of the rates. The substitution rates can be given either as percentages of the rate sum,
+as here, or they can be scaled to the $r_{GT}$ rate. The former representation is the simplex
 (Dirichlet) parameterization used internally by MrBayes. By default, MrBayes reports substitution
 rates in the simplex format but you can request conversion of sampled rates to the scaled format
-using the \texttt{report} command if you prefer this representation. One disadvantage with the scaled
-format is that the posterior distribution tends to be strongly skewed such that the arithmetic mean
-of the sampled values is considerably higher than the mode and the median. Therefore, consider
-using the median instead of the mean when reporting a posterior distribution sampled in the scaled
-format.
+using the \texttt{report} command if you prefer this representation. One disadvantage with the
+scaled format is that the posterior distribution tends to be strongly skewed such that the
+arithmetic mean of the sampled values is considerably higher than the mode and the median.
+Therefore, consider using the median instead of the mean when reporting a posterior distribution
+sampled in the scaled format.
 
 Before using the GTR model for some of your data, we recommend that you make sure there are at
 least a few possible substitutions of each type. For instance, if there is not a single GT
@@ -5062,12 +5052,12 @@ rates, $\kappa = r_{ti}/r_{tv}$, and this is the default format used by MrBayes 
 samples from the posterior distribution. Internally, however, MrBayes uses the simplex (Dirichlet)
 parameterization in which the transition and transversion rates are expressed as percentages of the
 (unscaled) rate sum. If you prefer, you can have MrBayes report the sampled values using the
-Dirichlet format instead of the ratio format by using the command \tb{report tratio=dirichlet}. The
-caveats described above for the GT-scaled substitution rates also apply to the
-transition/transversion rate ratio. In the \texttt{.p} files, the ratio will be referred to as kappa
-and the transition and transversion rate proportions will be referred to as \texttt{ti} and \texttt{tv}.
-The setting of the \texttt{report tratio} option will determine whether you will see a single
-\texttt{kappa} column or the two \texttt{ti} and \texttt{tv} columns.
+Dirichlet format instead of the ratio format by using the command \texttt{report tratio=dirichlet}.
+The caveats described above for the GT-scaled substitution rates also apply to the
+transition/transversion rate ratio. In the \texttt{.p} files, the ratio will be referred to as
+kappa and the transition and transversion rate proportions will be referred to as \texttt{ti} and
+\texttt{tv}. The setting of the \texttt{report tratio} option will determine whether you will see
+a single \texttt{kappa} column or the two \texttt{ti} and \texttt{tv} columns.
 
 As with the GTR model, you can fix both the stationary state frequencies and the transition /
 transversion rate ratio of the HKY model. If you fix the stationary state frequencies to be equal,
@@ -5085,8 +5075,8 @@ Q=\begin{bmatrix}
 \end{bmatrix}
 \]
 
-If the stationary state frequencies are fixed to be equal using \tb{prset
-statefreqpr=fixed(equal)}, you will get the simplest of all nucleotide substitution models, the JC
+If the stationary state frequencies are fixed to be equal using \texttt{prset
+statefreqpr = fixed(equal)}, you will get the simplest of all nucleotide substitution models, the JC
 model \citep{jukes69}.
 
 A large number of other constrained versions of the GTR model are often used in Maximum Likelihood
@@ -5110,7 +5100,7 @@ concerning the correct structure of the substitution model. This is accomplished
 procedure sample across substitution models \citep{huelsenbeck04d}, a method made available in
 version 3.2 of MrBayes. This will result in all parameter estimates being averaged across
 substitution models, with each substitution model being weighted according to its posterior
-probability. For example, to sample across substitution models, simply use the command \tb{lset
+probability. For example, to sample across substitution models, simply use the command \texttt{lset
 nst=mixed} before running the analysis. See sections \ref{modelJumping} and
 \ref{bayesianModelChoice} for more details.
 
@@ -5165,14 +5155,14 @@ Q=\begin{bmatrix}
 \normalsize
 
 Instead of using the GTR model, we could of course have used the HKY or F81 model, resulting in
-obvious modifications of the $r_{mn}$ values. Use \texttt{lset nst} to change among those options; for
-instance, use \tb{lset nst=6} to choose the GTR model. The default model is the F81 model
+obvious modifications of the $r_{mn}$ values. Use \texttt{lset nst} to change among those options;
+for instance, use \texttt{lset nst=6} to choose the GTR model. The default model is the F81 model
 (\texttt{lset nst=1}).
 
 Before the doublet model can be used, it is necessary to specify all the nucleotide pairs in the
-alignment. This is done using the \texttt{pairs} command, most conveniently in a \texttt{MRBAYES} block
-in a data file. For instance, \tb{pairs 1:10, 2:9;} would pair nucleotide 1 with 10, and 2 with 9.
-See the \texttt{kim.nex} data file for an example of an analysis using the doublet model.
+alignment. This is done using the \texttt{pairs} command, most conveniently in a \texttt{MRBAYES}
+block in a data file. For instance, \texttt{pairs 1:10, 2:9;} would pair nucleotide 1 with 10, and 2
+with 9. See the \texttt{kim.nex} data file for an example of an analysis using the doublet model.
 
 \subsection{Codon Models}
 
@@ -5196,8 +5186,9 @@ q_{ij} = \left\{
 \]
 with the diagonal elements being defined to balance the rows of the instantaneous rate matrix, as
 usual. The single-nucleotide substitution rates can be modeled using the GTR, the F81, or the JC
-model, as before. Use \texttt{lset nst} to change among those options; for instance, use \tb{lset
-nst=6} to choose the GTR model. The default model is the F81 model (\texttt{lset nst=1}).
+model, as before. Use \texttt{lset nst} to change among those options; for instance, use
+\texttt{lset nst=6} to choose the GTR model. The default model is the F81 model (\texttt{lset
+nst=1}).
 
 Invoking the codon model is easy; just make sure that the aligned DNA or RNA sequences start with a
 nucleotide in codon position 1 and that they end with a nucleotide in codon position 3. Also, make
@@ -5223,31 +5214,32 @@ according to a gamma distribution. The likelihood of each site is calculated und
 different $\omega$ values and then the values are summed to give the site likelihood. A difference
 is that the stationary frequency of each omega category is estimated, instead of being fixed as in
 the case of the gamma distribution. There are two variants implemented in MrBayes, and they are
-invoked using the \texttt{lset omegavar} option. In the Ny98 model \citep{nielsen98}, there are three
-classes with potentially different $\omega$ values: 0 $< \omega_1 <$ 1, $\omega_2$ = 1, and
+invoked using the \texttt{lset omegavar} option. In the Ny98 model \citep{nielsen98}, there are
+three classes with potentially different $\omega$ values: 0 $< \omega_1 <$ 1, $\omega_2$ = 1, and
 $\omega_3 >$ 1. The M3 model also has three classes of $\omega$ values but these values are less
 constrained in that they only have to be ordered $\omega_1 < \omega_2 < \omega_3$. If, for
-instance, you would like to invoke the M3 model, use the command \tb{lset omegavar=M3}.
+instance, you would like to invoke the M3 model, use the command \texttt{lset omegavar=M3}.
 
 When you use a model with variation in selection pressure across sites, you probably want to infer
-the positively selected sites. If you select \tb{report possel=yes} before you start your analysis,
-MrBayes will calculate the probability of each site being in a positively selected omega class. For
-the M3 model, for instance, the likelihood of the site is calculated under each of the three
-categories, taking the category frequencies into account, and then the likelihoods are summed to
-yield the total likelihood of the site. Finally, the proportion of this sum originating from
+the positively selected sites. If you select \texttt{report possel=yes} before you start your
+analysis, MrBayes will calculate the probability of each site being in a positively selected omega
+class. For the M3 model, for instance, the likelihood of the site is calculated under each of the
+three categories, taking the category frequencies into account, and then the likelihoods are summed
+to yield the total likelihood of the site. Finally, the proportion of this sum originating from
 categories that are positively selected (those that have an $\omega$ value larger than 1); this is
 the posterior probability of the site being positively selected.
 
 Once the probabilities of each site being positively selected are printed to file, they can be
-summarized using the standard \texttt{sump} command. When interpreting the output from the Ny98 model,
-it is helpful to know that \texttt{pi(-)}, \texttt{pi(N)}, and \texttt{pi(+)} are the frequencies of the
-negatively selected, neutral and positively selected categories, respectively, and \texttt{omega(-)},
-\texttt{omega(N)}, and \texttt{omega(+)} are the corresponding $\omega$ values. The M3 model parameters
-are instead labeled \texttt{pi(1)}, \texttt{pi(2)}, and \texttt{pi(3)} for the category frequencies and
-\texttt{omega(1)}, \texttt{omega(2)}, and \texttt{omega(3)} for the $\omega$ values. The probability of a
-codon being positively selected is labeled by the site numbers in the original alignment. Thus
-\texttt{pr+(16,17,18)} is the probability of the codon corresponding to the original nucleotide
-alignment sites 16, 17, and 18 being in a positively selected omega category.
+summarized using the standard \texttt{sump} command. When interpreting the output from the Ny98
+model, it is helpful to know that \texttt{pi(-)}, \texttt{pi(N)}, and \texttt{pi(+)} are the
+frequencies of the negatively selected, neutral and positively selected categories, respectively,
+and \texttt{omega(-)}, \texttt{omega(N)}, and \texttt{omega(+)} are the corresponding $\omega$
+values. The M3 model parameters are instead labeled \texttt{pi(1)}, \texttt{pi(2)}, and
+\texttt{pi(3)} for the category frequencies and \texttt{omega(1)}, \texttt{omega(2)}, and
+\texttt{omega(3)} for the $\omega$ values. The probability of a codon being positively selected is
+labeled by the site numbers in the original alignment. Thus \texttt{pr+(16,17,18)} is the
+probability of the codon corresponding to the original nucleotide alignment sites 16, 17, and 18
+being in a positively selected omega category.
 
 \section{Amino-acid Models}
 \label{amino-acidModels}
@@ -5268,7 +5260,8 @@ model \citep{adachi96}, the Mtmam model (\citet{cao98}; \citet{yang98}), the WAG
 \citep{whelan01},the Rtrev model \citep{dimmic02}, the Cprev model \citep{adachi00}, the Vt model
 \citep{muller00} and the Blosum62 model \citep{henikoff92}. Each model is appropriate for a
 particular type of proteins. For instance, if you are analyzing mammal mitochondrial proteins, you
-might want to use the Mtmam model. Invoke that model by typing \tb{prset aamodelpr=fixed(mtmam)}.
+might want to use the Mtmam model. Invoke that model by using \texttt{prset
+aamodelpr=fixed(mtmam)}.
 
 \subsection{Estimating the Fixed Rate Model}
 \label{estimatingTheFixedRateModel}
@@ -5284,11 +5277,12 @@ will contribute significantly too. A nice feature of the MCMC model estimation i
 computational cost is negligible.
 
 To allow so-called model jumping between fixed-rate amino acid models, simply set the prior for the
-amino acid model to mixed, \tb{prset aamodelpr=mixed}, prior to analysis. During the run, MrBayes
-will print the index of the current model to the \texttt{.p} file(s) in the \texttt{aamodel} column. The
-indices of the models are as follows: 0 = Poisson, 1 = Jones, 2 = Dayhoff, 3 = Mtrev, 4 = Mtmam, 5
-= Wag, 6 = Rtrev, 7 = Cprev, 8 = Vt, 9 = Blosum. When you use the \texttt{sump} command, you will get
-a table with the names of the amino acid models and their posterior probabilities.
+amino acid model to mixed, \texttt{prset aamodelpr=mixed}, prior to analysis. During the run,
+MrBayes will print the index of the current model to the \texttt{.p} file(s) in the
+\texttt{aamodel} column. The indices of the models are as follows: 0 = Poisson, 1 = Jones, 2 =
+Dayhoff, 3 = Mtrev, 4 = Mtmam, 5 = Wag, 6 = Rtrev, 7 = Cprev, 8 = Vt, 9 = Blosum. When you use the
+\texttt{sump} command, you will get a table with the names of the amino acid models and their
+posterior probabilities.
 
 \subsection{Variable Rate Models}
 
@@ -5338,11 +5332,11 @@ parameter-rich that you need a fairly sizable data set to be able to estimate al
 reasonable precision.
 
 The $GTR$ $model$ can be used to express a user-derived fixed rate model other than those already
-implemented in MrBayes. Simply use the \texttt{prset} command to fix the stationary state frequencies
-and substitution rates of the GTR model to the desired values. You need to set two options,
-\texttt{prset aarevmatpr=fixed(<190 comma-separated values>)} and \texttt{prset statefreqpr=fixed(<20
-comma-separated values>)}. Once the values are fixed prior to analysis, the MCMC procedure will not
-change them and they will remain the same throughout the analysis.
+implemented in MrBayes. Simply use the \texttt{prset} command to fix the stationary state
+frequencies and substitution rates of the GTR model to the desired values. You need to set two
+options, \texttt{prset aarevmatpr=fixed(<190 comma-separated values>)} and \texttt{prset
+statefreqpr=fixed(<20 comma-separated values>)}. Once the values are fixed prior to analysis, the
+MCMC procedure will not change them and they will remain the same throughout the analysis.
 
 \section{Restriction Site (Binary) Model}
 
@@ -5365,23 +5359,23 @@ A problem with some binary data sets, notably restriction sites, is that there i
 impossible, for instance, to detect restriction sites that are absent in all of the studied taxa.
 MrBayes corrects for this bias by calculating likelihoods conditional on the unobservable
 characters being absent (Felsenstein, 1992). The ascertainment (coding) bias is selected using
-\texttt{lset coding}. There are five options: (1) there is no bias, all types of characters could, in
-principle, be observed (\texttt{lset coding=all}); (2) characters that are absent (state 0) in all
-taxa cannot be observed (\texttt{lset coding=noabsencesites}); (3) characters that are present (state
-1) in all taxa cannot be observed (\texttt{lset coding=nopresencesites}); (4) characters that are
-constant (either state 0 or 1) in all taxa cannot be observed (\texttt{lset coding=variable}); and (5)
-only characters that are parsimony-informative have been scored (\texttt{lset coding=informative}).
-For restriction sites it is typically true that all-absence sites cannot be observed, so the
-correct coding bias option is \texttt{noabsencesites}.
+\texttt{lset coding}. There are five options: (1) there is no bias, all types of characters could,
+in principle, be observed (\texttt{lset coding=all}); (2) characters that are absent (state 0) in
+all taxa cannot be observed (\texttt{lset coding=noabsencesites}); (3) characters that are present
+(state 1) in all taxa cannot be observed (\texttt{lset coding=nopresencesites}); (4) characters
+that are constant (either state 0 or 1) in all taxa cannot be observed (\texttt{lset
+coding=variable}); and (5) only characters that are parsimony-informative have been scored
+(\texttt{lset coding=informative}).  For restriction sites it is typically true that all-absence
+sites cannot be observed, so the correct coding bias option is \texttt{noabsencesites}.
 
 The binary model is useful for a number of character types other than restriction sites. For
 instance, the model can be used for gap characters. The presence and absence of gaps must be coded
 consistently for all characters; let us assume here that absence of a gap is coded as 0 and
 presence as 1. Since the detection of gaps is typically contingent on observing some sequence
 length variation, neither all-absence nor all-presence characters can be observed. Thus, the
-correct ascertainment bias for gap characters is \texttt{variable}. The parameters $\pi_0$ and $\pi_1$
-would represent the rate at which insertions and deletions occur, respectively (assuming that state
-0 denotes absence of a gap).
+correct ascertainment bias for gap characters is \texttt{variable}. The parameters $\pi_0$ and
+$\pi_1$ would represent the rate at which insertions and deletions occur, respectively (assuming
+that state 0 denotes absence of a gap).
 
 The binary model can also be used for ecological, morphological, or other binary characters of
 arbitrary origin. However, if the binary model is applied to more than one character, then there is
@@ -5395,8 +5389,8 @@ consistently coded wing venation characters, but we cannot compare the rate of l
 articles to the rate at which a yellow patch evolves into a green patch. If state labels are truly
 arbitrary, then the stationary state frequencies of the binary model must be fixed to be equal,
 such that the estimation of model parameters becomes independent of the labeling of character
-states. An alternative is to consider the standard model, which provides more sophisticated ways
-of dealing with arbitrary state labels.
+states. An alternative is to consider the standard model, which provides more sophisticated ways of
+dealing with arbitrary state labels.
 
 When is the correction for ascertainment bias important? This is strongly dependent on the size of
 the tree (the sum of the branch lengths on the tree). The larger the tree, the less important the
@@ -5428,7 +5422,6 @@ characters, on the other hand, evolution between some states is assumed to go th
 states. MrBayes implements a stochastic model for such characters. For a three-state character
 assumed to be ordered (by convention in the sequence $0 \leftrightarrow 1 \leftrightarrow 2$), the
 instantaneous rate matrix is
-
 \[
 Q=\begin{bmatrix}
     & [0] & [1] & [2]\\
@@ -5440,9 +5433,9 @@ Q=\begin{bmatrix}
 
 Note that the instantaneous rate of going between the two end states is 0, that is, a transition
 from 0 to 2, or from 2 to 0, has to go through state 1. By default, MrBayes treats all standard
-characters as unordered. To change this, use the \texttt{ctype} command. For instance, if you want to
-treat characters 3 and 4 as ordered you need to include the statement \texttt{ctype ordered: 3 4;} in
-your \texttt{MRBAYES} block (or enter it using the command line, if you prefer).
+characters as unordered. To change this, use the \texttt{ctype} command. For instance, if you want
+to treat characters 3 and 4 as ordered you need to include the statement \texttt{ctype ordered: 3
+4;} in your \texttt{MRBAYES} block (or enter it using the command line, if you prefer).
 
 The number of states of each standard character is determined by MrBayes simply by looking at the
 state codes in your matrix. Thus, a three-state model will be used for a three-state character and
@@ -5465,14 +5458,14 @@ likelihood.
 The symmetric Dirichlet distribution has one parameter that determines its shape, just like the
 alpha parameter determines the shape of the gamma distribution. The larger the parameter of the
 symmetric Dirichlet, the less transition rate (stationary frequency) asymmetry there is across
-sites. By default, the parameter is fixed to infinity (\texttt{prset symdirihyperpr=fixed(infinity)});
-this corresponds to the standard assumption of no transition rate asymmetry across sites: the rate
-of going from 0 to 1 is equal to the rate of going from 1 to 0 for all characters. The prior is
-called a hyperprior because it concerns a distribution that controls the distributions of other
-model parameters (stationary state frequencies in this case). If you want to allow transition rate
-(stationary frequency) asymmetry in standard data, then simply select another (hyper)prior. For
-instance, you can fix the parameter to $1.0$, which would result in a uniform prior on the
-proportions of the state frequencies.
+sites. By default, the parameter is fixed to infinity (\texttt{prset
+symdirihyperpr=fixed(infinity)}); this corresponds to the standard assumption of no transition rate
+asymmetry across sites: the rate of going from 0 to 1 is equal to the rate of going from 1 to 0 for
+all characters. The prior is called a hyperprior because it concerns a distribution that controls
+the distributions of other model parameters (stationary state frequencies in this case). If you
+want to allow transition rate (stationary frequency) asymmetry in standard data, then simply select
+another (hyper)prior. For instance, you can fix the parameter to $1.0$, which would result in a
+uniform prior on the proportions of the state frequencies.
 
 In practice, MrBayes uses a discrete approximation of the Dirichlet distribution for binary
 characters; five categories are used by default (change this with \texttt{lset nbetacat}). For
@@ -5551,20 +5544,21 @@ rates across sites as $\alpha$ becomes larger.
 
 In practice, the gamma distribution is approximated using a small number of discrete rate
 categories \citep{yang94a}. By default, four rate categories are used; you can change this setting
-by using \texttt{lset ngammacat}. For instance, if you want to use eight discrete rate categories the
-appropriate command is \tb{lset ngammacat=8}. The computational complexity is proportional to the
-number of categories used. An analysis with four discrete gamma categories is four times as slow as
-an analysis with no rate variation across sites and twice as fast as one with eight categories.
+by using \texttt{lset ngammacat}. For instance, if you want to use eight discrete rate categories
+the appropriate command is \texttt{lset ngammacat=8}. The computational complexity is proportional
+to the number of categories used. An analysis with four discrete gamma categories is four times as
+slow as an analysis with no rate variation across sites and twice as fast as one with eight
+categories.
 
 The shape parameter ($\alpha$) of the gamma distribution is similar to the shape parameter of the
 Dirichlet distribution of stationary state frequencies used for standard data (see above) in that
 it controls the distribution of another model parameter (the site rates). Therefore, the prior
 probability distribution used for the shape parameter can be referred to as a hyperprior. The
-default prior used in MrBayes is an exponential distribution with the rate set to $1.0$ (\texttt{prset
-shapepr=exponential(1.0)}). Note that he mean of the exponential distribution is the inverse of the
-rate, so if, for example, changing the rate of the exponential distribution to $10.0$, will move
-the mean from $1.0$ to $1/10.0 = 0.1$. The sampled values of the shape parameter are found under
-the column heading \texttt{alpha} in the \texttt{.p} file(s).
+default prior used in MrBayes is an exponential distribution with the rate set to $1.0$
+(\texttt{prset shapepr=exponential(1.0)}). Note that he mean of the exponential distribution is the
+inverse of the rate, so if, for example, changing the rate of the exponential distribution to
+$10.0$, will move the mean from $1.0$ to $1/10.0 = 0.1$. The sampled values of the shape parameter
+are found under the column heading \texttt{alpha} in the \texttt{.p} file(s).
 
 \subsection{Autocorrelated Gamma Model}
 
@@ -5597,8 +5591,8 @@ gene. The command \texttt{databreaks} is provided for this purpose. For instance
 two genes in your data set, the first with 960 sites, you would specify the break between them with
 the statement \texttt{databreaks 960}. Note that you specify the break by giving the last sequence
 site before the break. The \texttt{databreaks} command is only needed when you invoke a single
-autocorrelated gamma model for a multigene dataset. The \texttt{databreaks} command cannot be used to
-partition a data set.
+autocorrelated gamma model for a multigene dataset. The \texttt{databreaks} command cannot be used
+to partition a data set.
 
 %%%% JN: This subsection needs to be expanded
 \subsection{Lognormal-distributed Rates Across Sites}
@@ -5615,17 +5609,17 @@ nlnormcat=<value>}. Default value is 4.
 
 \texttt{Kmixture} --- Site rates come from a mixture with $k$ categories. Category rates are drawn
 from an ordered flat Dirichlet distribution with mean rather than sum equal to $1.0$. You invoke
-this assumption about rate variation acrros sites by the command \texttt{lset rates=kmixture}. To set
-the number of components in the $k$-mixture model, you use \texttt{lset nmixtcat=<value>}. Default
-value is 4.
+this assumption about rate variation acrros sites by the command \texttt{lset rates=kmixture}. To
+set the number of components in the $k$-mixture model, you use \texttt{lset nmixtcat=<value>}.
+Default value is 4.
 
 \subsection{Proportion of Invariable Sites}
 
 A completely different approach to rate variation is to allow a proportion of sites to be
-invariable. This model is invoked using \tb{lset rates=propinv}. The proportion of invariable sites
-is referred to as \texttt{pinvar;} it can vary from $0$ (no invariable sites) to $1$ (all sites are
-invariable). The default prior is a uniform distribution on the interval $(0,1)$; change it using
-\texttt{prset pinvarpr}.
+invariable. This model is invoked using \texttt{lset rates=propinv}. The proportion of invariable
+sites is referred to as \texttt{pinvar;} it can vary from $0$ (no invariable sites) to $1$ (all
+sites are invariable). The default prior is a uniform distribution on the interval $(0,1)$; change
+it using \texttt{prset pinvarpr}.
 
 The proportion of invariable sites model can be combined with the gamma model using \texttt{lset
 rates=invgamma}. Although this model is slightly better than the simple gamma model for many data
@@ -5638,8 +5632,8 @@ not be surprised if Metropolis-coupling results in rapid (instantaneous) shifts 
 the other during the stationary phase of the analysis. The reason for this is that different chains
 are likely to explore different peaks in the posterior, and successful swapping involving the cold
 chain is likely to result in mode-jumping. Also, you should consider presenting the entire
-distribution of the sampled \texttt{alpha} and \texttt{pinvar} parameters since simple point estimates of
-each parameter would be misleading.
+distribution of the sampled \texttt{alpha} and \texttt{pinvar} parameters since simple point
+estimates of each parameter would be misleading.
 
 \subsection{Partitioned (Site Specific) Rate Model}
 
@@ -5654,35 +5648,39 @@ data set and then unlinking parameters across the partitions. Assume for instanc
 set up a site-specific rate model for a data set with one sequence. We first set up the codon site
 partitioning scheme using the following lines in a MrBayes block:
 
-\begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
+\begin{figure}[h]
+\centering
+\begin{BVerbatim}[baselinestretch=0.8,fontsize=\small]
 charset pos1 = 1-.\3;
 charset pos2 = 2-.\3;
 charset pos3 = 3-.\3;
 partition by_codon = 3:pos1,pos2,pos3;
 set partition = by_codon;
-\end{Verbatim}
+\end{BVerbatim}
+\end{figure}
 
 The character sets are first defined using the dot sign (.) to mark the last character in the data
 set and the $\backslash$3 sequence to include every third character in the specified range. Then a
 partitioning scheme called \texttt{by\_codon} is defined using the previously named character sets.
-Finally, the partitioning scheme called \texttt{by\_codon} is invoked using the \texttt{set} command.
+Finally, the partitioning scheme called \texttt{by\_codon} is invoked using the \texttt{set}
+command.
 
 When we process these commands in MrBayes using the \texttt{execute} command, the characters are
 divided into three sets corresponding to the codon positions. By default, however, all model
 parameters including the rate will be shared across partitions. To allow the rates to differ across
 partitions, we need to change the prior for rates using \texttt{prset}. Specifically, \texttt{prset
 ratepr=variable} invokes partition-specific rates. The partition-specific rate parameter is
-referred to as \texttt{ratemult}, and the individual rates are labeled \texttt{m\{1\}}, \texttt{m\{2\}}, etc
-for the rate (multiplier) of character division 1, 2, etc. See below for more information on how to
-set up partitioned models.
+referred to as \texttt{ratemult}, and the individual rates are labeled \texttt{m\{1\}},
+\texttt{m\{2\}}, etc for the rate (multiplier) of character division 1, 2, etc. See below for more
+information on how to set up partitioned models.
 
 \subsection{Inferring Site Rates}
 
 When you are allowing rate variation across sites, you may be interested in inferring the rates at
 each individual site. By default, the site rates are not sampled during a MCMC run. You need to
-request the sampling of these values using \texttt{report siterates=yes}. The rates will be referred
-to as \texttt{r(<site number>)}. For instance, \texttt{r(45)} is the inferred rate at site (character) 45
-of your data set.
+request the sampling of these values using \texttt{report siterates=yes}. The rates will be
+referred to as \texttt{r(<site number>)}. For instance, \texttt{r(45)} is the inferred rate at site
+(character) 45 of your data set.
 
 \section{Rate Variation Across the Tree}
 
@@ -5732,7 +5730,7 @@ invariable sites.
 
 Note that the covarion-like model implemented in MrBayes differs from the original covarion model
 in that sites switch completely independently of each other between the on and off states. To
-invoke the covarion-like model, simply use \tb{lset covarion=yes} and then choose the desired
+invoke the covarion-like model, simply use \texttt{lset covarion=yes} and then choose the desired
 nucleotide or amino acid model using the other \texttt{lset} and the \texttt{prset} options. The
 covarion-like model can be combined with the gamma model of rate variation across sites.
 
@@ -5741,18 +5739,18 @@ covarion-like model can be combined with the gamma model of rate variation acros
 
 \section{Topology and Branch Length Models}
 
-The topology and branch length models in MrBayes are set using the \texttt{prset topologypr} options,
-which deal with the tree topology prior, and the \texttt{prset brlenspr} options, which deal with the
-branch lengths.
+The topology and branch length models in MrBayes are set using the \texttt{prset topologypr}
+options, which deal with the tree topology prior, and the \texttt{prset brlenspr} options, which
+deal with the branch lengths.
 
 \subsection{Unconstrained and Constrained Topology}
 \label{unconstrainedAndConstrainedTopology}
 
 In MrBayes 3, there are four choices for the prior probability distribution on topology:
-\texttt{uniform}, \texttt{speciestree}, \texttt{fixed}, or \texttt{constraints}. By default, topologies are not
-constrained in the prior (\texttt{prset topologypr=uniform}), resulting in equal prior probability
-being associated with all possible labeled trees (unless a different topology prior is induced by
-the branch length model, see below).
+\texttt{uniform}, \texttt{speciestree}, \texttt{fixed}, or \texttt{constraints}. By default,
+topologies are not constrained in the prior (\texttt{prset topologypr=uniform}), resulting in equal
+prior probability being associated with all possible labeled trees (unless a different topology
+prior is induced by the branch length model, see below).
 
 There are some cases where one wish to constrain the topology. For example, if you are interested
 in branch lengths or other parameters in your model, but where the tree topology is assumed to be
@@ -5762,9 +5760,9 @@ you also want to fix branch lengths, you do that by using the \texttt{brlenspr} 
 
 Another special case is when you are using the multi-species coalescent to infer species trees from
 gene trees. Then the topology is constrained to fold inside a species tree together with other
-(gene) trees. This is accomplished by using the \texttt{speciestree} argument for the \texttt{topologypr}
-option. See section \ref{theMultiSpeciesCoalescent} for more information on the multi-species
-coalescent.
+(gene) trees. This is accomplished by using the \texttt{speciestree} argument for the
+\texttt{topologypr} option. See section \ref{theMultiSpeciesCoalescent} for more information on the
+multi-species coalescent.
 
 Other scenarios might be when you want to contrast a hypothesis of monophyly for a group with the
 more general hypothesis with no topological constraints; or you may want to infer ancestral states
@@ -5772,28 +5770,28 @@ for a particular node in the tree. In both those cases, you need to specify the 
 by listing the taxa that should form a monophyletic group.
 
 There are three types of constraints implemented in MrBayes v3.2. The type of the constraint is
-specified by using one of the three keywords \texttt{hard}, \texttt{negative}, or \texttt{partial} right
-after the name of the constraint (see example below). If no type is specified, then the constraint
-is assumed to be hard.
+specified by using one of the three keywords \texttt{hard}, \texttt{negative}, or \texttt{partial}
+right after the name of the constraint (see example below). If no type is specified, then the
+constraint is assumed to be hard.
 
-In a rooted tree, a \texttt{hard} constraint forces the taxa in the list to form a monophyletic group.
-In an unrooted tree, the taxon split that separates the taxa in the list from other taxa is forced
-to be present. The interpretation of this depends on whether the tree is rooted on a taxon outside
-the list or a taxon in the list. If the outgroup is excluded, the taxa in the list are assumed to
-form a monophyletic group, but if the outgroup is included, the taxa that are not in the list are
-forced together.
+In a rooted tree, a \texttt{hard} constraint forces the taxa in the list to form a monophyletic
+group.  In an unrooted tree, the taxon split that separates the taxa in the list from other taxa is
+forced to be present. The interpretation of this depends on whether the tree is rooted on a taxon
+outside the list or a taxon in the list. If the outgroup is excluded, the taxa in the list are
+assumed to form a monophyletic group, but if the outgroup is included, the taxa that are not in the
+list are forced together.
 
-A \texttt{negative} constraint ``bans'' all the trees that have the listed taxa in the same subtree.
-In other words, it is the opposite of a hard constraint.
+A \texttt{negative} constraint ``bans'' all the trees that have the listed taxa in the same
+subtree.  In other words, it is the opposite of a hard constraint.
 
-A \texttt{partial} or ``backbone'' constraint is defined in terms of two sets of taxa separated by a
-colon character. The constraint forces all taxa in the first list to form a monophyletic group that
-does not include any taxon in the second list. Taxa that are not included in either list can be
-placed in any position on the tree, either inside or outside the constrained group. In an unrooted
-tree, the two taxon lists can be switched with each other with no effect. For a rooted tree, it is
-the taxa in the first list that have to be monophyletic, that is, these taxa must share a common
-ancestor not shared with any taxon in the second list. The taxa in the second list may or may not
-fall in a monophyletic group depending on the rooting of the tree.
+A \texttt{partial} or ``backbone'' constraint is defined in terms of two sets of taxa separated by
+a colon character. The constraint forces all taxa in the first list to form a monophyletic group
+that does not include any taxon in the second list. Taxa that are not included in either list can
+be placed in any position on the tree, either inside or outside the constrained group. In an
+unrooted tree, the two taxon lists can be switched with each other with no effect. For a rooted
+tree, it is the taxa in the first list that have to be monophyletic, that is, these taxa must share
+a common ancestor not shared with any taxon in the second list. The taxa in the second list may or
+may not fall in a monophyletic group depending on the rooting of the tree.
 
 A list of taxa can be specified using a taxset, taxon names, taxon numbers, or any combination of
 the above, sepatated by spaces. The constraint is treated as an absolute requirement of trees, that
@@ -5840,8 +5838,8 @@ the `\texttt{:}', as in the example given above, to constrain tree space.
 When you define constraints, make sure that you have the outgroup selected correctly. By default,
 MrBayes uses the first taxon in the data matrix as the outgroup. You can change this by using the
 \texttt{outgroup} command. For instance, if you want taxon number 7 called \textit{Hylobates} to be
-the outgroup, either use \tb{outgroup 7} or \tb{outgroup Hylobates}. MrBayes 3.2 only allows a
-single taxon as the outgroup.
+the outgroup, either use \texttt{outgroup 7} or \texttt{outgroup Hylobates}. MrBayes 3.2 only
+allows a single taxon as the outgroup.
 
 To define a more complex constraint tree, simply combine constraints into a list when issuing the
 \texttt{prset topologypr} command.
@@ -5855,9 +5853,9 @@ can associate unconstrained branch lengths with five alternative prior distribut
 are the simple uniform and exponential priors. The uniform prior takes two parameters, the lower
 and upper bound of the uniform distribution, respectively. The exponential prior takes a single
 parameter, the rate of the exponential distribution. The mean of the exponential distribution is
-the inverse of the rate. For instance, an \texttt{exp(10)} distribution has an expected mean of $0.1$.
-MrBayes also offers three more complex prior distributions on unconstrained branch lengths. The
-two-exponential prior (\citet{yang05}; \citet{yang07}) uses two different exponential
+the inverse of the rate. For instance, an \texttt{exp(10)} distribution has an expected mean of
+$0.1$.  MrBayes also offers three more complex prior distributions on unconstrained branch lengths.
+The two-exponential prior (\citet{yang05}; \citet{yang07}) uses two different exponential
 distributions, one for internal and one for external branch lengths. The two-exponential prior is
 invoked using \texttt{prset brlenspr=unconstrained:twoexp(<r\_I>,<r\_E>)}, where \texttt{r\_I} is a
 number specifying the rate of the exponential distribution on internal branch lengths ($r_{I}$),
@@ -5865,28 +5863,28 @@ while \texttt{r\_E} is the rate for external branch lengths ($r_{E}$). The prior
 branch lengths is then $1/r_{I}$, and for external ones is $1/r_{E}$. For instance, to set prior
 mean of internal branch lengths to $0.01$, and external ones to $0.1$, use \texttt{twoexp(100,10)}.
 The setting \texttt{twoexp(10,10)} is equivalent to \texttt{exp(10)}. The compound Dirichlet priors
-\texttt{gammadir(<a\_T>,<b\_T>,<a>,<c>)} and \texttt{invgamdir(<a\_T>,<b\_T>,<a>,<c>)} specify a fairly
-diffuse prior on tree length $T$, and then partition the tree length into branch lengths according
-to a Dirichlet distribution \citep{rannala12}. If $T$ is considered drawn from a gamma
+\texttt{gammadir(<a\_T>,<b\_T>,<a>,<c>)} and \texttt{invgamdir(<a\_T>,<b\_T>,<a>,<c>)} specify a
+fairly diffuse prior on tree length $T$, and then partition the tree length into branch lengths
+according to a Dirichlet distribution \citep{rannala12}. If $T$ is considered drawn from a gamma
 distribution with parameters $a_{T}$ and $b_{T}$, and with mean $a_{T}/b_{T}$, we recommend setting
-$a_{T} = 1$; if it is instead considered drawn from an inverse gamma (\texttt{invgamma}) distribution
-with parameters $a_{T}$ and $b_{T}$, and with mean $b_{T}/(a_{T} - 1)$, then we recommend setting
-$a_{T} = 3$. In the latter case, $b_{T}$ should be chosen so that the prior mean of $T$ is
-reasonable for the data. In the former case, setting $b_{T} = 0.1$ (corresponding to a mean tree
-length of $10$) should be appropriate for a wide range of tree lengths (at least in the interval 1
-to 100). The concentration parameter a of the Dirichlet distribution is inversely related to the
-variance of the branch lengths, while $c$ is the ratio of the prior means for the internal and
-external branch lengths. The default setting, $a$ = $c$ = $1$, specifies a uniform Dirichlet
-distribution of branch lengths given the tree length. For instance, \texttt{gammadir(1,0.1,1,1)}
-specifies a compound Dirichlet prior on branch lengths, where tree length is associated with a
-gamma distribution with mean $10$, and branch length proportions are associated with a uniform
-Dirichlet distribution (default).
+$a_{T} = 1$; if it is instead considered drawn from an inverse gamma (\texttt{invgamma})
+distribution with parameters $a_{T}$ and $b_{T}$, and with mean $b_{T}/(a_{T} - 1)$, then we
+recommend setting $a_{T} = 3$. In the latter case, $b_{T}$ should be chosen so that the prior mean
+of $T$ is reasonable for the data. In the former case, setting $b_{T} = 0.1$ (corresponding to a
+mean tree length of $10$) should be appropriate for a wide range of tree lengths (at least in the
+interval 1 to 100). The concentration parameter a of the Dirichlet distribution is inversely
+related to the variance of the branch lengths, while $c$ is the ratio of the prior means for the
+internal and external branch lengths. The default setting, $a$ = $c$ = $1$, specifies a uniform
+Dirichlet distribution of branch lengths given the tree length. For instance,
+\texttt{gammadir(1,0.1,1,1)} specifies a compound Dirichlet prior on branch lengths, where tree
+length is associated with a gamma distribution with mean $10$, and branch length proportions are
+associated with a uniform Dirichlet distribution (default).
 
 \subsection{Strict Clock Trees}
 
-MrBayes implements three strict clock models: the simple (uniform) model, the birth-death model, and
-the coalescence model. The birth-death model and coalescence models both have additional parameters
-describing the tree-generating process, whereas the simple model does not.
+MrBayes implements three strict clock models: the simple (uniform) model, the birth-death model,
+and the coalescence model. The birth-death model and coalescence models both have additional
+parameters describing the tree-generating process, whereas the simple model does not.
 
 In the $birth$-$death$ $model$ (see \citet{yang97b}, for a Bayesian implementation), trees are
 generated according to a birth-death model with a speciation and an extinction rate. The model, as
@@ -5898,12 +5896,12 @@ In the $coalescence$ $model$, the tree generating process is looked at from the 
 perspective, backward in time. Instead of lineages branching, this model sees them as coalescing
 into fewer and fewer ancestral lineages. This process occurs at a rate determined by the $\theta$
 (theta) parameter; it is also affected by the ploidy of the data (haploid or diploid). The prior
-for the theta parameter is set using \texttt{prset thetapr}. The ploidy level is set using \texttt{lset
-ploidy}.
+for the theta parameter is set using \texttt{prset thetapr}. The ploidy level is set using
+\texttt{lset ploidy}.
 
 The $simple$ $clock$ model is invoked by \texttt{prset brlenspr=clock:uniform}. There is only one
-additional parameter in the simple clock model, namely the total tree height/age. The prior for this
-parameter is set by \texttt{prset treeagepr}. The default prior is an gamma distribution with
+additional parameter in the simple clock model, namely the total tree height/age. The prior for
+this parameter is set by \texttt{prset treeagepr}. The default prior is an gamma distribution with
 mean 1.0 (\texttt{gamma(1.0,1.0)}, i.e. \texttt{exp(1.0)}).
 
 \subsection{Relaxed Clock Trees}
@@ -5919,14 +5917,14 @@ available in version 3.2.
 MrBayes provides great flexibility in setting up partitioned models. By default, the characters are
 divided into partitions based on the data type. If there is only one data type in the matrix, then
 all characters will be in a single partition. The default partitioning scheme is called
-\texttt{default}. For information on how to set up a file with mixed data types, see the example file
-\texttt{cynmix.nex} and the tutorial in section \ref{tutorialPartitioned} of this manual.
+\texttt{default}. For information on how to set up a file with mixed data types, see the example
+file \texttt{cynmix.nex} and the tutorial in section \ref{tutorialPartitioned} of this manual.
 
 You can easily set up partitioning schemes that divide the characters up further than the default
-partition does using the \texttt{partition} command. The most convenient way of partitioning data is
-to define character sets first using the \texttt{charset} command. For instance, assume that you have
-concatenated nucleotide sequences from three genes in your data set of length 1962, 1050, and 2082
-sites, respectively. Then you create character sets for those three genes using
+partition does using the \texttt{partition} command. The most convenient way of partitioning data
+is to define character sets first using the \texttt{charset} command. For instance, assume that you
+have concatenated nucleotide sequences from three genes in your data set of length 1962, 1050, and
+2082 sites, respectively. Then you create character sets for those three genes using
 
 \begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
 charset gene1 = 1-1962;
@@ -5934,21 +5932,21 @@ charset gene2 = 1963-3012;
 charset gene3 = 3013-.;
 \end{Verbatim}
 
-in a \texttt{MRBAYES} block. Note the use of the dot (\texttt{.}) as a synonym of the last site. You can
-also use the ``backslash n'' sequence to include every $n$th character in the preceding range of
-characters (see the description of the site-specific rate model above). Once the character sets are
-defined, the partitioning scheme based on the genes is defined with the \texttt{partition} command and
-selected using the \texttt{set} command:
+in a \texttt{MRBAYES} block. Note the use of the dot (\texttt{.}) as a synonym of the last site.
+You can also use the ``backslash n'' sequence to include every $n$th character in the preceding
+range of characters (see the description of the site-specific rate model above). Once the character
+sets are defined, the partitioning scheme based on the genes is defined with the \texttt{partition}
+command and selected using the \texttt{set} command:
 
 \begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
 partition by_gene = 3:gene1,gene2,gene3;
 set partition = by_gene;
 \end{Verbatim}
 
-Here, \texttt{by\_gene} is the name we chose for the partitioning scheme. The name is followed by an
-equal sign, the number of partitions, and then a comma-separated list of characters to include in
-each partition. Note that MrBayes requires the partitioning scheme to include all characters. Say,
-for instance, that you wanted to run an analysis with only gene 1 and gene 2. Then define a
+Here, \texttt{by\_gene} is the name we chose for the partitioning scheme. The name is followed by
+an equal sign, the number of partitions, and then a comma-separated list of characters to include
+in each partition. Note that MrBayes requires the partitioning scheme to include all characters.
+Say, for instance, that you wanted to run an analysis with only gene 1 and gene 2. Then define a
 two-partition scheme and exclude the characters represented by gene 3:
 
 \begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
@@ -5957,14 +5955,15 @@ exclude gene3;
 set partition = genes_1_2;
 \end{Verbatim}
 
-If the only purpose of the partition \texttt{genes\_1\_2} is to allow exclusion of gene 3, then gene 3
-can of course be included in either of the two partitions before being excluded.
+If the only purpose of the partition \texttt{genes\_1\_2} is to allow exclusion of gene 3, then
+gene 3 can of course be included in either of the two partitions before being excluded.
 
 Once the partitions have been correctly set up, MrBayes allows you to set models for individual
-partitions using the \texttt{lset applyto} and \texttt{prset applyto} mechanism. For instance, assume
-that we have two partitions, a standard data partition (partition 1) and a nucleotide partition
-(partition 2), and want to apply a GTR model to the nucleotide data, gamma-shaped rate variation to
-both partitions, and allow the partition rates to be different. Then we would use the commands
+partitions using the \texttt{lset applyto} and \texttt{prset applyto} mechanism. For instance,
+assume that we have two partitions, a standard data partition (partition 1) and a nucleotide
+partition (partition 2), and want to apply a GTR model to the nucleotide data, gamma-shaped rate
+variation to both partitions, and allow the partition rates to be different. Then we would use the
+commands
 
 \begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
 lset applyto=(2) nst=6;
@@ -5974,26 +5973,26 @@ prset applyto=(all) ratepr=variable;
 
 By default, all model parameters that are identical and have the same prior probability
 distribution associated with them, are linked across partitions (they are assumed to be one and the
-same parameter). To unlink parameters, use the \texttt{unlink} command. For instance, assume that we
-want to unlink the shape parameter across the partitions discussed above (after all, why should the
-standard data and the molecular data have the same distribution of rates across sites?). This would
-be achieved using
+same parameter). To unlink parameters, use the \texttt{unlink} command. For instance, assume that
+we want to unlink the shape parameter across the partitions discussed above (after all, why should
+the standard data and the molecular data have the same distribution of rates across sites?). This
+would be achieved using
 
 \begin{Verbatim}[baselinestretch=0.8,fontsize=\small]
 unlink shape=(all);
 \end{Verbatim}
 
-If you unlink parameters by mistake, they can be linked again using the \texttt{link} command. All of
-the commands mentioned above and given as they would appear in a \texttt{MRBAYES} block in a Nexus
-file can of course be entered from the command line as well (without the trailing semicolon).
+If you unlink parameters by mistake, they can be linked again using the \texttt{link} command. All
+of the commands mentioned above and given as they would appear in a \texttt{MRBAYES} block in a
+Nexus file can of course be entered from the command line as well (without the trailing semicolon).
 However, it is often more convenient to have them in either your data file or in a separate Nexus
 file that you process after you have read in your data. MrBayes will keep the data set in memory
 until you read in a new \texttt{DATA} block, so you can have your different \texttt{MRBAYES} blocks
 pertaining to the same data file distributed over as many separate Nexus files as you like.
 
 We recommend that, before you run your analysis, you check the current model settings using the
-\texttt{showmodel} command. This command will list all the active parameters and how they are linked
-across partitions, as well as the priors associated with each parameter.
+\texttt{showmodel} command. This command will list all the active parameters and how they are
+linked across partitions, as well as the priors associated with each parameter.
 
 Finally, we want to give you a warning. Even though MrBayes allows you to easily set up extremely
 complex and parameter-rich models, and the Bayesian MCMC approach is good at handling such models,
@@ -6006,7 +6005,6 @@ with convergence in addition to the excessive variance seen in the parameter est
 
 \appendix
 
-%%%% JN: CHAPTER A
 \chapter{Overview of Models and Moves}\label{appendixOverview}
 \addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
 \hspace{-12mm}\includegraphics[width=0.85\textheight]{Appendix_Fig1.pdf}\newpage
