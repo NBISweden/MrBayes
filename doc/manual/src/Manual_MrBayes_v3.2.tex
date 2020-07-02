@@ -11,14 +11,20 @@
 \usepackage{longtable}
 \usepackage{booktabs}
 \usepackage[linktoc=all,colorlinks=true,citecolor=darkgray,filecolor=black,linkcolor=blue,urlcolor=purple]{hyperref}
+
 %%%% JN: For verbatim blocks, combine features from these packages
 \usepackage{float}
 \usepackage{fancyvrb}
-%%%% JN: Try to reduce vertical space around verbatim
 \usepackage{etoolbox}
 \makeatletter
 \preto{\@verbatim}{\topsep=0pt \partopsep=0pt }
 \makeatother
+\RecustomVerbatimEnvironment
+    {BVerbatim}{BVerbatim}
+    {baselinestretch=0.8,fontsize=\footnotesize}
+\RecustomVerbatimEnvironment
+    {Verbatim}{Verbatim}
+    {baselinestretch=0.8,fontsize=\small}
 
 % The following specifies a line spacing of 1.2 times normal
 \renewcommand{\baselinestretch}{1.2}
