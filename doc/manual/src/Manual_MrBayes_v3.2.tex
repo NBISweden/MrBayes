@@ -1,9 +1,9 @@
 \documentclass[12pt]{book}
-\usepackage[a4paper]{geometry} %  (or letter, a4paper, a5paper...) See geometry.pdf to learn the layout options.
+\usepackage[a4paper]{geometry}
 \usepackage[english]{babel}   % Will manage the 90% hyphenation for us 
 \usepackage[parfill]{parskip} % Activate to begin paragraphs width empty line instead of indent
 \usepackage{graphicx}
-\usepackage{amssymb,amsmath} % is nice having similar packages grouped, and we save one line
+\usepackage{amssymb,amsmath}
 \usepackage{setspace}
 \usepackage{url}
 \usepackage{natbib}
@@ -11,11 +11,9 @@
 \usepackage{longtable}
 \usepackage{booktabs}
 \usepackage[linktoc=all,colorlinks=true,citecolor=darkgray,filecolor=black,linkcolor=blue,urlcolor=purple]{hyperref}
-
 %%%% JN: For verbatim blocks, combine features from these packages
 \usepackage{float}
 \usepackage{fancyvrb}
-
 %%%% JN: Try to reduce vertical space around verbatim
 \usepackage{etoolbox}
 \makeatletter
@@ -41,13 +39,6 @@
 %%%% JN: NOTES:
 %%%% JN: Since we are not yet ready with the text, placement of tables (figures) are
 %%%% JN: not a priority. This will have to be set at a later stage.
-%%%% JN: [X] Remove `wrapfigure`
-%%%% JN: [X] Remove left-hand space from tables
-%%%% JN: [ ] Center tables
-%%%% JN: [ ] Check consistent font sizes for verbatim lists
-%%%% JN: [ ] Check consistent font sizes for verbatim code
-%%%% JN: [ ] Consistent use of `MrBayes >`
-%%%% JN: [ ] Consistent use of `\tb{}`, `\texttt{}`, etc
 
 \begin{document}
 
@@ -65,11 +56,9 @@
 
 \frontmatter
 
-%%%% JN: CHAPTER Preface
-\chapter{Preface}
-\label{preface}
+\chapter{Preface}\label{preface}
 
-When we started working on MrBayes in 1999-2000, we knew that there was a need for a Bayesian MCMC
+When we started working on MrBayes in 1999--2000, we knew that there was a need for a Bayesian MCMC
 package for phylogenetics, which was more flexible and easier to use than the software available
 then. Nevertheless, we were astonished by how quickly users took MrBayes to their hearts. The
 original release paper \citep{huelsenbeck01c}, which appeared in Bioinformatics in 2001, quickly
@@ -128,9 +117,8 @@ November, 2011\hfill\\
 
 \mainmatter
 
-%%%% JN: CHAPTER 1
-\chapter{Introduction}
-\label{intro}
+\chapter{Introduction}\label{intro}
+
 MrBayes 3 is a program for Bayesian inference and model choice across a large space of phylogenetic
 and evolutionary models. The program has a command-line interface and should run on a variety of
 computer platforms, including large computer clusters and multicore machines. Depending on the
@@ -296,11 +284,10 @@ information.
 \section{Reporting and Fixing Bugs}
 
 If you find a bug in MrBayes, we are grateful if you tell us about it using the bug reporting
-functions of GitHub, as explained on the MrBayes web site (\url{www.mrbayes.net}).
-%%%% JN: Remove or rewrite next paragraph. At least refer to direct contributions through github
-Advanced users may be interested in fixing bugs themselves in the source code. Refer to section
-\ref{advancedTopics} of this manual for information on how to contribute bug fixes, improved
-algorithms or expanded functionality to other users of MrBayes.
+functions of GitHub, as explained on the MrBayes web site (\url{www.mrbayes.net}).  Advanced users
+may be interested in fixing bugs themselves in the source code. Refer to section
+\ref{modifyingOrExtendingMrBayes} of this manual for information on how to contribute bug fixes,
+improved algorithms or expanded functionality to other users of MrBayes.
 
 \section{License and Warranty}
 
@@ -317,30 +304,26 @@ General Public License for more details (\url{http://www.gnu.org/copyleft/gpl.ht
 If you wish to cite the program, you can simply refer to the most recent release note
 \citep{ronquist12b}. That is,
 
-\begin{singlespacing}
-\footnotesize
+\begin{quote}\footnotesize
 Ronquist, F., M. Teslenko, P. van der Mark, D. Ayres, A. Darling, S. H\"{o}hna, B. Larget, L. Liu,
 M. A. Suchard, and J. P. Huelsenbeck. 2012. MrBayes 3.2: efficient Bayesian phylogenetic
-inference and model choice across a large model space. Systematic Biology 61:539--542.
-\normalsize
-\end{singlespacing}
+inference and model choice across a large model space. Systematic Biology 61:539--542. DOI:
+10.1093/sysbio/sys029
+\end{quote}
 
 This manual should be cited as an online publication, for example:
 
-\begin{singlespacing}
-\footnotesize
+\begin{quote}\footnotesize
 Ronquist, F., J. P. Huelsenbeck, M. Teslenko, C, Zhang, and J. A. A Nylander (2020) MrBayes version
 3.2 manual: tutorials and model summaries. Distributed with the software from
 \url{https://github.com/NBISweden/MrBayes}
-\normalsize
-\end{singlespacing}
+\end{quote}
 
 For more tips on citations, you can run the \texttt{citations} command in the program, which will give
 you a number of other relevant citations for the program and its models and algorithms.
 
-%%%% JN: CHAPTER 2
-\chapter{Tutorial: A Simple Analysis}
-\label{tutorialSimple}
+\chapter{Tutorial: A Simple Analysis}\label{tutorialSimple}
+
 This section walks you through a simple MrBayes example analysis to get you started. It is based on
 the \texttt{primates.nex} data file and will guide you through a basic Bayesian MCMC analysis of
 phylogeny, explaining the most important features of the program. There are two versions of the
@@ -1501,7 +1484,6 @@ contains the most probable trees up to an accumulated posterior probability of 9
 this file will only contain one tree, but data sets with more topological uncertainty can produce
 long lists of trees in the \texttt{.trprobs} files.
 
-%%%% JN: CHAPTER 3
 \chapter{Tutorial: A Partitioned Analysis}\label{tutorialPartitioned}
 
 MrBayes handles a wide variety of data types and models, as well as any mix of these models. In
@@ -1696,7 +1678,6 @@ named \texttt{analysis1.run1.t}, \texttt{analysis1.run2.t}, etc. An alternative 
 each analysis in a separate directory, in which case the naming of the output files will not be an
 issue.
 
-%%%% JN: CHAPTER 4
 \chapter{More Tutorials}\label{tutorialAdvanced}
 
 In this chapter, we provide a number of brief tutorials that cover a wide range of common models
@@ -3542,9 +3523,7 @@ that the species tree is very shallow, so the sequences are quite similar to eac
 partition tables printed above the trees, it is possible to find the posterior probability for each
 of the individual clades found in the tree samples.
 
-%%%% JN: CHAPTER 5
-\chapter{Working with MrBayes}
-\label{advancedTopics}
+\chapter{Working with MrBayes}\label{advancedTopics}
 
 In this chapter, we cover the current capabilities of MrBayes, and provide some guidance on how you
 work most effectively with the program. We also discuss how to compile the program from source, and
@@ -4817,8 +4796,7 @@ prematurely. By default, MrBayes outputs a checkpoint file every 2,000 generatio
 \ref{checkpointing} for more details on checkpointing and how to restart your analysis from a
 checkpoint file.
 
-\subsection{Compiling the Development Version of MrBayes}
-\label{compileDevVersion}
+\subsection{Compiling the Development Version of MrBayes}\label{compileDevVersion}
 
 If you want to use recently added features that have not made it to an official release yet, you
 may want to compile the most recent development version of MrBayes. First a word of warning,
@@ -4836,7 +4814,7 @@ $ git clone --depth=1 https://github.com/NBISweden/MrBayes.git
 In the copy of the \texttt{MrBayes} repository you get on the local system, you will find the compile
 instructions in the file \texttt{INSTALL}.
 
-\subsection{Modifying or Extending MrBayes}
+\subsection{Modifying or Extending MrBayes}\label{modifyingOrExtendingMrBayes}
 
 If you are interested in investigating or working with the source code, you first need to download
 the latest development version from the MrBayes repository on GitHub
@@ -4941,9 +4919,7 @@ character matrix.
 For more information on how to use MrBayes, turn to the MrBayes web site
 (\texttt{www.mrbayes.net}).
 
-%%%% JN: CHAPTER 6
-\chapter{Evolutionary Models in MrBayes}
-\label{evolutionaryModels}
+\chapter{Evolutionary Models in MrBayes}\label{evolutionaryModels}
 
 MrBayes implements a wide variety of evolutionary models for nucleotide, amino acid, restriction
 site (binary), and standard discrete data. In addition, there are several different ways of
@@ -6006,12 +5982,13 @@ with convergence in addition to the excessive variance seen in the parameter est
 \appendix
 
 \chapter{Overview of Models and Moves}\label{appendixOverview}
+
 \addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
 \hspace{-12mm}\includegraphics[width=0.85\textheight]{Appendix_Fig1.pdf}\newpage
 \hspace{-8mm}\includegraphics[width=0.85\textheight]{Appendix_Fig2.pdf}
 \includegraphics[width=0.8\textheight]{Appendix_Fig3.pdf}
 
 \addcontentsline{toc}{chapter}{Bibliography}
-\bibliographystyle{sysbio} % or "unsrt", "alpha", "abbrv", etc.
+\bibliographystyle{sysbio}
 \bibliography{bayes}
 \end{document}
