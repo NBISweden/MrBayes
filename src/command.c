@@ -2306,9 +2306,11 @@ int DoCitations (void)
     MrBayesPrint ("   In the WN model, the branch rates are modeled as being drawn independently    \n");
     MrBayesPrint ("   from gamma distributions. The distributions are not identical as the variance \n");
     MrBayesPrint ("   is proportional to the branch length. See Lepage et al. (2007) for details.   \n");
-    MrBayesPrint ("   Note that the WN model was named 'IGR' in previous versions of MrBayes, but   \n");
-    MrBayesPrint ("   now 'IGR' refers to a slightly different model, in which the branch rates are \n");
-    MrBayesPrint ("   drawn from independent and identically distributed (i.i.d.) gamma distribs.   \n");
+    MrBayesPrint ("   Note that the WN model was named 'IGR' in previous versions of MrBayes (up to \n");
+    MrBayesPrint ("   version 3.2.7), but now 'IGR' refers to a slightly different model, in which  \n");
+    MrBayesPrint ("   the branch rates are drawn from independent and identically distributed       \n");
+    MrBayesPrint ("   (i.i.d.) gamma distributions. This naming change better reflects common usage \n");
+    MrBayesPrint ("   of the term 'independent' in the relaxed clock model literature.              \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   The ILN model is analogous to IGR but differs in that the branch rates follow \n");
     MrBayesPrint ("   i.i.d. lognormal (instead of gamma) distributions (Drummond et al. 2006).     \n");
