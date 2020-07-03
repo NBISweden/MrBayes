@@ -21,4 +21,4 @@ jobs:
         run: ./configure
 
       - name: Build project
-        run: make -C doc
+        run: make pdf
