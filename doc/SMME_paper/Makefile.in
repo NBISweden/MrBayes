@@ -484,7 +484,9 @@ mostlyclean: mostlyclean-am
 
 mostlyclean-am: mostlyclean-generic
 
-pdf: pdf-am
+@HAVE_LATEXMK_FALSE@pdf: pdf-am
+
+@HAVE_LATEX_FALSE@pdf: pdf-am
 
 pdf-am:
 
@@ -510,6 +512,8 @@ uninstall-am: uninstall-dist_pdfDATA
 
 .PRECIOUS: Makefile
 
+
+@HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@pdf: Huelsenbeck_Ronquist_SMME_2005.pdf
 
 @HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@Huelsenbeck_Ronquist_SMME_2005.pdf: $(deps)
 @HAVE_LATEXMK_TRUE@@HAVE_LATEX_TRUE@	env $(envvars) $(LATEXMK) -quiet -pdf $(srcdir)/src/Huelsenbeck_Ronquist_SMME_2005
