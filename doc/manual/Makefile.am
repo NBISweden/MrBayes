@@ -30,6 +30,8 @@ deps=	\
 if HAVE_LATEX
 if HAVE_LATEXMK
 
+pdf: Manual_MrBayes_v3.2.pdf
+
 Manual_MrBayes_v3.2.pdf: $(deps)
 	env $(envvars) $(LATEXMK) -quiet -pdf $(srcdir)/src/Manual_MrBayes_v3.2
 

@@ -41,6 +41,8 @@ deps=	\
 if HAVE_LATEX
 if HAVE_LATEXMK
 
+pdf: Huelsenbeck_Ronquist_SMME_2005.pdf
+
 Huelsenbeck_Ronquist_SMME_2005.pdf: $(deps)
 	env $(envvars) $(LATEXMK) -quiet -pdf $(srcdir)/src/Huelsenbeck_Ronquist_SMME_2005
 
