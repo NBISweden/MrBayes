@@ -1902,7 +1902,7 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     int         i, j, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
                 isVPriorExp, moveInRoot, isStartConstrained, isStopConstrained, tempInt;
     MrBFlt      m, x, y, tuning, maxV, minV, extensionProb, brlensExp=0.0;
-    TreeNode    *p, *q, *a=NULL, *b=NULL, *c=NULL, *d=NULL, *u, *v, *interiorRoot;
+    TreeNode    *p, *q, *a=NULL, *b=NULL, *c=NULL, *d=NULL, *u, *v, *interiorRoot=NULL;
     Tree        *t;
     ModelParams *mp;
     
@@ -2345,7 +2345,7 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     int         i, j, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
                 isVPriorExp, moveInRoot, isStartConstrained, isStopConstrained, tempInt;
     MrBFlt      m, x, y, tuning, maxV, minV, extensionProb, brlensExp=0.0;
-    TreeNode    *p, *a, *b, *c, *d, *u, *v, *brlenNode[7], *interiorRoot;
+    TreeNode    *p, *a, *b, *c, *d, *u, *v, *brlenNode[7], *interiorRoot=NULL;
     Tree        *t;
     ModelParams *mp;
     
@@ -3982,7 +3982,7 @@ int Move_ExtSS (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     int         i, numFree, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
                 isVPriorExp, moveInRoot, tempInt;
     MrBFlt      m, x, tuning, maxV, minV, extensionProb, brlensExp=0.0;
-    TreeNode    *p, *q, *a, *b, *c, *d, *u, *v, *interiorRoot;
+    TreeNode    *p, *q, *a, *b, *c, *d, *u, *v, *interiorRoot=NULL;
     Tree        *t;
     ModelParams *mp;
 
@@ -4908,7 +4908,7 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     int         i, j, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
                 isVPriorExp, alwaysMoveRoot, isCrownStartConstrained, isRootStartConstrained, isStopConstrained, tempInt;
     MrBFlt      m, x, y, tuning, maxV, minV, extensionProb, brlensExp=0.0;
-    TreeNode    *p, *a, *b, *c, *d, *u, *v, *interiorRoot;
+    TreeNode    *p, *a, *b, *c, *d, *u, *v, *interiorRoot=NULL;
     Tree        *t;
     ModelParams *mp;
 
@@ -9929,7 +9929,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
                 cumulativeProb, warpFactor, ran, tuning, increaseProb, decreaseProb,
                 divFactor, nStates, rateMult, v_typical, sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
-    TreeNode    *p, *q, *a, *b, *u, *v, *c=NULL, *d, *interiorRoot;
+    TreeNode    *p, *q, *a, *b, *u, *v, *c=NULL, *d, *interiorRoot=NULL;
     Tree        *t;
     ModelParams *mp;
     ModelInfo   *m = NULL;
@@ -11061,7 +11061,7 @@ int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, tuning, warpFactor,
                 v_typical, divFactor, nStates, sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
-    TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL, *interiorRoot;
+    TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL, *interiorRoot=NULL;
     Tree        *t;
     ModelParams *mp;
     ModelInfo   *m=NULL;
@@ -13089,7 +13089,7 @@ int Move_ParsTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, tuning, warpFactor,
                 sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
-    TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL, *interiorRoot;
+    TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL, *interiorRoot=NULL;
     Tree        *t;
     ModelParams *mp;
     ModelInfo   *m=NULL;
@@ -13620,7 +13620,7 @@ int Move_ParsTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, tuning, warpFactor,
                 v_typical, divFactor, nStates, sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
-    TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL, *interiorRoot;
+    TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL, *interiorRoot=NULL;
     Tree        *t;
     ModelParams *mp;
     ModelInfo   *m=NULL;
