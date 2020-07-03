@@ -2656,9 +2656,6 @@ of the better model \citep{kass95}.
 
 \section{Node Dating and Total-Evidence Dating}
 
-\vspace{10 pt}
-{\large\color{red} Please note, this section of the manual is not revised for v.3.2.7!}
-
 In this tutorial, we will use three different approaches to dating. First, we will show how to
 calibrate a tree based on information about the clock rate (rate dating), then we will date the
 tree based on node calibrations (node dating), and finally we will use total-evidence dating (or
@@ -2699,7 +2696,7 @@ this assumption, we could for instance use a normal distribution as the prior fo
 using $0.01$ as the mean and $0.005$ as the standard deviation. Since we give these values using
 millions of years as the unit, the resulting tree will be calibrated in millions of years.
 
-Setting the prior on the clock rate is thus achieved with
+Setting the prior on the clock rate is thus achieved with:
 
 \begin{Verbatim}
 MrBayes > prset clockratepr=normal(0.01,0.005)
@@ -2718,7 +2715,8 @@ rate is fixed to $1.0$. When we change the clock prior, we usually need to recon
 For instance, we might want to modify the prior so that it has the same effect on branch lengths
 measured in substitution units. In our case, we want to change the default prior, with expected
 mean $1.0$, to one with expected mean $1.0 / 0.01 = 100$, that is, the original value divided by
-the expected clock rate. 
+the expected clock rate.
+%%%% JN: Orphan, commented, sentence below. Include or not?
 %Since the expectation of the exponential distribution is the same as the inverse of the rate
 % parameter, we thus need to modify the tree age prior to an exponential distribution with the
 % rate $0.01$. 
@@ -2742,32 +2740,32 @@ The resulting dated phylogram should look something like this:
 \begin{figure}[H]
 \centering
 \begin{BVerbatim}[fontsize=\scriptsize]
-                                                     /----- Homo_sapiens (3)
-                                                   /-+
-                                                   | \----- Pan (4)
-                                           /-------+
-                                           |       \------- Gorilla (5)
-                                      /----+
-                                      |    \--------------- Pongo (6)
-                        /-------------+
-                        |             \-------------------- Hylobates (7)
-                        |
-                        |                               /-- Macaca_fuscata (8)
-             /----------+                           /---+
-             |          |                           |   \-- M_mulatta (9)
-             |          |                        /--+
-             |          |                        |  \------ M_fascicularis (10)
-/------------+          \------------------------+
-|            |                                   \--------- M_sylvanus (11)
-|            |
-+            \--------------------------------------------- Saimiri_sciure~ (12)
+              /-------------------------------------------- Tarsius_syrichta (1)
+/-------------+
+|             \-------------------------------------------- Lemur_catta (2)
 |
-|              /------------------------------------------- Tarsius_syrichta (1)
-\--------------+
-               \------------------------------------------- Lemur_catta (2)
+|                                                    /----- Homo_sapiens (3)
+|                                                  /-+
+|                                                  | \----- Pan (4)
+|                                          /-------+
+|                                          |       \------- Gorilla (5)
+|                                     /----+
++                                     |    \--------------- Pongo (6)
+|                       /-------------+
+|                       |             \-------------------- Hylobates (7)
+|                       |
+|                       |                               /-- Macaca_fuscata (8)
+|           /-----------+                            /--+
+|           |           |                            |  \-- M_mulatta (9)
+|           |           |                         /--+
+|           |           |                         |  \----- M_fascicularis (10)
+\-----------+           \-------------------------+
+            |                                     \-------- M_sylvanus (11)
+            |
+            \---------------------------------------------- Saimiri_sciure~ (12)
 
----|----------|----------|----------|----------|----------|
- 50.0       40.0       30.0       20.0       10.0        0.0                    
+------|---------|----------|---------|----------|---------|
+    50.0      40.0       30.0      20.0       10.0       0.0
 \end{BVerbatim}
 \end{figure}
 
@@ -2829,15 +2827,15 @@ For instance, assume that we are interested in the age of the oldest split in th
 split between humans and chimps. The oldest split in the tree corresponds to the partition
 description with all stars, that is, partition ID 0. Humans have taxon ID 3 and chimps the taxon ID
 4. The partition description corresponding to the human--chimp split thus should have stars in
-positions 3 and 4, and dots in all other positions. This is partition ID 20. In your analysis, the
-partition IDs may be different.
+positions 3 and 4, and dots in all other positions. This is partition ID 20 (in your analysis, the
+partition IDs may be different).
 
 Now we go into the table of node and branch parameter estimates, and find the corresponding age
 estimates. Here are the relevant rows in this table in our analysis:
 
 \begin{figure}[H]
 \centering
-\begin{BVerbatim}
+    \begin{BVerbatim}[fontsize=\scriptsize]
                                         95% HPD Interval
                                       --------------------
 Parameter      Mean       Variance     Lower       Upper       Median     PSRF+  Nruns
@@ -2849,10 +2847,10 @@ age[20]       5.361829    4.555993    2.300513   10.178956    4.955494    1.000 
 \end{figure}
 
 For instance, we see that the posterior distribution of the age of the human--chimp split has a
-mean of $5.4$ Ma, a median of $5.0$ Ma, and a 95\% HPD ranging from $2.3$ to $10.2$ Ma. By default,
-the \texttt{sumt} command will print all the summaries of node and branch parameters to the tree in
-the file with the ending \texttt{.con.tre} in a format that can be understood by the program
-FigTree.  When you open the file in FigTree, you will have access to a range of options for
+mean of $5.36$ Ma, a median of $4.96$ Ma, and a 95\% HPD ranging from $2.30$ to $10.18$ Ma. By
+default, the \texttt{sumt} command will print all the summaries of node and branch parameters to
+the tree in the file with the ending \texttt{.con.tre} in a format that can be understood by the
+program FigTree.  When you open the file in FigTree, you will have access to a range of options for
 visualizing the parameter summaries of your interest.
 
 We now turn our attention to dating of the tree using node calibrations (node dating). Assume, for
@@ -2925,13 +2923,7 @@ distribution will always depend to a considerable extent on the prior. Therefore
 to consider the priors on the clock tree parameters (such as the tree age for the uniform prior),
 the node ages and the clock rate carefully. It is good practice to examine the influence of these
 priors on the dating results.
-
-%%%% JN: tor  2 jul 2020 21:42:54
-%%%% JN: The two analyses are NOT described in the MrBayes/examples/hymfossil.nex file!
-%%%% JN: Text AND nexus file needs to be updated!
-%%%% JN: Furthermore, the file "hym.nex" -- a "truncated" hymfossil.nex, and referred to in
-%%%% JN: Chi's document "https://arxiv.org/pdf/1603.05707.pdf" -- is no longer included in MrBayes.
-%%%% JN: Hence, this section is currently not correct, and the steps can not be replicated.
+\vspace{1cm}
 
 Now we turn our attention to a larger data set, and more complex dating scenarios. The data set,
 \texttt{hymfossil.nex}, is from a study of the early radiation of the Hymenoptera
@@ -2966,12 +2958,12 @@ needed in setting up the node dating and total-evidence dating analyses.
 The block starts out by defining a number of character sets. Then there is a set of lines that
 define the model for the morphological partition. It first defines a set of morphological
 characters to be ordered (\texttt{morph\_ordered}), and then a set of morphological characters to
-be excluded (\texttt{morph\_excluded}). Then these characters are ordered and excluded with the
-following two lines:
+be excluded (\texttt{morph\_excluded}, \texttt{morph\_constant}). Then these characters are ordered
+and excluded with the following two lines:
 
 \begin{Verbatim}
 ctype ordered: morph_ordered;
-exclude morph_excluded;
+exclude morph_excluded morph_constant;
 \end{Verbatim}
 
 The next set of lines define the partitioning of the data:
@@ -3015,7 +3007,7 @@ all the constraints corresponding to the calibration nodes are defined:
 constraint root = 1-.;
 constraint Hymenoptera = 10-69;
 constraint Holometabola = 3-69;
-constraint HolometabolaWithFossils = 3-114;
+constraint Holometabola_withFossils = 3-114;
 ...
 \end{Verbatim}
 
@@ -3058,8 +3050,8 @@ using the same commands discussed previously in this tutorial:
 \begin{Verbatim}
 prset clockratepr=lognorm(-7.1,0.5);
 calibrate root=offsetexp(315,396);
-calibrate holometabola_withFossils=offsetexp(302,396);
-prset topologypr=constraints(root,holometabola_withFossils);
+calibrate Holometabola_with_fossils=offsetexp(302,396);
+prset topologypr=constraints(root,Holometabola_with_fossils);
 prset nodeagepr=calibrated;
 \end{Verbatim}
 
@@ -3076,7 +3068,9 @@ defined taxon set called \texttt{fossils}:
 \begin{Verbatim}
 delete fossils
 \end{Verbatim}
-
+%%%% JN: Note, the following paragraph describes non-existing commands in the hymfossils.nex!
+%%%% JN: The current hymfossil.nex have the fossilized BD prior instead of "the relaxed clock model
+%%%% JN: in the same way as the total-evidence analysis"!
 It then continues by defining the relaxed clock model in the same way as the total-evidence
 analysis. This is followed by a specification of the clock rate prior and then the specification of
 the two outgroup and seven ingroup calibration points. The commands are essentially the same used
@@ -3084,7 +3078,7 @@ in the total-evidence analysis. Note that all nine constraints have to be enforc
 the topology prior:
 
 \begin{Verbatim}
-prset topologypr=constraints(root,holometabola,hymenoptera,...,Vespina);
+prset topologypr=constraints(root,Holometabola,Hymenoptera,...,Vespina);
 \end{Verbatim}
 
 This completes the description of the analysis specifications. As you will notice, the file ends by
@@ -3094,6 +3088,8 @@ you to actually start the analysis.
 Another total-evidence dating tutorial using the Hymenoptera data (truncated) is provided by Zhang
 (\url{https://arxiv.org/abs/1603.05707}). It uses the fossilized birth-death model
 \citep{Stadler:2010fn,Heath:2014hn,Zhang:2016kf} as a tree prior.
+%%%% JN: The current hymfossil.nex have the fossilized BD prior instead of "the relaxed clock model
+%%%% JN: in the same way as the total-evidence analysis"!
 
 \section{Inferring Ancestral States}
 %%%% JN: tor  2 jul 2020 21:44:19 Need to verify that commands work
