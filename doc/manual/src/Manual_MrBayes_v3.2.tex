@@ -2538,7 +2538,7 @@ List of taxa in bipartitions:
 \end{BVerbatim}
 \end{figure}
 
-The second part consists of a "dot-and-star"-table, indicating which taxa that belong to which
+The second part consists of a ``dot-and-star''-table, indicating which taxa that belong to which
 partition. For example ID 17 describes a partition that divides taxa nr 3 and 4 against the rest.
 \begin{figure}[H]
 \centering
@@ -5698,11 +5698,19 @@ this parameter is set by \texttt{prset treeagepr}. The default prior is an gamma
 mean 1.0 (\texttt{gamma(1.0,1.0)}, i.e. \texttt{exp(1.0)}).
 
 \subsection{Relaxed Clock Trees}
-%%%% JN: subsection need to be expanded
+
 {\large\color{red} Please note, this section of the manual is not revised for v.3.2.7!}
 
-Relaxed clock models and functions for dating are not implemented in MrBayes 3.1. They are
-available in version 3.2.
+%%%% JN: subsection need to be expanded. I pasted a block of text from another section below
+MrBayes offers five relaxed clock models: the Thorne--Kishino 2002 (TK02) \citep{thorne02}, the
+compound poisson process (CPP) \citep{huelsenbeck00a}, the white noise (WN) \citep{lepage07}, the
+independent gamma rates (IGR), and independent lognormal (ILN) \citep{drummond06} models. We note
+here that, since version 3.2.8, the name `WN' is used to refer to `IGR' in old versions, while
+`IGR' is used to refer to a different model. In the new IGR model, the rates are i.i.d. gamma
+distributions across branches and the variance does not dependent on branch lengths as in the WN
+model. The ILN model differs from IGR in that the rate variation follows i.i.d. lognormal
+distributions instead of gamma distributions.
+
 
 \section{Partitioned Models}
 \label{partitionedModels}
