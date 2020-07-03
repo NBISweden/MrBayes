@@ -14091,7 +14091,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
             isSame = NO; /* the nucleotide models are different */
         if (strcmp(modelParams[part1].covarionModel, modelParams[part2].covarionModel) && !(!strcmp(modelParams[part1].nucModel, "Codon") && !strcmp(modelParams[part2].nucModel, "Codon")))
             isSame = NO; /* the models have different covarion struture */
-            
+ 
         /* If both partitions have nucmodel=codon, then we also have to make certain that the same genetic code is used. */
         if (!strcmp(modelParams[part1].nucModel, "Codon") && !strcmp(modelParams[part2].nucModel, "Codon"))
             {
@@ -14130,6 +14130,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
                 }
             else
                 isSame = NO; /* the priors are not the same, so we cannot set the parameter to be equal for both partitions */
+            printf("isSame is %s\n", (isSame==YES ? "YES" : "NO"));
             }
         if (modelSettings[part1].dataType == PROTEIN && modelSettings[part2].dataType == PROTEIN)
             {
@@ -16652,7 +16653,7 @@ int ProcessStdChars (RandLong *seed)
             p = &params[k];
             if (p->nSympi > 0)
                 {
-                p->printParam = YES;    /* print even if fixed alpha_symdir */
+                p->printParam = YES;    /* print even if fixed alpha_symdir because we sample state freqs and do not integrate them out */
                 index = 0;
                 p->sympiBsIndex = sympiIndex + i;
                 p->sympinStates = sympiIndex + i + n;
@@ -19505,10 +19506,12 @@ int SetModelParams (void)
                         }
                     }
                 p->nSubValues = 0;  /* store state frequencies in p->stdStateFreqs */
-                if (p->paramId == SYMPI_EXP || p->paramId == SYMPI_EXP_MS || p->paramId == SYMPI_UNI || p->paramId == SYMPI_UNI_MS)
+                if (p->nValues == 1 && strcmp(mp->symPiPr,"Fixed") != 0)
+                    {
                     p->printParam = YES;
-                SafeStrcat (&p->paramHeader, "alpha_symdir");
-                SafeStrcat (&p->paramHeader, partString);
+                    SafeStrcat (&p->paramHeader, "alpha_symdir");
+                    SafeStrcat (&p->paramHeader, partString);
+                    }
                 /* further processing done in ProcessStdChars */
                 }
             else
@@ -24592,9 +24595,9 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                 else
                     { /* mp->symBetaFix == -1 */
                     if (AreDoublesEqual(mp->symBetaFix, -1.0, ETA)==YES)
-                        MrBayesPrint ("%s            Prior      = Symmetric dirichlet with all parameters equal to infinity\n", spacer);
+                        MrBayesPrint ("%s            Prior      = Symmetric dirichlet with all parameters fixed to infinity\n", spacer);
                     else
-                        MrBayesPrint ("%s            Prior      = Symmetric dirichlet with all parameters equal to %1.2lf\n", spacer, mp->symBetaFix);
+                        MrBayesPrint ("%s            Prior      = Symmetric dirichlet with all parameters fixed to %1.2lf\n", spacer, mp->symBetaFix);
                     }
                 }
             else if (ms->dataType == PROTEIN)
