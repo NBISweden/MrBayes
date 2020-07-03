@@ -2294,9 +2294,14 @@ int DoCitations (void)
     MrBayesPrint ("   autocorrelated continuous model, in which rates vary according to a lognormal \n");
     MrBayesPrint ("   distribution.  Specifically, the rate of a descendant node is assumed to      \n");
     MrBayesPrint ("   be drawn from a lognormal distribution with the mean being the rate of the    \n");
-    MrBayesPrint ("   ancestral node, and the variance being proportional to the length of the      \n");
-    MrBayesPrint ("   branch separating the nodes (measured in terms of expected substitutions per  \n");
-    MrBayesPrint ("   site at the base rate of the clock).                                          \n");
+    MrBayesPrint ("   ancestral node (and not the log of the rate of the ancestral node), and the   \n");
+    MrBayesPrint ("   variance (on the log scale) being proportional to the length of the branch    \n");
+    MrBayesPrint ("   separating the nodes (measured in terms of expected substitutions per site at \n");
+    MrBayesPrint ("   the base rate of the clock). Note that in MrBayes versions up until 3.2.7,    \n");
+    MrBayesPrint ("   the variance was measured on the linear scale and not on the log scale, which \n");
+    MrBayesPrint ("   a slight difference from the original formulation of the model. Note also that\n");
+    MrBayesPrint ("   we factor out the base rate of the clock in MrBayes, so the model applies to  \n");
+    MrBayesPrint ("   the deviations from this rate.                                                \n");
     MrBayesPrint ("                                                                                 \n");
     MrBayesPrint ("   In the WN model, the branch rates are modeled as being drawn independently    \n");
     MrBayesPrint ("   from gamma distributions. The distributions are not identical as the variance \n");
