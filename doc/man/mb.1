@@ -1,0 +1,52 @@
+.\" manpage for MrBayes
+.\" https://github.com/NBISweden/MrBayes/doc/man/mb.1
+.TH mrbayes "1" "Jul 2020" "mrbayes 3.2.7" "User Commands"
+.SH NAME
+MrBayes \- A program for Bayesian Analysis of Phylogeny
+.SH SYNOPSIS
+.B mb [OPTION] [FILE]
+.SH DESCRIPTION
+MrBayes (
+.B mb
+) is a program for Bayesian inference and model choice across a wide range of phylogenetic and evolutionary models. MrBayes uses Markov chain Monte Carlo (MCMC) methods to estimate the posterior distribution of model parameters.
+.PP
+.B Program features include:
+.PP
+.IP "A common command-line interface across Macintosh, Windows, and UNIX operating systems;"
+.IP "Extensive help available from the command line;"
+.IP "Analysis of nucleotide, amino acid, restriction site, and morphological data;"
+.IP "Mixing of data types, such as molecular and morphological characters, in a single analysis;"
+.IP "Easy linking and unlinking of parameters across data partitions;"
+.IP "An abundance of evolutionary models, including 4x4, doublet, and codon models for nucleotide data and many of the standard rate matrices for amino acid data;"
+.IP "Estimation of positively selected sites in a fully hierarchical Bayesian framework;"
+.IP "Full integration of the BEST algorithms for the multi-species coalescent;"
+.IP "Estimation of time calibrated (clock) trees using a variety of (strict and) relaxed-clock models;"
+.IP "Support for complex combinations of positive, negative, and backbone constraints on topologies;"
+.IP "Model jumping across the GTR model space and across fixed rate matrices for amino acid data;"
+.IP "Monitoring of convergence during the analysis, and access to a wide range of convergence diagnostics tools after the analysis has finished;"
+.IP "Rich summaries of posterior samples of branch and node parameters printed to majority rule consensus trees in FigTree format;"
+.IP "Implementation of the stepping-stone method for accurate estimation of model likelihoods for Bayesian model choice using Bayes factors;"
+.IP "The ability to spread jobs over a cluster of computers using MPI (for Macintosh (OS X) and UNIX environments only);"
+.IP "Support for the BEAGLE library, resulting in dramatic speedups for codon and amino acid models on compatible hardware (NVIDIA graphics cards);"
+.IP "Check pointing across all models, allowing the user to seamlessly extend a previous analysis or recover from a system crash;"
+.SH OPTIONS
+.TP
+.B -i
+Force interactive mode. Non-interactive mode is the default when a filename is given.
+.TP
+.B -v
+Display version information and exit.
+.TP
+.B -h
+Display this short help text and exit.
+.SH REPORTNG BUGS
+Please report bugs at <https://github.com/NBISweden/MrBayes/issues>
+.SH AUTHOR
+Written by Fredrik Ronquist, John Huelsenbeck, Paul van der Mark, Maxim Teslenko, and Chi Zhang.
+.SH COPYRIGHT
+GNU General Public License v3.0.
+.PP
+This document is part of the MrBayes software.
+.SH SEE ALSO
+Full documentation and code at <http://mrbayes.net>
+
