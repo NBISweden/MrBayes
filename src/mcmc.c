@@ -193,7 +193,7 @@ int       PrintAncStates_Bin (TreeNode *p, int division, int chain);
 int       PrintAncStates_Gen (TreeNode *p, int division, int chain);
 int       PrintAncStates_NUC4 (TreeNode *p, int division, int chain);
 int       PrintAncStates_Std (TreeNode *p, int division, int chain);
-int       PrintCheckPoint (int gen);
+int       PrintCheckPoint (long long gen);
 int       PrintMCMCDiagnosticsToFile (long long curGen);
 #if defined (MPI_ENABLED)
 int       PrintMPISlaves (FILE *fp);
@@ -4073,7 +4073,7 @@ int DoSs (void)
     chainParams.relativeBurnin = YES;
  
     if (chainParams.burninSS < 0)
-        chainParams.burninSS =  chainParams.numGen / ((chainParams.numStepsSS-chainParams.burninSS)*chainParams.sampleFreq);
+        chainParams.burninSS =  (int)(chainParams.numGen / ((chainParams.numStepsSS-chainParams.burninSS)*(long long)(chainParams.sampleFreq)));
     chainParams.isSS = YES;
 
     ret=DoMcmc();
@@ -11267,7 +11267,7 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 |   PrintCheckPoint: Print checkpoint to file
 |
 ------------------------------------------------------------------------*/
-int PrintCheckPoint (int gen)
+int PrintCheckPoint (long long gen)
 {
     int         i, j, k, k1, nErrors=0, run, chn, nValues, tempStrSize = TEMPSTRSIZE,
                 hasEvents, *intValue, oldPrecision;
@@ -11325,7 +11325,7 @@ int PrintCheckPoint (int gen)
     ERROR_TEST2("",free(tempString),return(ERROR));
     
     /* write file header */
-    MrBayesPrintf (fp, "#NEXUS\n[ID: %s]\n[generation: %d]\n", stamp, gen);
+    MrBayesPrintf (fp, "#NEXUS\n[ID: %s]\n[generation: %lli]\n", stamp, gen);
 
     if (chainParams.isSS == YES)
         {
@@ -17137,7 +17137,7 @@ int RunChain (RandLong *seed)
 #   endif
                     }
 
-                lastDiagnostics = (n/chainParams.sampleFreq)+1; /* +1 because we always have start tree sampled*/
+                lastDiagnostics = (int)(n/chainParams.sampleFreq)+1; /* +1 because we always have start tree sampled*/
                 if (chainParams.relativeBurnin == YES)
                     {
                     i = lastDiagnostics - removeTo;
