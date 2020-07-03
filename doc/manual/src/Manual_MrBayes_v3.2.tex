@@ -3092,7 +3092,6 @@ Another total-evidence dating tutorial using the Hymenoptera data (truncated) is
 %%%% JN: in the same way as the total-evidence analysis"!
 
 \section{Inferring Ancestral States}
-%%%% JN: tor  2 jul 2020 21:44:19 Need to verify that commands work
 
 The purpose of the analysis discussed in this tutorial is to infer the ancestral state
 probabilities for a given node in a phylogeny, while simultaneously accommodating uncertainty in
@@ -3302,36 +3301,37 @@ should look something like this:
 \begin{BVerbatim}[fontsize=\scriptsize]
 Clade credibility values:
 
- /------------------------------------------------------------------ SpeciesA (1)
- |                                                                               
- |------------------------------------------------------------------ SpeciesB (2)
- +                                                                               
- |------------------------------------------------------------------ SpeciesC (3)
- |                                                                               
- \------------------------------------------------------------------ SpeciesD (4)
-                                                                                 
+/------------------------------------------------------------------ SpeciesD (4)
+|
++                                /--------------------------------- SpeciesA (1)
+|                                |
+\---------------100--------------+--------------------------------- SpeciesB (2)
+                                 |
+                                 \--------------------------------- SpeciesC (3)
 
- Phylogram (based on median node depths):
 
- /------------------------------------------------------------------ SpeciesA (1)
- |                                                                               
- |------------------------------------------------------------------ SpeciesB (2)
- +                                                                               
- |------------------------------------------------------------------ SpeciesC (3)
- |                                                                               
- \------------------------------------------------------------------ SpeciesD (4)
-                                                                                 
- ---|------------|------------|-----------|------------|-----------|             
- 5.00e-04    4.00e-04     3.00e-04    2.00e-04     1.00e-04    2.71e-20 
+Phylogram (based on median node depths):
+
+/------------------------------------------------------------------ SpeciesD (4)
+|
++                                                              /--- SpeciesA (1)
+|                                                              |
+\--------------------------------------------------------------+--- SpeciesB (2)
+                                                               |
+                                                               \--- SpeciesC (3)
+
+--------|-------|--------|-------|-------|--------|-------|-------|
+    7.00e-036.00e-03 5.00e-034.00e-033.00e-03 2.00e-031.00e-030.00e+00
 
 [Expected changes per site]
+
 \end{BVerbatim}
 \end{figure}
 
-These summaries of the tree samples show that the species tree topology is unresolved. Note also
-that the species tree is very shallow, so the sequences are quite similar to each other. In the
-partition tables printed above the trees, it is possible to find the posterior probability for each
-of the individual clades found in the tree samples.
+These summaries of the tree samples show that the species tree topology is partly unresolved. Note
+also that the species phylogram is shallow, so the sequences are quite similar to each other. In
+the partition tables printed above the trees, it is possible to find the posterior probability for
+each of the individual clades found in the tree samples.
 
 \chapter{Working with MrBayes}\label{advancedTopics}
 
