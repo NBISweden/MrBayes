@@ -14105,32 +14105,20 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
             /* The data are morphological (STANDARD). The state frequencies are specified by a
                symmetric beta distribution, the parameter of which needs to be the same to apply to both
                partitions. Note that symPiPr = -1 is equivalent to setting the variance to 0.0. */
-            if (!strcmp(modelParams[part1].symPiPr,"Uniform") && !strcmp(modelParams[part2].symPiPr,"Uniform"))
+            /* In principle, the two partitions can be linked but if we need to take the possibility of
+             * asymmetry in transition rates into account, then we do not know at this stage whether we
+             * will have to sample from the state frequencies or integrate them out. Since these two
+             * model levels are both represented by the same data structure, we do not allow partitions
+             * to be linked unless symPiPr == -1, that is, if state frequencies are equal so that they
+             * do not have to be sampled under any conditions. */
+            if (strcmp(modelParams[part1].symPiPr,"Fixed") != 0 || strcmp(modelParams[part2].symPiPr,"Fixed") != 0)
                 {
-                if (AreDoublesEqual (modelParams[part1].symBetaUni[0], modelParams[part2].symBetaUni[0], (MrBFlt) 0.00001) == NO)
-                    isSame = NO;
-                if (AreDoublesEqual (modelParams[part1].symBetaUni[1], modelParams[part2].symBetaUni[1], (MrBFlt) 0.00001) == NO)
-                    isSame = NO;
-                if (modelParams[part1].numBetaCats != modelParams[part2].numBetaCats)
-                    isSame = NO;    /* can't link because the discrete beta approximation is different */
+                isSame = NO;
                 }
-            else if (!strcmp(modelParams[part1].symPiPr,"Exponential") && !strcmp(modelParams[part2].symPiPr,"Exponential"))
+            else if (modelParams[part1].symBetaFix != -1 ||  modelParams[part2].symBetaFix != -1)
                 {
-                if (AreDoublesEqual (modelParams[part1].symBetaExp, modelParams[part2].symBetaExp, (MrBFlt) 0.00001) == NO)
-                    isSame = NO;
-                if (modelParams[part1].numBetaCats != modelParams[part2].numBetaCats)
-                    isSame = NO;    /* can't link because the discrete beta approximation is different */
+                isSame = NO;
                 }
-            else if (!strcmp(modelParams[part1].symPiPr,"Fixed") && !strcmp(modelParams[part2].symPiPr,"Fixed"))
-                {
-                if (AreDoublesEqual (modelParams[part1].symBetaFix, modelParams[part2].symBetaFix, (MrBFlt) 0.00001) == NO)
-                    isSame = NO;
-                if (AreDoublesEqual (modelParams[part1].symBetaFix, (MrBFlt) -1.0, (MrBFlt) 0.00001) == NO && modelParams[part1].numBetaCats != modelParams[part2].numBetaCats)
-                    isSame = NO;    /* can't link because the discrete beta approximation is different */
-                }
-            else
-                isSame = NO; /* the priors are not the same, so we cannot set the parameter to be equal for both partitions */
-            printf("isSame is %s\n", (isSame==YES ? "YES" : "NO"));
             }
         if (modelSettings[part1].dataType == PROTEIN && modelSettings[part2].dataType == PROTEIN)
             {
@@ -16616,8 +16604,8 @@ int ProcessStdChars (RandLong *seed)
                         }
                     }
                 }
+            p->nStdStateFreqs = index;
             }
-        p->nStdStateFreqs = index;
         }
     
     /* allocate space for sympiIndex, stdStateFreqs; then fill */
