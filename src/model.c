@@ -2427,18 +2427,18 @@ int CompressData (void)
     ModelInfo       *m;
     ModelParams     *mp;
 
-#   if defined DEBUG_COMPRESSDATA
-    if (PrintMatrix() == ERROR)
-        goto errorExit;
-    getchar();
-#   endif
-
     /* set all pointers that will be allocated locally to NULL */
     isTaken = NULL;
     tempMatrix = NULL;
     tempSitesOfPat = NULL;
     tempChar = NULL;
 
+#   if defined DEBUG_COMPRESSDATA
+    if (PrintMatrix() == ERROR)
+        goto errorExit;
+    getchar();
+#   endif
+ 
     /* allocate indices pointing from original to compressed matrix */
     if (memAllocs[ALLOC_COMPCOLPOS] == YES)
         {
