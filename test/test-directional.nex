@@ -1,0 +1,33 @@
+#NEXUS
+
+[Tests of various versions of the directional model of evolution.]
+
+begin mrbayes;
+    exe taylor.nex;
+    delete 1-69 71 75-.;
+    lset coding=variable statefrmod=directional;
+    mcmc ngen=500000;
+    sumt;
+    sump;
+    lset statefrmod=mixed;
+    mcmc;
+    sumt;
+    sump;
+    lset statefrmod=stationary;
+    mcmc;
+    sumt;
+    sump;
+    lset coding=all statefrmod=directional;
+    mcmc;
+    sumt;
+    sump;
+    lset statefrmod=mixed;
+    mcmc;
+    sumt;
+    sump;
+    lset statefrmod=stationary;
+    mcmc;
+    sumt;
+    sump;
+end;
+
