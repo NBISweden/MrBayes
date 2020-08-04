@@ -12982,6 +12982,11 @@ int PrintStates (long long curGen, int coldId)
             {
             /* We print the subvalues if we are dealing with state frequencies (state frequencies are held in subvalues) OR
                if we are dealing with rates of a siterate mixture (rates held in subvalues). */
+            if (p->nValues == 1 && strcmp(mp->symPiPr,"Fixed") != 0)
+                {
+                SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(sst[j]));
+                if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+                }
             for (j=0; j<p->nSubValues; j++)
                 {
                 SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(sst[j]));
