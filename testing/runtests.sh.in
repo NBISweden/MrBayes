@@ -12,6 +12,9 @@ case "@TESTS_USE_MPI@" in
 		exit 1
 esac
 
+mkdir tmp || exit 1
+cp "@top_srcdir@/examples/primates.nex" tmp
+
 err=0
 for t in test[12].nex; do
 	printf 'Producing test output for "%s"...\n' "$t"
@@ -129,4 +132,7 @@ for t in test[12].nex; do
 done
 
 printf '%s %d tests failed\n' '-->' "$err"
+
+rm -rf tmp
+
 exit "$err"
