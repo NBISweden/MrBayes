@@ -283,8 +283,6 @@ AC_CONFIG_FILES([Makefile
                  examples/Makefile
                  src/Makefile
                  testing/Makefile
-                 testing/test1.nex
-                 testing/test2.nex
 ])
 AC_CONFIG_FILES([testing/runtests.sh], [chmod +x testing/runtests.sh])
 AC_OUTPUT
