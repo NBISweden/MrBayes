@@ -97,7 +97,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/src/config.h
-CONFIG_CLEAN_FILES = test1.nex test2.nex runtests.sh
+CONFIG_CLEAN_FILES = runtests.sh
 CONFIG_CLEAN_VPATH_FILES =
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -119,8 +119,7 @@ am__can_run_installinfo = \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
-am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/runtests.sh.in \
-	$(srcdir)/test1.nex.in $(srcdir)/test2.nex.in
+am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/runtests.sh.in
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
@@ -273,10 +272,6 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-test1.nex: $(top_builddir)/config.status $(srcdir)/test1.nex.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-test2.nex: $(top_builddir)/config.status $(srcdir)/test2.nex.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 runtests.sh: $(top_builddir)/config.status $(srcdir)/runtests.sh.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 tags TAGS:

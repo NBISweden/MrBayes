@@ -7996,7 +7996,7 @@ fi
 done
 
 
-ac_config_files="$ac_config_files Makefile doc/Makefile doc/SMME_paper/Makefile doc/manual/Makefile examples/Makefile src/Makefile testing/Makefile testing/test1.nex testing/test2.nex"
+ac_config_files="$ac_config_files Makefile doc/Makefile doc/SMME_paper/Makefile doc/manual/Makefile examples/Makefile src/Makefile testing/Makefile"
 
 ac_config_files="$ac_config_files testing/runtests.sh"
 
@@ -8750,8 +8750,6 @@ do
     "examples/Makefile") CONFIG_FILES="$CONFIG_FILES examples/Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
     "testing/Makefile") CONFIG_FILES="$CONFIG_FILES testing/Makefile" ;;
-    "testing/test1.nex") CONFIG_FILES="$CONFIG_FILES testing/test1.nex" ;;
-    "testing/test2.nex") CONFIG_FILES="$CONFIG_FILES testing/test2.nex" ;;
     "testing/runtests.sh") CONFIG_FILES="$CONFIG_FILES testing/runtests.sh" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
