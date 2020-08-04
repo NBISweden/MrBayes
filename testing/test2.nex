@@ -2,13 +2,13 @@
 [Test 2. Mixed model with partitions. IGR-clock model.]
 begin mrbayes;
     set autoclose=yes nowarnings=yes;
-    execute "@top_srcdir@/examples/primates.nex";
+    execute "tmp/primates.nex";
     partition test = 2: 1-400, 401-.;
     set partition=test;
     lset nst=mixed rates=invgamma;
     unlink statefr=(all) revmat=(all) pinvar=(all) shape=(all);
     prset brlenspr=clock:uniform clockratepr=exp(1) clockvarpr=igr;
-    mcmc ng=20000;
+    mcmc ng=25000;
     sump;
     sumt;
 end;
