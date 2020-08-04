@@ -7,6 +7,8 @@ AC_INIT([MrBayes],[3.2.7a])
 AC_CONFIG_AUX_DIR([autotools])
 AC_CONFIG_MACRO_DIRS([autotools])
 
+AC_REQUIRE_AUX_FILE([tap-driver.sh])
+
 AM_INIT_AUTOMAKE([foreign])
 AM_MAINTAINER_MODE
 
