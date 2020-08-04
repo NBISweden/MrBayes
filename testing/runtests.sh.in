@@ -14,9 +14,10 @@ esac
 
 mkdir tmp || exit 1
 cp "@top_srcdir@/examples/primates.nex" tmp
+cp "@srcdir@"/test[12].nex tmp
 
 err=0
-for t in test[12].nex; do
+for t in tmp/test[12].nex; do
 	printf 'Producing test output for "%s"...\n' "$t"
 
 	"$@" "$t" |
@@ -27,7 +28,7 @@ for t in test[12].nex; do
 	fi
 done
 
-for t in test[12].nex; do
+for t in tmp/test[12].nex; do
 	printf 'Running checks for "%s"...\n' "$t"
 
 	printf 'Check #1:\t'
