@@ -3,35 +3,37 @@
 nex_file=$1
 
 # We're doing 7 tests:
-# One setup test, 1 run tests, 5 result tests
+# One setup test, one run tests, five result tests
 
 echo 1..7
 t=0	# current test number
 
 case "@TESTS_USE_MPI@" in
 	yes)
-		set -- mpirun -np 2 -H localhost:2 "../@top_builddir@/src/mb"
+		set -- mpirun -np 2 -H localhost:2 "@abs_top_builddir@/src/mb"
 		;;
 	no)
-		set -- "../@top_builddir@/src/mb"
+		set -- "@abs_top_builddir@/src/mb"
 		;;
 	*)
 		printf 'use_mpi="%s" (not "yes" or "no")\n' "@use_mpi@" >&2
 		exit 1
 esac
 
+tmpdir=$(mktemp -d ./${nex_file##*/}.XXXXXXXX)
+
 t=1
-if	mkdir tmp &&
-	cp "@top_srcdir@/examples/primates.nex" tmp && 
-	cp "$nex_file" tmp
+if	cp "@top_srcdir@/examples/primates.nex" "$tmpdir" && 
+	cp "$nex_file" "$tmpdir"
 then
 	printf 'ok %d - Setup\n' "$t"
-	trap 'rm -rf tmp' EXIT
 else
 	printf 'not ok %d - Setup\n' "$t"
 	echo Bail out! Could not copy needed files...
 	exit 1
 fi
+
+trap 'rm -rf "$tmpdir"' EXIT TERM INT
 
 ok () {
 	printf 'ok %d - %s\n' "$t" "$m"
@@ -45,9 +47,10 @@ not_ok () {
 	fi
 }
 
+pathname=${nex_file##*/}
 
 t=$(( t + 1 )); m='Ran MrBayes'
-if	(cd tmp && "$@" "${pathname#tmp/}") >"$pathname.out"
+if	(cd "$tmpdir" && "$@" "$pathname") >"$tmpdir/$pathname.out"
 then
 	ok
 else
@@ -69,7 +72,7 @@ END {
 		err = 1
 	}
 	exit err
-}' "$pathname".out
+}' "$tmpdir/$pathname".out
 if [ "$?" -eq 0 ]; then ok; else not_ok; fi
 
 t=$(( t + 1 )); m='Cold state likelihood in range [-5715,-5700]'
@@ -89,7 +92,7 @@ END {
 		err = 1
 	}
 	exit err
-}' "$pathname".out
+}' "$tmpdir/$pathname".out
 if [ "$?" -eq 0 ]; then ok; else not_ok; fi
 
 t=$(( t + 1 )); m='TL{all} in range [0.95,1.2]'
@@ -109,8 +112,8 @@ END {
 		err = 1
 	}
 	exit err
-}' "$pathname".out
-if [ "$?" -eq 0 ]; then ok; else not_ok; fi
+}' "$tmpdir/$pathname".out
+if [ "$?" -eq 0 ]; then ok; else not_ok SKIP; fi
 
 t=$(( t + 1 )); m='Avg. stdv. of split freqs. < 0.05'
 # Average standard deviation of split frequencies = N
@@ -130,26 +133,25 @@ END {
 		err = 1
 	}
 	exit err
-}' "$pathname".out
+}' "$tmpdir/$pathname".out
 if [ "$?" -eq 0 ]; then ok; else not_ok; fi
 
-	t=$(( t + 1 )); m='Avg. PSRF in range [0.95,1.2]'
-	# Average PSRF for parameter values (excluding NA and >10.0) = N
-	# ... should occur once and N (a "simple" float) should lie in the range [0.95,1.2].
-	awk '
-	/Average PSRF for parameter values \(excluding NA and >10.0\) = [[:digit:]]+\.[[:digit:]]+/ {
-		count++
-		if ($NF < 0.95 || $NF > 1.2) {
-			printf "%g not in range [0.95,1.2] on line %d\n", $NF, NR
-			err = 1
-		}
+t=$(( t + 1 )); m='Avg. PSRF in range [0.95,1.2]'
+# Average PSRF for parameter values (excluding NA and >10.0) = N
+# ... should occur once and N (a "simple" float) should lie in the range [0.95,1.2].
+awk '
+/Average PSRF for parameter values \(excluding NA and >10.0\) = [[:digit:]]+\.[[:digit:]]+/ {
+	count++
+	if ($NF < 0.95 || $NF > 1.2) {
+		printf "%g not in range [0.95,1.2] on line %d\n", $NF, NR
+		err = 1
 	}
-	END {
-		if (count != 1) {
-			printf "Did find expected text (count = %d != 2)\n", count
-			err = 1
-		}
-		exit err
-	}' "$pathname".out
-	if [ "$?" -eq 0 ]; then ok; else not_ok SKIP; fi
-done
+}
+END {
+	if (count != 1) {
+		printf "Did find expected text (count = %d != 2)\n", count
+		err = 1
+	}
+	exit err
+}' "$tmpdir/$pathname".out
+if [ "$?" -eq 0 ]; then ok; else not_ok; fi
