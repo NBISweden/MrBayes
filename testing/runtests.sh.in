@@ -1,5 +1,15 @@
 #!/bin/sh
 
+if [ "$#" -ne 1 ]; then
+	cat <<-END_USAGE
+	Usage:
+
+	    $0 path-to-NEX-file
+
+	END_USAGE
+	exit 1
+fi
+
 nex_file=$1
 
 # We're doing 7 tests:
