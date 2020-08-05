@@ -8,6 +8,24 @@ nex_file=$1
 echo 1..7
 t=0	# current test number
 
+ok () {
+	printf 'ok %d - %s\n' "$t" "$m"
+}
+
+fail () {
+	printf 'not ok %d - %s\n' "$t" "$m"
+}
+
+xfail () {
+	printf 'not ok %d - %s # TODO (expected to sometimes fail)\n' "$t" "$m"
+}
+
+error () {
+	fail
+	printf 'Bail out! %s\n' "$1"
+	exit 1
+}
+
 case "@TESTS_USE_MPI@" in
 	yes)
 		set -- mpirun -np 2 -H localhost:2 "@abs_top_builddir@/src/mb"
@@ -22,42 +40,18 @@ esac
 
 tmpdir=$(mktemp -d ./${nex_file##*/}.XXXXXXXX)
 
-t=1
+t=$(( t + 1 )); m='Setup'
 if	cp "@top_srcdir@/examples/primates.nex" "$tmpdir" && 
 	cp "$nex_file" "$tmpdir"
-then
-	printf 'ok %d - Setup\n' "$t"
-else
-	printf 'not ok %d - Setup\n' "$t"
-	echo Bail out! Could not copy needed files...
-	exit 1
-fi
+then ok; else error 'Could not copy needed files...'; fi
 
 trap 'rm -rf "$tmpdir"' EXIT TERM INT
-
-ok () {
-	printf 'ok %d - %s\n' "$t" "$m"
-}
-
-not_ok () {
-	if [ "$1" = "SKIP" ]; then
-		printf 'not ok %d - %s # SKIP\n' "$t" "$m"
-	else
-		printf 'not ok %d - %s\n' "$t" "$m"
-	fi
-}
 
 pathname=${nex_file##*/}
 
 t=$(( t + 1 )); m='Ran MrBayes'
 if	(cd "$tmpdir" && "$@" "$pathname") >"$tmpdir/$pathname.out"
-then
-	ok
-else
-	not_ok
-	echo Bail out! Could not create output...
-	exit 1
-fi
+then ok; else error 'Could not create output...'; fi
 
 t=$(( t + 1 )); m='Analysis completed'
 # Analysis completed in N seconds
@@ -73,7 +67,7 @@ END {
 	}
 	exit err
 }' "$tmpdir/$pathname".out
-if [ "$?" -eq 0 ]; then ok; else not_ok; fi
+if [ "$?" -eq 0 ]; then ok; else fail; fi
 
 t=$(( t + 1 )); m='Cold state likelihood in range [-5715,-5700]'
 # Likelihood of best state for "cold" chain of run 1 was N
@@ -93,7 +87,7 @@ END {
 	}
 	exit err
 }' "$tmpdir/$pathname".out
-if [ "$?" -eq 0 ]; then ok; else not_ok; fi
+if [ "$?" -eq 0 ]; then ok; else xfail; fi
 
 t=$(( t + 1 )); m='TL{all} in range [0.95,1.2]'
 # There should be one line with "TL{all}" in the first field.
@@ -113,7 +107,7 @@ END {
 	}
 	exit err
 }' "$tmpdir/$pathname".out
-if [ "$?" -eq 0 ]; then ok; else not_ok SKIP; fi
+if [ "$?" -eq 0 ]; then ok; else xfail; fi
 
 t=$(( t + 1 )); m='Avg. stdv. of split freqs. < 0.05'
 # Average standard deviation of split frequencies = N
@@ -134,7 +128,7 @@ END {
 	}
 	exit err
 }' "$tmpdir/$pathname".out
-if [ "$?" -eq 0 ]; then ok; else not_ok; fi
+if [ "$?" -eq 0 ]; then ok; else xfail; fi
 
 t=$(( t + 1 )); m='Avg. PSRF in range [0.95,1.2]'
 # Average PSRF for parameter values (excluding NA and >10.0) = N
@@ -154,4 +148,4 @@ END {
 	}
 	exit err
 }' "$tmpdir/$pathname".out
-if [ "$?" -eq 0 ]; then ok; else not_ok; fi
+if [ "$?" -eq 0 ]; then ok; else xfail; fi
