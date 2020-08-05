@@ -2,7 +2,7 @@
 [Test 1. Mixed model with partitions.]
 begin mrbayes;
     set autoclose=yes nowarnings=yes;
-    execute "tmp/primates.nex";
+    execute "primates.nex";
     partition test = 2: 1-400, 401-.;
     set partition=test;
     lset nst=mixed rates=invgamma;

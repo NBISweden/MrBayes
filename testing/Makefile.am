@@ -1,11 +1,14 @@
-EXTRA_DIST=	\
-	runtests.sh \
-	test1.nex \
+TEST_EXTENSIONS=	.nex
+
+NEX_LOG_DRIVER=	\
+	env AM_TAP_AWK='$(AWK)' $(SHELL) \
+	$(top_srcdir)/autotools/tap-driver.sh
+
+NEX_LOG_COMPILER=	./runtests.sh
+
+TESTS=	test1.nex \
 	test2.nex
 
-CLEANFILES=	\
-	test1.nex.out \
-	test2.nex.out
-
-check: $(top_builddir)/src/mb $(EXTRA_DIST)
-	./runtests.sh
+EXTRA_DIST=	\
+	$(TESTS) \
+	runtests.sh

@@ -194,8 +194,9 @@ am__DIST_COMMON = $(srcdir)/Makefile.in \
 	$(top_srcdir)/autotools/config.guess \
 	$(top_srcdir)/autotools/config.sub \
 	$(top_srcdir)/autotools/install-sh \
-	$(top_srcdir)/autotools/missing COPYING INSTALL NEWS README \
-	TODO autotools/compile autotools/config.guess \
+	$(top_srcdir)/autotools/missing \
+	$(top_srcdir)/autotools/tap-driver.sh COPYING INSTALL NEWS \
+	README TODO autotools/compile autotools/config.guess \
 	autotools/config.sub autotools/depcomp autotools/install-sh \
 	autotools/missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
