@@ -44,7 +44,7 @@ case "@TESTS_USE_MPI@" in
 		set -- "@abs_top_builddir@/src/mb"
 		;;
 	*)
-		printf 'use_mpi="%s" (not "yes" or "no")\n' "@use_mpi@" >&2
+		echo 'Do not know whether to use MPI or not' >&2
 		exit 1
 esac
 
