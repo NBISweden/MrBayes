@@ -21570,7 +21570,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[3] = CLOCKRATE_EXP;
     mt->nApplicable = 4;
     mt->moveFxn = &Move_ClockRate_M;
-    mt->relProposalProb = 3.0;
+    mt->relProposalProb = 5.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -21626,7 +21626,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = BRLENS_CLOCK_FOSSIL;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_AddBranch;
-    mt->relProposalProb = 15.0;
+    mt->relProposalProb = 5.0;
     mt->numTuningParams = 0;
     mt->parsimonyBased = NO;
     mt->level =STANDARD_USER;
@@ -21640,7 +21640,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = BRLENS_CLOCK_FOSSIL;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_DelBranch;
-    mt->relProposalProb = 15.0;
+    mt->relProposalProb = 5.0;
     mt->numTuningParams = 0;
     mt->parsimonyBased = NO;
     mt->level =STANDARD_USER;
@@ -22034,7 +22034,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[7] = TOPOLOGY_RCCL_CONSTRAINED;
     mt->nApplicable = 8;
     mt->moveFxn = &Move_NNIClock;
-    mt->relProposalProb = 12.0;
+    mt->relProposalProb = 20.0;
     mt->numTuningParams = 0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
@@ -22109,7 +22109,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[3] = BRLENS_CLOCK_FOSSIL;
     mt->nApplicable = 4;
     mt->moveFxn = &Move_NodeSliderClock;
-    mt->relProposalProb = 20.0;
+    mt->relProposalProb = 40.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 0.05; /* window size */
     mt->minimum[0] = 0.000001;
@@ -22497,7 +22497,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[7] = TOPOLOGY_RCCL_CONSTRAINED;
     mt->nApplicable = 8;
     mt->moveFxn = &Move_ParsSPRClock;
-    mt->relProposalProb = 8.0;
+    mt->relProposalProb = 5.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 0.1;  /* warp */
     mt->minimum[0] = 0.0;
@@ -23232,7 +23232,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = WNBRANCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_WNBranchRate;
-    mt->relProposalProb = 20.0;
+    mt->relProposalProb = 50.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -23271,7 +23271,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = IGRBRANCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_IgrBranchRate;
-    mt->relProposalProb = 20.0;
+    mt->relProposalProb = 50.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -23310,7 +23310,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = ILNBRANCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_IlnBranchRate;
-    mt->relProposalProb = 20.0;
+    mt->relProposalProb = 50.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -23349,7 +23349,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = MIXEDBRCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_MixedBranchRate;
-    mt->relProposalProb = 20.0;
+    mt->relProposalProb = 50.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -23368,7 +23368,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = MIXEDBRCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_RelaxedClockModel;
-    mt->relProposalProb = 30.0;
+    mt->relProposalProb = 25.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 1.0;
     mt->minimum[0] = 0.0001;
