@@ -4270,16 +4270,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
             if (p->anc->anc != NULL)
                 {
                 p->length = p->anc->nodeDepth - p->nodeDepth;
-                if (p->length < BRLENS_MIN)
-                    {
-                    //MrBayesPrint ("%s   Restrictions of node calibration and clockrate makes some branch lengths too small.\n", spacer);
-                    //return (ERROR);
-                    }
-                if (p->length > BRLENS_MAX)
-                    {
-                    //MrBayesPrint ("%s   Restrictions of node calibration and clockrate makes some branch lengths too long.\n", spacer);
-                    //return (ERROR);
-                    }
+                // no need to check p->length < BRLENS_MIN or p->length > BRLENS_MAX
                 }
             else
                 p->length = 0.0; //not a problem for root node. 

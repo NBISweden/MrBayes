@@ -12381,7 +12381,7 @@ int FillBrlensSubParams (Param *param, int chn, int state)
                     rateMult[p->index] = NULL;
                     }
                 nEvents[p->index] = 0;
-                assert (j==tree->nNodes-2 || fabs(p->length - (p->anc->nodeDepth - p->nodeDepth)) < 0.000001);
+                // assert (j==tree->nNodes-2 || fabs(p->length - (p->anc->nodeDepth - p->nodeDepth)) < 0.000001);
                 brlen[p->index] = p->length;
                 }
             }
@@ -12393,7 +12393,6 @@ int FillBrlensSubParams (Param *param, int chn, int state)
             for (j=0; j<tree->nNodes-1; j++)
                 {
                 p = tree->allDownPass[j];
-                assert (j==tree->nNodes-2 || fabs(p->length - (p->anc->nodeDepth - p->nodeDepth)) < 0.000001);
                 branchRate[p->index] = 1.0;
                 brlen[p->index] = p->length;
                 }

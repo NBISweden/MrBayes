@@ -9072,7 +9072,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
         lambda[i] = netDiver[i] / (1.0 - turnOver[i]);
         mu[i] = lambda[i] * turnOver[i];
         psi[i] = mu[i] * sampProp[i] / (1.0 - sampProp[i]);
-        rho[i] = 1E-20;  // to avoid prob being -inf
+        rho[i] = 1E-10;  // to avoid prob being -inf
         }
     rho[sl] = sF;  // 0 < sF <= 1
 
@@ -9276,7 +9276,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         lambda[i] = netDiver[i] / (1.0 - turnOver[i]);
         mu[i] = lambda[i] * turnOver[i];
         psi[i] = mu[i] * sampProp[i] / (1.0 - sampProp[i]);
-        rho[i] = 1E-20;  // to avoid prob being -inf
+        rho[i] = 1E-10;  // to avoid prob being -inf
         }
     lambda[sl] = lambda[sl-1];  netDiver[sl] = netDiver[sl-1];
     mu[sl]  = mu[sl-1];         turnOver[sl] = turnOver[sl-1];
