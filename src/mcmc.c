@@ -5952,12 +5952,14 @@ int InitChainCondLikes (void)
         {
         m = &modelSettings[d];
 
+#       if defined (BEAGLE_ENABLED)
         /* if using beagle, adjust SIMD settings */
         if (m->useBeagle == YES)
             {
             m->useVec = VEC_NONE;
             m->numFloatsPerVec = 0;
             }
+#       endif
 
         /* get size of tree */
         nIntNodes = GetTree(m->brlens,0,0)->nIntNodes;
