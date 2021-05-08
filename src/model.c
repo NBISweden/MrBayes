@@ -12405,8 +12405,7 @@ int FillBrlensSubParams (Param *param, int chn, int state)
 
 /* Note: In PruneConstraintPartitions() we can not rely on specific rooting of a tree since different partitions
    may theoretically have different clock models, while constraints apply to all partitions/trees */
-int PruneConstraintPartitions()
-{
+int PruneConstraintPartitions(void) {
     int             i, j, constraintId, nLongsNeeded;
     
     nLongsNeeded = (numLocalTaxa - 1) / nBitsInALong + 1;
@@ -22033,7 +22032,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[7] = TOPOLOGY_RCCL_CONSTRAINED;
     mt->nApplicable = 8;
     mt->moveFxn = &Move_NNIClock;
-    mt->relProposalProb = 20.0;
+    mt->relProposalProb = 25.0;
     mt->numTuningParams = 0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
