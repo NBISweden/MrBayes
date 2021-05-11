@@ -12405,7 +12405,8 @@ int FillBrlensSubParams (Param *param, int chn, int state)
 
 /* Note: In PruneConstraintPartitions() we can not rely on specific rooting of a tree since different partitions
    may theoretically have different clock models, while constraints apply to all partitions/trees */
-int PruneConstraintPartitions(void) {
+int PruneConstraintPartitions (void)
+{
     int             i, j, constraintId, nLongsNeeded;
     
     nLongsNeeded = (numLocalTaxa - 1) / nBitsInALong + 1;
