@@ -265,10 +265,10 @@ MrBFlt    LnProbRatioTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt newX, MrBFlt ol
 MrBFlt    LnProbRatioUniform (MrBFlt newX, MrBFlt oldX, MrBFlt *params);
 MrBFlt    LnProbGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x);
 MrBFlt    LnProbTruncGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x, MrBFlt min, MrBFlt max);
-MrBFlt    LnProbLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt x);
-MrBFlt    LnRatioLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt xNew, MrBFlt xOld);
-MrBFlt    LnProbLogNormal_LinMean_LogVar (MrBFlt mean, MrBFlt var, MrBFlt x);
-MrBFlt    LnRatioLogNormal_LinMean_LogVar (MrBFlt mean, MrBFlt var, MrBFlt xNew, MrBFlt xOld);
+MrBFlt    LnProbLogNormal (MrBFlt mu, MrBFlt sigma, MrBFlt x);
+MrBFlt    LnProbLogNormal_Mean_LogVar (MrBFlt mean, MrBFlt sigma2, MrBFlt x);
+MrBFlt    LnProbLogNormal_Mean_Var (MrBFlt mean, MrBFlt var, MrBFlt x);
+MrBFlt    LnRatioLogNormal (MrBFlt mu, MrBFlt sigma, MrBFlt xNew, MrBFlt xOld);
 MrBFlt    LogNormalRandomVariable (MrBFlt mean, MrBFlt var, RandLong *seed);
 MrBFlt    MaximumValue (MrBFlt x, MrBFlt y);
 MrBFlt    MinimumValue (MrBFlt x, MrBFlt y);

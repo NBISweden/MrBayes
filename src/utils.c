@@ -13129,27 +13129,28 @@ MrBFlt LnRatioLogNormal (MrBFlt mu, MrBFlt sigma, MrBFlt xNew, MrBFlt xOld)
 
 
 /* Log probability for a value drawn from a lognormal distribution;
-   parameters are mean and variance of value (not of log value) */
-MrBFlt LnProbLogNormal_LinMean_LogVar (MrBFlt mean, MrBFlt var, MrBFlt x)
+   parameters are natural mean (not of log value) and variance on log scale */
+MrBFlt LnProbLogNormal_Mean_LogVar (MrBFlt mean, MrBFlt sigma2, MrBFlt x)
 {
     MrBFlt  mu, sigma;
     
-    sigma = sqrt(var);
-    mu    = log(mean) - sigma * sigma / 2.0;
-    
+    mu    = log(mean) - sigma2 / 2.0;
+    sigma = sqrt(sigma2);
+
     return LnProbLogNormal(mu, sigma, x);
 }
 
 
-/* Log ratio for two values drawn from a lognormal distribution */
-MrBFlt LnRatioLogNormal_LinMean_LogVar (MrBFlt mean, MrBFlt var, MrBFlt xNew, MrBFlt xOld)
+/* Log probability for a value drawn from a lognormal distribution;
+   parameters are mean and variance of value (not of log value) */
+MrBFlt LnProbLogNormal_Mean_Var (MrBFlt mean, MrBFlt var, MrBFlt x)
 {
     MrBFlt  mu, sigma;
-
-    sigma = sqrt(var);
+    
+    sigma = sqrt(log(1.0 + var / (mean*mean)));
     mu    = log(mean) - sigma * sigma / 2.0;
 
-    return LnRatioLogNormal (mu, sigma, xNew, xOld);
+    return LnProbLogNormal(mu, sigma, x);
 }
 
 

@@ -1059,9 +1059,9 @@ int ReinitializeMrBayes (void)
     chainParams.orderTaxa = NO;                      /* should taxa be ordered in output trees?       */
     chainParams.append = NO;                         /* append to previous analysis?                  */
     chainParams.autotune = YES;                      /* autotune?                                     */
-    chainParams.tuneFreq = 100;                      /* autotuning frequency                          */
+    chainParams.tuneFreq = 1000;                     /* autotuning frequency                          */
     chainParams.checkPoint = YES;                    /* should we checkpoint the run?                 */
-    chainParams.checkFreq = 2000;                    /* check-pointing frequency                      */
+    chainParams.checkFreq = 1000;                    /* check-pointing frequency                      */
     chainParams.diagnStat = AVGSTDDEV;               /* mcmc diagnostic to use                        */
 
     /* sumt parameters */

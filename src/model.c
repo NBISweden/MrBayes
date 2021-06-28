@@ -8879,9 +8879,9 @@ int DoPrsetParm (char *parmName, char *tkn)
                         if (!strcmp(modelParams[i].cppMultDevPr,"Fixed"))
                             {
                             sscanf (tkn, "%lf", &tempD);
-                            if (tempD < POSREAL_MIN || tempD > POSREAL_MAX)
+                            if (tempD < POS_MIN || tempD > POS_MAX)
                                 {
-                                MrBayesPrint ("%s   The log standard deviation of rate multipliers must be in the range %f - %f\n", spacer, POSREAL_MIN, POSREAL_MAX);
+                                MrBayesPrint ("%s   The log standard deviation of rate multipliers must be in the range %f - %f\n", spacer, POS_MIN, POS_MAX);
                                 return (ERROR);
                                 }
                             modelParams[i].cppMultDevFix = tempD;
@@ -23363,15 +23363,15 @@ void SetUpMoveTypes (void)
     mt->name = "rjMCMC among Relaxed Clock Models";
     mt->shortName = "rjMCMC_RCL";
     mt->tuningName[0] = "Ratio between variances";
-    mt->shortTuningName[0] = "delta";
+    mt->shortTuningName[0] = "delta";  // w = sigma_L/sigma_G
     mt->applicableTo[0] = MIXEDBRCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_RelaxedClockModel;
     mt->relProposalProb = 25.0;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 1.0;
-    mt->minimum[0] = 0.0001;
-    mt->maximum[0] = 1000.0;
+    mt->tuningParam[0] = 1.5;
+    mt->minimum[0] = 0.01;
+    mt->maximum[0] = 100.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     

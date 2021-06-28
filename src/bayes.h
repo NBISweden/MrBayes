@@ -365,8 +365,6 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define POS_MAX                 1E25f
 #define POS_INFINITY            1E25f
 #define NEG_INFINITY            -1000000.0f
-#define POSREAL_MIN             1E-25f
-#define POSREAL_MAX             1E25f
 
 /* SK:
  * Used when doing reversible jump over stationary and directional

@@ -8292,8 +8292,8 @@ MrBFlt LogPrior (int chain)
                 {
                 branch = t->allDownPass[i];
                 if (branch->length > 0.0)  // not ancestral fossil
-                    lnPrior += LnProbLogNormal_LinMean_LogVar (st[branch->anc->index], nu*branch->length, st[branch->index]);
-                }
+                    lnPrior += LnProbLogNormal_Mean_LogVar (st[branch->anc->index], nu*branch->length, st[branch->index]);
+                }   // mean is on natural scale and variance is on log scale
             }
         else if (p->paramType == P_WNVAR)
             {
@@ -8346,8 +8346,8 @@ MrBFlt LogPrior (int chain)
                 {
                 branch = t->allDownPass[i];
                 if (branch->length > 0.0)  // not ancestral fossil
-                    lnPrior += LnProbLogNormal_LinMean_LogVar (1.0, nu, st[branch->index]);
-                }
+                    lnPrior += LnProbLogNormal_Mean_Var (1.0, nu, st[branch->index]);
+                }   // both mean and variance are on natural scale
             }
         else if (p->paramType == P_IGRVAR)
             {
@@ -9074,7 +9074,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
         lambda[i] = netDiver[i] / (1.0 - turnOver[i]);
         mu[i] = lambda[i] * turnOver[i];
         psi[i] = mu[i] * sampProp[i] / (1.0 - sampProp[i]);
-        rho[i] = 1E-10;  // to avoid prob being -inf
+        rho[i] = 1E-20;  // to avoid prob being -inf
         }
     rho[sl] = sF;  // 0 < sF <= 1
 
@@ -9278,7 +9278,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         lambda[i] = netDiver[i] / (1.0 - turnOver[i]);
         mu[i] = lambda[i] * turnOver[i];
         psi[i] = mu[i] * sampProp[i] / (1.0 - sampProp[i]);
-        rho[i] = 1E-10;  // to avoid prob being -inf
+        rho[i] = 1E-20;  // to avoid prob being -inf
         }
     lambda[sl] = lambda[sl-1];  netDiver[sl] = netDiver[sl-1];
     mu[sl]  = mu[sl-1];         turnOver[sl] = turnOver[sl-1];
@@ -17214,7 +17214,7 @@ int RunChain (RandLong *seed)
                     stopChain = YES;
                     for (i=0; i<numTopologies; i++)
                         {
-                        f=-1.0;
+                        f = -1.0;
                         if (chainParams.stat[i].numPartitions == 0)
                             {
                             if (strcmp(modelParams[0].topologyPr,"Speciestree") == 0)
