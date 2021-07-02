@@ -23374,6 +23374,8 @@ void SetUpMoveTypes (void)
     mt->maximum[0] = 100.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
+    mt->Autotune = &AutotuneRJClocks;
+    mt->targetRate = 1.0;
     
     numMoveTypes = i;
     
