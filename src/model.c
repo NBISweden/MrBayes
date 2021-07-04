@@ -23367,7 +23367,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[0] = MIXEDBRCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_RelaxedClockModel;
-    mt->relProposalProb = 35.0;
+    mt->relProposalProb = 30.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0;
     mt->minimum[0] = 0.01;
