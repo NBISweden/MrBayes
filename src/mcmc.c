@@ -1319,6 +1319,50 @@ void AutotuneSlider (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt
         *width = newTuning;
 }
 
+/* used in rjMCMC to achieve higher acceptance rate of the move */
+MrBFlt initial_w = 2.0, previousRate = 0.0;  int previousDirection = 1;
+void AutotuneRJClocks (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBFlt *w, MrBFlt minTuning, MrBFlt maxTuning)
+{
+    MrBFlt delta, newTuning;
+
+    // a hack to disable autotune: propset rj_clocks$targetrate = 0.5
+    if (targetRate < 0.99)
+        return;
+
+    delta = 1.0 / sqrt(batch);
+    delta = 0.1 < delta ? 0.1 : delta;
+
+    if (batch == 1)
+        initial_w = *w;  // record the initial value
+   
+    if (previousRate == 0.0 && acceptanceRate == 0.0)
+        {
+        newTuning = initial_w;  // fall back
+        }
+    else if (acceptanceRate > previousRate && previousDirection > 0)
+        {
+        newTuning = *w + delta; // move on
+        }
+    else if (acceptanceRate > previousRate && previousDirection < 0)
+        {
+        newTuning = *w - delta; // move on
+        }
+    else if (acceptanceRate < previousRate && previousDirection > 0)
+        {
+        newTuning = *w - delta;
+        previousDirection = -1; // turn around
+        }
+    else // (acceptanceRate < previousRate && previousDirection < 0)
+        {
+        newTuning = *w + delta;
+        previousDirection = 1;  // turn around
+        }
+
+    previousRate = acceptanceRate;
+    if (newTuning > minTuning && newTuning < maxTuning)
+        *w = newTuning;
+}
+
 
 void BuildExhaustiveSearchTree (Tree *t, int chain, int nTaxInTree, TreeInfo *tInfo)
 {
