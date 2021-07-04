@@ -22086,7 +22086,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[2] = BRLENS_GamDir;
     mt->applicableTo[3] = BRLENS_iGmDir;
     mt->applicableTo[4] = BRLENS_twoExp;
-    mt->nApplicable = 5;  // was 2
+    mt->nApplicable = 5;
     mt->moveFxn = &Move_NodeSlider;
     mt->relProposalProb = 7.0;
     mt->numTuningParams = 1;
@@ -23360,10 +23360,10 @@ void SetUpMoveTypes (void)
 
     /* Move_RelaxedClockModel */
     mt = &moveTypes[i++];
-    mt->name = "rjMCMC among Relaxed Clock Models";
-    mt->shortName = "rjMCMC_RCL";
-    mt->tuningName[0] = "Ratio between variances";
-    mt->shortTuningName[0] = "delta";  // w = sigma_L/sigma_G
+    mt->name = "rjMCMC among relaxed clock models";
+    mt->shortName = "RJ_Clocks";
+    mt->tuningName[0] = "Ratio between ILN and IGR variances";
+    mt->shortTuningName[0] = "ratio";  // w = sigma_L/sigma_G
     mt->applicableTo[0] = MIXEDBRCHRATES;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_RelaxedClockModel;

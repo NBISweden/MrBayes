@@ -1325,6 +1325,10 @@ void AutotuneRJClocks (MrBFlt acceptanceRate, MrBFlt targetRate, int batch, MrBF
 {
     MrBFlt delta, newTuning;
 
+    // a hack to disable autotune: propset rj_clocks$targetrate = 0.5
+    if (targetRate < 0.99)
+        return;
+
     delta = 1.0 / sqrt(batch);
     delta = 0.1 < delta ? 0.1 : delta;
 
