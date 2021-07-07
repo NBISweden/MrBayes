@@ -21592,7 +21592,7 @@ void SetUpMoveTypes (void)
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 0.1;  /* window size */
     mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 20.0;
+    mt->maximum[0] = 1.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneSlider;
@@ -21611,7 +21611,7 @@ void SetUpMoveTypes (void)
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 0.1;  /* window size */
     mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 20.0;
+    mt->maximum[0] = 1.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneSlider;
@@ -21938,8 +21938,8 @@ void SetUpMoveTypes (void)
     mt->relProposalProb = 0.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
-    mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 100.0;
+    mt->minimum[0] = 0.0001;
+    mt->maximum[0] = 20.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FourTaxaOrMore;
@@ -21960,8 +21960,8 @@ void SetUpMoveTypes (void)
     mt->relProposalProb = 0.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (2.0);  /* lambda */
-    mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 100.0;
+    mt->minimum[0] = 0.0001;
+    mt->maximum[0] = 20.0;
     mt->parsimonyBased = NO;
     mt->level = DEVELOPER;
     mt->isApplicable = &IsApplicable_ThreeTaxaOrMore;
@@ -21996,7 +21996,7 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_MixtureRates_Slider;
     mt->relProposalProb = 0.5;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 0.20;  /* window size (change in proportions) */
+    mt->tuningParam[0] = 0.2;  /* window size (change in proportions) */
     mt->minimum[0] = 0.00001;
     mt->maximum[0] = 1.0;
     mt->parsimonyBased = NO;
@@ -22052,8 +22052,6 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_NNI;
     mt->relProposalProb = 3.0;
     mt->numTuningParams = 0;
-    mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 100.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FourTaxaOrMore;
@@ -22069,8 +22067,6 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_NNI_Hetero;
     mt->relProposalProb = 15.0;
     mt->numTuningParams = 0;
-    mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 100.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FourTaxaOrMore;
@@ -22110,9 +22106,9 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_NodeSliderClock;
     mt->relProposalProb = 30.0;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 0.05; /* window size */
-    mt->minimum[0] = 0.000001;
-    mt->maximum[0] = 1.0;
+    mt->tuningParam[0] = 0.1; /* window size */
+    mt->minimum[0] = 0.00001;
+    mt->maximum[0] = 100.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneSlider;
@@ -22130,7 +22126,7 @@ void SetUpMoveTypes (void)
     mt->relProposalProb = 20.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 0.05; /* window size */
-    mt->minimum[0] = 0.000001;
+    mt->minimum[0] = 0.00001;
     mt->maximum[0] = 100.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
@@ -22149,7 +22145,7 @@ void SetUpMoveTypes (void)
     mt->relProposalProb = 1.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 1.0; /* sliding window size */
-    mt->minimum[0] = 0.000001;
+    mt->minimum[0] = 0.00001;
     mt->maximum[0] = 100.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
@@ -22398,8 +22394,8 @@ void SetUpMoveTypes (void)
     mt->maximum[1] = 0.3;
     mt->minimum[2] = 0.0001;
     mt->maximum[2] = 0.5;
-    mt->minimum[3] = 2.0 * log (0.001);
-    mt->maximum[3] = 2.0 * log (1000.);
+    mt->minimum[3] = 0.0001;
+    mt->maximum[3] = 20.0;
     mt->parsimonyBased = YES;
     mt->level = STANDARD_USER;
     mt->isApplicable = &IsApplicable_FourTaxaOrMore;
@@ -22431,8 +22427,8 @@ void SetUpMoveTypes (void)
     mt->maximum[0] = 5.0;
     mt->minimum[1] = 0.0;
     mt->maximum[1] = 0.3;
-    mt->minimum[2] = 2.0 * log (0.001);
-    mt->maximum[2] = 2.0 * log (1000.);
+    mt->minimum[2] = 0.0001;
+    mt->maximum[2] = 20.0;
     mt->minimum[3] = 2.0;
     mt->maximum[3] = 1000.0;
     mt->parsimonyBased = YES;
@@ -22471,8 +22467,8 @@ void SetUpMoveTypes (void)
     mt->maximum[1] = 0.3;
     mt->minimum[2] = 0.0001;
     mt->maximum[2] = 0.5;
-    mt->minimum[3] = 2.0 * log (0.001);
-    mt->maximum[3] = 2.0 * log (1000.);
+    mt->minimum[3] = 0.0001;
+    mt->maximum[3] = 20.0;
     mt->minimum[4] = 2.0;
     mt->maximum[4] = 1000.0;
     mt->parsimonyBased = YES;
@@ -22558,8 +22554,8 @@ void SetUpMoveTypes (void)
     mt->maximum[0] = 5.0;
     mt->minimum[1] = 0.0;
     mt->maximum[1] = 0.3;
-    mt->minimum[2] = 2.0 * log (0.001);
-    mt->maximum[2] = 2.0 * log (1000.);
+    mt->minimum[2] = 0.0001;
+    mt->maximum[2] = 20.0;
     mt->minimum[3] = 2.0;
     mt->maximum[3] = 1000.0;
     mt->parsimonyBased = YES;
@@ -22598,8 +22594,8 @@ void SetUpMoveTypes (void)
     mt->maximum[1] = 0.3;
     mt->minimum[2] = 0.0001;
     mt->maximum[2] = 0.5;
-    mt->minimum[3] = 2.0 * log (0.001);
-    mt->maximum[3] = 2.0 * log (1000.);
+    mt->minimum[3] = 0.0001;
+    mt->maximum[3] = 20.0;
     mt->minimum[4] = 2.0;
     mt->maximum[4] = 1000.0;
     mt->parsimonyBased = YES;
@@ -22640,11 +22636,11 @@ void SetUpMoveTypes (void)
     mt->relProposalProb = 1.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log(1.5);  /* lambda */
-    mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 100.0;
+    mt->minimum[0] = 0.0001;
+    mt->maximum[0] = 20.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
-    mt->Autotune = &AutotuneSlider;
+    mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
 
     /* Move_RateMult_Dir */
@@ -22679,7 +22675,7 @@ void SetUpMoveTypes (void)
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 0.05;  /* window size */
     mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 1.0;
+    mt->maximum[0] = 100.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneSlider;
@@ -22737,7 +22733,7 @@ void SetUpMoveTypes (void)
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 0.15;  /* window size */
     mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 1.0;
+    mt->maximum[0] = 100.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneSlider;
@@ -22812,7 +22808,7 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_Speciation;
     mt->relProposalProb = 0.0;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 1.0;  /* window size */
+    mt->tuningParam[0] = 0.1;  /* window size */
     mt->minimum[0] = 0.00001;
     mt->maximum[0] = 100.0;
     mt->parsimonyBased = NO;
@@ -22833,7 +22829,7 @@ void SetUpMoveTypes (void)
     mt->relProposalProb = 3.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
-    mt->minimum[0] = 0.00001;
+    mt->minimum[0] = 0.0001;
     mt->maximum[0] = 20.0;                 /* smaller */
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
@@ -22852,8 +22848,8 @@ void SetUpMoveTypes (void)
     mt->relProposalProb = 10.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 1.2;       /* Default tuning parameter value */
-    mt->minimum[0] = 0.00001;       /* Minimum value of tuning param */
-    mt->maximum[0] = 1000.0;        /* Maximum value of tuning param */
+    mt->minimum[0] = 0.0001;        /* Minimum value of tuning param */
+    mt->maximum[0] = 20.0;          /* Maximum value of tuning param */
     mt->parsimonyBased = NO;        /* It does not use parsimony scores */
     mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier; /* Autotune this move as a multiplier move (larger is more bold) */
@@ -22895,7 +22891,7 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_Statefreqs_Slider;
     mt->relProposalProb = 0.5;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 0.20;  /* window size (change in proportions) */
+    mt->tuningParam[0] = 0.2;  /* window size (change in proportions) */
     mt->minimum[0] = 0.00001;
     mt->maximum[0] = 1.0;
     mt->parsimonyBased = NO;
@@ -22937,7 +22933,7 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_StatefreqsRoot_Slider;
     mt->relProposalProb = 0.5;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 0.20;  /* window size (change in proportions) */
+    mt->tuningParam[0] = 0.2;  /* window size (change in proportions) */
     mt->minimum[0] = 0.00001;
     mt->maximum[0] = 1.0;
     mt->parsimonyBased = NO;
@@ -23083,7 +23079,7 @@ void SetUpMoveTypes (void)
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (2.0);  /* lambda */
     mt->minimum[0] = 0.0001;
-    mt->maximum[0] = 100.0;                /* smaller */
+    mt->maximum[0] = 20.0;                 /* smaller */
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;

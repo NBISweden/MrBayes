@@ -14934,8 +14934,8 @@ void RedistributeMoveInfo (void)
                 mv->nTotAccepted[i] = 0;
                 mv->nTotTried[i] = 0;
                 mv->lastAcceptanceRate[i] = 0;
-        if (mv->moveType->Autotune != NULL)
-                    mv->tuningParam[i][0]=0.0;            
+                if (mv->moveType->Autotune != NULL)
+                    mv->tuningParam[i][0] = 0.0;
                 }
             }
         }
