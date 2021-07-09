@@ -22087,8 +22087,8 @@ void SetUpMoveTypes (void)
     mt->relProposalProb = 7.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
-    mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 100.0;
+    mt->minimum[0] = 0.0001;
+    mt->maximum[0] = 20.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
 
@@ -22828,7 +22828,7 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_Speciation_M;
     mt->relProposalProb = 3.0;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
+    mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
     mt->minimum[0] = 0.0001;
     mt->maximum[0] = 20.0;                 /* smaller */
     mt->parsimonyBased = NO;
@@ -23171,7 +23171,7 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_Nu;
     mt->relProposalProb = 2.0;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
+    mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
     mt->minimum[0] = 0.0001;
     mt->maximum[0] = 20.0;                 /* smaller */
     mt->parsimonyBased = NO;
@@ -23210,7 +23210,7 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_WNVar;
     mt->relProposalProb = 2.0;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
+    mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
     mt->minimum[0] = 0.0001;
     mt->maximum[0] = 20.0;                 /* smaller */
     mt->parsimonyBased = NO;
@@ -23249,7 +23249,7 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_IgrVar;
     mt->relProposalProb = 2.0;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
+    mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
     mt->minimum[0] = 0.0001;
     mt->maximum[0] = 20.0;                 /* smaller */
     mt->parsimonyBased = NO;
@@ -23288,7 +23288,7 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_IlnVar;
     mt->relProposalProb = 2.0;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
+    mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
     mt->minimum[0] = 0.0001;
     mt->maximum[0] = 20.0;                 /* smaller */
     mt->parsimonyBased = NO;
@@ -23327,7 +23327,7 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_MixedVar;
     mt->relProposalProb = 2.0;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 2.0 * log (1.1);  /* lambda */
+    mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
     mt->minimum[0] = 0.0001;
     mt->maximum[0] = 20.0;                 /* smaller */
     mt->parsimonyBased = NO;
