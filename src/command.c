@@ -1561,7 +1561,7 @@ int DoCalibrateParm (char *parmName, char *tkn)
             {
             calibrationPtr->LnPriorProb     = &LnPriorProbOffsetLognormal_Param_Offset_Mean_Sd;
             calibrationPtr->LnPriorRatio    = &LnProbRatioOffsetLognormal_Param_Offset_Mean_Sd;
-            calibrationPtr->min             = priorParams[0];
+            calibrationPtr->min             = BRLENS_MIN + priorParams[0];
             calibrationPtr->max             = POS_INFINITY;
             }
         else if (calPrior == standardGamma)
@@ -1575,7 +1575,7 @@ int DoCalibrateParm (char *parmName, char *tkn)
             {
             calibrationPtr->LnPriorProb     = &LnPriorProbOffsetGamma_Param_Offset_Mean_Sd;
             calibrationPtr->LnPriorRatio    = &LnProbRatioOffsetGamma_Param_Offset_Mean_Sd;
-            calibrationPtr->min             = priorParams[0];
+            calibrationPtr->min             = BRLENS_MIN + priorParams[0];
             calibrationPtr->max             = POS_INFINITY;
             }
 
