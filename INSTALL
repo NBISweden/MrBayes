@@ -249,7 +249,8 @@ It's assumed that the Beagle library is being installed in the default
 location, under "/usr/local". Note that the Beagle Java library is not
 needed by MrBayes.
 
-    git clone --depth=1 https://github.com/beagle-dev/beagle-lib.git
+    git clone --branch=v3.1.2 --depth=1 \
+	'https://github.com/beagle-dev/beagle-lib.git'
     cd beagle-lib
 
     ./autogen.sh
