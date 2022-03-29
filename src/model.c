@@ -363,7 +363,7 @@ int AddDummyChars (void)
 
             if (isCompat == NO)
                 {
-                numIncompatible++;
+                numIncompatible++;  // printf("%d\n",  origChar[oldChar]+1);
                 numIncompatibleChars += (int) numSitesOfPat[oldChar];
                 oldChar++;
                 }

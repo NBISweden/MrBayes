@@ -1318,7 +1318,7 @@ typedef struct modelinfo
     int         nParsIntsPerSite;           /* # parsimony ints per character           */  
     int         nCharsPerSite;              /* number chars per site (eg 3 for codon)   */
     int         rateProbStart;              /* start of rate probs (for adgamma)        */
-                
+
      /* Variables for eigen decompositions */
     int         cijkLength;                 /* stores length of cijk vector                 */
     int         nCijkParts;                 /* stores number of cijk partitions (1 except for omega/covarion models) */

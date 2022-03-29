@@ -14818,11 +14818,9 @@ void ShowNodes (TreeNode *p, int indent, int isThisTreeRooted)
 
 int StandID (char nuc)
 {
-    char        n;
-    
-    /* Note that if you change how many states are recognized, you need 
+    /* Note that if you change how many states are recognized, you need
        to look at IsMissing */
-    n = nuc;
+    char n = nuc;
 
     if (n == '0')
         {
@@ -15013,8 +15011,37 @@ int StateCode_NUC4 (int n)
 
 int StateCode_Std (int n)
 {
+    /* max 24 states: 0-9 A-N */
     if (n <= 9 && n >= 0)
         return '0' + n;
+    else if (n == 10)
+        return 'A';
+    else if (n == 11)
+        return 'B';
+    else if (n == 12)
+        return 'C';
+    else if (n == 13)
+        return 'D';
+    else if (n == 14)
+        return 'E';
+    else if (n == 15)
+        return 'F';
+    else if (n == 16)
+        return 'G';
+    else if (n == 17)
+        return 'H';
+    else if (n == 18)
+        return 'I';
+    else if (n == 19)
+        return 'J';
+    else if (n == 20)
+        return 'K';
+    else if (n == 21)
+        return 'L';
+    else if (n == 22)
+        return 'M';
+    else if (n == 23)
+        return 'N';
     else return '?';
 }
 
