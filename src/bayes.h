@@ -107,9 +107,9 @@ typedef long RandLong;
 #define MRBFLT_NEG_MAX (-DBL_MAX)  /* maximum possible negative value that can be stored in MrBFlt */
 typedef double MrBFlt;      /* double used for parameter values and generally for floating point values, 
                                if set to float MPI would not work becouse of use MPI_DOUBLE */
-typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt) to increase speed and reduce memory requirement */
-                            /* set CLFlt to double if you want increased precision */
-                            /* NOTE: CLFlt = double not compatible with SSE_ENABLED, AVX_ENABLED or FMA_ENABLED */
+typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt) to increase speed and
+                               reduce memory requirement, set CLFlt to double if you want increased precision
+                               NOTE: CLFlt = double not compatible with SSE_ENABLED, AVX_ENABLED or FMA_ENABLED */
 
 /*
  * Make sure we define SIMD instruction flags in a stepwise manner. That is, if we have FMA, make sure we have AVX;
@@ -605,7 +605,7 @@ typedef struct
     char            name[100];          /*!< name of tree                                 */
     int             memNodes;           /*!< number of allocated nodes (do not exceed!)   */
     int             nNodes;             /*!< number of nodes in tree (including lower root in rooted trees) */
-    int             nIntNodes;          /*!< number of interior nodes in tree (excluding lower root in rooted trees) */  
+    int             nIntNodes;          /*!< number of interior nodes in tree (excluding lower root in rooted trees) */
     int             isRooted;           /*!< is tree rooted?                              */
     int             isClock;            /*!< is tree clock?                               */
     int             isCalibrated;       /*!< is tree calibrated?                          */
@@ -625,7 +625,7 @@ typedef struct
     TreeNode        *nodes;             /*!< array containing the nodes                   */
     BitsLong        *bitsets;           /*!< pointer to bitsets describing splits         */
     BitsLong        *flags;             /*!< pointer to cond like flags                   */
-    int             fromUserTree;       /*!< YES is set for the trees whose branch lengths are set from user tree(as start tree or fix branch length prior), NO otherwise */       
+    int             fromUserTree;       /*!< YES is set for the trees whose branch lengths are set from user tree(as start tree or fix branch length prior), NO otherwise */
     }
     Tree;
 
@@ -660,7 +660,7 @@ typedef struct
     PolyNode        **allDownPass;       /*!< downpass array over all nodes               */
     PolyNode        **intDownPass;       /*!< downpass array over interior nodes          */
     PolyNode        *root;               /*!< pointer to root (lower for rooted trees     */
-    PolyNode        *nodes;              /*!< array holding the tree nodes                */  
+    PolyNode        *nodes;              /*!< array holding the tree nodes                */
     BitsLong        *bitsets;            /*!< bits describing partitions (splits)         */
     int             nBSets;              /*!< number of effective branch length sets      */
     int             nESets;              /*!< number of breakpoint rate sets              */

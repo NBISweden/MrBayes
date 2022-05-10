@@ -9094,7 +9094,6 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
     if (!lambda || !mu || !psi || !rho || !netDiver || !turnOver || !sampProp || !c1 || !c2 || !p_t)
         {
         MrBayesPrint ("%s   ERROR: Problem allocating memory in LnFossilizedBDPriorRandom\n", spacer);
-        free(lambda); free(mu); free(psi); free(rho); free(netDiver); free(turnOver); free(sampProp); free(c1); free(c2); free(p_t);
         return (ERROR);
         }
     
@@ -9298,7 +9297,6 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     if (!lambda || !mu || !psi || !rho || !netDiver || !turnOver || !sampProp || !c1 || !c2 || !p_t)
         {
         MrBayesPrint ("%s   ERROR: Problem allocating memory in LnFossilizedBDPriorDiversity\n", spacer);
-        free(lambda); free(mu); free(psi); free(rho); free(netDiver); free(turnOver); free(sampProp); free(c1); free(c2); free(p_t);
         return (ERROR);
         }
     
@@ -9478,7 +9476,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 |
 |   The probability of the coalescence tree is:
 |   
-|   prob = (k_C_2 / (N(t_k + t_k))) * exp(-integral_(from x=t_k, to g_k + t_k)  (k_C_2 / N(x)) dx)
+|   prob = (k_C_2 / (N(g_k + t_k))) * exp(-integral_(from x=t_k, to g_k + t_k) (k_C_2 / N(x)) dx)
 |
 |   where N(x) = N(0) * exp(-r*x). For the constant population size case,
 |   N(0) = N_e. r is the population growth parameter for the exponentially
@@ -9497,7 +9495,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 |   (2004; Inferring Phylogenies). -- Fredrik.
 |
 ---------------------------------------------------------------------------------*/
-int LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
+int LnCoalescencePriorPr_Contemp (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
 {
     int             i, j, k, nNodes;
     MrBFlt          *ct, tempD, lastCoalescenceTime, coalescenceTime, intervalLength;
@@ -9551,8 +9549,7 @@ int LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
         for (i=0, k=numLocalTaxa; i<nNodes; i++)
             {
             coalescenceTime = ct[i];
-            intervalLength = coalescenceTime - lastCoalescenceTime; /* FIXME: Not used (from clang static analyzer) */
-            tempD += growth * coalescenceTime + (((k * (k-1)) / (theta * growth)) * (exp(growth * lastCoalescenceTime) - exp(growth * coalescenceTime)));
+            tempD += growth * coalescenceTime + ((k * (k-1) / (theta * growth)) * (exp(growth * lastCoalescenceTime) - exp(growth * coalescenceTime)));
             lastCoalescenceTime = ct[i];
             k--;
             }
@@ -9567,6 +9564,92 @@ int LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
     return (NO_ERROR);
 }
 
+/*---------------------------------------------------------------------------------
+|
+|   LnCoalescencePriorPr
+|
+|   This function supports serially-sampled tips, while the original function
+|   for contemporary tips is renamed to LnCoalescencePriorPr_Contemp.
+|   -- Chi 2022-5-10
+|
+ ---------------------------------------------------------------------------------*/
+int LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
+{
+    int             i, j, nTimes, nCoals, *k;
+    MrBFlt          *ct, duration, mid, tempD;
+    TreeNode        *p;
+
+    nTimes = t->nNodes -1; // number of coalescent and tip times
+    nCoals = t->nIntNodes; // number of coalescent events
+
+    /* allocate space for the coalescence and tip times */
+    ct = (MrBFlt *)SafeMalloc((size_t)nTimes * sizeof(MrBFlt));
+    /* allocate space for the number of lineages */
+    k = (int *)SafeMalloc((size_t)nTimes * sizeof(int));
+    if (!ct || !k)
+        {
+        MrBayesPrint ("%s   ERROR: Problem allocating coalescenct times\n", spacer);
+        return (ERROR);
+        }
+
+    /* get the coalescence and tip times and put them into a vector */
+    for (i = 0; i < nTimes; i++)
+        {
+        p = t->allDownPass[i];
+        ct[i] = p->nodeDepth;  // do not divide clockRate here, as mu is already in theta
+        }
+
+    /* sort the times array in increasing order */
+    SortMrBFlt (ct, 0, nTimes -1);
+
+    /* get the number of lineages in each time interval */
+    for (i = 0; i < nTimes -1; i++)
+        {
+        mid = (ct[i] + ct[i+1]) / 2.0;
+        k[i] = 0;
+        for (j = 0; j < nTimes -1; j++)
+            { // loop over lineages
+            p = t->allDownPass[j];
+            if (p->nodeDepth <= mid && p->anc->nodeDepth > mid)
+                k[i]++;
+            }
+        }
+    k[nTimes -1] = 1;
+
+    /* for (i = 0; i < nTimes; i++)
+        printf ("%3d %lf %d\n", i, ct[i], k[i]); */
+
+    /* calculate probability of the tree */
+    if (AreDoublesEqual (growth, 0.0, 0.000001) == YES)
+        {
+        /* use this if there is no population growth */
+        tempD = 0.0;
+        for (i = 0; i < nTimes -1; i++)
+            {
+            duration = ct[i+1] - ct[i];
+            tempD += - k[i] * (k[i] -1) * duration / theta;
+            }
+        (*prob) = nCoals * log(2.0 / theta) + tempD;
+        }
+    else
+        {
+        /* use this if the population is growing exponentially */
+        tempD = 0.0;
+        for (i = 0; i < nTimes -1; i++)
+            {
+            tempD += - k[i] * (k[i] -1) * (exp(growth * ct[i+1]) - exp(growth * ct[i])) / (theta * growth);
+            if (k[i+1] < k[i])  // for a coalescent event
+                tempD += growth * ct[i+1];
+            }
+        (*prob) = nCoals * log(2.0 / theta) + tempD;
+        }
+
+    /* free memory */
+    free (ct);
+    free (k);
+    
+    return (NO_ERROR);
+}
 
 /*---------------------------------------------------------------------------------
 |
