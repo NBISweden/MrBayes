@@ -4157,7 +4157,7 @@ int DoFormatParm (char *parmName, char *tkn)
                             {
                             MrBayesPrint ("%s   MrBayes currently does not support the use of the 'Continuous' datatype\n", spacer);
                             return ERROR;
-                            /* dataType = CONTINUOUS;*/
+                            /* dataType = CONTINUOUS; */
                             }
                         else if (!strcmp(tempStr, "Mixed"))
                             {
@@ -9830,8 +9830,8 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                    Datatype = Protein: Amino acid states (A,R,N,D,C,Q,E,        \n");
         MrBayesPrint ("                               G,H,I,L,K,M,F,P,S,T,W,Y,V)                        \n");
         MrBayesPrint ("                    Datatype = Restriction: Restriction site (0,1) states        \n");
-        MrBayesPrint ("                    Datatype = Standard: Morphological (0,1) states              \n");
-      /*MrBayesPrint ("                    Datatype = Continuous: Real number valued states             \n");*/
+        MrBayesPrint ("                    Datatype = Standard: Morphological (0,1) or (0,1,2)... states\n");
+        MrBayesPrint ("                    Datatype = Continuous: Real number valued states             \n");
         MrBayesPrint ("                    Datatype = Mixed(<type>:<range>,...,<type>:<range>): A       \n");
         MrBayesPrint ("                               mixture of the above datatypes. For example,      \n");
         MrBayesPrint ("                               \"datatype=mixed(dna:1-100,protein:101-200)\"     \n");
@@ -10501,8 +10501,8 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                Default value is 4.                                              \n");
         MrBayesPrint ("   Nmixtcat  -- Used to set the number of components in the k-mixture model of   \n");
         MrBayesPrint ("                rate variation across sites. Default value is 4.                 \n");
-#if 0
-        /* Temporarily disable this because of conflict with likelihood calculators. It should be renamed to samplerates when reintroduced. */
+        /* Temporarily disable this because of conflict with likelihood calculators.
+           It should be renamed to samplerates when reintroduced.
         MrBayesPrint ("   Usegibbs  -- Specifies whether site probabilities under the discrete gamma    \n");
         MrBayesPrint ("                model of rate variation across sites will be summed across rate  \n");
         MrBayesPrint ("                categories ('Usegibbs=No') or sampled using a Gibbs sampler      \n");
@@ -10531,8 +10531,7 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                tional to n+k. Compare this with the traditional approach of     \n");
         MrBayesPrint ("                summing across the n rate categories in every generation, which  \n");
         MrBayesPrint ("                requires time proportional to n*k. In practice, however, the     \n");
-        MrBayesPrint ("                speed difference is not quite as large as this.                  \n");
-#endif
+        MrBayesPrint ("                speed difference is not quite as large as this.                  \n"); */
         MrBayesPrint ("   Nbetacat  -- Sets the number of rate categories for the beta distribution.    \n");
         MrBayesPrint ("                A symmetric beta distribution is used to model the stationary    \n");
         MrBayesPrint ("                frequencies when morphological data are used. This option        \n");
@@ -11548,9 +11547,9 @@ int GetUserHelp (char *helpTkn)
 
             MrBayesPrint ("   Ratecorrpr       Uniform/Fixed                %s", mp->adGammaCorPr);
             if (!strcmp(mp->adGammaCorPr, "Uniform"))
-                MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->corrUni[0], mp->corrUni[1]);
+                MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->adgCorrUni[0], mp->adgCorrUni[1]);
             else
-                MrBayesPrint ("(%1.1lf)\n", mp->corrFix);
+                MrBayesPrint ("(%1.1lf)\n", mp->adgCorrFix);
 
             MrBayesPrint ("   Pinvarpr         Uniform/Fixed                %s", mp->pInvarPr);
             if (!strcmp(mp->pInvarPr, "Uniform"))
@@ -12787,9 +12786,6 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("      Switchrates     -- Switching rates for covarion model                      \n");
         MrBayesPrint ("      Topology        -- Topology of tree                                        \n");
         MrBayesPrint ("      Brlens          -- Branch lengths of tree                                  \n");
-        MrBayesPrint ("      Speciationrate  -- Speciation rates for birth-death process                \n");
-        MrBayesPrint ("      Extinctionrate  -- Extinction rates for birth-death process                \n");
-    //  MrBayesPrint ("   Fossilizationrate  -- Fossilization rates for fossilized birth-death process  \n");
         MrBayesPrint ("      Popsize         -- Population size for coalescence process                 \n");
         MrBayesPrint ("      Growthrate      -- Growth rate of coalescence process                      \n"); 
         MrBayesPrint ("      Aamodel         -- Aminoacid rate matrix                                   \n"); 
@@ -12837,9 +12833,6 @@ else if (!strcmp(helpTkn, "Set"))
         MrBayesPrint ("      Switchrates     -- Switching rates for covarion model                      \n");
         MrBayesPrint ("      Topology        -- Topology of tree                                        \n");
         MrBayesPrint ("      Brlens          -- Branch lengths of tree                                  \n");
-        MrBayesPrint ("      Speciationrate  -- Speciation rates for birth-death process                \n");
-        MrBayesPrint ("      Extinctionrate  -- Extinction rates for birth-death process                \n");
-    //  MrBayesPrint ("   Fossilizationrate  -- Fossilization rates for fossilized birth-death process  \n");
         MrBayesPrint ("      Popsize         -- Population size for coalescence process                 \n");
         MrBayesPrint ("      Growthrate      -- Growth rate of coalescence process                      \n");
         MrBayesPrint ("      Aamodel         -- Aminoacid rate matrix                                   \n");
@@ -14587,7 +14580,7 @@ void SetUpParms (void)
     PARAM (107, "Parameter",      DoPlotParm,        "\0");
     PARAM (108, "Match",          DoPlotParm,        "Perfect|Consistentwith|All|\0");
     PARAM (109, "Burnin",         DoPlotParm,        "\0");
-    PARAM (110, "Brownscalepr",   DoPrsetParm,       "Uniform|Gamma|Gammamean|Fixed|\0");
+    PARAM (110, "Brownscalepr",   DoPrsetParm,       "Uniform|Gamma|Fixed|\0");
     PARAM (111, "Browncorrpr",    DoPrsetParm,       "Uniform|Fixed|\0");
     PARAM (112, "Pbf",            DoMcmcParm,        "Yes|No|\0");
     PARAM (113, "Pbfinitburnin",  DoMcmcParm,        "\0");
@@ -14747,7 +14740,7 @@ void SetUpParms (void)
     PARAM (267, "Steptoplot",     DoSumSsParm,       "\0");
     PARAM (268, "Precision",      DoSetParm,         "\0");
     PARAM (269, "Fossilizationpr",   DoPrsetParm,    "Beta|Fixed|\0");
-    PARAM (270, "Fossilizationrate", DoLinkParm,     "\0");
+    PARAM (270, "Browncorr",      DoLinkParm,        "\0");
     PARAM (271, "Generatepr",     DoPrsetParm,       "Variable|Fixed|\0");
     PARAM (272, "Mixedvarpr",     DoPrsetParm,       "Fixed|Exponential|Uniform|\0");
     PARAM (273, "Mixedvar",       DoLinkParm,        "\0");
@@ -14756,10 +14749,10 @@ void SetUpParms (void)
     PARAM (276, "Nlnormcat",      DoLsetParm,        "\0");
     PARAM (277, "Nmixtcat",       DoLsetParm,        "\0");
     PARAM (278, "Beaglethreadcount",  DoSetParm,     "\0");
-    PARAM (279, "Beaglefloattips",DoSetParm,  "Yes|No|\0");
-    PARAM (280, "Statefreqmodel", DoLsetParm,         "Stationary|Directional|Mixed|\0"); //SK
-    PARAM (281, "Rootfreqpr",     DoPrsetParm,        "Dirichlet|Fixed|\0"); //SK
-    PARAM (282, "Statefrmod",     DoLsetParm,         "Stationary|Directional|Mixed|\0"); //SK
+    PARAM (279, "Beaglefloattips",DoSetParm,         "Yes|No|\0");
+    PARAM (280, "Statefreqmodel", DoLsetParm,        "Stationary|Directional|Mixed|\0"); //SK
+    PARAM (281, "Rootfreqpr",     DoPrsetParm,       "Dirichlet|Fixed|\0"); //SK
+    PARAM (282, "Statefrmod",     DoLsetParm,        "Stationary|Directional|Mixed|\0"); //SK
 
     /* NOTE: If a change is made to the parameter table, make certain you change
             NUMPARAMS (now 283; one more than last index) at the top of this file. */

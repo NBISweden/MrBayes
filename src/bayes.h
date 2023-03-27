@@ -181,12 +181,6 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define ETA (1E-30)
 #endif
 
-/* This defined DEBUG() is not used anywhere
-#if defined (DEBUGOUTPUT)
-#define DEBUG(fmt, arg) printf("%s:%d ",__FILE__,__LINE__); printf(fmt,arg);
-#endif
-*/
-
 /* TEMPSTRSIZE determines size of temporary sprintf buffer (for SafeSprintf) */
 /* A patch was sent in by Allen Smith for SafeSprintf, but I could not get
    it compiled on SGI IRIX 6.5 (too old?) with _xpg5_vsnprintf undefined.
@@ -330,8 +324,6 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define RELBRLENS_MAX           100.0f
 #define KAPPA_MIN               0.001f
 #define KAPPA_MAX               1000.0f
-#define GROWTH_MIN              0.000001f
-#define GROWTH_MAX              1000000.0f
 #define RATE_MIN                0.000001f
 #define RATE_MAX                1000.0f
 #define AA_RATE_MIN             1.0E-15f
@@ -362,7 +354,6 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define OMEGA_MAX               1000.0f
 
 #define POS_MIN                 1E-25f
-#define POS_MAX                 1E25f
 #define POS_INFINITY            1E25f
 #define NEG_INFINITY            -1000000.0f
 
@@ -456,8 +447,8 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define P_FOSLRATE              13
 #define P_POPSIZE               14
 #define P_AAMODEL               15
-#define P_BRCORR                16
-#define P_BRSIGMA               17
+#define P_BMCORR                16
+#define P_BMSIGMA               17
 #define P_GROWTH                18
 #define P_CPPMULTDEV            19
 #define P_CPPRATE               20
@@ -485,7 +476,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 
 #define MAX_NUM_USERTREES       200     /* maximum number of user trees MrBayes will read */
 #define MAX_CHAINS              256     /* maximum number of chains you can run actually only half of it because of m->lnLike[MAX_CHAINS] */
-#define MAX_STD_STATES 24  // 0-9 A-N
+#define MAX_STD_STATES          24      // 0-9 A-N
 
 // #define PARAM_NAME_SIZE      400
 
@@ -892,6 +883,11 @@ typedef struct param
 #define TOPOLOGY_RNCL_UNIFORM           161
 #define TOPOLOGY_RNCL_CONSTRAINED       162
 #define TOPOLOGY_RNCL_FIXED             163
+#define BMCORR_UNI                      164
+#define BMCORR_FIX                      165
+#define BMSIGMA_UNI                     166
+#define BMSIGMA_GAMMA                   167
+#define BMSIGMA_FIX                     168
 
 #if defined (BEAGLE_ENABLED)
 #define MB_BEAGLE_SCALE_ALWAYS          0
@@ -1065,7 +1061,7 @@ typedef struct model
     MrBFlt      stateFreqsDir[200];
     char        stateFreqsFixType[100];
     int         numDirParams;
-    char        rootFreqPr[100];    /* prior for root state frequencies (dir model)*/ //SK
+    char        rootFreqPr[100];   /* prior for root state frequencies (dir model)*/ //SK
     MrBFlt      rootFreqsFix[200];
     MrBFlt      rootFreqsDir[200];
     int         numDirParamsRoot;
@@ -1077,8 +1073,8 @@ typedef struct model
     MrBFlt      pInvarFix;
     MrBFlt      pInvarUni[2];
     char        adGammaCorPr[100]; /* prior for correlation param of adGamma model */
-    MrBFlt      corrFix;
-    MrBFlt      corrUni[2];
+    MrBFlt      adgCorrFix;
+    MrBFlt      adgCorrUni[2];
     char        covSwitchPr[100];  /* prior for switching rates of covarion model  */
     MrBFlt      covswitchFix[2];
     MrBFlt      covswitchUni[2];
@@ -1091,22 +1087,21 @@ typedef struct model
     MrBFlt      ratePrDir;
     char        generatePr[100];   /* prior on rate for a gene (one or more partitions) */
     MrBFlt      generatePrDir;
-    char        brownCorPr[100];   /* prior for correlation of Brownian model      */
+    char        brownCorrPr[100];      /* prior for correlation of Brownian model       */
     MrBFlt      brownCorrFix;
     MrBFlt      brownCorrUni[2];
-    char        brownScalesPr[100];  /* prior for scales of Brownian model         */
-    MrBFlt      brownScalesFix;
-    MrBFlt      brownScalesUni[2];
-    MrBFlt      brownScalesGamma[2];
-    MrBFlt      brownScalesGammaMean;
+    char        brownScalePr[100];     /* prior for scale (sigma) of Brownian model     */
+    MrBFlt      brownScaleFix;
+    MrBFlt      brownScaleUni[2];
+    MrBFlt      brownScaleGamma[2];
 
-    char        topologyPr[100];   /* prior for tree topology                      */
-    int         topologyFix;       /* user tree index for fixed topology           */
-    int         *activeConstraints;  /* which constraints are active?              */
+    char        topologyPr[100];       /* prior for tree topology                       */
+    int         topologyFix;           /* user tree index for fixed topology            */
+    int         *activeConstraints;    /* which constraints are active?                 */
     int         numActiveConstraints;
     int         numActiveLocks;
-    char        brlensPr[100];     /* prior on branch lengths                      */
-    int         brlensFix;         /* user tree index for fixed brlens             */
+    char        brlensPr[100];         /* prior on branch lengths                       */
+    int         brlensFix;             /* user tree index for fixed brlens              */
     MrBFlt      brlensUni[2];
     MrBFlt      brlensExp;
     MrBFlt      brlens2Exp[2];
@@ -1304,6 +1299,8 @@ typedef struct modelinfo
     Param       *mixedvar;                  /* ptr to var for mixed relaxed clock       */
     Param       *mixedBrchRates;            /* ptr to branch rates for mixed relaxed clock */
     Param       *clockRate;                 /* ptr to clock rate parameter              */
+    Param       *brownCorr;                 /* ptr to Brownian motion correlation parameter */
+    Param       *brownSigma;                /* ptr to Brownian motion scale parameter   */
 
     /* Information about characters and transformations */
     int         numChars;                   /* number of compressed characters          */
@@ -1319,7 +1316,7 @@ typedef struct modelinfo
     int         nCharsPerSite;              /* number chars per site (eg 3 for codon)   */
     int         rateProbStart;              /* start of rate probs (for adgamma)        */
 
-     /* Variables for eigen decompositions */
+    /* Variables for eigen decompositions */
     int         cijkLength;                 /* stores length of cijk vector                 */
     int         nCijkParts;                 /* stores number of cijk partitions (1 except for omega/covarion models) */
     int         upDateCijk;                 /* whether cijk vector needs to be updated      */

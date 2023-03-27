@@ -39,6 +39,15 @@
 #define TG                          14
 #define TT                          15
 
+
+void      CopySiteScalers (ModelInfo *m, int chain);
+void      ResetSiteScalers (ModelInfo *m, int chain);
+void      FlipCijkSpace (ModelInfo *m, int chain);
+void      FlipCondLikeSpace (ModelInfo *m, int chain, int nodeIndex);
+void      FlipNodeScalerSpace (ModelInfo *m, int chain, int nodeIndex);
+void      FlipSiteScalerSpace (ModelInfo *m, int chain);
+void      FlipTiProbsSpace (ModelInfo *m, int chain, int nodeIndex);
+
 int       CondLikeDown_Bin (TreeNode *p, int division, int chain);
 #if defined (SSE_ENABLED)
 int       CondLikeDown_Bin_SSE (TreeNode *p, int division, int chain);
@@ -143,6 +152,7 @@ int       Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int
 int       Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
 #endif
 int       Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
+int       Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
 int       TiProbs_Fels (TreeNode *p, int division, int chain);
 int       TiProbs_Gen (TreeNode *p, int division, int chain);
 int       TiProbs_GenCov (TreeNode *p, int division, int chain);

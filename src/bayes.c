@@ -775,9 +775,9 @@ int InitializeMrBayes (void)
     defaultModel.pInvarUni[0] = 0.0;
     defaultModel.pInvarUni[1] = 1.0;
     strcpy(defaultModel.adGammaCorPr, "Uniform");       /* prior for correlation param of adGamma model */
-    defaultModel.corrFix = 0.0;
-    defaultModel.corrUni[0] = -1.0;
-    defaultModel.corrUni[1] = 1.0;
+    defaultModel.adgCorrFix = 0.0;
+    defaultModel.adgCorrUni[0] = -1.0;
+    defaultModel.adgCorrUni[1] = 1.0;
     strcpy(defaultModel.covSwitchPr, "Uniform");        /* prior for switching rates of covarion model  */
     defaultModel.covswitchFix[0] = 1.0;
     defaultModel.covswitchFix[1] = 1.0;
@@ -789,17 +789,16 @@ int InitializeMrBayes (void)
     defaultModel.symBetaUni[0] = 0.0;
     defaultModel.symBetaUni[1] = 20.0;
     defaultModel.symBetaExp = 2;
-    strcpy(defaultModel.brownCorPr, "Fixed");           /* prior on correlation of brownian model       */
+    strcpy(defaultModel.brownCorrPr, "Fixed");          /* prior on correlation of brownian model       */
     defaultModel.brownCorrFix = 0.0;
     defaultModel.brownCorrUni[0] = -1.0;
     defaultModel.brownCorrUni[1] = 1.0;
-    strcpy(defaultModel.brownScalesPr, "Gammamean");    /* prior on scales of brownian model            */
-    defaultModel.brownScalesFix = 10.0;
-    defaultModel.brownScalesUni[0] = 0.0;
-    defaultModel.brownScalesUni[1] = 100.0;
-    defaultModel.brownScalesGamma[0] = 1.0;
-    defaultModel.brownScalesGamma[1] = 10.0;
-    defaultModel.brownScalesGammaMean = 10.0;
+    strcpy(defaultModel.brownScalePr, "Gamma");        /* prior on scales of brownian model            */
+    defaultModel.brownScaleFix = 10.0;
+    defaultModel.brownScaleUni[0] = 0.0;
+    defaultModel.brownScaleUni[1] = 100.0;
+    defaultModel.brownScaleGamma[0] = 1.0;
+    defaultModel.brownScaleGamma[1] = 10.0;
     strcpy(defaultModel.topologyPr, "Uniform");         /* prior for tree topology                      */
     defaultModel.topologyFix = -1;                      /* user tree index to use for fixed topology    */
     defaultModel.activeConstraints = NULL;              /* which constraints are active                 */

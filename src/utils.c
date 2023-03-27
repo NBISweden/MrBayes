@@ -987,7 +987,7 @@ int LongestLine (FILE *fp)
 void LowerUpperMedian (MrBFlt *vals, int nVals, MrBFlt *lower, MrBFlt *upper, MrBFlt *median)
 
 {    
-    SortMrBFlt (vals, 0, nVals-1);
+    SortMrBFlt_Asc (vals, 0, nVals-1);
     
     *lower  = vals[(int)(0.025*nVals)];
     *upper  = vals[(int)(0.975*nVals)];
@@ -1002,7 +1002,7 @@ void LowerUpperMedianHPD (MrBFlt *vals, int nVals, MrBFlt *lower, MrBFlt *upper,
     int     i, width, theStart;
     MrBFlt  f, g, interval;
 
-    SortMrBFlt (vals, 0, nVals-1);
+    SortMrBFlt_Asc (vals, 0, nVals-1);
     
     width = (int)(nVals * 0.95 + 0.5);
     theStart = 0;
@@ -1639,7 +1639,7 @@ void SetBit (int i, BitsLong *bits)
 }
 
 
-int MrBFlt_cmp (const void *a, const void *b)
+int MrBFlt_cmpAsc (const void *a, const void *b)
 {
     MrBFlt          x = * (MrBFlt *) a;
     MrBFlt          y = * (MrBFlt *) b;
@@ -1652,11 +1652,32 @@ int MrBFlt_cmp (const void *a, const void *b)
     return 0;
 }
 
-/* SortMrBFlt: Sort in increasing order */
-void SortMrBFlt (MrBFlt *item, int left, int right)
+
+int MrBFlt_cmpDes (const void *a, const void *b)
 {
-    qsort ((void *) item, right - left + 1, sizeof (MrBFlt),
-           &MrBFlt_cmp);
+    MrBFlt          x = * (MrBFlt *) a;
+    MrBFlt          y = * (MrBFlt *) b;
+
+    if (x > y)
+        return -1;
+    else if (x < y)
+        return 1;
+
+    return 0;
+}
+
+
+/* Sort MrBFlt in increasing order */
+void SortMrBFlt_Asc (MrBFlt *item, int left, int right)
+{
+    qsort ((void *) item, right - left + 1, sizeof (MrBFlt), &MrBFlt_cmpAsc);
+}
+
+
+/* Sort MrBFlt in decreasing order */
+void SortMrBFlt_Des (MrBFlt *item, int left, int right)
+{
+    qsort ((void *) item, right - left + 1, sizeof (MrBFlt), &MrBFlt_cmpDes);
 }
 
 
@@ -6239,8 +6260,6 @@ void ResetTreeNode (TreeNode *p)
     p->marked                 = NO;
     p->length                 = 0.0;
     p->nodeDepth              = 0.0;
-    p->x                      = 0;
-    p->y                      = 0;
     p->index                  = 0;
     p->isDated                = NO;
     p->calibration            = NULL;
@@ -6248,6 +6267,8 @@ void ResetTreeNode (TreeNode *p)
     p->isLocked               = NO;
     p->lockID                 = -1;
     p->label                  = noLabel;
+    p->x                      = 0;
+    p->y                      = 0;
     p->d                      = 0.0;
     p->partition              = NULL;
 }
@@ -9579,9 +9600,7 @@ void BetaBreaks (MrBFlt alpha, MrBFlt beta, MrBFlt *values, int K)
         
 #   if 0
     for (i=0; i<K; i++)
-        {
         MrBayesPrint ("%4d %lf %lf\n", i, values[i]);
-        }
 #   endif
 }
 
@@ -13151,6 +13170,17 @@ MrBFlt LnProbLogNormal_Mean_Var (MrBFlt mean, MrBFlt var, MrBFlt x)
     mu    = log(mean) - sigma * sigma / 2.0;
 
     return LnProbLogNormal(mu, sigma, x);
+}
+
+
+/* Log probability for a value drawn from a normal distribution */
+MrBFlt LnProbNormal (MrBFlt mu, MrBFlt sigma, MrBFlt x)
+{
+    MrBFlt z;
+
+    z = (x - mu) / sigma;
+
+    return - log(sigma * sqrt(2.0 * M_PI)) - z * z / 2.0;
 }
 
 

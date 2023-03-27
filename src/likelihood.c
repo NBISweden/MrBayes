@@ -55,12 +55,6 @@ extern int      rateProbRowSize;            /* size of rate probs for one chain 
 extern MrBFlt   **rateProbs;                /* pointers to rate probs used by adgamma model */
 
 /* local prototypes */
-void      CopySiteScalers (ModelInfo *m, int chain);
-void      FlipCondLikeSpace (ModelInfo *m, int chain, int nodeIndex);
-void      FlipCijkSpace (ModelInfo *m, int chain);
-void      FlipNodeScalerSpace (ModelInfo *m, int chain, int nodeIndex);
-void      FlipSiteScalerSpace (ModelInfo *m, int chain);
-void      FlipTiProbsSpace (ModelInfo *m, int chain, int nodeIndex);
 MrBFlt    GetRate (int division, int chain);
 int       RemoveNodeScalers(TreeNode *p, int division, int chain);
 #if defined (SSE_ENABLED)
@@ -69,7 +63,6 @@ int       RemoveNodeScalers_SSE(TreeNode *p, int division, int chain);
 #if defined (AVX_ENABLED)
 int       RemoveNodeScalers_AVX(TreeNode *p, int division, int chain);
 #endif
-void      ResetSiteScalers (ModelInfo *m, int chain);
 int       SetBinaryQMatrix (MrBFlt **a, int whichChain, int division);
 int       SetNucQMatrix (MrBFlt **a, int n, int whichChain, int division, MrBFlt rateMult, MrBFlt *rA, MrBFlt *rS);
 int       SetStdQMatrix (MrBFlt **a, int nStates, MrBFlt *bs, int cType);
@@ -77,11 +70,9 @@ int       SetProteinQMatrix (MrBFlt **a, int n, int whichChain, int division, Mr
 int       UpDateCijk (int whichPart, int whichChain);
 
 
-#if !defined (SSE_ENABLED) || 1
 /*----------------------------------------------------------------
 |
-|   CondLikeDown_Bin: binary model with or without rate
-|       variation
+|   CondLikeDown_Bin: binary model with or without rate variation
 |
 -----------------------------------------------------------------*/
 int CondLikeDown_Bin (TreeNode *p, int division, int chain)
@@ -126,7 +117,6 @@ int CondLikeDown_Bin (TreeNode *p, int division, int chain)
     return NO_ERROR;
     
 }
-#endif
 
 
 #if defined (SSE_ENABLED)
@@ -1577,7 +1567,6 @@ int CondLikeDown_NUC4_SSE (TreeNode *p, int division, int chain)
 #endif
 
 
-#if !defined (SSE_ENABLED) || 1
 /*----------------------------------------------------------------
 |
 |   CondLikeDown_NY98: codon model with omega variation
@@ -1731,7 +1720,6 @@ int CondLikeDown_NY98 (TreeNode *p, int division, int chain)
 
     return NO_ERROR;
 }
-#endif
 
 
 #if defined (SSE_ENABLED)
@@ -1998,7 +1986,6 @@ int CondLikeDown_Std (TreeNode *p, int division, int chain)
 }
 
 
-#if !defined (SSE_ENABLED) || 1
 /*----------------------------------------------------------------
 |
 |   CondLikeRoot_Bin: binary model with or without rate
@@ -2053,7 +2040,6 @@ int CondLikeRoot_Bin (TreeNode *p, int division, int chain)
 
     return NO_ERROR;
 }
-#endif
 
 
 #if defined (SSE_ENABLED)
@@ -4016,7 +4002,6 @@ int CondLikeRoot_NUC4_SSE (TreeNode *p, int division, int chain)
 #endif
 
 
-#if !defined (SSE_ENABLED) || 1
 /*----------------------------------------------------------------
 |
 |   CondLikeRoot_NY98: codon model with omega variation
@@ -4229,7 +4214,6 @@ int CondLikeRoot_NY98 (TreeNode *p, int division, int chain)
 
     return NO_ERROR;
 }
-#endif
 
 
 #if defined (SSE_ENABLED)
@@ -5421,7 +5405,6 @@ int CondLikeScaler_NUC4_GibbsGamma (TreeNode *p, int division, int chain)
 }
 
 
-#if !defined (SSE_ENABLED) || 1
 /*----------------------------------------------------------------
 |
 |   CondLikeScaler_NY98: codon model with omega variation
@@ -5481,7 +5464,6 @@ int CondLikeScaler_NY98 (TreeNode *p, int division, int chain)
 
     return (NO_ERROR);
 }
-#endif
 
 
 #if defined (SSE_ENABLED)
@@ -5628,6 +5610,78 @@ int CondLikeScaler_Std (TreeNode *p, int division, int chain)
 }
 
 
+/* FlipCijkSpace: Flip space for cijks with scratch area */
+void FlipCijkSpace (ModelInfo* m, int chain)
+{
+    int         temp;
+
+    temp                = m->cijkIndex[chain];
+    m->cijkIndex[chain] = m->cijkScratchIndex;
+    m->cijkScratchIndex = temp;
+}
+
+
+/* FlipCondLikeSpace: Flip space for conditional likelihoods with scratch area */
+void FlipCondLikeSpace (ModelInfo* m, int chain, int nodeIndex)
+{
+    int         temp;
+
+    temp                               = m->condLikeIndex[chain][nodeIndex];
+    m->condLikeIndex[chain][nodeIndex] = m->condLikeScratchIndex[nodeIndex];
+    m->condLikeScratchIndex[nodeIndex] = temp;
+}
+
+
+/* FlipNodeScalerSpace: Flip space for node scalers and scaler flag with scratch area */
+void FlipNodeScalerSpace (ModelInfo* m, int chain, int nodeIndex)
+{
+    int         temp;
+
+    temp                                 = m->nodeScalerIndex[chain][nodeIndex];
+    m->nodeScalerIndex[chain][nodeIndex] = m->nodeScalerScratchIndex[nodeIndex];
+    m->nodeScalerScratchIndex[nodeIndex] = temp;
+
+    temp                                 = m->unscaledNodes[chain][nodeIndex];
+    m->unscaledNodes[chain][nodeIndex]   = m->unscaledNodesScratch[nodeIndex];
+    m->unscaledNodesScratch[nodeIndex]   = temp;
+}
+
+
+/* FlipSiteScalerSpace: Flip space for ln site scalers */
+void FlipSiteScalerSpace (ModelInfo *m, int chain)
+{
+    int  temp;
+
+#   if defined (BEAGLE_ENABLED)
+    int *tempp;
+#   endif
+
+    temp = m->siteScalerIndex[chain];
+    m->siteScalerIndex[chain] = m->siteScalerScratchIndex;
+    m->siteScalerScratchIndex = temp;
+
+#   if defined (BEAGLE_ENABLED)
+    if (m->useBeagle == YES)
+        {
+        tempp = m->isScalerNode[chain];
+        m->isScalerNode[chain] = m->isScalerNodeScratch ;
+        m->isScalerNodeScratch = tempp;
+        }
+#   endif
+}
+
+
+/* FlipTiProbsSpace: Flip space for ti probs with scratch area */
+void FlipTiProbsSpace (ModelInfo* m, int chain, int nodeIndex)
+{
+    int         temp;
+
+    temp                              = m->tiProbsIndex[chain][nodeIndex];
+    m->tiProbsIndex[chain][nodeIndex] = m->tiProbsScratchIndex[nodeIndex];
+    m->tiProbsScratchIndex[nodeIndex] = temp;
+}
+
+
 /*------------------------------------------------------------------
 |
 |   Likelihood_Adgamma: all n-state models with autocorrelated
@@ -5650,7 +5704,6 @@ int Likelihood_Adgamma (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
        we properly calculate likelihoods when some site patterns have increased or decreased weight. For
        now, we do not allow MCMCMC with character reweighting with this HMM; we bail out in the function
        FillNumSitesOfPat if we have Adgamma rate variation and reweighting. */
-    k = whichSitePats;  /* FIXME: Not used (from clang static analyzer) */
     
     /* find model settings */
     m = &modelSettings[division];
@@ -5864,48 +5917,6 @@ int Likelihood_Gen (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 
 
 #if defined (SSE_ENABLED)
-//#   if 0
-//CLFlt DeleteME[1000];
-//int PrintOld_SSE (TreeNode *p, int division, int chain){
-//
-//    int             c, c1, j, k, nStates;
-//    //MrBFlt            *swr, likeI, pInvar=0.0, lnLike;
-//    CLFlt           *temp_vector;
-//    __m128          *clPtr, **clP;
-//    ModelInfo       *m;
-//
-//    m = &modelSettings[division];
-//    nStates = m->numModelStates;
-//    /* find conditional likelihood pointers */
-//
-//    temp_vector =  DeleteME;
-//
-//    clPtr = (__m128 *) (m->condLikes[m->condLikeIndex[chain][p->index]]);
-//    clP = m->clP_SSE;
-//    for (k=0; k<m->numRateCats; k++)
-//        {
-//        clP[k] = clPtr;
-//        clPtr += m->numVecChars * m->numModelStates;
-//        }
-//
-//    for (c=0; c<m->numChars; c++)
-//        {
-//        c1 = c / FLOATS_PER_VEC;
-//        for (k=0; k<m->numRateCats; k++)
-//            {
-//            for (j=0; j<nStates; j++)
-//                {
-//                *temp_vector++ = *(((CLFlt*)&clP[k][c1*nStates+j])+c % FLOATS_PER_VEC);
-//                }
-//            }
-//        }
-//    temp_vector=DeleteME;
-//
-//    return 1;
-//}
-//#   endif
-
-
 /*------------------------------------------------------------------
 |
 |   Likelihood_Gen_SSE: general n-state model with or without rate
@@ -6445,150 +6456,6 @@ int Likelihood_NUC4_GibbsGamma (TreeNode *p, int division, int chain, MrBFlt *ln
 
     return NO_ERROR;
 }
-
-
-//#if defined (SSE_ENABLED)
-///*------------------------------------------------------------------
-// |
-// | Likelihood_NUC4_GibbsGamma: 4by4 nucleotide models with rate
-// |     variation using Gibbs sampling from gamma rate categories
-// |
-// -------------------------------------------------------------------*/
-//int Likelihood_NUC4_GibbsGamma_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-//{
-//    int             c, i, r, nRateCats, *rateCat;
-//    MrBFlt          *bs, like;
-//    CLFlt           *lnScaler, *nSitesOfPat, *lnL_SSE, *lnLI_SSE;
-//    __m128          *clP, *clInvar=NULL;
-//    __m128          m1, mA, mC, mG, mT, mFreq, mPInvar, mLike;
-//    ModelInfo       *m;
-//    
-//#if defined (FAST_LOG)
-//    int             k, index;
-//    MrBFlt          likeAdjust = 1.0, f;
-//#endif
-//    
-//    /* find model settings and invar cond likes */
-//    m = &modelSettings[division];
-//    clInvar = (__m128 *)m->invCondLikes;
-//    /* find conditional likelihood pointer */
-//    clP = (__m128 *)m->condLikes[m->condLikeIndex[chain][p->index]];
-//    
-//    lnL_SSE  = m->lnL_SSE;
-//    lnLI_SSE = m->lnLI_SSE;
-//    
-//    /* find base frequencies */
-//    bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
-//    
-//    /* find tree scaler */
-//    lnScaler = m->scalers[m->siteScalerIndex[chain]];
-//    
-//    /* find nSitesOfPat */
-//    nSitesOfPat = numSitesOfPat + (whichSitePats*numCompressedChars) + m->compCharStart;
-//    
-//    /* find rate category index  and number of rate categories */
-//    rateCat = m->tiIndex + chain * m->numChars;
-//    nRateCats = m->numRateCats;
-//    
-//    /* reset lnL */
-//    *lnL = 0.0;
-//    
-//    /* calculate variable likelihood */
-//    for (c=0; c<m->numVecChars; c++)
-//    {
-//        mLike = _mm_mul_ps (clP[A], mA);
-//        m1    = _mm_mul_ps (clP[C], mC);
-//        mLike = _mm_add_ps (mLike, m1);
-//        m1    = _mm_mul_ps (clP[G], mG);
-//        mLike = _mm_add_ps (mLike, m1);
-//        m1    = _mm_mul_ps (clP[T], mT);
-//        mLike = _mm_add_ps (mLike, m1);
-//        
-//        clP += 4;
-//        _mm_store_ps (lnL_SSE, mLike);
-//        lnL_SSE += FLOATS_PER_VEC;
-//    }
-//    
-//    /* calculate invariable likelihood */
-//    if (hasPInvar == YES)
-//    {
-//        for (c=0; c<m->numVecChars; c++)
-//        {
-//            mLike = _mm_mul_ps (clInvar[A], mA);
-//            m1    = _mm_mul_ps (clInvar[C], mC);
-//            mLike = _mm_add_ps (mLike, m1);
-//            m1    = _mm_mul_ps (clInvar[G], mG);
-//            mLike = _mm_add_ps (mLike, m1);
-//            m1    = _mm_mul_ps (clInvar[T], mT);
-//            mLike = _mm_add_ps (mLike, m1);
-//            mLike = _mm_mul_ps (mLike, mPInvar);
-//            
-//            _mm_store_ps (lnLI_SSE, mLike);
-//            clInvar += 4;
-//            lnLI_SSE += FLOATS_PER_VEC;
-//        }
-//    }
-//    
-//    
-//    /* loop over characters */
-//    if (m->pInvar == NULL)
-//    {
-//        for (c=i=0; c<m->numChars; c++)
-//        {
-//            like = m->lnL_SSE[c];
-//            /* check against LIKE_EPSILON (values close to zero are problematic) */
-//            if (like < LIKE_EPSILON)
-//            {
-//                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
-//                (*lnL) = MRBFLT_NEG_MAX;
-//                return ERROR;
-//            }
-//            else
-//            {
-//#if defined (FAST_LOG)
-//                f = frexp (like, &index);
-//                index = 1-index;
-//                (*lnL) += (lnScaler[c] +  logValue[index]) * nSitesOfPat[c];
-//                for (k=0; k<(int)nSitesOfPat[c]; k++)
-//                    likeAdjust *= f;
-//#else
-//                (*lnL) += (lnScaler[c] +  log(like)) * nSitesOfPat[c];
-//#endif
-//            }
-//        }
-//    }
-//    else
-//    {
-//        /* has invariable category */
-//        for (c=i=0; c<m->numChars; c++)
-//        {
-//            r = rateCat[c];
-//            if (r < nRateCats)
-//                like = m->lnL_SSE[c];
-//            else
-//                like = m->lnLI_SSE[c];
-//            
-//            /* check against LIKE_EPSILON (values close to zero are problematic) */
-//            if (like < LIKE_EPSILON)
-//            {
-//                MrBayesPrint ("%s   WARNING: In LIKE_EPSILON - for division %d char %d has like = %1.30lf\n", spacer, division, c, like);
-//                (*lnL) = MRBFLT_NEG_MAX;
-//                return ERROR;
-//            }
-//            else
-//            {
-//                (*lnL) += (log (like) + lnScaler[c]) * nSitesOfPat[c];
-//            }
-//        }       
-//    }
-//    
-//#if defined (FAST_LOG)
-//    (*lnL) += log (likeAdjust);
-//#endif
-//    
-//    return NO_ERROR;
-//}
-//#endif
 
 
 #if defined (FMA_ENABLED)
@@ -7271,7 +7138,6 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
     CLFlt           *clPtr, **clP, *lnScaler, *nSitesOfPat;
     ModelParams     *mp;
     ModelInfo       *m;
-
     
     m = &modelSettings[division];
     mp = &modelParams[division];
@@ -7676,6 +7542,54 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 
 /*------------------------------------------------------------------
 |
+|   Likelihood_Cont: likelihood for continuous traits
+|
+|   This function calculates the restricted maximum likelihood (REML)
+|      using phylogenetic independent contrasts (PICs) (Felsenstein 1985).
+|   These standardized contrasts are, under a BM model, both independent and identically distributed.
+|   The “restricted” part of REML refers to the fact that it calculates likelihood based on a transformed
+|      set of data where the effect of nuisance parameters (the root state in this case) has been removed.
+|
+-------------------------------------------------------------------*/
+int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
+{
+    // int             c, i, j, k;
+    MrBFlt          sigma, corr;
+    ModelParams     *mp;
+    ModelInfo       *m;
+    Tree            *t;
+
+    /* find model and parameter settings */
+    m = &modelSettings[division];
+    mp = &modelParams[division];
+    
+    /* get the brownian motion parameters */
+    sigma = *GetParamVals(m->brownSigma, chain, state[chain]);
+    corr  = *GetParamVals(m->brownCorr,  chain, state[chain]);
+
+    /* do not consider trait correlations at the moment */
+    if (AreDoublesEqual (corr, 0.0, 1E-6) == NO)
+        {
+        MrBayesPrint ("%s   Continuous traits correlation not yet supported.\n", spacer);
+        abortMove = YES;
+        return ERROR;
+        }
+
+    /* start calculating phylogenetic independent contrasts (PICs) and REML */
+
+    /* reset log likelihood */
+    (*lnL) = 0.0;
+
+    t = GetTree(m->brlens,chain,state[chain]);
+
+	//chi TODO
+	
+    return NO_ERROR;
+}
+
+
+/*------------------------------------------------------------------
+|
 |   Likelihood_Pars: likelihood under the Tuffley and Steel (1997)
 |       model for characters with constant number of states. The idea
 |       is described in:
@@ -7802,52 +7716,12 @@ int Likelihood_Pars (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 }
 
 
-#if 0
-int Likelihood_ParsCodon (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-{
-    int             x, y;
-    TreeNode        *q;
-    
-    /* no warnings */
-    q = p;
-    x = division;
-    y = chain;
-    *lnL = 0.0;
-    x = whichSitePats;
-
-    MrBayesPrint ("%s   Parsimony calculator for codons not yet implemented\n", spacer);
-    
-    return ERROR;
-}
-#   endif
-
-
 /*------------------------------------------------------------------
 |
 |   Likelihood_Pars: likelihood under the Tuffley and Steel (1997)
-|       model for characters with constant number of states. The idea
-|       is described in:
+|       model for characters with constant number of states.
 |
-|       Tuffley, C., and M. Steel. 1997. Links between maximum likelihood
-|          and maximum parsimony under a simple model of site substitution.
-|          Bull. Math. Bio. 59:581-607.
-|
-|       The likelihood under the Tuffley and Steel (1997) model is:
-|       
-|       L = k^[-(T + n)]
-|      
-|       where L is the likelihood
-|             k is the number of character states
-|             T is the parsimony tree length
-|             n is the number of characters 
-|
-|   The parsimony calculator does not use character packing; this is
-|       to enable reweighting of characters 
-|
-|   Note that this is an empirical Bayes approach in that it uses the
-|       maximum likelihood branch length.
-|
-|   This variant of the calculator assumes that the number of states
+|   This variant of Likelihood_Pars assumes that the number of states
 |       is variable. It does not take state order into account.
 |
 -------------------------------------------------------------------*/
@@ -7932,6 +7806,7 @@ int Likelihood_ParsStd (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     return (NO_ERROR);
 }
 
+
 #if defined(BEAGLE_V3_ENABLED)
 /*-----------------------------------------------------------------
 |
@@ -7991,6 +7866,7 @@ void LaunchLogLikeForBeagleMultiPartition(int chain, MrBFlt* lnL)
 }
 #endif /* BEAGLE_MULTI_PART_ENABLED */
 
+
 /*-----------------------------------------------------------------
 |
 |   LaunchLogLikeForDivision: calculate the log likelihood of the 
@@ -8028,7 +7904,7 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL)
         }
 #   endif
         
-    if (m->parsModelId == NO)
+    if (m->parsModelId == NO && m->dataType != CONTINUOUS)
         {
         /* get site scalers ready */
         FlipSiteScalerSpace(m, chain);
@@ -8214,6 +8090,82 @@ int RemoveNodeScalers_SSE (TreeNode *p, int division, int chain)
     
 }
 #endif
+
+
+/* CopySiteScalers: Copy site scalers from scratch space into current space */
+void CopySiteScalers (ModelInfo *m, int chain)
+{
+    CLFlt       *from, *to;
+#   if defined (BEAGLE_ENABLED)
+    int         i, j;
+#   endif
+
+#   if defined (BEAGLE_ENABLED)
+    if (m->useBeagle == YES)
+        {
+        j = m->siteScalerScratchIndex;
+        for (i=0; i<m->nCijkParts; i++)
+            {
+            if (m->useBeagleMultiPartitions == NO)
+                {
+                beagleResetScaleFactors (m->beagleInstance,
+                                         m->siteScalerIndex[chain] + i);
+                beagleAccumulateScaleFactors (m->beagleInstance,
+                                              &j,
+                                              1,
+                                              m->siteScalerIndex[chain] + i);
+                }
+            else
+#   if defined (BEAGLE_V3_ENABLED)
+                {
+                beagleResetScaleFactorsByPartition (m->beagleInstance,
+                                                    m->siteScalerIndex[chain] + i,
+                                                    m->divisionIndex);
+                beagleAccumulateScaleFactorsByPartition (m->beagleInstance,
+                                                         &j,
+                                                         1,
+                                                         m->siteScalerIndex[chain] + i,
+                                                         m->divisionIndex);
+                }
+#   endif /* BEAGLE_V3_ENABLED */
+            j++;
+            }
+        return;
+        }
+#   endif
+    from = m->scalers[m->siteScalerScratchIndex];
+    to   = m->scalers[m->siteScalerIndex[chain]];
+    memcpy ((void*) to, (void*) from, (size_t)(m->numChars) * sizeof(CLFlt));
+}
+
+
+/*----------------------------------------------------------------------
+ |
+ |   ResetSiteScalers: Set log site scalers to 0.0.
+ |
+ ------------------------------------------------------------------------*/
+void ResetSiteScalers (ModelInfo *m, int chain)
+{
+    int     c;
+    CLFlt   *lnScaler;
+
+#if defined (BEAGLE_ENABLED)
+    if (m->useBeagle == YES)
+        {
+        if (m->useBeagleMultiPartitions == NO)
+            beagleResetScaleFactors(m->beagleInstance, m->siteScalerIndex[chain]);
+        else
+#   if defined (BEAGLE_V3_ENABLED)
+            beagleResetScaleFactorsByPartition(m->beagleInstance, m->siteScalerIndex[chain], m->divisionIndex);
+#   endif /* BEAGLE_V3_ENABLED */
+        /* TODO: check if nCijkParts scale factors should also be reset here */
+        return;
+        }
+#endif
+    lnScaler = m->scalers[m->siteScalerIndex[chain]];
+    for (c=0; c<m->numChars; c++)
+        lnScaler[c] = 0.0;
+}
 
 
 int SetBinaryQMatrix (MrBFlt **a, int whichChain, int division)
@@ -10246,18 +10198,6 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
             }
 
         /* TODO: need a general algorithm for ordered characters */
-        /* for (nStates=3; nStates<=MAX_STD_STATES; nStates++)
-            {
-            if (m->isTiNeeded[nStates+MAX_STD_STATES-4] == NO)
-                continue;
-            for (k=0; k<m->numRateCats; k++)
-                {
-                v =  length * baseRate * catRate[k];
-                
-                // UpDateCijk() here?
-                }
-            } */
-
         /* 3-state ordered character */
         if (m->isTiNeeded[MAX_STD_STATES-1] == YES)
             {
@@ -10611,9 +10551,6 @@ int UpDateCijk (int whichPart, int whichChain)
                     rateOmegaValues = GetParamSubVals (m->mixtureRates, whichChain, state[whichChain]);
                 }
             }
-#   if defined (BEAGLE_ENABLED)
-        else if (m->dataType == RESTRICTION){}
-#   endif
         else if (m->dataType != STANDARD)
             {
             MrBayesPrint ("%s   ERROR: Should not be updating cijks!\n", spacer);

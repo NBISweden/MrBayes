@@ -335,8 +335,8 @@ int Move_Adgamma (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     mp = &modelParams[param->relParts[0]];
     
     /* get minimum and maximum values for rho */
-    minP = mp->corrUni[0];
-    maxP = mp->corrUni[1];
+    minP = mp->adgCorrUni[0];
+    maxP = mp->adgCorrUni[1];
 
     /* get address of markovTi */
     markovTiValues = GetParamSubVals (param, chain, state[chain]);
@@ -453,9 +453,8 @@ int Move_Beta (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
 
     /* fill in the new betacat frequencies */
     bs = GetParamStdStateFreqs(param, chain, state[chain]);
-    k = mp->numBetaCats;
-    BetaBreaks (newB, newB, bs, k);
-    k *= 2;
+    BetaBreaks (newB, newB, bs, mp->numBetaCats);
+    k = 2 * mp->numBetaCats;
     for (i=k-2; i>0; i-=2)
         {
         bs[i] = bs[i/2];
@@ -603,6 +602,119 @@ int Move_BrLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     else if (isVPriorExp > 1)
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
 
+    return (NO_ERROR);
+}
+
+
+int Move_BMcorr (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+    /* change Brownian motion correlation parameter (brownCorr) */
+
+    int             i, isValidP;
+    MrBFlt          oldP, newP, window, minP, maxP;
+    ModelParams     *mp;
+
+    /* get size of window, centered on current value */
+    window = mvp[0];
+
+    /* get model params */
+    mp = &modelParams[param->relParts[0]];
+    
+    /* get minimum and maximum values */
+    minP = mp->brownCorrUni[0];
+    maxP = mp->brownCorrUni[1];
+
+    /* get old value */
+    oldP = *GetParamVals(param, chain, state[chain]);
+
+    /* propose a new value based on the current one */
+    if (maxP - minP < window)
+        window = maxP - minP;
+    newP = oldP + window * (RandomNumber(seed) - 0.5);
+
+    /* check validity */
+    isValidP = NO;
+    do  {
+        if (newP < minP)
+            newP = 2* minP - newP;
+        else if (newP > maxP)
+            newP = 2 * maxP - newP;
+        else
+            isValidP = YES;
+        } while (isValidP == NO);
+
+    /* assign the new value */
+    *GetParamVals(param, chain, state[chain]) = newP;
+
+    /* calculate proposal ratio and prior ratio */
+    *lnProposalRatio = *lnPriorRatio = 0.0;
+
+    /* set update flags for all relavent partitions */
+    for (i = 0; i < param->nRelParts; i++)
+        TouchAllTreeNodes(&modelSettings[param->relParts[i]], chain);
+
+    return (NO_ERROR);
+}
+
+
+int Move_BMsigma (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+    /* change Brownian motion scale parameter (brownSigma) using multiplier */
+    
+    int         i, isSPriorGamma, isValidL;
+    MrBFlt      oldL, newL, minL, maxL, tuning;
+    ModelParams *mp;
+
+    /* get tuning parameter */
+    tuning = mvp[0];
+
+    /* get model params */
+    mp = &modelParams[param->relParts[0]];
+    
+    /* get minimum and maximum values */
+    if (param->paramId == BMSIGMA_UNI)
+        {
+        minL = mp->brownScaleUni[0] ;
+        maxL = mp->brownScaleUni[1];
+        isSPriorGamma = NO;
+        }
+    else
+        {
+        minL = RATE_MIN;
+        maxL = RATE_MAX;
+        isSPriorGamma = YES;
+        }
+
+    /* get old value */
+    oldL = *GetParamVals(param, chain, state[chain]);
+
+    /* propose a new value based on the current one */
+    newL = oldL * exp(tuning * (RandomNumber(seed) - 0.5));
+    
+    /* check that new value is valid */
+    isValidL = NO;
+    do  {
+        if (newL < minL)
+            newL = minL * minL / newL;
+        else if (newL > maxL)
+            newL = maxL * maxL / newL;
+        else
+            isValidL = YES;
+        } while (isValidL == NO);
+
+    /* assign the new value */
+    *GetParamVals(param, chain, state[chain]) = newL;
+
+    /* get proposal ratio */
+    *lnProposalRatio = log (newL / oldL);
+    
+    /* calculate prior ratio */
+    *lnPriorRatio = param->LnPriorRatio(newL, oldL, param->priorParams);
+
+    /* set update flags for all relavent partitions */
+    for (i = 0; i < param->nRelParts; i++)
+        TouchAllTreeNodes(&modelSettings[param->relParts[i]], chain);
+        
     return (NO_ERROR);
 }
 
@@ -1720,8 +1832,8 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     oldM = *valPtr;
 
     /* change value */
-    if (window > maxM-minM)
-        window = maxM-minM;
+    if (window > maxM - minM)
+        window = maxM - minM;
     newM = oldM + window * (RandomNumber(seed) - 0.5);
     
     /* check that new value is valid */
@@ -1739,7 +1851,7 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     *lnProposalRatio = 0.0;
     
     /* calculate prior ratio */
-    t  = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
+    t  = GetTree(m->brlens, chain, state[chain]);
     sR = GetParamVals (m->speciationRates, chain, state[chain]);
     eR = GetParamVals (param, chain, state[chain]);
     sF = mp->sampleProb;
@@ -1769,7 +1881,6 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
             return (ERROR);
             }
         *valPtr = newM;  // update with new value
-        // for (i=0; i<param->nValues; i++)  *(GetParamVals(param, chain, state[chain]) + i) = newM;
         if (LnFossilizationPriorPr (t, clockRate, &newLnPrior, sR, eR, fR, sF, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
@@ -1831,8 +1942,8 @@ int Move_Fossilization (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     oldM = *valPtr;
     
     /* change value */
-    if (window > maxM-minM)
-        window = maxM-minM;
+    if (window > maxM - minM)
+        window = maxM - minM;
     newM = oldM + window * (RandomNumber(seed) - 0.5);
     
     /* check that new value is valid */
@@ -1850,7 +1961,7 @@ int Move_Fossilization (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     *lnProposalRatio = 0.0;
     
     /* calculate prior ratio */
-    t  = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
+    t  = GetTree(m->brlens, chain, state[chain]);
     sR = GetParamVals (m->speciationRates, chain, state[chain]);
     eR = GetParamVals (m->extinctionRates, chain, state[chain]);
     fR = GetParamVals (param, chain, state[chain]);
@@ -2898,7 +3009,7 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
        along the branch (below the minimum age of the node). */
     
     int         i, j, topologyHasChanged=NO, isStartLocked=NO, isStopLocked=NO, nRootNodes, directionUp,
-                n1=0, n2=0, n3=0, n4=0, n5=0, *nEvents;
+                n1=0, n2=0, n3=0, n4=0, n5=0, *nEvents, numMovableNodesOld, numMovableNodesNew;
     MrBFlt      x, y=0.0, oldBrlen=0.0, newBrlen=0.0, extensionProb, nu, var, *rate=NULL,
                 v1=0.0, v2=0.0, v3=0.0, v4=0.0, v5=0.0, v3new=0.0, lambda,
                 **position=NULL, **rateMultiplier=NULL, *brlens, minV, clockRate;
@@ -2929,6 +3040,20 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     getchar();
 #   endif
     
+    numMovableNodesOld = 0;
+    for (i=0; i<t->nNodes-2; ++i)
+        {
+        p = t->allDownPass[i];
+        a = p->anc->left;
+        b = p->anc->right;
+        if (!(p->anc->isLocked == YES || p->anc->anc->anc == NULL
+              || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN)
+              || (p->length < TIME_MIN && p->calibration->prior == fixed)))
+            ++numMovableNodesOld;
+        }
+    if (numMovableNodesOld == 0)  // we can't move!
+        return NO_ERROR;
+
     /* pick a branch */
     do  {
         p = t->allDownPass[(int)(RandomNumber(seed) * (t->nNodes - 2))];
@@ -3361,6 +3486,21 @@ int Move_ExtSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
         p = p->anc;
         }
 
+    /* adjust proposal ratio for number of movable nodes */
+    numMovableNodesNew = 0;
+    for (i=0; i<t->nNodes-2; ++i)
+        {
+        p = t->allDownPass[i];
+        a = p->anc->left;
+        b = p->anc->right;
+        if (!(p->anc->isLocked == YES || p->anc->anc->anc == NULL
+              || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN)
+              || (p->length < TIME_MIN && p->calibration->prior == fixed)))
+            ++numMovableNodesNew;
+        }
+    if (numMovableNodesOld != numMovableNodesNew)
+        (*lnProposalRatio) += log(numMovableNodesOld/numMovableNodesNew);
+
     /* adjust prior ratio for clock tree */
     if (LogClockTreePriorRatio(param, chain, &x) == ERROR)
         return (ERROR);
@@ -3427,7 +3567,7 @@ int Move_ExtSPRClock_Fossil (Param *param, int chain, RandLong *seed, MrBFlt *ln
 #   endif
     
     /* mark all nodes that only have fossil children with YES and count number movable nodes in current tree */
-    numMovableNodesOld=0;
+    numMovableNodesOld = 0;
     for (i=0; i<t->nNodes-2; ++i)
         {
         p = t->allDownPass[i];
@@ -3451,12 +3591,12 @@ int Move_ExtSPRClock_Fossil (Param *param, int chain, RandLong *seed, MrBFlt *ln
             }
         a = p->anc->left;
         b = p->anc->right;
-        if (p->anc->isLocked == YES || p->anc->anc->anc == NULL
-            || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN) || p->x == NO)
+        if (!(p->anc->isLocked == YES || p->anc->anc->anc == NULL
+              || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN)
+              || (p->length < TIME_MIN && p->calibration->prior == fixed) || p->x == NO))
             numMovableNodesOld++;
         }
-    
-    if (numMovableNodesOld==0)
+    if (numMovableNodesOld == 0)
         return (NO_ERROR);
     
     /* pick a branch */
@@ -3467,8 +3607,7 @@ int Move_ExtSPRClock_Fossil (Param *param, int chain, RandLong *seed, MrBFlt *ln
         }
     while (p->anc->isLocked == YES || p->anc->anc->anc == NULL
            || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN)
-           || (p->length < TIME_MIN && p->calibration->prior == fixed)
-           || p->x == NO);
+           || (p->length < TIME_MIN && p->calibration->prior == fixed) || p->x == NO);
     /* skip constraints, siblings of root (and root); and consider ancestral fossils in fbd tree;
        skip all nodes that subtend extant terminals */
     
@@ -3911,7 +4050,7 @@ int Move_ExtSPRClock_Fossil (Param *param, int chain, RandLong *seed, MrBFlt *ln
         }
     
     /* adjust proposal prob for number movable nodes in new tree */
-    numMovableNodesNew=0;
+    numMovableNodesNew = 0;
     for (i=0; i<t->nNodes-2; ++i)
         {
         p = t->allDownPass[i];
@@ -3935,16 +4074,14 @@ int Move_ExtSPRClock_Fossil (Param *param, int chain, RandLong *seed, MrBFlt *ln
             }
         a = p->anc->left;
         b = p->anc->right;
-        if (p->anc->isLocked == YES || p->anc->anc->anc == NULL
-            || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN) || p->x == NO)
+        if (!(p->anc->isLocked == YES || p->anc->anc->anc == NULL
+              || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN)
+              || (p->length < TIME_MIN && p->calibration->prior == fixed) || p->x == NO))
             numMovableNodesNew++;
         }
     
-    if (numMovableNodesNew!=numMovableNodesOld)
-        {
-        /* FIXME: numMovableNodesNew may be zero (from clang static analyzer) */
-        (*lnProposalRatio) += log (numMovableNodesOld / numMovableNodesNew);
-        }
+    if (numMovableNodesNew != numMovableNodesOld)
+        (*lnProposalRatio) += log(numMovableNodesOld/numMovableNodesNew);
     
 #   if defined (DEBUG_ExtSPRClock)
     ShowNodes (t->root, 2, YES);
@@ -5539,7 +5676,7 @@ int Move_Growth_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     (*lnProposalRatio) = log (newG / oldG);
     
     /* get prior ratio */
-    t = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
+    t = GetTree(m->brlens, chain, state[chain]);
     if (LnCoalescencePriorPr (t, &oldLnPrior, curTheta, oldG) == ERROR)
         {
         MrBayesPrint ("%s   Problem calculating prior for coalescent process\n", spacer);
@@ -11117,7 +11254,7 @@ int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
     
     /* set topologyHasChanged to NO */
-    topologyHasChanged = NO;    /* FIXME: Not used (from clang static analyzer) */
+    topologyHasChanged = NO;
     
     /* pick a random branch */
     do  {
@@ -11787,16 +11924,18 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     getchar();
 #   endif
     
-    numMovableNodesOld=0;
+    numMovableNodesOld = 0;
     for (i=0; i<t->nNodes-2; ++i)
         {
         p = t->allDownPass[i];
         a = p->anc->left;
         b = p->anc->right;
-        if (p->anc->isLocked == YES || p->anc->anc->anc == NULL
-            || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN))
+        if (!(p->anc->isLocked == YES || p->anc->anc->anc == NULL
+              || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN)))
             ++numMovableNodesOld;
         }
+    if (numMovableNodesOld == 0)
+        return NO_ERROR;
     
     /* pick a branch */
     do  {
@@ -12354,14 +12493,14 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     GetDownPass (t);
 
     /* adjust proposal ratio for number of movable nodes */
-    numMovableNodesNew=0;
+    numMovableNodesNew = 0;
     for (i=0; i<t->nNodes-2; ++i)
         {
         p = t->allDownPass[i];
         a = p->anc->left;
         b = p->anc->right;
-        if (p->anc->isLocked == YES || p->anc->anc->anc == NULL
-            || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN))
+        if (!(p->anc->isLocked == YES || p->anc->anc->anc == NULL
+              || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN)))
             ++numMovableNodesNew;
         }
     if (numMovableNodesOld != numMovableNodesNew)
@@ -12427,7 +12566,7 @@ int Move_ParsSPRClock_Fossil (Param *param, int chain, RandLong *seed, MrBFlt *l
 #   endif
     
     /* mark all nodes that only have fossil children with YES and count number movable nodes in current tree */
-    numMovableNodesOld=0;
+    numMovableNodesOld = 0;
     for (i=0; i<t->nNodes-2; ++i)
         {
         p = t->allDownPass[i];
@@ -12451,12 +12590,11 @@ int Move_ParsSPRClock_Fossil (Param *param, int chain, RandLong *seed, MrBFlt *l
             }
         a = p->anc->left;
         b = p->anc->right;
-        if (p->anc->isLocked == YES || p->anc->anc->anc == NULL
-            || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN) || p->x == NO)
+        if (!(p->anc->isLocked == YES || p->anc->anc->anc == NULL
+              || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN) || p->x == NO))
             numMovableNodesOld++;
         }
-    
-    if (numMovableNodesOld==0)
+    if (numMovableNodesOld == 0)
         return (NO_ERROR);
     
     /* pick a branch */
@@ -13027,7 +13165,7 @@ int Move_ParsSPRClock_Fossil (Param *param, int chain, RandLong *seed, MrBFlt *l
     (*lnPriorRatio) += x;
     
     /* adjust proposal prob for number movable nodes in new tree */
-    numMovableNodesNew=0;
+    numMovableNodesNew = 0;
     for (i=0; i<t->nNodes-2; ++i)
         {
         p = t->allDownPass[i];
@@ -13051,15 +13189,14 @@ int Move_ParsSPRClock_Fossil (Param *param, int chain, RandLong *seed, MrBFlt *l
             }
         a = p->anc->left;
         b = p->anc->right;
-        if (p->anc->isLocked == YES || p->anc->anc->anc == NULL
-            || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN) || p->x == NO)
+        if (!(p->anc->isLocked == YES || p->anc->anc->anc == NULL
+              || (p == b && a->length < TIME_MIN) || (p == a && b->length < TIME_MIN) || p->x == NO))
             numMovableNodesNew++;
         }
     
-    if (numMovableNodesNew!=numMovableNodesOld)
-        {
-        (*lnProposalRatio) += log (numMovableNodesOld / numMovableNodesNew);
-        }
+    if (numMovableNodesNew != numMovableNodesOld)
+        (*lnProposalRatio) += log(numMovableNodesOld/numMovableNodesNew);
+
     
 #   if defined (DEBUG_ParsSPRClock)
     ShowNodes (t->root, 2, YES);
@@ -13144,7 +13281,7 @@ int Move_ParsTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
     
     /* set topologyHasChanged to NO */
-    topologyHasChanged = NO; /* FIXME: Not used (from clang static analyzer) */
+    topologyHasChanged = NO;
     
     /* reset node variables that will be used */
     for (i=0; i<t->nNodes; i++)
@@ -13676,7 +13813,7 @@ int Move_ParsTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         (*lnPriorRatio) = -LogDirPrior(t, mp, isVPriorExp);
     
     /* set topologyHasChanged to NO */
-    topologyHasChanged = NO; /* FIXME: Not used (from clang static analyzer) */
+    topologyHasChanged = NO;
     
     /* reset node variables that will be used */
     for (i=0; i<t->nNodes; i++)
@@ -14227,8 +14364,7 @@ int Move_Pinvar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     for (i=0; i<param->nRelParts; i++)
         TouchAllTreeNodes(&modelSettings[param->relParts[i]],chain);
     
-    /* However, you do need to update cijk flags if this is a covarion model */
-    /* TO DO */
+    /* TODO: However, you do need to update cijk flags if this is a covarion model */
     
     return (NO_ERROR);
 }
@@ -14261,7 +14397,7 @@ int Move_PopSize_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     else
         {
         minN = 0.00000001;
-        maxN = 10000000;
+        maxN = 100000000;
         }
 
     /* get pointer to value to be changed */
@@ -14306,8 +14442,7 @@ int Move_PopSize_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
         }
     else
         {
-        t = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
-        m = &modelSettings[param->relParts[0]];
+        t = GetTree(m->brlens, chain, state[chain]);
         clockRate = *GetParamVals(m->clockRate, chain, state[chain]);
         if (!strcmp(mp->ploidy, "Diploid"))
             clockRate *= 4.0;
@@ -14429,6 +14564,106 @@ int Move_PosRealMultiplier (Param *param, int chain, RandLong *seed, MrBFlt *lnP
     
     /* copy new value back */
     *(GetParamVals(param, chain, state[chain])) = newX;
+
+    /* Set update flags for tree nodes if relevant */
+    if (param->affectsLikelihood == YES)
+        {
+        for (i=0; i<param->nRelParts; i++)
+            TouchAllTreeNodes(&modelSettings[param->relParts[i]],chain);
+        }
+
+    return (NO_ERROR);
+}
+
+
+/* Generalized normal move for real random variables */
+int Move_RealNormal (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+    int             i;
+    MrBFlt          oldX, newX, tuning, minX, maxX, u, z;
+
+    /* get tuning parameter */
+    tuning = mvp[0];
+
+    /* get minimum and maximum values for X */
+    minX = param->min;
+    maxX = param->max;
+
+    /* get old value of X */
+    oldX = *GetParamVals(param, chain, state[chain]);
+
+    /* change value */
+    u = RandomNumber(seed);
+    z = PointNormal(u);
+    newX = oldX + z * tuning;
+    
+    /* check that new value is valid */
+    if (newX < minX || newX > maxX)
+        {
+        abortMove = YES;
+        return (NO_ERROR);
+        }
+
+    /* get proposal ratio */
+    (*lnProposalRatio) = 0.0;
+    
+    /* get prior ratio */
+    (*lnPriorRatio) = param->LnPriorRatio(newX, oldX, param->priorParams);
+
+    /* copy new value back */
+    *GetParamVals(param, chain, state[chain]) = newX;
+
+    /* Set update flags for tree nodes if relevant */
+    if (param->affectsLikelihood == YES)
+        {
+        for (i=0; i<param->nRelParts; i++)
+            TouchAllTreeNodes(&modelSettings[param->relParts[i]],chain);
+        }
+
+    return (NO_ERROR);
+}
+
+
+/* Generalized slider move for real random variables */
+int Move_RealSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
+{
+    int             i, isValid;
+    MrBFlt          oldX, newX, window, minX, maxX, u;
+
+    /* get size of window, centered on current value */
+    window = mvp[0];
+
+    /* get minimum and maximum values for X */
+    minX = param->min;
+    maxX = param->max;
+
+    /* get old value of X */
+    oldX = *GetParamVals(param, chain, state[chain]);
+
+    /* change value */
+    u = RandomNumber(seed);
+    newX = oldX + window * (u - 0.5);
+    
+    /* check that new value is valid */
+    isValid = NO;
+    do
+        {
+        if (newX < minX)
+            newX = 2* minX - newX;
+        else if (newX > maxX)
+            newX = 2 * maxX - newX;
+        else
+            isValid = YES;
+        } while (isValid == NO);
+
+    /* get proposal ratio */
+    (*lnProposalRatio) = 0.0;
+    
+    /* get prior ratio */
+    (*lnPriorRatio) = param->LnPriorRatio(newX, oldX, param->priorParams);
+
+    /* copy new value back */
+    *GetParamVals(param, chain, state[chain]) = newX;
 
     /* Set update flags for tree nodes if relevant */
     if (param->affectsLikelihood == YES)
@@ -14920,7 +15155,7 @@ int Move_Revmat_DirMix (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
         if (isValid==1) break;
         for (i=0; i<nRates; i++)
             {
-            if (newRate[i]!=RATE_MIN)
+            if (newRate[i] != RATE_MIN)
                 newRate[i] = rate_pot * newRate[i] / sum;
             }
         }
@@ -15743,8 +15978,8 @@ int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         }
     else
         {
-        minL = 0.000001;
-        maxL = 1000.0;
+        minL = RATE_MIN;
+        maxL = RATE_MAX;
         lambdaExp = mp->speciationExp;
         isLPriorExp = YES;
         }
@@ -15776,7 +16011,7 @@ int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     *lnProposalRatio = 0.0;
     
     /* calculate prior ratio */
-    t  = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
+    t  = GetTree(m->brlens, chain, state[chain]);
     sR = GetParamVals (param, chain, state[chain]);
     eR = GetParamVals (m->extinctionRates, chain, state[chain]);
     sF = mp->sampleProb;
@@ -15806,7 +16041,6 @@ int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
             return (ERROR);
             }
         *valPtr = newL;  // update with new value
-        // for (i=0; i<param->nValues; i++)  *(GetParamVals(param, chain, state[chain]) + i) = newL;
         if (LnFossilizationPriorPr (t, clockRate, &newLnPrior, sR, eR, fR, sF, sS) == ERROR)
             {
             MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
@@ -15855,8 +16089,8 @@ int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
         }
     else
         {
-        minL = 0.000001;
-        maxL = 1000.0;
+        minL = RATE_MIN;
+        maxL = RATE_MAX;
         lambdaExp = mp->speciationExp;
         isLPriorExp = YES;
         }
@@ -15886,7 +16120,7 @@ int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     *lnProposalRatio = log (newL / oldL);
     
     /* calculate prior ratio */
-    t  = GetTree(modelSettings[param->relParts[0]].brlens,chain,state[chain]);
+    t  = GetTree(m->brlens, chain, state[chain]);
     sR = GetParamVals (param, chain, state[chain]);
     eR = GetParamVals (m->extinctionRates, chain, state[chain]);
     sF = mp->sampleProb;
@@ -16959,20 +17193,18 @@ int Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     for (i=0; i<t->nNodes; i++)
         {
         p = t->allDownPass[i];
-        if (p->anc != NULL)
+        if (p->anc != NULL && (t->isRooted == NO || p->anc->anc != NULL)) //SK: additional condition for rooted trees
             {
-            if (t->isRooted == NO || p->anc->anc != NULL) //SK: additional condition for rooted trees
+            if (p->length*treescaler < minV || p->length*treescaler > maxV)
                 {
-                if (p->length*treescaler < minV || p->length*treescaler > maxV)
-                    {
-                    abortMove = YES;
-                    return NO_ERROR;
-                    }
-                begin_tl += p->length;
-                branch_counter++;
-                }              
+                abortMove = YES;
+                return NO_ERROR;
+                }
+            begin_tl += p->length;
+            branch_counter++;
             }
         }
+        
     if (t->isRooted == NO)
         assert(branch_counter==t->nNodes-1);
     else
@@ -16982,17 +17214,14 @@ int Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     for (i=0; i < t->nNodes; i++)
         {
         p = t->allDownPass[i];
-        if (p->anc != NULL)
+        if (p->anc != NULL && (t->isRooted == NO || p->anc->anc != NULL)) //SK: additional condition for rooted trees
             {
-            if (t->isRooted == NO || p->anc->anc != NULL) //SK: additional condition for rooted trees
-                {
-                /* set new length */
-                p->length *= treescaler;
+            /* set new length */
+            p->length *= treescaler;
 
-                /* set flags for update of transition probabilities at p */
-                p->upDateTi = YES;
-                p->anc->upDateCl = YES;
-                }
+            /* set flags for update of transition probabilities at p */
+            p->upDateTi = YES;
+            p->anc->upDateCl = YES;
             }
         }
 
@@ -17294,123 +17523,6 @@ int Move_TreeStretch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 }
 
 
-/* Generalized normal move for real random variables */
-int Move_RealNormal (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-{
-    int             i;
-    MrBFlt          oldX, newX, tuning, minX, maxX, u, z;
-
-    /* get tuning parameter */
-    tuning = mvp[0];
-
-    /* get minimum and maximum values for X */
-    minX = param->min;
-    maxX = param->max;
-
-    /* get old value of X */
-    oldX = *GetParamVals(param, chain, state[chain]);
-
-    /* change value */
-    u = RandomNumber(seed);
-    z = PointNormal(u);
-    newX = oldX + z * tuning;
-    
-    /* check that new value is valid */
-    if (newX < minX || newX > maxX)
-        {
-        abortMove = YES;
-        return (NO_ERROR);
-        }
-
-    /* get proposal ratio */
-    (*lnProposalRatio) = 0.0;
-    
-    /* get prior ratio */
-    (*lnPriorRatio) = param->LnPriorRatio(newX, oldX, param->priorParams);
-
-    /* copy new value back */
-    *GetParamVals(param, chain, state[chain]) = newX;
-
-    /* Set update flags for tree nodes if relevant */
-    if (param->affectsLikelihood == YES)
-        {
-        for (i=0; i<param->nRelParts; i++)
-            TouchAllTreeNodes(&modelSettings[param->relParts[i]],chain);
-        }
-
-    return (NO_ERROR);
-}
-
-
-/* Generalized slider move for real random variables */
-int Move_RealSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
-{
-    int             i, isValid;
-    MrBFlt          oldX, newX, window, minX, maxX, u;
-
-    /* get size of window, centered on current value */
-    window = mvp[0];
-
-    /* get minimum and maximum values for X */
-    minX = param->min;
-    maxX = param->max;
-
-    /* get old value of X */
-    oldX = *GetParamVals(param, chain, state[chain]);
-
-    /* change value */
-    u = RandomNumber(seed);
-    newX = oldX + window * (u - 0.5);
-    
-    /* check that new value is valid */
-    isValid = NO;
-    do
-        {
-        if (newX < minX)
-            newX = 2* minX - newX;
-        else if (newX > maxX)
-            newX = 2 * maxX - newX;
-        else
-            isValid = YES;
-        } while (isValid == NO);
-
-    /* get proposal ratio */
-    (*lnProposalRatio) = 0.0;
-    
-    /* get prior ratio */
-    (*lnPriorRatio) = param->LnPriorRatio(newX, oldX, param->priorParams);
-
-    /* copy new value back */
-    *GetParamVals(param, chain, state[chain]) = newX;
-
-    /* Set update flags for tree nodes if relevant */
-    if (param->affectsLikelihood == YES)
-        {
-        for (i=0; i<param->nRelParts; i++)
-            TouchAllTreeNodes(&modelSettings[param->relParts[i]],chain);
-        }
-
-    return (NO_ERROR);
-}
-
-
-void TouchAllTreeNodes (ModelInfo *m, int chain)
-{
-    int         i;
-    Tree        *t;
-    TreeNode    *p;
-    
-    t = GetTree(m->brlens, chain, state[chain]);
-    for (i=0; i<t->nNodes; i++)
-        {
-        p = t->allDownPass[i];
-        p->upDateCl = YES;
-        p->upDateTi = YES;
-        }
-    m->upDateAll = YES;
-}
-
-
 int Move_WNBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
     /* move one WN relaxed clock branch rate using multiplier */
@@ -17561,5 +17673,22 @@ int Move_WNVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         }
 
     return (NO_ERROR);
+}
+
+
+void TouchAllTreeNodes (ModelInfo *m, int chain)
+{
+    int         i;
+    Tree        *t;
+    TreeNode    *p;
+    
+    t = GetTree(m->brlens, chain, state[chain]);
+    for (i=0; i<t->nNodes; i++)
+        {
+        p = t->allDownPass[i];
+        p->upDateCl = YES;
+        p->upDateTi = YES;
+        }
+    m->upDateAll = YES;
 }
 

@@ -138,16 +138,10 @@ PFNODE   *CompactTree (PFNODE *p);
 int       ConfirmAbortRun(void);
 void      CopyParams (int chain);
 void      CopyPFNodeDown (PFNODE *p);
-void      CopySiteScalers (ModelInfo *m, int chain);
 void      CopyTrees (int chain);
 int       ExtendChainQuery (void);
 int       FillNumSitesOfPat (void);
 TreeNode *FindBestNode (Tree *t, TreeNode *p, TreeNode *addNode, CLFlt *minLength, int chain);
-void      FlipCijkSpace (ModelInfo *m, int chain);
-void      FlipCondLikeSpace (ModelInfo *m, int chain, int nodeIndex);
-void      FlipNodeScalerSpace (ModelInfo *m, int chain, int nodeIndex);
-void      FlipSiteScalerSpace (ModelInfo *m, int chain);
-void      FlipTiProbsSpace (ModelInfo *m, int chain, int nodeIndex);
 void      FreeChainMemory (void);
 MrBFlt    GetFitchPartials (ModelInfo *m, int chain, int source1, int source2, int destination);
 void      GetStamp (void);
@@ -226,7 +220,6 @@ int       RemoveTreeSamples (int from, int to);
 int       ReopenMBPrintFiles (void);
 void      ResetChainIds (void);
 void      ResetFlips(int chain);
-void      ResetSiteScalers (ModelInfo *m, int chain);
 int       ReusePreviousResults(int *numSamples, int);
 int       RunChain (RandLong *seed);
 int       SafeSprintf (char **target, int *targetLen, char *fmt, ...);
@@ -1923,8 +1916,8 @@ void CalcTopoConvDiagn2 (int *nTrees)
 int CheckTemperature (void)
 {
     if (chainParams.userDefinedTemps == YES)
-            {
-          if (AreDoublesEqual(chainParams.userTemps[0], 1.0, ETA)==NO)
+        {
+        if (AreDoublesEqual(chainParams.userTemps[0], 1.0, ETA)==NO)
             {
             MrBayesPrint ("%s   The first user-defined temperature must be 1.0.\n", spacer);
             return (ERROR);
@@ -2114,53 +2107,6 @@ void CopyParams (int chain)
         }
         
     return;
-}
-
-
-/* CopySiteScalers: Copy site scalers from scratch space into current space */
-void CopySiteScalers (ModelInfo *m, int chain)
-{
-    CLFlt       *from, *to;
-#   if defined (BEAGLE_ENABLED)
-    int         i, j;
-#   endif
-
-#   if defined (BEAGLE_ENABLED)
-    if (m->useBeagle == YES)
-        {
-        j = m->siteScalerScratchIndex;
-        for (i=0; i<m->nCijkParts; i++)
-            {
-            if (m->useBeagleMultiPartitions == NO)
-                {
-                beagleResetScaleFactors (m->beagleInstance,
-                                         m->siteScalerIndex[chain] + i);
-                beagleAccumulateScaleFactors (m->beagleInstance,
-                                              &j,
-                                              1,
-                                              m->siteScalerIndex[chain] + i);
-                }
-            else
-#   if defined (BEAGLE_V3_ENABLED)
-                {
-                beagleResetScaleFactorsByPartition (m->beagleInstance,
-                                                    m->siteScalerIndex[chain] + i,
-                                                    m->divisionIndex);
-                beagleAccumulateScaleFactorsByPartition (m->beagleInstance,
-                                                         &j,
-                                                         1,
-                                                         m->siteScalerIndex[chain] + i,
-                                                         m->divisionIndex);                        
-                }
-#   endif /* BEAGLE_V3_ENABLED */
-            j++;
-            }
-        return;
-        }
-#   endif
-    from = m->scalers[m->siteScalerScratchIndex];
-    to   = m->scalers[m->siteScalerIndex[chain]];
-    memcpy ((void*) to, (void*) from, (size_t)(m->numChars) * sizeof(CLFlt));
 }
 
 
@@ -4450,78 +4396,6 @@ TreeNode *FindBestNode (Tree *t, TreeNode *p, TreeNode *addNode, CLFlt *minLengt
 }
 
 
-/* FlipCijkSpace: Flip space for cijks with scratch area */
-void FlipCijkSpace (ModelInfo* m, int chain)
-{
-    int         temp;
-
-    temp                = m->cijkIndex[chain];
-    m->cijkIndex[chain] = m->cijkScratchIndex;
-    m->cijkScratchIndex = temp;
-}
-
-
-/* FlipCondLikeSpace: Flip space for conditional likelihoods with scratch area */
-void FlipCondLikeSpace (ModelInfo* m, int chain, int nodeIndex)
-{
-    int         temp;
-
-    temp                               = m->condLikeIndex[chain][nodeIndex];
-    m->condLikeIndex[chain][nodeIndex] = m->condLikeScratchIndex[nodeIndex];
-    m->condLikeScratchIndex[nodeIndex] = temp;
-}
-
-
-/* FlipNodeScalerSpace: Flip space for node scalers and scaler flag with scratch area */
-void FlipNodeScalerSpace (ModelInfo* m, int chain, int nodeIndex)
-{
-    int         temp;
-
-    temp                                 = m->nodeScalerIndex[chain][nodeIndex];
-    m->nodeScalerIndex[chain][nodeIndex] = m->nodeScalerScratchIndex[nodeIndex];
-    m->nodeScalerScratchIndex[nodeIndex] = temp;
-
-    temp                                 = m->unscaledNodes[chain][nodeIndex];
-    m->unscaledNodes[chain][nodeIndex]   = m->unscaledNodesScratch[nodeIndex];
-    m->unscaledNodesScratch[nodeIndex]   = temp;
-}
-
-
-/* FlipSiteScalerSpace: Flip space for ln site scalers */
-void FlipSiteScalerSpace (ModelInfo *m, int chain)
-{
-    int  temp;
-
-#   if defined (BEAGLE_ENABLED)
-    int *tempp;
-#   endif
-
-    temp = m->siteScalerIndex[chain];
-    m->siteScalerIndex[chain] = m->siteScalerScratchIndex;
-    m->siteScalerScratchIndex = temp;
-
-#   if defined (BEAGLE_ENABLED)
-    if (m->useBeagle == YES)
-        {
-        tempp = m->isScalerNode[chain];
-        m->isScalerNode[chain] = m->isScalerNodeScratch ;
-        m->isScalerNodeScratch = tempp;
-        }
-#   endif
-}
-
-
-/* FlipTiProbsSpace: Flip space for ti probs with scratch area */
-void FlipTiProbsSpace (ModelInfo* m, int chain, int nodeIndex)
-{
-    int         temp;
-
-    temp                              = m->tiProbsIndex[chain][nodeIndex];
-    m->tiProbsIndex[chain][nodeIndex] = m->tiProbsScratchIndex[nodeIndex];
-    m->tiProbsScratchIndex[nodeIndex] = temp;
-}
-
-
 void FreeChainMemory (void)
 {
     int         i, j, k, nRates;
@@ -5854,7 +5728,7 @@ int InitChainCondLikes (void)
         m->condLikeLength = 0;
         m->numCondLikes = 0;
 
-        if (m->parsModelId == YES)
+        if (m->parsModelId == YES || m->dataType == CONTINUOUS)
             continue;
 
         condLikesUsed = YES;
@@ -6033,7 +5907,8 @@ int InitChainCondLikes (void)
         for (i=0; i<numLocalTaxa; i++)
             {
 #   if !defined (DEBUG_NOSHORTCUTS)
-            /* TODO: Until CondLikeRoot_XXX are fixed (case 4 when one of the children is non-ambig) we allocate space for non-ambig tips. If fixed also uncomment down the function */
+            /* TODO: Until CondLikeRoot_XXX are fixed (case 4 when one of the children is non-ambig) we allocate space for non-ambig tips.
+               If fixed also uncomment down the function */
             /* if (m->useBeagle == NO && m->useVec == VEC_NONE && m->isPartAmbig[i] == NO && m->dataType != STANDARD)
                 continue;
             */
@@ -6070,7 +5945,8 @@ int InitChainCondLikes (void)
             }
 
         /* parsimony models need nothing of the below */
-        if (m->parsModelId == YES)
+        //chi TODO: double check if also applies to continuous data
+        if (m->parsModelId == YES || m->dataType == CONTINUOUS)
             continue;
 
         /* allocate space for conditional likelihoods */
@@ -6461,7 +6337,8 @@ int InitChainCondLikes (void)
             for (i=0; i<numLocalTaxa; i++)
                 {
 #   if !defined (DEBUG_NOSHORTCUTS) && !defined (SSE_ENABLED)
-                /* TODO: Until CondLikeRoot_XXX are fixed (case 4 when one of the children is non-ambig) we allocate space for non-ambig tips. if fixed also uncomment up the function */
+                /* TODO: Until CondLikeRoot_XXX are fixed (case 4 when one of the children is non-ambig) we allocate space for non-ambig tips.
+                   if fixed also uncomment up the function */
                 /* if (m->isPartAmbig[i] == NO && m->dataType != RESTRICTION)
                     continue;
                 */
@@ -6599,7 +6476,7 @@ int InitChainCondLikes (void)
     for (d=0; d<numCurrentDivisions; d++)
         {
         m = &modelSettings[d];
-        if (m->dataType == STANDARD || m->parsModelId == YES)
+        if (m->dataType == STANDARD || m->dataType == CONTINUOUS || m->parsModelId == YES)
             continue;
 
         i = (m->numModelStates + 1) * m->numModelStates * m->numTiCats;
@@ -7975,7 +7852,7 @@ MrBFlt LogPrior (int chain)
         else if (p->paramType == P_CORREL)
             {
             /* adGamma model parameter */
-            lnPrior += log(1.0) - log(mp->corrUni[1] - mp->corrUni[0]);
+            lnPrior += log(1.0) - log(mp->adgCorrUni[1] - mp->adgCorrUni[0]);
             }
         else if (p->paramType == P_SWITCH)
             {
@@ -8250,18 +8127,6 @@ MrBFlt LogPrior (int chain)
                 lnPrior += p->LnPriorProb(st[i], p->priorParams);
                 }
             }
-        else if (p->paramType == P_AAMODEL)
-            {
-            lnPrior += sst[(int)st[0]];
-            }
-        else if (p->paramType == P_BRCORR)
-            {
-
-            }
-        else if (p->paramType == P_BRSIGMA)
-            {
-
-            }
         else if (p->paramType == P_GROWTH)
             {
             /* population growth parameter */
@@ -8269,9 +8134,31 @@ MrBFlt LogPrior (int chain)
                 {
                 lnPrior += log(1.0) - log(mp->growthUni[1] - mp->growthUni[0]);
                 }
-            else if (p->paramId == GROWTH_EXP)
+            else
                 {
-                lnPrior += log(mp->growthExp) - mp->growthExp * st[0];
+                lnPrior += p->LnPriorProb(st[0], p->priorParams);
+                }
+            }
+        else if (p->paramType == P_AAMODEL)
+            {
+            lnPrior += sst[(int)st[0]];
+            }
+        else if (p->paramType == P_BMCORR)
+            {
+            if (p->paramId == BMCORR_UNI)
+                {
+                lnPrior += log(1.0) - log(mp->brownCorrUni[1] - mp->brownCorrUni[0]);
+                }
+            }
+        else if (p->paramType == P_BMSIGMA)
+            {
+            if (p->paramId == BMSIGMA_UNI)
+                {
+                lnPrior += log(1.0) - log(mp->brownScaleUni[1] - mp->brownScaleUni[0]);
+                }
+            else if (p->paramId == BMSIGMA_GAMMA)
+                {
+                lnPrior += LnProbGamma(mp->brownScaleGamma[0], mp->brownScaleGamma[1], st[0]);
                 }
             }
         else if (p->paramType == P_CPPRATE)
@@ -8977,15 +8864,6 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 }
 
 
-int CompareDoubleDescending (const void *x, const void *y)
-{
-    if (*((double *)(x)) > *((double *)(y)))
-        return -1;
-    else if (*((double *)(x)) < *((double *)(y)))
-        return 1;
-    else
-        return 0;
-}
 int GetTotalRateShifts (Model *mp, MrBFlt *shiftTimes)
 {
     int    i, j, sLen, sTotal;
@@ -9013,8 +8891,8 @@ int GetTotalRateShifts (Model *mp, MrBFlt *shiftTimes)
             shiftTimes[sTotal++] = mp->deathRateShiftTime[i];
         }
     
-    /* sort shiftTimes[] in ascending order */
-    qsort(shiftTimes, sTotal, sizeof(double), CompareDoubleDescending);
+    /* sort shiftTimes[] in descending order */
+    SortMrBFlt_Des (shiftTimes, 0, sTotal-1);
 
     return sTotal;
 }
@@ -9519,7 +9397,7 @@ int LnCoalescencePriorPr_Contemp (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt gr
     nNodes = j;
 
     /* sort the coalescence times */
-    SortMrBFlt (ct, 0, nNodes-1);
+    SortMrBFlt_Asc (ct, 0, nNodes-1);
     
     /*for (i=0, k=numLocalTaxa; i<nNodes; i++)
         {
@@ -9600,7 +9478,7 @@ int LnCoalescencePriorPr (Tree *t, MrBFlt *prob, MrBFlt theta, MrBFlt growth)
         }
 
     /* sort the times array in increasing order */
-    SortMrBFlt (ct, 0, nTimes -1);
+    SortMrBFlt_Asc (ct, 0, nTimes -1);
 
     /* get the number of lineages in each time interval */
     for (i = 0; i < nTimes -1; i++)
@@ -9754,7 +9632,7 @@ MrBFlt LnUniformPriorPr (Tree *t, MrBFlt clockRate)
            returns the root node depth into nodeDepths, which is convenient. For now, this
            only works for dated tips, not for constrained but undated interior nodes. */
         GetDatedNodeDepths (root, nodeDepths);
-        SortMrBFlt (nodeDepths, 0, nDatedTips);   /* use index of left and right in call */
+        SortMrBFlt_Asc (nodeDepths, 0, nDatedTips);   /* use index of left and right in call */
 
         /* Get probability due to the uniform node depths; we do not use first and last tip depth
            for obvious reasons (see figure above) */
@@ -13087,14 +12965,16 @@ int PrintStates (long long curGen, int coldId)
         st  = GetParamVals (p, coldId, state[coldId]);
         sst = GetParamSubVals (p, coldId, state[coldId]);
 
-        if (p->paramId == SYMPI_EXP_MS || p->paramId == SYMPI_UNI_MS || p->paramId == SYMPI_FIX_MS)
+        if (p->paramId == SYMPI_EXP || p->paramId == SYMPI_UNI ||
+            p->paramId == SYMPI_EXP_MS || p->paramId == SYMPI_UNI_MS || p->paramId == SYMPI_FIX_MS)
             {
-            /* We print symmetric dirichlet alpha value if not fixed and then multistate character state frequencies */
+            /* print symmetric dirichlet alpha value if not fixed */
             if (p->paramId != SYMPI_FIX_MS)
                 {
                 SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(st[0]));
                 if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                 }
+            /* and then multistate character state frequencies */
             sst = GetParamStdStateFreqs (p, coldId, state[coldId]);
             if (p->hasBinaryStd == YES)
                 sst += 2 * m->numBetaCats;
@@ -13109,13 +12989,8 @@ int PrintStates (long long curGen, int coldId)
             }
         else if (p->paramType == P_PI || p->paramType == P_MIXTURE_RATES)
             {
-            /* We print the subvalues if we are dealing with state frequencies (state frequencies are held in subvalues) OR
-               if we are dealing with rates of a siterate mixture (rates held in subvalues). */
-            if (p->nValues == 1 && strcmp(mp->symPiPr,"Fixed") != 0)
-                {
-                SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(sst[j]));
-                if (AddToPrintString (tempStr) == ERROR) goto errorExit;
-                }
+            /* We print the subvalues if we are dealing with state frequencies (state frequencies are held in subvalues)
+               OR if we are dealing with rates of a siterate mixture (rates held in subvalues). */
             for (j=0; j<p->nSubValues; j++)
                 {
                 SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(sst[j]));
@@ -15930,33 +15805,32 @@ void ResetFlips (int chain)
 #endif    
     
     for (d=0; d<numCurrentDivisions; d++)
-    {
+        {
         m = &modelSettings[d];
 #if defined (BEAGLE_ENABLED)
         if (m->useBeagle == YES)
             isScalerNode = m->isScalerNode[chain];
 #endif
-        if (m->upDateCl != YES)
+
+        /* skip the following if we have irrelevant model or data types */
+        if (m->upDateCl != YES || m->parsModelId == YES || m->dataType == CONTINUOUS)
             continue;
         
-        if (m->parsModelId == NO)
-            {
 #if defined (BEAGLE_ENABLED)
-            if (m->useBeagle == NO || 
-                beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ||
-                m->rescaleBeagleAll == YES)
-                {
-                FlipSiteScalerSpace (m, chain);
-                if (m->useBeagle == YES && m->rescaleBeagleAll == YES)
-                    m->rescaleFreq[chain] = m->rescaleFreqOld;
-                }
-#else
+        if (m->useBeagle == NO ||
+            beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ||
+            m->rescaleBeagleAll == YES)
+            {
             FlipSiteScalerSpace (m, chain);
-#endif
-            if (m->upDateCijk == YES && m->nCijkParts > 0)
-                FlipCijkSpace (m, chain);
+            if (m->useBeagle == YES && m->rescaleBeagleAll == YES)
+                m->rescaleFreq[chain] = m->rescaleFreqOld;
             }
- 
+#else
+        FlipSiteScalerSpace (m, chain);
+#endif
+        if (m->upDateCijk == YES && m->nCijkParts > 0)
+            FlipCijkSpace (m, chain);
+        
         /* cycle over tree */
         tree = GetTree (m->brlens, chain, state[chain]);
         for (i=0; i<tree->nNodes; i++)
@@ -15969,17 +15843,14 @@ void ResetFlips (int chain)
                 if (p->upDateCl == YES)
                     {
                     FlipCondLikeSpace (m, chain, p->index);
-                    if (m->parsModelId == NO)
-                        {
 #if defined (BEAGLE_ENABLED)
-                        if (m->useBeagle == NO || 
-                            beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ||
-                            (m->rescaleBeagleAll == YES && isScalerNode[p->index] == YES))
-                            FlipNodeScalerSpace (m, chain, p->index);
-#else
+                    if (m->useBeagle == NO ||
+                        beagleScalingScheme == MB_BEAGLE_SCALE_ALWAYS ||
+                        (m->rescaleBeagleAll == YES && isScalerNode[p->index] == YES))
                         FlipNodeScalerSpace (m, chain, p->index);
+#else
+                    FlipNodeScalerSpace (m, chain, p->index);
 #endif
-                        }
                     }
 
 #if defined (BEAGLE_ENABLED)
@@ -15994,7 +15865,7 @@ void ResetFlips (int chain)
             }
         
         /* division flag and tree node flags are reset when trees are copied */
-    }
+        }
 }
 
 
@@ -16058,35 +15929,6 @@ int ResetScalersPartition (int *isScalerNode, Tree* t, unsigned rescaleFreq)
         }
 
     return NO_ERROR;
-}
-
-
-/*----------------------------------------------------------------------
- |
- |   ResetSiteScalers: Set log site scalers to 0.0.
- |
- ------------------------------------------------------------------------*/
-void ResetSiteScalers (ModelInfo *m, int chain)
-{
-    int     c;
-    CLFlt   *lnScaler;
-
-#if defined (BEAGLE_ENABLED)
-    if (m->useBeagle == YES)
-        {
-        if (m->useBeagleMultiPartitions == NO)
-            beagleResetScaleFactors(m->beagleInstance, m->siteScalerIndex[chain]);
-        else
-#   if defined (BEAGLE_V3_ENABLED)
-            beagleResetScaleFactorsByPartition(m->beagleInstance, m->siteScalerIndex[chain], m->divisionIndex);
-#   endif /* BEAGLE_V3_ENABLED */
-        /* TODO: check if nCijkParts scale factors should also be reset here */
-        return;
-        }
-#endif
-    lnScaler = m->scalers[m->siteScalerIndex[chain]];
-    for (c=0; c<m->numChars; c++)
-        lnScaler[c] = 0.0;
 }
 
 
@@ -17855,14 +17697,16 @@ int RunChain (RandLong *seed)
             if (chainParams.numRuns == 1)
                 MrBayesPrint ("\n%s   Acceptance rates for the moves in the \"cold\" chain:\n", spacer);
             else
-                MrBayesPrint ("\n%s   Acceptance rates for the moves in the \"cold\" chain of run %d:\n", spacer, j/chainParams.numChains+1);
+                MrBayesPrint ("\n%s   Acceptance rates for the moves in the \"cold\" chain of run %d:\n", spacer,
+                              j/chainParams.numChains+1);
             }
         else if (chainParams.allChains == YES)
             {
             if (chainParams.numRuns == 1)
                 MrBayesPrint ("\n%s   Acceptance rates for the moves in chain %d (heated):\n\n", spacer, j+1);
             else
-                MrBayesPrint ("\n%s   Acceptance rates for the moves in chain %d of run %d (heated):\n\n", spacer, j%chainParams.numChains+1, j/chainParams.numChains+1);
+                MrBayesPrint ("\n%s   Acceptance rates for the moves in chain %d of run %d (heated):\n\n", spacer,
+                              j%chainParams.numChains+1, j/chainParams.numChains+1);
             }
 
         if (j % chainParams.numChains == 0 || chainParams.allChains == YES)
@@ -17873,13 +17717,11 @@ int RunChain (RandLong *seed)
                 {
                 mv = usedMoves[i];
                 if (mv->nBatches[j] < 1)
-                    MrBayesPrint ("%s          NA           NA       %s\n",
-                    spacer, mv->name);
+                    MrBayesPrint ("%s          NA           NA       %s\n", spacer, mv->name);
                 else
                     MrBayesPrint ("%s       %6.1f %%     (%3.0f %%)     %s\n", spacer,
-                    100.0*mv->nTotAccepted[j]/(MrBFlt)(mv->nTotTried[j]),
-                    100.0*mv->lastAcceptanceRate[j],
-                    mv->name);
+                                  100.0*mv->nTotAccepted[j]/(MrBFlt)(mv->nTotTried[j]),
+                                  100.0*mv->lastAcceptanceRate[j], mv->name);
                 }
             }
         }
@@ -18199,8 +18041,7 @@ int SetLikeFunctions (void)
                     {
                     if (m->numModelStates > 4)
                         {
-                        /* covariotide model */
-                        /* TODO: allow autocorrelated rates */
+                        /* TODO: allow autocorrelated rates for covarion model */
                         if (m->gibbsGamma == YES)
                             {
                             m->CondLikeDown = &CondLikeDown_Gen_GibbsGamma;
@@ -18537,25 +18378,9 @@ int SetLikeFunctions (void)
                 m->CondLikeRoot   = &CondLikeRoot_Bin;
                 m->CondLikeScaler = &CondLikeScaler_Gen;
                 m->Likelihood     = &Likelihood_Res;
-#   if defined (SSE_ENABLED)
-                if (m->printAncStates == YES || m->printSiteRates == YES)
-                    {
-                    MrBayesPrint ("%s   Non-SSE version of conditional likelihood calculator will be used for division %d\n", spacer, i+1);
-                    MrBayesPrint ("%s   due to request of reporting 'ancestral states' or 'site rates'.\n", spacer);
-                    }
-                else
-                    {
-                    m->useVec = VEC_SSE;
-                    m->numFloatsPerVec = 4;
-                    m->CondLikeDown   = &CondLikeDown_Bin_SSE;
-                    m->CondLikeRoot   = &CondLikeRoot_Bin_SSE;
-                    m->CondLikeScaler = &CondLikeScaler_Gen_SSE;
-                    m->Likelihood     = &Likelihood_Res_SSE;
-                    }
-#   endif
-                m->TiProbs = &TiProbs_Res;
-                m->CondLikeUp = &CondLikeUp_Bin;
-                m->StateCode = &StateCode_Std;
+                m->TiProbs        = &TiProbs_Res;
+                m->CondLikeUp     = &CondLikeUp_Bin;
+                m->StateCode      = &StateCode_Std;
                 m->PrintAncStates = &PrintAncStates_Bin;
                 m->PrintSiteRates = &PrintSiteRates_Gen;
                 }
@@ -18587,8 +18412,11 @@ int SetLikeFunctions (void)
             }       
         else if (m->dataType == CONTINUOUS)
             {
-            
-            }       
+            if (m->parsModelId == NO)
+                {
+                m->Likelihood = &Likelihood_Cont;
+                }
+            }
         else
             {
             MrBayesPrint ("%s   ERROR: Data should be one of these types!\n", spacer);

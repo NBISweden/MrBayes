@@ -7858,7 +7858,7 @@ void PrintSumtTaxaInfo (void)
 /* Range: Determine range for a vector of MrBFlt values */
 void Range (MrBFlt *vals, int nVals, MrBFlt *min, MrBFlt *max)
 {    
-    SortMrBFlt (vals, 0, nVals-1);
+    SortMrBFlt_Asc (vals, 0, nVals-1);
     
     *min  = vals[0];
     *max  = vals[nVals-1];

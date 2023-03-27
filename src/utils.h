@@ -98,7 +98,8 @@ char    *SafeStrcpy (char **target, const char *source);
 void     SetBit (int i, BitsLong *bits);
 void     SortInts (int *item, int *assoc, int count, int descendingOrder);
 void     SortInts2 (int *item, int *assoc, int left, int right, int descendingOrder);
-void     SortMrBFlt (MrBFlt *item, int left, int right);
+void     SortMrBFlt_Asc (MrBFlt *item, int left, int right);
+void     SortMrBFlt_Des (MrBFlt *item, int left, int right);
 int      StrCmpCaseInsensitiveLen (const char *s, const char *t, size_t len);
 int      StrCmpCaseInsensitive (char *s, char *t);
 void     StripComments (char *s);
@@ -268,6 +269,7 @@ MrBFlt    LnProbTruncGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x, MrBFlt min, MrB
 MrBFlt    LnProbLogNormal (MrBFlt mu, MrBFlt sigma, MrBFlt x);
 MrBFlt    LnProbLogNormal_Mean_LogVar (MrBFlt mean, MrBFlt sigma2, MrBFlt x);
 MrBFlt    LnProbLogNormal_Mean_Var (MrBFlt mean, MrBFlt var, MrBFlt x);
+MrBFlt    LnProbNormal (MrBFlt mu, MrBFlt sigma, MrBFlt x);
 MrBFlt    LnRatioLogNormal (MrBFlt mu, MrBFlt sigma, MrBFlt xNew, MrBFlt xOld);
 MrBFlt    LogNormalRandomVariable (MrBFlt mean, MrBFlt var, RandLong *seed);
 MrBFlt    MaximumValue (MrBFlt x, MrBFlt y);
