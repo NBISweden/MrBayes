@@ -3554,7 +3554,7 @@ int DoEndBlock (void)
 int DoExecute (void)
 {
     int         rc, cmdLine, lineTerm, longestLineLength, nErrors;
-    char        *s, exeFileName[100];
+    char        *s;
     FILE        *fp;
     CmdType     *oldCommandPtr;
     char        *oldTokenP, oldToken[CMD_STRING_LENGTH];
@@ -3566,7 +3566,6 @@ int DoExecute (void)
     cmdLine = 0;
     numOpenExeFiles++;
     s = NULL;
-    strncpy (exeFileName, inputFileName, 98);
     
     if (numOpenExeFiles > 1)
         MrBayesPrint ("\n%s   Executing file \"%s\"...\n\n", spacer, inputFileName);
@@ -3793,7 +3792,7 @@ int DoExecute (void)
             {
             MrBayesPrint ("%s   The error occurred when reading char. %d-%d on line %d\n", spacer,
                 (size_t)(tokenP-s)-strlen(token)+1, (size_t)(tokenP-s), cmdLine);
-            MrBayesPrint ("%s      in the file '%s'\n", spacer, exeFileName);
+            MrBayesPrint ("%s      in the file '%s'\n", spacer, inputFileName);
             }
         if (s)
             free (s);
@@ -3842,7 +3841,7 @@ int DoExecuteParm (char *parmName, char *tkn)
         {
         MrBayesPrint ("%s   Maximum allowed length of file name is 99 characters. The given name:\n", spacer);
         MrBayesPrint ("%s      '%s'\n", spacer,tkn);
-        MrBayesPrint ("%s   has %d characters.\n", spacer,strlen(tkn));
+        MrBayesPrint ("%s   has %d characters.\n", spacer, strlen(tkn));
         return (ERROR);
         }
     strcpy (inputFileName, tkn);

@@ -298,27 +298,25 @@ int CopyResults (FILE *toFile, char *fromFileName, long long lastGen)
 
     longestLine = LongestLine(fromFile)+10;
     SafeFclose(&fromFile);
-    strBuf = (char *) SafeCalloc (2*(longestLine+2),sizeof(char));
-    strCpy = strBuf + longestLine + 2;
 
     if ((fromFile = OpenTextFileR(fromFileName)) == NULL)
-        {
-        free (strBuf);
         return ERROR;
-        }
-    
+
+    strBuf = (char *)SafeCalloc(longestLine, sizeof(char));
+    strCpy = (char *)SafeCalloc(longestLine, sizeof(char));
+
     while (fgets(strBuf,longestLine,fromFile)!=NULL)
         {
         strncpy (strCpy,strBuf,longestLine);
         word = strtok(strCpy," ");
         if (sscanf(word, "%lli", &tempL)==1 && tempL>lastGen)
             break;
-        fprintf (toFile,"%s",strBuf);
+        fprintf(toFile,"%s",strBuf);
         fflush (toFile);
         }
     
     SafeFclose(&fromFile);
-    free(strBuf);
+    free(strBuf); free(strCpy);
     return (NO_ERROR);
 }
 
@@ -336,15 +334,13 @@ int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *m
 
     longestLine = LongestLine(fromFile)+10;
     SafeFclose(&fromFile);
-    strBuf = (char *) SafeCalloc (2*(longestLine+2),sizeof(char));
-    strCpy = strBuf + longestLine + 2;
 
     if ((fromFile = OpenTextFileR(fromFileName)) == NULL)
-        {
-        free (strBuf);
         return ERROR;
-        }
-    
+
+    strBuf = (char *)SafeCalloc(longestLine, sizeof(char));
+    strCpy = (char *)SafeCalloc(longestLine, sizeof(char));
+
     while (fgets(strBuf,longestLine,fromFile)!=NULL)
         {
         strncpy (strCpy,strBuf,longestLine);
@@ -352,7 +348,7 @@ int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *m
         /* atoi returns 0 when word is not integer number */
         if (atoi(word)>lastStep)
             break;
-        fprintf (toFile,"%s",strBuf);
+        fprintf(toFile,"%s",strBuf);
         fflush (toFile);
         curStep = atoi(word);
         if (curStep > 0)
@@ -389,7 +385,7 @@ int CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *m
         }
     
     SafeFclose(&fromFile);
-    free(strBuf);
+    free(strBuf); free(strCpy);
     return (NO_ERROR);
 }
 
@@ -409,15 +405,13 @@ int CopyTreeResults (FILE *toFile, char *fromFileName, long long lastGen, int *n
 
     longestLine = LongestLine(fromFile)+10;
     SafeFclose(&fromFile);
-    strBuf = (char *) SafeCalloc (2*(longestLine+2),sizeof(char));
-    strCpy = strBuf + longestLine + 2;
 
     if ((fromFile = OpenTextFileR(fromFileName)) == NULL)
-        {
-        free (strBuf);
         return ERROR;
-        }
-    
+
+    strBuf = (char *)SafeCalloc(longestLine, sizeof(char));
+    strCpy = (char *)SafeCalloc(longestLine, sizeof(char));
+
     while (fgets(strBuf,longestLine,fromFile)!=NULL)
         {
         strncpy (strCpy,strBuf,longestLine);
@@ -429,15 +423,15 @@ int CopyTreeResults (FILE *toFile, char *fromFileName, long long lastGen, int *n
             if (sscanf(word+4, "%lli", &tempL)==1 && tempL>lastGen)
                 break;
             (*numTrees)++;
-            fprintf (toFile,"%s",strBuf);
+            fprintf(toFile,"%s",strBuf);
             }
         else if (*numTrees == 0)   /* do not print the end statement */
-            fprintf (toFile,"%s",strBuf);
+            fprintf(toFile,"%s",strBuf);
         fflush (toFile);
         }
         
     SafeFclose(&fromFile);
-    free(strBuf);
+    free(strBuf); free(strCpy);
     return (NO_ERROR);
 }
 

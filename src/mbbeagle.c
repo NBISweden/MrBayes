@@ -538,7 +538,7 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
 }
 
 
-void recalculateScalers(int chain)
+void recalculateScalers (int chain)
 {
     int         i, d, rescaleFreqNew;
     int         *isScalerNode;
@@ -606,7 +606,7 @@ void recalculateScalers(int chain)
 }
 
 
-void BeagleAddGPUDevicesToList(int **newResourceList, int *beagleResourceCount)
+void BeagleAddGPUDevicesToList (int **newResourceList, int *beagleResourceCount)
 {
     BeagleResourceList* beagleResources;
     int i, gpuCount;
@@ -626,7 +626,7 @@ void BeagleAddGPUDevicesToList(int **newResourceList, int *beagleResourceCount)
 }
 
 
-void BeagleRemoveGPUDevicesFromList(int **beagleResource, int *beagleResourceCount)
+void BeagleRemoveGPUDevicesFromList (int **beagleResource, int *beagleResourceCount)
 {
     *beagleResourceCount = 0;
 }
@@ -637,7 +637,7 @@ void BeagleRemoveGPUDevicesFromList(int **beagleResource, int *beagleResourceCou
 | BeaglePrintResources: outputs the available BEAGLE resources
 |
 ----------*/
-void BeaglePrintResources()
+void BeaglePrintResources (void)
 {
     int i;
     BeagleResourceList* beagleResources;
@@ -660,7 +660,7 @@ void BeaglePrintResources()
 }
 
 
-int BeagleCheckFlagCompatability(long inFlags)
+int BeagleCheckFlagCompatability (long inFlags)
 {
     if (inFlags & BEAGLE_FLAG_PROCESSOR_GPU) {
         if (inFlags & BEAGLE_FLAG_VECTOR_SSE) {
@@ -682,7 +682,7 @@ int BeagleCheckFlagCompatability(long inFlags)
 |  BeaglePrintFlags: outputs beagle instance details
 |
 ______________________*/
-void BeaglePrintFlags(long inFlags) 
+void BeaglePrintFlags (long inFlags)
 {
     int     i, k;
     char *names[] = { "PROCESSOR_CPU",
@@ -752,7 +752,7 @@ void BeaglePrintFlags(long inFlags)
         }
 }
 
-int ScheduleLogLikeForAllDivisions()
+int ScheduleLogLikeForAllDivisions (void)
 {
     int d;
     int divisionsToLaunch = 0;
@@ -1108,12 +1108,12 @@ int TreeCondLikes_Beagle_Always_Rescale (Tree *t, int division, int chain)
 }
 
 
-/**---------------------------------------------------------------------------
+/*---------------------------------------------------------------------------
 |
 |   TreeLikelihood_Beagle: Accumulate the log likelihoods calculated by Beagle
 |      at the root.
 |
----------------------------------------- -------------------------------------*/
+-----------------------------------------------------------------------------*/
 int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int whichSitePats)
 {
     int         i, j, c = 0, nStates, hasPInvar, beagleReturn;
@@ -1497,7 +1497,7 @@ int TreeTiProbs_Beagle (Tree *t, int division, int chain)
 |   InitBeagleMultiPartitionInstance: create and initialize a beagle instance for multiple partitions
 |
 -------------------------------------------------------------------------*/
-int InitBeagleMultiPartitionInstance ()
+int InitBeagleMultiPartitionInstance (void)
 {
     int                     i, j, k, c, s, d, *inStates, numPartAmbigTips, sizePD;
     int                     nCijkParts, numRateCats, numModelStates, numCondLikes, numScalers;
@@ -2621,12 +2621,12 @@ int TreeCondLikes_BeagleMultiPartition_Always_Rescale (int* divisions, int divis
     return NO_ERROR;
 }
 
-/**---------------------------------------------------------------------------
+/*---------------------------------------------------------------------------
 |
 |   TreeLikelihood_BeagleMultiPartition: Accumulate the log likelihoods calculated by Beagle
 |      at the root across all divisions.
 |
----------------------------------------- -------------------------------------*/
+-----------------------------------------------------------------------------*/
 int TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, int chain, MrBFlt *lnL, int whichSitePats)
 {
     int         i, j, d, c = 0, nStates, beagleReturn, site, dIndex, divisionOffset;
@@ -2648,6 +2648,7 @@ int TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, int 
     hasAnyDataRestriction = NO;
 
     m = &modelSettings[0];
+    nStates = m->numModelStates;
 
     for (d=0; d<divisionCount; d++)
         {
@@ -2663,7 +2664,6 @@ int TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, int 
         /* find root node */
         p = t->root->left;
         
-        nStates = m->numModelStates;
         if (m->pInvar == NULL)
             {
             hasPInvar = NO;
@@ -3009,13 +3009,13 @@ int TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, int 
 #endif /* BEAGLE_ENABLED */
 
 
-void BeagleNotLinked()
+void BeagleNotLinked (void)
 {
     MrBayesPrint ("%s   BEAGLE library is not linked to this executable.\n", spacer);
 }
 
 
-void BeagleThreadsNotAvailable()
+void BeagleThreadsNotAvailable (void)
 {
     MrBayesPrint ("%s   BEAGLE CPU threading requires v3.1 and higher of the library.\n", spacer);
 }

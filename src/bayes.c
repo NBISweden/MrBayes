@@ -409,7 +409,7 @@ int CommandLine (int argc, char **argv)
             cmdStrP = readline("MrBayes > ");
             if (cmdStrP!=NULL) 
                     {
-                    strncpy (cmdStr,cmdStrP,CMD_STRING_LENGTH - 2);
+                    strncpy (cmdStr, cmdStrP, CMD_STRING_LENGTH - 2);
 #                   ifdef HAVE_READLINE_HISTORY
                     if (*cmdStrP) 
                         add_history (cmdStrP);

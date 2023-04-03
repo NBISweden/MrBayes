@@ -4111,7 +4111,7 @@ int ExhaustiveParsimonySearch (Tree *t, int chain, TreeInfo *tInfo)
 }
 
 
-int ExtendChainQuery ()
+int ExtendChainQuery (void)
 {
     int             extendChain, additionalCycles;
     char            s[100];
@@ -8807,7 +8807,7 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
 {
     /* special case: upon sampling the lineage is dead and won't produce descendants. Each extinct sample is a tip */
     
-    int         i, n, m;
+    int         i;
     MrBFlt      x, lambda, mu, rho, psi, tmrca, c1, c2;
     TreeNode    *p;
     Model       *mp;
@@ -8825,7 +8825,7 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     /* calculate prior prob of the fbd tree */
     (*prob) = 0.0;
 
-    for (n = m = i = 0; i < t->nNodes -1; i++)
+    for (i = 0; i < t->nNodes -1; i++)
         {
         p = t->allDownPass[i];
         x = p->nodeDepth / clockRate;
@@ -8840,10 +8840,9 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
             if (p->nodeDepth > 0.0)
                 {
                 (*prob) += log(psi) - LnP1_fossil(x, rho, c1, c2);
-                m++;
+                // m++;
                 }
-            else
-                n++;
+            // else n++;
             }
         }
 
@@ -8935,7 +8934,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
     /* Fossils are sampled with piecewise constant rates in the past.
        Extant taxa are sampled uniformly at random at present. */
     
-    int         i, j, i1, i2, i3,  sl,  K, M, E;
+    int         i, j, i1, i2, i3,  sl,  M, E;
     MrBFlt      x, tmrca, *t_f, *lambda, *mu, *psi, *rho, *netDiver, *turnOver, *sampProp, *c1, *c2, *p_t;
     TreeNode    *p;
     Model       *mp;
@@ -9023,7 +9022,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
     /* calculate prior prob of the fbd tree */
     (*prob) = 0.0;
     
-    for (K = M = E = 0, i = 0; i < t->nNodes -1; i++)
+    for (M = E = 0, i = 0; i < t->nNodes -1; i++)
         {
         p = t->allDownPass[i];
         x = p->nodeDepth / clockRate;
@@ -9047,7 +9046,7 @@ int LnFossilizedBDPriorRandom (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *
                     {
                     (*prob) += log(rho[j]) - log(1 - rho[j]);
                     }
-                K++;              /* number of fossil ancestors */
+                // K++;           /* number of fossil ancestors */
                 }
             }
         else if (p->left == NULL && p->length > 0.0)  // tip
@@ -9119,7 +9118,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     /* Fossils are sampled with piecewise constant rates in the past.
        Extant taxa are sampled with prop sF to maximize diversity. */
     
-    int         i, j, i1, i2, i3,  sl,  K, M, E;
+    int         i, j, i1, i2, i3,  sl,  M, E;
     MrBFlt      x, tmrca, *t_f, x_cut, M_x, *lambda, *mu, *psi, *rho, *netDiver, *turnOver, *sampProp, *c1, *c2, *p_t;
     TreeNode    *p;
     Model       *mp;
@@ -9229,7 +9228,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
     /* first calculate prob of the fbd tree assuming complete sampling */
     (*prob) = 0.0;
     
-    for (K = M = E = 0, i = 0; i < t->nNodes -1; i++)
+    for (M = E = 0, i = 0; i < t->nNodes -1; i++)
         {
         p = t->allDownPass[i];
         x = p->nodeDepth / clockRate;
@@ -9253,7 +9252,7 @@ int LnFossilizedBDPriorDiversity (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
                     {
                     (*prob) += log(rho[j]) - log(1 - rho[j]);
                     }
-                K++;              /* number of fossil ancestors */
+                // K++;           /* number of fossil ancestors */
                 }
             }
         else if (p->left == NULL && p->length > 0.0)  // tip
@@ -13090,7 +13089,8 @@ int PrintStates (long long curGen, int coldId)
                 }
             }
 
-        if (p->paramType == P_OMEGA && p->paramId != OMEGA_DIR && p->paramId != OMEGA_FIX && p->paramId != OMEGA_FFF && p->paramId != OMEGA_FF && p->paramId != OMEGA_10FFF)
+        if (p->paramType == P_OMEGA && p->paramId != OMEGA_DIR && p->paramId != OMEGA_FIX &&
+            p->paramId != OMEGA_FFF && p->paramId != OMEGA_FF && p->paramId != OMEGA_10FFF)
             {
             /* OK, we also need to print subvalues for the category frequencies in a NY98-like model. */
             if (!strcmp(mp->omegaVar, "M10"))
@@ -15530,7 +15530,7 @@ int RemoveTreeSamples (int from, int to)
 int ReopenMBPrintFiles (void)
 {
     int     i, n;
-    char    fileName[120], localFileName[100];
+    char    fileName[133], localFileName[100];
     
     /* Take care of the mpi procs that do not have a file */
 #   if defined (MPI_ENABLED)
@@ -15562,7 +15562,6 @@ int ReopenMBPrintFiles (void)
                 sprintf (fileName, "%s.run%d.t", localFileName, n+1);
             else
                 sprintf (fileName, "%s.tree%d.run%d.t", localFileName, i+1, n+1);
-
             if ((fpTree[n][i] = OpenTextFileA (fileName)) == NULL)
                 return (ERROR);
             }
@@ -15942,7 +15941,7 @@ int ResetScalersPartition (int *isScalerNode, Tree* t, unsigned rescaleFreq)
 int ReusePreviousResults (int *numSamples, int steps)
 {
     int         i, n;
-    char        localFileName[100], fileName[220], bkupName[220];
+    char        localFileName[100], fileName[230], bkupName[230];
 
     (*numSamples) = 0;
 

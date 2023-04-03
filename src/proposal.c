@@ -661,7 +661,7 @@ int Move_BMsigma (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 {
     /* change Brownian motion scale parameter (brownSigma) using multiplier */
     
-    int         i, isSPriorGamma, isValidL;
+    int         i, isValidL;
     MrBFlt      oldL, newL, minL, maxL, tuning;
     ModelParams *mp;
 
@@ -676,13 +676,11 @@ int Move_BMsigma (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         {
         minL = mp->brownScaleUni[0] ;
         maxL = mp->brownScaleUni[1];
-        isSPriorGamma = NO;
         }
-    else
+    else  // isSPriorGamma = YES;
         {
         minL = RATE_MIN;
         maxL = RATE_MAX;
-        isSPriorGamma = YES;
         }
 
     /* get old value */
@@ -9770,8 +9768,7 @@ int Move_ParsEraser1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     int         i, j, isVPriorExp, nSubTerminals, nEmbeddedTrees;
     MrBFlt      alphaPi, warp, minV, maxV, minP, maxP, brlensExp=0.0, newM, oldM, maxLen,
                 *brlensCur, *brlensNew, *parslensCur, *parslensNew,
-                curLength, newLength, lnJacobian, lnRandomRatio, alpha[2], prob[2],
-                minLenCur, minLenNew, f;
+                curLength, newLength, lnJacobian, lnRandomRatio, alpha[2], prob[2], minLenNew, f;
     TreeNode    *p=NULL;
     Tree        *t, *subtree, *subtree1, memTree[2];
     ModelParams *mp;
@@ -9951,10 +9948,10 @@ int Move_ParsEraser1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     /* Find the Markov branch lengths of the new subtree */
     /* Calculate Jacobian and prob ratio for the Dirichlet random number generator */
     lnJacobian = lnRandomRatio = 0.0;
-    minLenCur = minLenNew = 0.0;
+    minLenNew = 0.0;
     for (i=0; i<subtree1->nNodes-1; i++)
         {
-        minLenCur += parslensCur[i];
+        // minLenCur += parslensCur[i];
         minLenNew += parslensNew[i];
         }
     for (i=0; i<subtree1->nNodes-1; i++)

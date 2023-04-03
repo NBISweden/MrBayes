@@ -195,7 +195,7 @@ int DoSump (void)
     int             i, n, nHeaders=0, numRows, numColumns, numRuns, whichIsX, whichIsY,
                     unreliable, oneUnreliable, burnin, longestHeader, len;
     MrBFlt          mean, harm_mean;
-    char            **headerNames=NULL, temp[120];
+    char            **headerNames=NULL, temp[130];
     SumpFileInfo    fileInfo, firstFileInfo;
     ParameterSample *parameterSamples=NULL;
     FILE            *fpLstat=NULL;
@@ -332,7 +332,7 @@ int DoSump (void)
     /* calculate arithmetic and harmonic means of likelihoods */
 
     /* open output file */
-    strncpy (temp, sumpParams.sumpOutfile, 90);
+    strncpy (temp, sumpParams.sumpOutfile, 120);
     strcat (temp, ".lstat");
     fpLstat = OpenNewMBPrintFile (temp);
     if (!fpLstat)
@@ -1977,7 +1977,7 @@ int GetHeaders (char ***headerNames, char *headerLine, int *nHeaders)
 int PrintMargLikes (char *fileName, char **headerNames, int nHeaders, ParameterSample *parameterSamples, int nRuns, int nSamples)
 {
     int     i, j, len, longestHeader, *sampleCounts=NULL;
-    char    temp[100];
+    char    temp[130];
     Stat    theStats;
     FILE    *fp;
     
@@ -1999,7 +1999,7 @@ int PrintMargLikes (char *fileName, char **headerNames, int nHeaders, ParameterS
         }
     
     /* open output file */
-    strncpy (temp, fileName, 90);
+    strncpy (temp, fileName, 99);
     strcat (temp, ".pstat");
     fp = OpenNewMBPrintFile (temp);
     if (!fp)
@@ -2105,7 +2105,7 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
 {
     int         i, j, j1, j2, k, longestName, nElements, *modelCounts=NULL;
     MrBFlt      f, *prob=NULL, *sum=NULL, *ssq=NULL, *min=NULL, *max=NULL, *stddev=NULL;
-    char        temp[100];
+    char        temp[130];
     FILE        *fp;
     ModelProb   *elem = NULL;
 
@@ -2139,7 +2139,7 @@ int PrintModelStats (char *fileName, char **headerNames, int nHeaders, Parameter
     /* open output file */
     MrBayesPrint ("%s   Model probabilities above %1.3lf\n", spacer, sumpParams.minProb);
     MrBayesPrint ("%s   Estimates saved to file \"%s.mstat\".\n", spacer, sumpParams.sumpOutfile);
-    strncpy (temp,fileName,90);
+    strncpy (temp, fileName, 99);
     strcat (temp, ".mstat");
     fp = OpenNewMBPrintFile(temp);
     if (!fp)
@@ -2474,7 +2474,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
 {
     int     i, j, k, l, len, longestHeader, *sampleCounts=NULL, *validSampleCounts=NULL;
     static char *temp=NULL;
-    char    tempf[100];
+    char    tempf[120];
     MrBFlt  **validVals=NULL;
     Stat    theStats;
     FILE    *fp;
@@ -2497,7 +2497,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
         }
     
     /* open output file */
-    strncpy (tempf, fileName, 90);
+    strncpy (tempf, fileName, 99);
     strcat (tempf, ".pstat");
     fp = OpenNewMBPrintFile (tempf);
     if (!fp)
@@ -3094,7 +3094,7 @@ TreeCtr *AddSumtTree (TreeCtr *r, int *order)
 
 
 /* AllocPartCtr: Allocate space for one partition counter node using info in sumtParams */
-PartCtr *AllocPartCtr ()
+PartCtr *AllocPartCtr (void)
 {
     int             i, j;
     PartCtr         *r;
@@ -3156,7 +3156,7 @@ PartCtr *AllocPartCtr ()
 
 
 /* AllocTreeCtr: Allocate space for a tree counter node using info in sumtParams struct*/
-TreeCtr *AllocTreeCtr ()
+TreeCtr *AllocTreeCtr (void)
 {
     TreeCtr     *r;
 
@@ -4611,7 +4611,7 @@ int DoCompRefTree (void)
     /* Compare a tree file with the reference tree files to generate the SDSFs.
        Use parameters in CompareTree and MCMCP (lazy option) */
     
-    char         outName[130], inName[130], inRefName[130], *treeName=NULL, *lineBuf=NULL, *s;
+    char         outName[130], inName[130], inRefName[140], *treeName=NULL, *lineBuf=NULL, *s;
     FILE         *fpTre=NULL, *fpOut=NULL;
     int          i, n, longestL=0, burnin, gen, nRefRun, nTre[2]={0}, skip;
     SumtFileInfo tFileInfo;

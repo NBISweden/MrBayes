@@ -175,7 +175,7 @@ int             *stateSize;                  /* # states for each compressed cha
 ------------------------------------------------------------------------*/
 int AddDummyChars (void)
 {
-    int         i, j, k, d, numIncompatible, numDeleted, numStdChars, oldRowSize,
+    int         i, j, k, d, numIncompatible, numDeleted, oldRowSize,
                 newRowSize, numDummyChars, newColumn, newChar, oldColumn, oldChar, 
                 isCompat, *tempChar, numIncompatibleChars;
     BitsLong    *tempMatrix, bitsLongOne = 1;
@@ -191,8 +191,7 @@ int AddDummyChars (void)
     tempChar = NULL;
 
     /* check how many dummy characters needed in total */
-    numDummyChars = 0;
-    numStdChars = 0;
+    numDummyChars = 0;  // numStdChars = 0;
     for (d=0; d<numCurrentDivisions; d++)
         {
         m = &modelSettings[d];
@@ -218,7 +217,7 @@ int AddDummyChars (void)
                 m->numDummyChars += 2;
             if (mp->coding & NOSINGLETONS)
                 m->numDummyChars += 2*numLocalTaxa;
-            numStdChars += (m->numChars + m->numDummyChars);
+            // numStdChars += (m->numChars + m->numDummyChars);
             }
 
         numDummyChars += m->numDummyChars;
@@ -2034,10 +2033,10 @@ int CheckModel (void)
 -------------------------------------------------------------*/
 int CheckExpandedModels (void)
 {
-    int             c, d, i, t, s, s1, s2, s3, whichNuc, uniqueId, numCharsInPart, 
+    int             c, d, i, t, s1, s2, s3, whichNuc, uniqueId, numCharsInPart,
                     firstChar, lastChar, contiguousPart, badBreak, badExclusion,
                     nGone, nuc1, nuc2, nuc3, foundStopCodon, posNucs1[4], posNucs2[4], posNucs3[4],
-                    oneGoodCodon, foundUnpaired, nPair, allCheckedOut;
+                    oneGoodCodon, foundUnpaired, nPair;
     char            *tempStr;
     int             tempStrSize=100;
     ModelParams     *mp;
@@ -2054,8 +2053,7 @@ int CheckExpandedModels (void)
         charInfo[i].charId = 0;
     
     /* loop over partitions */
-    allCheckedOut = 0;
-    uniqueId = 1;
+    uniqueId = 1;  // allCheckedOut = 0;
     for (d=0; d<numCurrentDivisions; d++)
         {
         mp = &modelParams[d];
@@ -2201,7 +2199,7 @@ int CheckExpandedModels (void)
                             GetPossibleNucs (nuc3, posNucs3);
                             
                             oneGoodCodon = NO;
-                            s = 0;
+                            // s = 0;
                             for (s1=0; s1<4; s1++)
                                 {
                                 for (s2=0; s2<4; s2++)
@@ -2213,7 +2211,7 @@ int CheckExpandedModels (void)
                                             if (mp->codon[s1*16 + s2*4 + s3] != 21)
                                                 oneGoodCodon = YES;
                                             }
-                                        s++;
+                                        // s++;
                                         }
                                     }
                                 }
@@ -2247,7 +2245,7 @@ int CheckExpandedModels (void)
                         }
                     }
                 
-                allCheckedOut++;
+                // allCheckedOut++;
                 /* end check that the codon model is appropriate for this partition */
                 }
             else if (!strcmp(mp->nucModel,"Doublet"))
@@ -2322,17 +2320,12 @@ int CheckExpandedModels (void)
                         }
                     }
                     
-                allCheckedOut++;
+                // allCheckedOut++;
                 /* end check that the doublet model is appropriate for this partition */
                 }
             }
         }
-        
-    /*
-    if (allCheckedOut > 0)
-        MrBayesPrint ("%s   Codon/Doublet models successfully checked\n", spacer);
-    */
-        
+
 #   if 0
     for (c=0; c<numChar; c++)
             printf (" %d", charId[c]);
@@ -13503,8 +13496,7 @@ int GetUserTreeFromName (int *index, char *treeName)
  -----------------------------------------------------------------------*/
 int InitializeChainTrees (Param *p, int from, int to, int isRooted)
 {
-    int             i, st, isCalibrated, isClock, nTaxa,
-                    numActiveHardConstraints = 0;
+    int             i, st, isCalibrated, isClock, nTaxa;
     Tree           *tree, **treeHandle;
     Model          *mp;
 
@@ -13530,16 +13522,6 @@ int InitializeChainTrees (Param *p, int from, int to, int isRooted)
         isCalibrated = YES;
     else
         isCalibrated = NO;
-
-    if (p->checkConstraints == YES)
-        {
-        for (i = 0; i < numDefinedConstraints; i++)
-            {
-            if (mp->activeConstraints[i] == YES
-                    && definedConstraintsType[i] == HARD)
-                numActiveHardConstraints++;
-            }
-        }
 
     /* allocate space for and construct the trees */
     /* NOTE: The memory allocation scheme used here must match GetTree
@@ -18208,7 +18190,7 @@ int SetAARates (void)
 
 void SetCode (int part)
 {
-    int     i, s, s1, s2, s3, ns;
+    int     s, s1, s2, s3;
     
     modelParams[part].codon[ 0] = 12; /* AAA Lys */
     modelParams[part].codon[ 1] =  3; /* AAC Asn */
@@ -18355,13 +18337,13 @@ void SetCode (int part)
         {
         }
     
-    ns = 0;
+    /* ns = 0;
     for (i=0; i<64; i++)
         {
         if (modelParams[part].codon[i] != 21)
             ns++;
         }
-    /* printf ("ns = %d\n", ns); */
+    printf ("ns = %d\n", ns); */
     
     s = 0;
     for (s1=0; s1<4; s1++)
@@ -18940,7 +18922,7 @@ int SetModelParams (void)
 {
     int             c, i, j, k, n, n1, n2, *isPartTouched, numRelParts, nRelParts, areAllPartsParsimony,
                     nClockBrlens, nRelaxedBrlens, nCalibratedBrlens;
-    char            tempCodon[15], tempMult[15], *tempStr,temp[30];
+    char            tempCodon[15], tempMult[20], *tempStr, temp[30];
     char static     *partString=NULL; /* mad static to avoid possible memory leak on return ERROR if it would be introduced later */
     Param           *p;
     ModelParams     *mp;

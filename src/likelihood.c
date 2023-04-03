@@ -6052,7 +6052,7 @@ int Likelihood_Gen_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
                 mCatLike = _mm_add_ps (mCatLike, m1);
                 }
             clInvar += nStates;
-            _mm_store_ps (lnL_SSE, mCatLike);
+            _mm_store_ps (lnLI_SSE, mCatLike);
             lnLI_SSE += m->numFloatsPerVec;
             }
 
@@ -7553,34 +7553,10 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 -------------------------------------------------------------------*/
 int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
 {
-    // int             c, i, j, k;
-    MrBFlt          sigma, corr;
-    ModelParams     *mp;
-    ModelInfo       *m;
-    Tree            *t;
-
-    /* find model and parameter settings */
-    m = &modelSettings[division];
-    mp = &modelParams[division];
-    
-    /* get the brownian motion parameters */
-    sigma = *GetParamVals(m->brownSigma, chain, state[chain]);
-    corr  = *GetParamVals(m->brownCorr,  chain, state[chain]);
-
-    /* do not consider trait correlations at the moment */
-    if (AreDoublesEqual (corr, 0.0, 1E-6) == NO)
-        {
-        MrBayesPrint ("%s   Continuous traits correlation not yet supported.\n", spacer);
-        abortMove = YES;
-        return ERROR;
-        }
-
     /* start calculating phylogenetic independent contrasts (PICs) and REML */
 
     /* reset log likelihood */
     (*lnL) = 0.0;
-
-    t = GetTree(m->brlens,chain,state[chain]);
 
 	//chi TODO
 	
@@ -7617,7 +7593,7 @@ int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 int Likelihood_Pars (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
 {
     int             c, i, nStates;
-    BitsLong        done, *pL, *pR, *pP, *pA, *oldpP, x;
+    BitsLong        *pL, *pR, *pP, *pA, x;
     CLFlt           nParsChars, treeLength;
     CLFlt           length, *nSitesOfPat, *newNodeLengthPtr, oldNodeLength;
     Tree            *t;
@@ -7653,8 +7629,8 @@ int Likelihood_Pars (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
         /* find parsimony sets for the node and its environment */
         pL    = m->parsSets[m->condLikeIndex[chain][p->left->index ]];
         pR    = m->parsSets[m->condLikeIndex[chain][p->right->index]];
-        oldpP = m->parsSets[m->condLikeScratchIndex[p->index       ]];
         pP    = m->parsSets[m->condLikeIndex[chain][p->index       ]];
+        // oldpP = m->parsSets[m->condLikeScratchIndex[p->index    ]];
 
         /* find old and new node lengths */
         oldNodeLength    =  m->parsNodeLens[m->condLikeScratchIndex[p->index]];
@@ -7681,8 +7657,7 @@ int Likelihood_Pars (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
             }
         else
             {
-            length = 0.0;
-            done = 0;
+            length = 0.0;  // done = 0;
             for (c=0; c<m->numChars; c++)
                 {
                 x = pL[c] & pR[c];
