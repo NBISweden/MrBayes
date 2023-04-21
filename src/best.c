@@ -577,7 +577,7 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
             else
                 u->sib = q->sib;
             u->depth = minDepth[i].depth;   // because minDepth structs are sorted, we know this is the min depth
-            assert (u->depth > 0.0);
+            assert (u->depth >= 0.0);
 
             // Create new taxon set with bitfield operations
             for (j=0; j<nLongsNeeded; j++)
@@ -592,7 +592,7 @@ int GetSpeciesTreeFromMinDepths (Tree* speciesTree, double *depthMatrix) {
         else if (p == polyTree->root && p->depth < 0.0) {
             // This is the first time we hit the root of the tree && it is resolved
             p->depth = minDepth[i].depth;
-            assert (p->depth > 0.0);
+            assert (p->depth >= 0.0);
             }
         // other cases should not be added to tree
         }

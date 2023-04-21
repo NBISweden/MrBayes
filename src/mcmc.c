@@ -5945,8 +5945,7 @@ int InitChainCondLikes (void)
             }
 
         /* parsimony models need nothing of the below */
-        //chi TODO: double check if also applies to continuous data
-        if (m->parsModelId == YES || m->dataType == CONTINUOUS)
+        if (m->parsModelId == YES || m->dataType == CONTINUOUS)  //chi TODO: double check if also applies to continuous data
             continue;
 
         /* allocate space for conditional likelihoods */
