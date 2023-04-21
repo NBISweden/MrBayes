@@ -10542,8 +10542,6 @@ int DiscreteGamma (MrBFlt *rK, MrBFlt alfa, MrBFlt beta, int K, int median)
  |
  |   LBH Notes:     K = # of rate classes
  |                *rK = pointer to output rate class matrix
- |               alfa = alpha param
- |               beta = beta param
  |             median = flag to use media or not (1 = use median, 0 = mean?)
  |
  ---------------------------------------------------------------------------------*/
@@ -10551,12 +10549,11 @@ int DiscreteLogNormal (MrBFlt *rK, MrBFlt sigma, int K, int median)
 {
     int i;
     MrBFlt t, factor;
-    MrBFlt sigmaL = sqrt(sigma);
-    MrBFlt mu = -0.5*sigmaL*sigmaL;
+    MrBFlt mu = -0.5*sigma*sigma;
     if (median)
         {
         for (i=0; i<K; i++) {
-            rK[i] = QuantileLogNormal( ((2.0*i + 1) / (2.0 * K)), mu, sigmaL);
+            rK[i] = QuantileLogNormal( ((2.0*i + 1) / (2.0 * K)), mu, sigma);
             }
         for (i=0,t=0.0; i<K; i++) {
             t = t+rK[i];
@@ -10567,17 +10564,16 @@ int DiscreteLogNormal (MrBFlt *rK, MrBFlt sigma, int K, int median)
         }
     else
         {
-        mu = -0.5*sigmaL*sigmaL;
         /* Mean set to 1.0 so factor = K */
         factor = 1.0*K;
         for (i=0; i<K-1; i++) {
-            rK[i] = QuantileLogNormal(((i + 1.0) / (K)), mu, sigmaL);
+            rK[i] = QuantileLogNormal(((i + 1.0) / K), mu, sigma);
             }
         for (i=0; i<K-1; i++) {
             //rK[i] = LogNormalPoint(rK[i], mu, sigma);
             //rK[i] = QuantileLogNormal(rK[i], mu, sigma);
             //rK[i] = CdfNormal((log(rK[i])-mu)/sigma);
-            rK[i] = 1 - (1.0 * CdfNormal((mu + sigmaL*sigmaL - log(rK[i]))/sigmaL));
+            rK[i] = 1 - (1.0 * CdfNormal((mu + sigma*sigma - log(rK[i])) / sigma));
             }
         rK[K-1] = 1.0;
         for (i=K-1; i>0; i--) {

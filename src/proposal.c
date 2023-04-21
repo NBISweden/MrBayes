@@ -14890,7 +14890,7 @@ int Move_RateShape_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     
     /* get minimum and maximum values for alpha */
     if (param->paramId == SHAPE_UNI)
-    {
+        {
         minA = mp->shapeUni[0];
         maxA = mp->shapeUni[1];
         if (minA < MIN_SHAPE_PARAM)
@@ -14898,14 +14898,14 @@ int Move_RateShape_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
         if (maxA > MAX_SHAPE_PARAM)
             maxA = MAX_SHAPE_PARAM;
         isAPriorExp = NO;
-    }
+        }
     else
-    {
+        {
         minA = MIN_SHAPE_PARAM;
         maxA = MAX_SHAPE_PARAM;
         alphaExp = mp->shapeExp;
         isAPriorExp = YES;
-    }
+        }
     
     /* get old value of alpha */
     oldA = *GetParamVals(param, chain, state[chain]);
@@ -14942,15 +14942,15 @@ int Move_RateShape_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     rates = GetParamSubVals (param, chain, state[chain]);
     
     if(!strcmp(mp->ratesModel, "LNorm"))
-    {
+        {
         if (DiscreteLogNormal (rates, newA, mp->numGammaCats, 1) == ERROR)
             return (ERROR);
-    }
+        }
     else  /* gamma rate */
-    {
+        {
         if (DiscreteGamma (rates, newA, newA, mp->numGammaCats, 0) == ERROR)
             return (ERROR);
-    }
+        }
     
     /* Set update flags for all partitions that share this alpha. Note that the conditional
      likelihood update flags have been set before we even call this function. */

@@ -10465,9 +10465,9 @@ int GetUserHelp (char *helpTkn)
         MrBayesPrint ("                              that describes how much rates vary.                \n");
         MrBayesPrint ("                * lnorm    -- Lognormal-distributed rates across sites. The      \n");
         MrBayesPrint ("                              rate at a site is drawn from a lognormal           \n");
-        MrBayesPrint ("                              distribution. the lognormal distribution has a     \n");
-        MrBayesPrint ("                              single parameter, sigma (SD) that describes how    \n");
-        MrBayesPrint ("                              much rates vary (mean fixed to log(1.0) == 0.0.    \n");
+        MrBayesPrint ("                              distribution, which has a single parameter, sigma  \n");
+        MrBayesPrint ("                              (SD in log scale) that describes how much rates    \n");
+        MrBayesPrint ("                              vary (mean in natural scale fixed to 1.0).         \n");
         MrBayesPrint ("                * adgamma  -- Autocorrelated rates across sites. The marg-       \n");
         MrBayesPrint ("                              inal rate distribution is gamma, but adjacent      \n");
         MrBayesPrint ("                              sites have correlated rates.                       \n");

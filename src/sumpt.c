@@ -300,9 +300,9 @@ int DoSump (void)
         MrBayesPrint ("%s   Could not find the 'Gen' column\n", spacer);
         return ERROR;
         }
-    if (FindHeader("LnL", headerNames, nHeaders, &whichIsY) == ERROR)
+    if (FindHeader("lnLike", headerNames, nHeaders, &whichIsY) == ERROR)
         {
-        MrBayesPrint ("%s   Could not find the 'LnL' column\n", spacer);
+        MrBayesPrint ("%s   Could not find the 'lnLike' column\n", spacer);
         return ERROR;
         }
 
@@ -448,7 +448,7 @@ int DoSump (void)
         }
     SafeFclose(&fpLstat);
 
-    /* Only print parameter summaries if we have any sampled paramters (except Gen, LnL and LnPr) */
+    /* Only print parameter summaries if we have any sampled paramters (except Gen, lnLike and lnPrior) */
     if (nHeaders > 3)
         {
         /* Calculate burnin */
@@ -647,9 +647,9 @@ int DoSumSs (void)
         MrBayesPrint ("%s   Could not find the 'Gen' column\n", spacer);
         goto errorExit;
         }
-    if (FindHeader("LnL", headerNames, nHeaders, &whichIsY) == ERROR)
+    if (FindHeader("lnLike", headerNames, nHeaders, &whichIsY) == ERROR)
         {
-        MrBayesPrint ("%s   Could not find the 'LnL' column\n", spacer);
+        MrBayesPrint ("%s   Could not find the 'lnLike' column\n", spacer);
         goto errorExit;
         }
 
@@ -1992,7 +1992,7 @@ int PrintMargLikes (char *fileName, char **headerNames, int nHeaders, ParameterS
                 break;
         if (modelIndicatorParams[j][0]!='\0')
             continue;
-        if (!strcmp (temp, "Gen") || !strcmp (temp, "LnL") || !strcmp (temp, "LnPr"))
+        if (!strcmp (temp, "Gen") || !strcmp (temp, "lnLike") || !strcmp (temp, "lnPrior"))
             continue;
         if (len > longestHeader)
             longestHeader = len;
@@ -2051,7 +2051,7 @@ int PrintMargLikes (char *fileName, char **headerNames, int nHeaders, ParameterS
         for (j=0; modelIndicatorParams[j][0]!='\0'; j++)
             if (IsSame (temp,modelIndicatorParams[j]) != DIFFERENT)
                 break;
-        if (!strcmp (temp, "Gen") || !strcmp (temp, "LnL") || !strcmp (temp, "LnPr"))
+        if (!strcmp (temp, "Gen") || !strcmp (temp, "lnLike") || !strcmp (temp, "lnPrior"))
             continue;
 
         GetSummary (parameterSamples[i].values, nRuns, sampleCounts, &theStats, sumpParams.HPD);
@@ -2490,7 +2490,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
                 break;
         if (modelIndicatorParams[j][0]!='\0')
             continue;
-        if (!strcmp (temp, "Gen") || !strcmp (temp, "LnL") || !strcmp (temp, "LnPr"))
+        if (!strcmp (temp, "Gen") || !strcmp (temp, "lnLike") || !strcmp (temp, "lnPrior"))
             continue;
         if (len > longestHeader)
             longestHeader = len;
@@ -2558,7 +2558,7 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
                 break;
         if (modelIndicatorParams[j][0]!='\0')
             continue;
-        if (!strcmp (temp, "Gen") || !strcmp (temp, "LnL") || !strcmp (temp, "LnPr"))
+        if (!strcmp (temp, "Gen") || !strcmp (temp, "lnLike") || !strcmp (temp, "lnPrior"))
             continue;
 
         if (IsSame (temp, "rootpi(0)") == SAME || IsSame (temp, "rootpi(1)") == SAME) // Currently only doing NA removal for root freqs. Can be extended in the future.

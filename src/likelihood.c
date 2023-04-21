@@ -10500,7 +10500,7 @@ int UpDateCijk (int whichPart, int whichChain)
         /* figure out information on either omega values or rate values, if necessary */
         if (m->dataType == DNA || m->dataType == RNA)
             {
-            if (m->nucModelId == NUCMODEL_CODON)                                                    /* we have a NY98 model     */
+            if (m->nucModelId == NUCMODEL_CODON)  /* we have a NY98 model     */
                 {
                 rateOmegaValues = GetParamVals(m->omega, whichChain, state[whichChain]);
                 if (m->numOmegaCats > 1)
@@ -10526,7 +10526,7 @@ int UpDateCijk (int whichPart, int whichChain)
                     rateOmegaValues = GetParamSubVals (m->mixtureRates, whichChain, state[whichChain]);
                 }
             }
-        else if (m->dataType != STANDARD)
+        else if (m->dataType != STANDARD && m->dataType != RESTRICTION)
             {
             MrBayesPrint ("%s   ERROR: Should not be updating cijks!\n", spacer);
             return (ERROR);

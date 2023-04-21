@@ -284,11 +284,11 @@ int             *chainId = NULL;             /* information on the id (0 ...) of
 MrBFlt          *curLnL = NULL;              /* stores log likelihood                        */
 MrBFlt          *curLnPr = NULL;             /* stores log prior probability                 */
 int             stepRelativeBurninSS;        /* Should we use relative burn in within each step or not    */
-MrBFlt          powerSS;                     /* power (beta) in power posterior distribution used in SS  */
+MrBFlt          powerSS;                     /* power (beta) in power posterior distribution used in SS   */
 MrBFlt          *marginalLnLSS = NULL;       /* marginal likelihood obtained using steppingstone sampling */
-MrBFlt          *stepAcumulatorSS = NULL;    /* accumulates likelihoods for current step in SS             */
+MrBFlt          *stepAcumulatorSS = NULL;    /* accumulates likelihoods for current step in SS            */
 MrBFlt          *stepScalerSS = NULL;        /* scaler of stepAcumulatorSS in log scale in SS             */
-MrBFlt          *splitfreqSS = NULL;         /* array holding split frequencies for each step in SS        */
+MrBFlt          *splitfreqSS = NULL;         /* array holding split frequencies for each step in SS       */
 int             *sympiIndex;                 /* sympi state freq index for multistate chars  */
 int             stdStateFreqsRowSize;        /* row size for std state frequencies           */
 int             *weight;                     /* weight of each compressed char               */
@@ -8278,7 +8278,7 @@ MrBFlt LogPrior (int chain)
                 branch = t->allDownPass[i];
                 if (branch->length > 0.0)  // not ancestral fossil
                     lnPrior += LnProbLogNormal_Mean_Var (1.0, nu, st[branch->index]);
-                }   // both mean and variance are on natural scale
+                }   // both mean and variance are on the natural scale
             }
         else if (p->paramType == P_IGRVAR)
             {
@@ -12590,9 +12590,9 @@ int PrintStates (long long curGen, int coldId)
         if (AddToPrintString (tempStr) == ERROR) goto errorExit;
         SafeSprintf (&tempStr, &tempStrSize, "Gen");
         if (AddToPrintString (tempStr) == ERROR) goto errorExit;
-        SafeSprintf (&tempStr, &tempStrSize, "\tLnL");
+        SafeSprintf (&tempStr, &tempStrSize, "\tlnLike");
         if (AddToPrintString (tempStr) == ERROR) goto errorExit;
-        SafeSprintf (&tempStr, &tempStrSize, "\tLnPr");
+        SafeSprintf (&tempStr, &tempStrSize, "\tlnPrior");
         if (AddToPrintString (tempStr) == ERROR) goto errorExit;
 
         for (i=0; i<numParams; i++)
@@ -12644,12 +12644,12 @@ int PrintStates (long long curGen, int coldId)
                 {
                 if (FillRelPartsString(p, &partString) == YES)
                     {
-                    SafeSprintf (&tempStr, &tempStrSize, "\tprop_ancfossil%s", partString);
+                    SafeSprintf (&tempStr, &tempStrSize, "\tpr_fossil_ancestor%s", partString);
                     if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                     }
                 else
                     {
-                    SafeSprintf (&tempStr, &tempStrSize, "\tprop_ancfossil");
+                    SafeSprintf (&tempStr, &tempStrSize, "\tpr_fossil_ancestor");
                     if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                     }
                 }
