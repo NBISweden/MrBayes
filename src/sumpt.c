@@ -5051,7 +5051,7 @@ int DoSumt (void)
                 divString=(char*)SafeRealloc(divString,strlen(treeName)*sizeof(char));
                 if (!divString)
                     {
-                    MrBayesPrint("%s   Problem allocating divString\n", spacer);
+                    MrBayesPrint ("%s   Problem allocating divString\n", spacer);
                     goto errorExit;
                     }
                 }
@@ -7384,7 +7384,7 @@ int PrintBrParamsToFile (PartCtr **treeParts, int numTreeParts, int treeNo, char
         sprintf (filename, "%s.tree%d.brparams", sumtParams.sumtOutfile, treeNo+1);
     else
         sprintf (filename, "%s.brparams", sumtParams.sumtOutfile);
-    MrBayesPrint( "%s   Saving branch parameters to file \"%s\"\n", spacer, filename);
+    MrBayesPrint ( "%s   Saving branch parameters to file \"%s\"\n", spacer, filename);
     
     /* Open file checking for over-write as appropriate */
     if ((fp = OpenNewMBPrintFile(filename)) == NULL)
@@ -7560,7 +7560,7 @@ int PrintBrParamsToFile (PartCtr **treeParts, int numTreeParts, int treeNo, char
             }   // next tree sample
         }   // next run
 
-    MrBayesPrint("\n");
+    MrBayesPrint ("\n");
     return NO_ERROR;
 }
 

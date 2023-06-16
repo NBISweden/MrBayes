@@ -842,13 +842,15 @@ int InitializeMrBayes (void)
     defaultModel.speciationUni[1] = 1000.0;
     defaultModel.speciationExp = 10.0;
     strcpy(defaultModel.extinctionPr, "Beta");          /* prior on extinction rate (turnover)          */
-    defaultModel.extinctionFix = 0.9;
+    defaultModel.extinctionFix = 0.5;
     defaultModel.extinctionBeta[0] = 1;
     defaultModel.extinctionBeta[1] = 1;
+    defaultModel.extinctionExp = 10.0;
     strcpy(defaultModel.fossilizationPr, "Beta");       /* prior on fossilization rate (sampling proportion) */
     defaultModel.fossilizationFix = 0.1;
     defaultModel.fossilizationBeta[0] = 1;
     defaultModel.fossilizationBeta[1] = 1;
+    defaultModel.fossilizationExp = 10.0;
     strcpy(defaultModel.sampleStrat, "Random");         /* taxon sampling strategy                      */
     defaultModel.sampleProb = 1.0;                      /* extant taxon sampling fraction               */
     defaultModel.birthRateShiftNum = 0;                 /* number of birth rate shifts                  */

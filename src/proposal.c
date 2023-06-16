@@ -392,7 +392,7 @@ int Move_Beta (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
     /* change symmetric Dirichlet variance using multiplier */
 
     int         i, j, k, isValidB, isPriorExp, nStates;
-    MrBFlt      oldB, newB, minB, maxB, priorExp=0.0, *bs, ran, factor, tuning,
+    MrBFlt      oldB, newB, minB, maxB, *bs, ran, factor, tuning,
                 x, y;
     ModelParams *mp;
 
@@ -412,7 +412,6 @@ int Move_Beta (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
     else
         {
         isPriorExp = YES;
-        priorExp = mp->symBetaExp;
         minB = SYMPI_MIN;
         maxB = SYMPI_MAX;
         }
@@ -446,7 +445,7 @@ int Move_Beta (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
     /* get prior ratio */
     if (isPriorExp == YES)
         {
-        *lnPriorRatio = priorExp * (oldB - newB);
+        *lnPriorRatio = (mp->symBetaExp) * (oldB - newB);
         }
     else
         *lnPriorRatio = 0.0;
@@ -479,7 +478,7 @@ int Move_Beta (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
             x += (newB-1.0)*log(bs[j]);
             y += (oldB-1.0)*log(bs[j]);
             }
-        (*lnPriorRatio) += x - y;
+        *lnPriorRatio += x - y;
 
         /* update pointer to state freqs */
         bs += nStates;
@@ -506,7 +505,7 @@ int Move_BrLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
 {
     /* change one branch length */
 
-    MrBFlt      tuning, maxV, minV, m, newM, brlensPrExp=0.0;
+    MrBFlt      tuning, maxV, minV, m, newM;
     TreeNode    *p;
     ModelParams *mp;
     Tree        *t;
@@ -545,8 +544,7 @@ int Move_BrLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         {
         minV = BRLENS_MIN;
         maxV = BRLENS_MAX;
-        brlensPrExp = mp->brlensExp;
-        isVPriorExp = YES;  
+        isVPriorExp = YES;
         }
 
     /* get tree */
@@ -597,7 +595,7 @@ int Move_BrLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
 
     /* update prior if exponential prior on branch lengths */
     if (param->paramId == BRLENS_EXP)
-        (*lnPriorRatio) = brlensPrExp * (m - newM);
+        (*lnPriorRatio) = (mp->brlensExp) * (m - newM);
     /* Dirichlet or twoExp prior */
     else if (isVPriorExp > 1)
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
@@ -1819,8 +1817,16 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     m = &modelSettings[param->relParts[0]];
     
     /* get minimum and maximum values */
-    minM = 0.0;
-    maxM = 0.999999;
+    if (param->paramId == EXTRATE_BETA)
+        {
+        minM = 0.0;
+        maxM = 0.999999;
+        }
+    else
+        {
+        minM = RATE_MIN;
+        maxM = RATE_MAX;
+        }
 
     /* get pointer to value to be changed */
     valIndex = (int)(RandomNumber(seed) * param->nValues);
@@ -1897,14 +1903,19 @@ int Move_Extinction (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     newProp[1] = 1.0 - newM;
     
     /* adjust prior ratio according to beta distribution */
-    alphaDir = mp->extinctionBeta;
-    x = y = 0.0;
-    for (i=0; i<2; i++)
-        x += (alphaDir[i]-1.0)*log(newProp[i]);
-    for (i=0; i<2; i++)
-        y += (alphaDir[i]-1.0)*log(oldProp[i]);
-    (*lnPriorRatio) = x - y + newLnPrior - oldLnPrior;
-    
+    if (param->paramId == EXTRATE_BETA)
+        {
+        alphaDir = mp->extinctionBeta;
+        x = y = 0.0;
+        for (i=0; i<2; i++)
+            x += (alphaDir[i]-1.0)*log(newProp[i]);
+        for (i=0; i<2; i++)
+            y += (alphaDir[i]-1.0)*log(oldProp[i]);
+        *lnPriorRatio = x - y + newLnPrior - oldLnPrior;
+        }
+    else if (param->paramId == EXTRATE_EXP)
+        *lnPriorRatio = newLnPrior - oldLnPrior - (mp->extinctionExp)*(newM - oldM);
+
     return (NO_ERROR);
 }
 
@@ -1929,9 +1940,17 @@ int Move_Fossilization (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     m = &modelSettings[param->relParts[0]];
     
     /* get minimum and maximum values */
-    minM = 0.000001;
-    maxM = 1.0;
-    
+    if (param->paramId == FOSLRATE_BETA)
+        {
+        minM = 0.000001;
+        maxM = 1.0;
+        }
+    else
+        {
+        minM = RATE_MIN;
+        maxM = RATE_MAX;
+        }
+
     /* get pointer to value to be changed */
     valIndex = (int)(RandomNumber(seed) * param->nValues);
     valPtr = GetParamVals(param, chain, state[chain]) + valIndex;
@@ -1986,14 +2005,19 @@ int Move_Fossilization (Param *param, int chain, RandLong *seed, MrBFlt *lnPrior
     newProp[1] = 1.0 - newM;
 
     /* adjust prior ratio according to beta distribution */
-    alphaDir = mp->fossilizationBeta;
-    x = y = 0.0;
-    for (i=0; i<2; i++)
-        x += (alphaDir[i]-1.0)*log(newProp[i]);
-    for (i=0; i<2; i++)
-        y += (alphaDir[i]-1.0)*log(oldProp[i]);
-    (*lnPriorRatio) = x - y + newLnPrior - oldLnPrior;            
-    
+    if (param->paramId == FOSLRATE_BETA)
+        {
+        alphaDir = mp->fossilizationBeta;
+        x = y = 0.0;
+        for (i=0; i<2; i++)
+            x += (alphaDir[i]-1.0)*log(newProp[i]);
+        for (i=0; i<2; i++)
+            y += (alphaDir[i]-1.0)*log(oldProp[i]);
+        *lnPriorRatio = x - y + newLnPrior - oldLnPrior;
+        }
+    else if (param->paramId == FOSLRATE_EXP)
+        *lnPriorRatio = newLnPrior - oldLnPrior - (mp->fossilizationExp)*(newM - oldM);
+
     return (NO_ERROR);
 }
 
@@ -2006,7 +2030,7 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     
     int         i, j, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
                 isVPriorExp, moveInRoot, isStartConstrained, isStopConstrained, tempInt;
-    MrBFlt      m, x, y, tuning, maxV, minV, extensionProb, brlensExp=0.0;
+    MrBFlt      m, x, y, tuning, maxV, minV, extensionProb;
     TreeNode    *p, *q, *a=NULL, *b=NULL, *c=NULL, *d=NULL, *u, *v, *interiorRoot=NULL;
     Tree        *t;
     ModelParams *mp;
@@ -2056,7 +2080,6 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         {
         minV = BRLENS_MIN;
         maxV = BRLENS_MAX;
-        brlensExp = mp->brlensExp;
         isVPriorExp = YES;
         }
 
@@ -2131,7 +2154,7 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         /* update proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / m);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (m - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (m - x);
         }
 
     /* move around in root subtree */
@@ -2254,7 +2277,7 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         /* update proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / m);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (m - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (m - x);
 
         /* combine the subtrees */
         if (directionUp == YES)
@@ -2387,7 +2410,7 @@ int Move_ExtSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         /* update proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / m);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (m - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (m - x);
         }
 
     /* adjust proposal ratio for constraints */
@@ -2449,7 +2472,7 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     
     int         i, j, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
                 isVPriorExp, moveInRoot, isStartConstrained, isStopConstrained, tempInt;
-    MrBFlt      m, x, y, tuning, maxV, minV, extensionProb, brlensExp=0.0;
+    MrBFlt      m, x, y, tuning, maxV, minV, extensionProb;
     TreeNode    *p, *a, *b, *c, *d, *u, *v, *brlenNode[7], *interiorRoot=NULL;
     Tree        *t;
     ModelParams *mp;
@@ -2499,7 +2522,6 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         {
         minV = BRLENS_MIN;
         maxV = BRLENS_MAX;
-        brlensExp = mp->brlensExp;
         isVPriorExp = YES;
         }
 
@@ -2887,7 +2909,7 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     /* update proposal and prior ratio based on length modification */
     (*lnProposalRatio) += log (x / m);
     if (isVPriorExp == YES)
-        (*lnPriorRatio) += brlensExp * (m - x);
+        (*lnPriorRatio) += (mp->brlensExp) * (m - x);
 
     if (moveInRoot == NO)
         {
@@ -2913,7 +2935,7 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         /* update proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / m);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (m - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (m - x);
         }
             
     if (moveInRoot == YES)
@@ -2942,7 +2964,7 @@ int Move_ExtSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
             /* update proposal and prior ratio based on length modification */
             (*lnProposalRatio) += log (x / m);
             if (isVPriorExp == YES)
-                (*lnPriorRatio) += brlensExp * (m - x); 
+                (*lnPriorRatio) += (mp->brlensExp) * (m - x);
             }
         }
 
@@ -4112,7 +4134,7 @@ int Move_ExtSS (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     
     int         i, numFree, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
                 isVPriorExp, moveInRoot, tempInt;
-    MrBFlt      m, x, tuning, maxV, minV, extensionProb, brlensExp=0.0;
+    MrBFlt      m, x, tuning, maxV, minV, extensionProb;
     TreeNode    *p, *q, *a, *b, *c, *d, *u, *v, *interiorRoot=NULL;
     Tree        *t;
     ModelParams *mp;
@@ -4162,7 +4184,6 @@ int Move_ExtSS (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         {
         minV = BRLENS_MIN;
         maxV = BRLENS_MAX;
-        brlensExp = mp->brlensExp;
         isVPriorExp = YES;
         }
 
@@ -4519,7 +4540,7 @@ int Move_ExtSS (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         /* update proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / m);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (m - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (m - x);
         }
 
     if (q != NULL && q->anc != NULL)
@@ -4539,7 +4560,7 @@ int Move_ExtSS (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         /* update proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / m);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (m - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (m - x);
         }
 
     /* set flags for update of cond likes from v and down to root */
@@ -5038,7 +5059,7 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     
     int         i, j, topologyHasChanged, nCrownNodes, nRootNodes, directionLeft, directionUp, 
                 isVPriorExp, alwaysMoveRoot, isCrownStartConstrained, isRootStartConstrained, isStopConstrained, tempInt;
-    MrBFlt      m, x, y, tuning, maxV, minV, extensionProb, brlensExp=0.0;
+    MrBFlt      m, x, y, tuning, maxV, minV, extensionProb;
     TreeNode    *p, *a, *b, *c, *d, *u, *v, *interiorRoot=NULL;
     Tree        *t;
     ModelParams *mp;
@@ -5088,7 +5109,6 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         {
         minV = BRLENS_MIN;
         maxV = BRLENS_MAX;
-        brlensExp = mp->brlensExp;
         isVPriorExp = YES;
         }
 
@@ -5184,7 +5204,7 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     /* calculate proposal and prior ratio based on length modification */
     (*lnProposalRatio) = log (x / m);
     if (isVPriorExp == YES)
-        (*lnPriorRatio) = brlensExp * (m - x);
+        (*lnPriorRatio) = (mp->brlensExp) * (m - x);
 
     /* record v length and adjust with multiplier using reflection*/
     m = v->length;
@@ -5201,7 +5221,7 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
     /* adjust proposal and prior ratio based on length modification */
     (*lnProposalRatio) += log (v->length / m);
     if (isVPriorExp == YES)
-        (*lnPriorRatio) += brlensExp * (m - v->length);
+        (*lnPriorRatio) += (mp->brlensExp) * (m - v->length);
 
     /* mark nodes in root part */
     /* also determine direction of move in root part */
@@ -5264,7 +5284,7 @@ int Move_ExtTBR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         /* adjust proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (u->length / m);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (m - u->length);
+            (*lnPriorRatio) += (mp->brlensExp) * (m - u->length);
         }
     u->upDateTi = YES;
 
@@ -6298,7 +6318,7 @@ int Move_Local (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
 {
     int         topologyHasChanged, isVPriorExp, directionUp, moveX;
     MrBFlt      oldM, newM, x, y, newX, newY,
-                tuning, minV, maxV, brlensExp=0.0;
+                tuning, minV, maxV;
     TreeNode    *v, *u, *a, *b, *c, *d;
     Tree        *t;
     ModelParams *mp;
@@ -6340,7 +6360,6 @@ int Move_Local (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         {
         minV = BRLENS_MIN;
         maxV = BRLENS_MAX;
-        brlensExp = mp->brlensExp;
         isVPriorExp = YES;
         }
 
@@ -6460,7 +6479,7 @@ int Move_Local (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
     /* and insertion mechanism */   
     (*lnProposalRatio) += 3.0 * log (newM / oldM);
     if (isVPriorExp == YES)
-        (*lnPriorRatio) = brlensExp * (oldM - newM);
+        (*lnPriorRatio) = (mp->brlensExp) * (oldM - newM);
 
     /* make topology move if necessary and then set branch lengths */
     if (newX > newY)
@@ -8427,7 +8446,7 @@ int Move_NNI_Hetero (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 -------------------------------------------------------------------------------------*/
 int Move_NodeSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
-    MrBFlt      tuning, maxV, minV, oldM, newM, brlensPrExp=0.0, newMin, newMax, oldMin, oldMax;
+    MrBFlt      tuning, maxV, minV, oldM, newM, newMin, newMax, oldMin, oldMax;
     TreeNode    *p, *q;
     ModelParams *mp;
     Tree        *t;
@@ -8466,7 +8485,6 @@ int Move_NodeSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         {
         minV = BRLENS_MIN;
         maxV = BRLENS_MAX;
-        brlensPrExp = mp->brlensExp;
         isVPriorExp = YES;
         }
     
@@ -8533,7 +8551,7 @@ int Move_NodeSlider (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
 
     /* update prior if exponential prior on branch lengths */
     if (param->paramId == BRLENS_EXP)
-        (*lnPriorRatio) = brlensPrExp * (oldM - newM);
+        (*lnPriorRatio) = (mp->brlensExp) * (oldM - newM);
     /* Dirichlet or twoExp prior */
     else if (isVPriorExp > 1)
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);
@@ -9766,7 +9784,7 @@ int Move_OmegaPur (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
 int Move_ParsEraser1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp)
 {
     int         i, j, isVPriorExp, nSubTerminals, nEmbeddedTrees;
-    MrBFlt      alphaPi, warp, minV, maxV, minP, maxP, brlensExp=0.0, newM, oldM, maxLen,
+    MrBFlt      alphaPi, warp, minV, maxV, minP, maxP, newM, oldM, maxLen,
                 *brlensCur, *brlensNew, *parslensCur, *parslensNew,
                 curLength, newLength, lnJacobian, lnRandomRatio, alpha[2], prob[2], minLenNew, f;
     TreeNode    *p=NULL;
@@ -9824,7 +9842,6 @@ int Move_ParsEraser1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
         {
         minV = BRLENS_MIN;
         maxV = BRLENS_MAX;
-        brlensExp = mp->brlensExp;
         isVPriorExp = YES;
         }
     minP = 3.0 * ((1.0 / 4.0) - ((1.0 / 4.0) * exp (-4.0 * minV / 3.0)));
@@ -9994,7 +10011,7 @@ int Move_ParsEraser1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
             oldM += brlensCur[i];
             newM += brlensNew[i];
             }
-        (*lnPriorRatio) += brlensExp * (oldM - newM);
+        (*lnPriorRatio) += (mp->brlensExp) * (oldM - newM);
         }
 
     /* Copy subtree into tree */
@@ -10053,7 +10070,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 
     int         i, j, n, division, topologyHasChanged, isVPriorExp, tempInt;
     BitsLong    *pA, *pV, *pP, y[2];
-    MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0,
+    MrBFlt      x, minV, maxV, minLength=0.0, length=0.0,
                 cumulativeProb, warpFactor, ran, tuning, increaseProb, decreaseProb,
                 divFactor, nStates, rateMult, v_typical, sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSitesOfPat, *nSites, *globalNSitesOfPat;
@@ -10109,7 +10126,6 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         {
         minV = BRLENS_MIN;
         maxV = BRLENS_MAX;
-        brlensExp = mp->brlensExp;
         isVPriorExp = YES;
         }
 
@@ -10438,7 +10454,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     /* calculate proposal and prior ratio based on length modification */
     (*lnProposalRatio) += log (x / c->length);
     if (isVPriorExp == YES)
-        (*lnPriorRatio) += brlensExp * (c->length - x);
+        (*lnPriorRatio) += (mp->brlensExp) * (c->length - x);
     c->length = x;
     
     /* hit a length with multiplier */
@@ -10453,7 +10469,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     /* calculate proposal and prior ratio based on length modification */
     (*lnProposalRatio) += log (x / a->length);
     if (isVPriorExp == YES)
-        (*lnPriorRatio) += brlensExp * (a->length - x);
+        (*lnPriorRatio) += (mp->brlensExp) * (a->length - x);
     a->length = x;
 
     /* hit u length with multiplier */
@@ -10468,7 +10484,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     /* calculate proposal and prior ratio based on length modification */
     (*lnProposalRatio) += log (x / u->length);
     if (isVPriorExp == YES)
-        (*lnPriorRatio) += brlensExp * (u->length - x);
+        (*lnPriorRatio) += (mp->brlensExp) * (u->length - x);
     u->length = x;
 
     /* set tiprobs update flags */
@@ -10535,7 +10551,7 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     
     int         i, j, k, n, division, topologyHasChanged, moveInRoot, nNeighbor, nRoot, nCrown, iA, jC, isVPriorExp;
     BitsLong    *pA, *pB, *pP, *pC, *pD, y[2];
-    MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, tuning, warpFactor,
+    MrBFlt      x, minV, maxV, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, tuning, warpFactor,
                 sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
     TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL;
@@ -10586,7 +10602,6 @@ int Move_ParsSPR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         {
         minV = BRLENS_MIN;
         maxV = BRLENS_MAX;
-        brlensExp = mp->brlensExp;
         isVPriorExp = YES;
         }
 
@@ -11017,7 +11032,7 @@ outLoop:;
         /* calculate proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / a->length);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (a->length - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (a->length - x);
         a->length = x;
 
         /* hit u length with multiplier */
@@ -11030,7 +11045,7 @@ outLoop:;
         /* calculate proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / u->length);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (u->length - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (u->length - x);
         u->length = x;
 
         /* hit newA length with multiplier */
@@ -11043,7 +11058,7 @@ outLoop:;
         /* calculate proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / newA->length);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (newA->length - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (newA->length - x);
         newA->length = x;
          
         /* set tiprobs update flags */
@@ -11102,7 +11117,7 @@ outLoop:;
         /* calculate proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / q->length);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (q->length - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (q->length - x);
         q->length = x;
         q->upDateTi = YES;
 
@@ -11116,7 +11131,7 @@ outLoop:;
         /* calculate proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / newB->length);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (newB->length - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (newB->length - x);
         newB->length = x;
         newB->upDateTi = YES;
 
@@ -11130,7 +11145,7 @@ outLoop:;
         /* calculate proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / newC->length);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (newC->length - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (newC->length - x);
         newC->length = x;
         newC->upDateTi = YES;
  
@@ -11186,7 +11201,7 @@ int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     
     int         i, j, k, n, division, topologyHasChanged, moveInRoot, nNeighbor, nRoot, nCrown, iA, jC, isVPriorExp, tempInt;
     BitsLong    *pA, *pB, *pP, *pC, *pD, y[2];
-    MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, tuning, warpFactor,
+    MrBFlt      x, minV, maxV, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, tuning, warpFactor,
                 v_typical, divFactor, nStates, sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
     TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL, *interiorRoot=NULL;
@@ -11242,7 +11257,6 @@ int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         {
         minV = BRLENS_MIN;
         maxV = BRLENS_MAX;
-        brlensExp = mp->brlensExp;
         isVPriorExp = YES;
         }
 
@@ -11709,7 +11723,7 @@ outLoop:;
         /* calculate proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / a->length);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (a->length - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (a->length - x);
         a->length = x;
 
         /* hit u length with multiplier */
@@ -11722,7 +11736,7 @@ outLoop:;
         /* calculate proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / u->length);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (u->length - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (u->length - x);
         u->length = x;
 
         /* hit newA length with multiplier */
@@ -11735,7 +11749,7 @@ outLoop:;
         /* calculate proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / newA->length);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (newA->length - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (newA->length - x);
         newA->length = x;
          
         /* set tiprobs update flags */
@@ -11794,7 +11808,7 @@ outLoop:;
         /* calculate proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / q->length);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (q->length - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (q->length - x);
         q->length = x;
         q->upDateTi = YES;
 
@@ -11808,7 +11822,7 @@ outLoop:;
         /* calculate proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / newB->length);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (newB->length - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (newB->length - x);
         newB->length = x;
         newB->upDateTi = YES;
 
@@ -11822,7 +11836,7 @@ outLoop:;
         /* calculate proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / newC->length);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (newC->length - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (newC->length - x);
         newC->length = x;
         newC->upDateTi = YES;
  
@@ -13214,7 +13228,7 @@ int Move_ParsTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     
     int         i, j, k, n, division, topologyHasChanged, nNeighbor, nRoot, nCrown, iA, jC, isVPriorExp, tempInt;
     BitsLong    *pA, *pB, *pC, *pD, y[2];
-    MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, tuning, warpFactor,
+    MrBFlt      x, minV, maxV, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, tuning, warpFactor,
                 sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
     TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL, *interiorRoot=NULL;
@@ -13269,7 +13283,6 @@ int Move_ParsTBR1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         {
         minV = BRLENS_MIN;
         maxV = BRLENS_MAX;
-        brlensExp = mp->brlensExp;
         isVPriorExp = YES;
         }
 
@@ -13610,7 +13623,7 @@ outLoop:;
         /* calculate proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / u->length);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (u->length - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (u->length - x);
         u->length = x;
 
         /* set tiprobs update flags */
@@ -13655,7 +13668,7 @@ outLoop:;
         /* calculate proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / newB->length);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (newB->length - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (newB->length - x);
         newB->length = x;
         newB->upDateTi = YES;
         }
@@ -13677,7 +13690,7 @@ outLoop:;
     /* calculate proposal and prior ratio based on length modification */
     (*lnProposalRatio) += log (x / v->length);
     if (isVPriorExp == YES)
-        (*lnPriorRatio) += brlensExp * (v->length - x);
+        (*lnPriorRatio) += (mp->brlensExp) * (v->length - x);
     v->length = x;
     v->upDateTi = YES;
  
@@ -13745,7 +13758,7 @@ int Move_ParsTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
     
     int         i, j, k, n, division, topologyHasChanged, nNeighbor, nRoot, nCrown, iA, jC, isVPriorExp, tempInt;
     BitsLong    *pA, *pB, *pC, *pD, y[2];
-    MrBFlt      x, minV, maxV, brlensExp=0.0, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, tuning, warpFactor,
+    MrBFlt      x, minV, maxV, minLength=0.0, length=0.0, *parLength=NULL, prob, ran, tuning, warpFactor,
                 v_typical, divFactor, nStates, sum1, sum2, tempsum, tempc, tempy;
     CLFlt       *nSites, *nSitesOfPat=NULL, *globalNSitesOfPat;
     TreeNode    *p, *q, *r, *a, *b, *u, *v, *c, *d, *newB, *newA, *newC, **pRoot=NULL, **pCrown=NULL, *interiorRoot=NULL;
@@ -13801,7 +13814,6 @@ int Move_ParsTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         {
         minV = BRLENS_MIN;
         maxV = BRLENS_MAX;
-        brlensExp = mp->brlensExp;
         isVPriorExp = YES;
         }
 
@@ -14151,7 +14163,7 @@ outLoop:;
         /* calculate proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / u->length);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (u->length - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (u->length - x);
         u->length = x;
 
         /* set tiprobs update flags */
@@ -14196,7 +14208,7 @@ outLoop:;
         /* calculate proposal and prior ratio based on length modification */
         (*lnProposalRatio) += log (x / newB->length);
         if (isVPriorExp == YES)
-            (*lnPriorRatio) += brlensExp * (newB->length - x);
+            (*lnPriorRatio) += (mp->brlensExp) * (newB->length - x);
         newB->length = x;
         newB->upDateTi = YES;
         }
@@ -14218,7 +14230,7 @@ outLoop:;
     /* calculate proposal and prior ratio based on length modification */
     (*lnProposalRatio) += log (x / v->length);
     if (isVPriorExp == YES)
-        (*lnPriorRatio) += brlensExp * (v->length - x);
+        (*lnPriorRatio) += (mp->brlensExp) * (v->length - x);
     v->length = x;
     v->upDateTi = YES;
  
@@ -14879,7 +14891,7 @@ int Move_RateShape_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     /* change gamma/lnorm shape parameter using multiplier */
     
     int         i, isAPriorExp, isValidA;
-    MrBFlt      oldA, newA, minA, maxA, alphaExp=0.0, ran, factor, tuning, *rates;
+    MrBFlt      oldA, newA, minA, maxA, ran, factor, tuning, *rates;
     ModelParams *mp;
     
     /* get tuning parameter */
@@ -14903,7 +14915,6 @@ int Move_RateShape_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
         {
         minA = MIN_SHAPE_PARAM;
         maxA = MAX_SHAPE_PARAM;
-        alphaExp = mp->shapeExp;
         isAPriorExp = YES;
         }
     
@@ -14933,7 +14944,7 @@ int Move_RateShape_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     if (isAPriorExp == NO)
         *lnPriorRatio = 0.0;
     else
-        *lnPriorRatio = -alphaExp * (newA - oldA);
+        *lnPriorRatio = -(mp->shapeExp) * (newA - oldA);
     
     /* copy new alpha value back */
     *GetParamVals(param, chain, state[chain]) = newA;
@@ -15952,7 +15963,7 @@ int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     /* change speciation rate using sliding window */
     
     int         isLPriorExp, isValidL, valIndex;
-    MrBFlt      *valPtr, oldL, newL, minL, maxL, lambdaExp=0.0, *sR, *eR, sF, *fR, oldLnPrior, newLnPrior,
+    MrBFlt      *valPtr, oldL, newL, minL, maxL, *sR, *eR, sF, *fR, oldLnPrior, newLnPrior,
                 window, clockRate;
     char        *sS;
     ModelParams *mp;
@@ -15977,7 +15988,6 @@ int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         {
         minL = RATE_MIN;
         maxL = RATE_MAX;
-        lambdaExp = mp->speciationExp;
         isLPriorExp = YES;
         }
 
@@ -16052,8 +16062,8 @@ int Move_Speciation (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     if (isLPriorExp == NO)
         *lnPriorRatio = newLnPrior - oldLnPrior;
     else
-        *lnPriorRatio = -lambdaExp * (newL - oldL) + (newLnPrior - oldLnPrior);
-    
+        *lnPriorRatio = newLnPrior - oldLnPrior - (mp->speciationExp)*(newL - oldL);
+
     return (NO_ERROR);
 }
 
@@ -16063,7 +16073,7 @@ int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     /* change speciation rate using multiplier */
     
     int         isLPriorExp, isValidL, valIndex;
-    MrBFlt      *valPtr, oldL, newL, minL, maxL, lambdaExp=0.0, *sR, *eR, sF, *fR, oldLnPrior, newLnPrior,
+    MrBFlt      *valPtr, oldL, newL, minL, maxL, *sR, *eR, sF, *fR, oldLnPrior, newLnPrior,
                 tuning, clockRate;
     char        *sS;
     ModelParams *mp;
@@ -16088,7 +16098,6 @@ int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
         {
         minL = RATE_MIN;
         maxL = RATE_MAX;
-        lambdaExp = mp->speciationExp;
         isLPriorExp = YES;
         }
 
@@ -16161,8 +16170,8 @@ int Move_Speciation_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     if (isLPriorExp == NO)
         *lnPriorRatio = newLnPrior - oldLnPrior;
     else
-        *lnPriorRatio = -lambdaExp * (newL - oldL) + (newLnPrior - oldLnPrior);
-    
+        *lnPriorRatio = newLnPrior - oldLnPrior - (mp->speciationExp)*(newL - oldL);
+
     return (NO_ERROR);
 }
 
@@ -16764,7 +16773,7 @@ int Move_SwitchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     /* change switch rate of covarion model using sliding window */
     
     int         i, isSPriorExp, isValidS, whichRate;
-    MrBFlt      oldS, newS, window, minS, maxS, sExp=0.0, ran, *value;
+    MrBFlt      oldS, newS, window, minS, maxS, ran, *value;
     ModelParams *mp;
 
     /* decide which switching rate to change */
@@ -16790,7 +16799,6 @@ int Move_SwitchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
         {
         minS = 0.01;
         maxS = KAPPA_MAX;
-        sExp = mp->covswitchExp;
         isSPriorExp = YES;
         }
 
@@ -16825,7 +16833,7 @@ int Move_SwitchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     if (isSPriorExp == NO)
         *lnPriorRatio = 0.0;
     else
-        *lnPriorRatio = -sExp * (newS - oldS);
+        *lnPriorRatio = -(mp->covswitchExp) * (newS - oldS);
     
     /* copy new switching rate value back */
     value[whichRate] = newS;
@@ -16851,7 +16859,7 @@ int Move_SwitchRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     /* change switch rate of covarion model using multiplier */
 
     int         i, isSPriorExp, isValidS, whichRate;
-    MrBFlt      oldS, newS, minS, maxS, sExp=0.0, tuning, ran, factor, *value;
+    MrBFlt      oldS, newS, minS, maxS, tuning, ran, factor, *value;
     ModelParams *mp;
 
     /* decide which switching rate to change */
@@ -16877,7 +16885,6 @@ int Move_SwitchRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
         {
         minS = 0.01;
         maxS = KAPPA_MAX;
-        sExp = mp->covswitchExp;
         isSPriorExp = YES;
         }
 
@@ -16909,7 +16916,7 @@ int Move_SwitchRate_M (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
     if (isSPriorExp == NO)
         *lnPriorRatio = 0.0;
     else
-        *lnPriorRatio = -sExp * (newS - oldS);
+        *lnPriorRatio = -(mp->covswitchExp) * (newS - oldS);
     
     /* copy new switching rate value back */
     value[whichRate] = newS;
@@ -17130,7 +17137,7 @@ int Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 {
     /* change all branch lengths */
 
-    MrBFlt      begin_tl, treescaler, tuning, maxV, minV, brlensPrExp=0.0;
+    MrBFlt      begin_tl, treescaler, tuning, maxV, minV;
     TreeNode    *p;
     ModelParams *mp;
     Tree        *t;
@@ -17169,7 +17176,6 @@ int Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         {
         minV = BRLENS_MIN;
         maxV = BRLENS_MAX;
-        brlensPrExp = mp->brlensExp;
         isVPriorExp = YES;
         }
 
@@ -17227,7 +17233,7 @@ int Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 
     /* update prior if exponential prior on branch lengths */
     if (param->paramId == BRLENS_EXP)
-        (*lnPriorRatio) = brlensPrExp * (begin_tl* (1 - treescaler));
+        (*lnPriorRatio) = (mp->brlensExp) * begin_tl * (1 - treescaler);
     /* Dirichlet or twoExp prior */
     else if (isVPriorExp > 1)
         (*lnPriorRatio) += LogDirPrior(t, mp, isVPriorExp);

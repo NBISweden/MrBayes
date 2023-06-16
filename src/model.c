@@ -267,9 +267,6 @@ int AddDummyChars (void)
         /* insert the dummy characters first for each division */
         if (m->numDummyChars > 0)
             {
-            // MrBayesPrint("%s   Adding dummy characters (unobserved site patterns) for division %d\n", spacer, d+1);
-            // do not print this every time
-
             for (k=0; k<2; k++)
                 {
                 if (((mp->coding & NOSINGLETONPRESENCE) && k == 0) || ((mp->coding & NOSINGLETONABSENCE) && k == 1))
@@ -1923,7 +1920,8 @@ int CheckModel (void)
     
     if (i < numTrees)
         {
-        if (!strcmp(modelParams[t->relParts[0]].clockRatePr, "Fixed") && AreDoublesEqual(modelParams[t->relParts[0]].clockRateFix, 1.0, 1E-6) == YES)
+        if (!strcmp(modelParams[t->relParts[0]].clockRatePr, "Fixed") &&
+            AreDoublesEqual (modelParams[t->relParts[0]].clockRateFix, 1.0, 1E-6) == YES)
             {
             MrBayesPrint("%s   WARNING: You have calibrated the tree but the clock rate is fixed to 1.0.\n", spacer);
             MrBayesPrint("%s      This means that time is measured in expected changes per time unit. If\n", spacer);
@@ -1950,8 +1948,10 @@ int CheckModel (void)
     for (i=0; i<numTrees; i++)
         {
         t = GetTreeFromIndex(i, 0, 0);
-        if ((!strcmp(modelParams[t->relParts[0]].clockPr,"Coalescence") || !strcmp(modelParams[t->relParts[0]].clockPr,"Speciestreecoalescence"))
-            && !strcmp(modelParams[t->relParts[0]].clockRatePr, "Fixed") && AreDoublesEqual(modelParams[t->relParts[0]].clockRateFix, 1.0, 1E-6) == YES)
+        if ((!strcmp(modelParams[t->relParts[0]].clockPr,"Coalescence") ||
+             !strcmp(modelParams[t->relParts[0]].clockPr,"Speciestreecoalescence"))
+            && !strcmp(modelParams[t->relParts[0]].clockRatePr, "Fixed")
+            && AreDoublesEqual (modelParams[t->relParts[0]].clockRateFix, 1.0, 1E-6) == YES)
             {
             if (i == 0) // We only warn for the first tree
                 {
@@ -2531,7 +2531,7 @@ int CompressData (void)
                 j = 1;
                 if (charInfo[c].charId == 0)
                     {
-                    MrBayesPrint("%s   Character %d is not properly defined\n", spacer, c+1);
+                    MrBayesPrint ("%s   Character %d is not properly defined\n", spacer, c+1);
                     goto errorExit;
                     }
                 for (i=c+1; i<numChar; i++)
@@ -2540,7 +2540,7 @@ int CompressData (void)
                         {
                         if (j >= m->nCharsPerSite)
                             {
-                            MrBayesPrint("%s   Too many matches in charId (division %d char %d)\n", spacer, d, numCompressedChars);
+                            MrBayesPrint ("%s   Too many matches in charId (division %d char %d)\n", spacer, d, numCompressedChars);
                             goto errorExit;
                             }
                         else
@@ -4637,7 +4637,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                     activeParts[fromI-1] = YES;
 #               if 0
                 for (i=0; i<numCurrentDivisions; i++)
-                    MrBayesPrint("%d ", activeParts[i]);
+                    MrBayesPrint ("%d ", activeParts[i]);
                 MrBayesPrint ("\n");
 #               endif
                 expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
@@ -6591,7 +6591,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 spacer, modelParams[i].ratePrDir);
                             }
                         else
-                            MrBayesPrint(",%1.2f", modelParams[i].ratePrDir);
+                            MrBayesPrint (",%1.2f", modelParams[i].ratePrDir);
                         }
                     }
                 if (numCurrentDivisions == 1)
@@ -6720,7 +6720,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                           spacer, modelParams[i].generatePrDir);
                             }
                         else
-                            MrBayesPrint(",%1.2f", modelParams[i].generatePrDir);
+                            MrBayesPrint (",%1.2f", modelParams[i].generatePrDir);
                         }
                     }
                 if (numCurrentDivisions == 1)
@@ -7100,7 +7100,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 MrBayesPrint ("%s   Setting Statefreqpr to Dirichlet(", spacer);
                                 for (j=0; j<ns; j++)
                                     {
-                                    MrBayesPrint("%1.2lf", modelParams[i].stateFreqsDir[j]);
+                                    MrBayesPrint ("%1.2lf", modelParams[i].stateFreqsDir[j]);
                                     if (j == ns - 1)
                                         MrBayesPrint (")");
                                     else
@@ -7127,7 +7127,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                     MrBayesPrint ("%s   Setting Statefreqpr to Dirichlet(", spacer);
                                     for (j=0; j<ns; j++)
                                         {
-                                        MrBayesPrint("%1.2lf", modelParams[i].stateFreqsDir[j]);
+                                        MrBayesPrint ("%1.2lf", modelParams[i].stateFreqsDir[j]);
                                         if (j == ns - 1)
                                             MrBayesPrint (")");
                                         else
@@ -7171,7 +7171,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                     MrBayesPrint ("%s   Setting Statefreqpr to Fixed(", spacer);
                                     for (j=0; j<ns; j++)
                                         {
-                                        MrBayesPrint("%1.2lf", modelParams[i].stateFreqsFix[j]);
+                                        MrBayesPrint ("%1.2lf", modelParams[i].stateFreqsFix[j]);
                                         if (j == ns - 1)
                                             MrBayesPrint (")");
                                         else
@@ -7266,7 +7266,7 @@ int DoPrsetParm (char *parmName, char *tkn)
 
                                 for (j=0; j<ns; j++)
                                     {
-                                    MrBayesPrint("%1.2lf", modelParams[i].rootFreqsDir[j]);
+                                    MrBayesPrint ("%1.2lf", modelParams[i].rootFreqsDir[j]);
                                     if (j == ns - 1)
                                         MrBayesPrint (")");
                                     else
@@ -7293,7 +7293,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                     MrBayesPrint ("%s   Setting Rootfreqpr to Dirichlet(", spacer);
                                     for (j=0; j<ns; j++)
                                         {
-                                        MrBayesPrint("%1.2lf", modelParams[i].rootFreqsDir[j]);
+                                        MrBayesPrint ("%1.2lf", modelParams[i].rootFreqsDir[j]);
                                         if (j == ns - 1)
                                             MrBayesPrint (")");
                                         else
@@ -7331,7 +7331,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                     MrBayesPrint ("%s   Setting Rootfreqpr to Fixed(", spacer);
                                     for (j=0; j<ns; j++)
                                         {
-                                        MrBayesPrint("%1.2lf", modelParams[i].rootFreqsFix[j]);
+                                        MrBayesPrint ("%1.2lf", modelParams[i].rootFreqsFix[j]);
                                         if (j == ns - 1)
                                             MrBayesPrint (")");
                                         else
@@ -8020,6 +8020,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                 }
             else if (expecting == Expecting(NUMBER))
                 {
+                sscanf (tkn, "%lf", &tempD);
                 nApplied = NumActiveParts ();
                 for (i=0; i<numCurrentDivisions; i++)
                     {
@@ -8027,7 +8028,6 @@ int DoPrsetParm (char *parmName, char *tkn)
                         {
                         if (!strcmp(modelParams[i].speciationPr,"Uniform"))
                             {
-                            sscanf (tkn, "%lf", &tempD);
                             modelParams[i].speciationUni[numVars[i]++] = tempD;
                             if (numVars[i] == 1)
                                 expecting  = Expecting(COMMA);
@@ -8047,7 +8047,6 @@ int DoPrsetParm (char *parmName, char *tkn)
                             }
                         else if (!strcmp(modelParams[i].speciationPr,"Exponential"))
                             {
-                            sscanf (tkn, "%lf", &tempD);
                             if (tempD <= 0.0)
                                 {
                                 MrBayesPrint ("%s   Exponential parameter must be positive\n", spacer);
@@ -8062,7 +8061,6 @@ int DoPrsetParm (char *parmName, char *tkn)
                             }
                         else if (!strcmp(modelParams[i].speciationPr,"Fixed"))
                             {
-                            sscanf (tkn, "%lf", &tempD);
                             if (tempD <= 0.0)
                                 {
                                 MrBayesPrint ("%s   Net speciation rate must be positive\n", spacer);
@@ -8118,6 +8116,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                 }
             else if (expecting == Expecting(NUMBER))
                 {
+                sscanf (tkn, "%lf", &tempD);
                 nApplied = NumActiveParts ();
                 for (i=0; i<numCurrentDivisions; i++)
                     {
@@ -8125,7 +8124,6 @@ int DoPrsetParm (char *parmName, char *tkn)
                         {
                         if (!strcmp(modelParams[i].extinctionPr,"Beta"))
                             {
-                            sscanf (tkn, "%lf", &tempD);
                             if (tempD <= 0.0)
                                 {
                                 MrBayesPrint ("%s   Beta parameter must be positive\n", spacer);
@@ -8143,9 +8141,22 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 expecting  = Expecting(RIGHTPAR);
                                 }
                             }
+                        else if (!strcmp(modelParams[i].extinctionPr,"Exponential"))
+                            {
+                            if (tempD <= 0.0)
+                                {
+                                MrBayesPrint ("%s   Exponential parameter must be positive\n", spacer);
+                                return (ERROR);
+                                }
+                            modelParams[i].extinctionExp = tempD;
+                            if (nApplied == 0 && numCurrentDivisions == 1)
+                                MrBayesPrint ("%s   Setting Extinctionpr to Exponential(%1.2lf)\n", spacer, modelParams[i].extinctionExp);
+                            else
+                                MrBayesPrint ("%s   Setting Extinctionpr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].extinctionExp, i+1);
+                            expecting  = Expecting(RIGHTPAR);
+                            }
                         else if (!strcmp(modelParams[i].extinctionPr,"Fixed"))
                             {
-                            sscanf (tkn, "%lf", &tempD);
                             if (tempD <= 0.0 || tempD >= 1.0)
                                 {
                                 MrBayesPrint ("%s   Relative extinction rate must be in range (0,1)\n", spacer);
@@ -8201,6 +8212,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                 }
             else if (expecting == Expecting(NUMBER))
                 {
+                sscanf (tkn, "%lf", &tempD);
                 nApplied = NumActiveParts ();
                 for (i=0; i<numCurrentDivisions; i++)
                     {
@@ -8208,7 +8220,6 @@ int DoPrsetParm (char *parmName, char *tkn)
                         {
                         if (!strcmp(modelParams[i].fossilizationPr,"Beta"))
                             {
-                            sscanf (tkn, "%lf", &tempD);
                             if (tempD <= 0.0)
                                 {
                                 MrBayesPrint ("%s   Beta parameter must be positive\n", spacer);
@@ -8226,9 +8237,22 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 expecting  = Expecting(RIGHTPAR);
                                 }
                             }
+                        else if (!strcmp(modelParams[i].fossilizationPr,"Exponential"))
+                            {
+                            if (tempD <= 0.0)
+                                {
+                                MrBayesPrint ("%s   Exponential parameter must be positive\n", spacer);
+                                return (ERROR);
+                                }
+                            modelParams[i].fossilizationExp = tempD;
+                            if (nApplied == 0 && numCurrentDivisions == 1)
+                                MrBayesPrint ("%s   Setting Fossilizationpr to Exponential(%1.2lf)\n", spacer, modelParams[i].fossilizationExp);
+                            else
+                                MrBayesPrint ("%s   Setting Fossilizationpr to Exponential(%1.2lf) for partition %d\n", spacer, modelParams[i].fossilizationExp, i+1);
+                            expecting  = Expecting(RIGHTPAR);
+                            }
                         else if (!strcmp(modelParams[i].fossilizationPr,"Fixed"))
                             {
-                            sscanf (tkn, "%lf", &tempD);
                             if (tempD < 0.0 || tempD >= 1.0)
                                 {
                                 MrBayesPrint ("%s   Relative fossilization rate must be in the range (0,1)\n", spacer);
@@ -8558,36 +8582,36 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 modelParams[i].treeAgePr.prior == truncatedNormal ||
                                 modelParams[i].treeAgePr.prior == offsetLogNormal ||
                                 modelParams[i].treeAgePr.prior == offsetGamma)
-                                MrBayesPrint("%s   Minimum, offset or truncation point must be nonnegative\n", spacer);
+                                MrBayesPrint ("%s   Minimum, offset or truncation point must be nonnegative\n", spacer);
                             else if (modelParams[i].treeAgePr.prior == fixed)
-                                MrBayesPrint("%s   Fixed age must be nonnegative\n", spacer);
+                                MrBayesPrint ("%s   Fixed age must be nonnegative\n", spacer);
                             else
-                                MrBayesPrint("%s   Mean must be nonnegative\n", spacer);
+                                MrBayesPrint ("%s   Mean must be nonnegative\n", spacer);
                             break;
                             }
                         else if (numVars[i] == 1)
                             {
                             if (modelParams[i].treeAgePr.prior == uniform && tempD <= modelParams[i].treeAgePr.priorParams[0])
                                 {
-                                MrBayesPrint("%s   Max of uniform distribution must be larger than min\n", spacer);
+                                MrBayesPrint ("%s   Max of uniform distribution must be larger than min\n", spacer);
                                 break;
                                 }
                             else if ((modelParams[i].treeAgePr.prior == standardGamma || modelParams[i].treeAgePr.prior == logNormal) && tempD <= 0.0)
                                 {
-                                MrBayesPrint("%s   Standard deviation must be positive\n", spacer);
+                                MrBayesPrint ("%s   Standard deviation must be positive\n", spacer);
                                 break;
                                 }
                             else if ((modelParams[i].treeAgePr.prior == offsetExponential ||
                                       modelParams[i].treeAgePr.prior == offsetGamma ||
                                       modelParams[i].treeAgePr.prior == offsetLogNormal) && tempD <= modelParams[i].treeAgePr.priorParams[0])
                                 {
-                                MrBayesPrint("%s   Mean must be larger than offset\n", spacer);
+                                MrBayesPrint ("%s   Mean must be larger than offset\n", spacer);
                                 break;
                                 }
                             }
                         else if (numVars[i] == 2 && tempD <= 0.0)
                             {
-                            MrBayesPrint("%s   Standard deviation must be positive\n", spacer);
+                            MrBayesPrint ("%s   Standard deviation must be positive\n", spacer);
                             break;
                             }
                         modelParams[i].treeAgePr.priorParams[numVars[i]++] = tempD;
@@ -8768,8 +8792,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                     MrBayesPrint ("%s   Standard deviation of the normal must be positive\n", spacer);
                                 return (ERROR);
                                 }
-                            modelParams[i].clockRateNormal[numVars[i]] = tempD;
-                            numVars[i]++;
+                            modelParams[i].clockRateNormal[numVars[i]++] = tempD;
                             if (numVars[i] == 1)
                                 expecting  = Expecting(COMMA);
                             else
@@ -8783,8 +8806,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                             }
                         else if (!strcmp(modelParams[i].clockRatePr,"Lognormal"))
                             {
-                            modelParams[i].clockRateLognormal[numVars[i]] = tempD;
-                            numVars[i]++;
+                            modelParams[i].clockRateLognormal[numVars[i]++] = tempD;
                             if (numVars[i] == 1)
                                 expecting  = Expecting(COMMA);
                             else
@@ -8804,7 +8826,6 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 return (ERROR);
                                 }
                             modelParams[i].clockRateExp = tempD;
-                            numVars[i]++;
                             if (nApplied == 0 || numCurrentDivisions == 1)
                                 MrBayesPrint ("%s   Setting Clockratepr to Exponential(%1.2lf)\n", spacer, modelParams[i].clockRateExp);
                             else
@@ -8821,8 +8842,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                                     MrBayesPrint ("%s   Rate (inverse scale) of the gamma must be positive\n", spacer);
                                 return (ERROR);
                                 }
-                            modelParams[i].clockRateGamma[numVars[i]] = tempD;
-                            numVars[i]++;
+                            modelParams[i].clockRateGamma[numVars[i]++] = tempD;
                             if (numVars[i] == 1)
                                 expecting  = Expecting(COMMA);
                             else
@@ -8842,7 +8862,6 @@ int DoPrsetParm (char *parmName, char *tkn)
                                 return (ERROR);
                                 }
                             modelParams[i].clockRateFix = tempD;
-                            numVars[i]++;
                             if (nApplied == 0 || numCurrentDivisions == 1)
                                 MrBayesPrint ("%s   Setting Clockratepr to Fixed(%1.6lf)\n", spacer, modelParams[i].clockRateFix);
                             else
@@ -10761,9 +10780,10 @@ int DoStartvalsParm (char *parmName, char *tkn)
                         if (theTree->isCalibrated == YES && !strcmp(modelParams[theTree->relParts[0]].clockRatePr, "Fixed"))
                             {
                             clockRate = modelParams[theTree->relParts[0]].clockRateFix;
-                            if ((clockRate < minRate && AreDoublesEqual (clockRate, minRate , 0.001) == NO) || (clockRate > maxRate && AreDoublesEqual (clockRate, maxRate , 0.001) == NO))
+                            if ((clockRate < minRate && AreDoublesEqual (clockRate, minRate , 0.001) == NO) ||
+                                (clockRate > maxRate && AreDoublesEqual (clockRate, maxRate , 0.001) == NO))
                                 {
-                                MrBayesPrint("%s   Fixed branch lengths do not satisfy fixed clockrate\n", spacer);
+                                MrBayesPrint ("%s   Fixed branch lengths do not satisfy fixed clockrate\n", spacer);
                                 return (ERROR);
                                 }
                             }
@@ -11865,7 +11885,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                     if (p->paramId == SPECRATE_FIX)
                         value[j] = mp->speciationFix;
                     else
-                        value[j] = 0.1;
+                        value[j] = 0.3;
                     }
                 }
             else if (p->paramType == P_EXTRATE)
@@ -11876,7 +11896,7 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                     if (p->paramId == EXTRATE_FIX)
                         value[j] = mp->extinctionFix;
                     else
-                        value[j] = 0.9;
+                        value[j] = 0.2;
                     }
                 }
             else if (p->paramType == P_FOSLRATE)
@@ -12294,34 +12314,34 @@ int FillTopologySubParams (Param *param, int chn, int state, RandLong *seed)
                 ResetIntNodeIndices (sourceTree);
                 if (tree->isRooted != sourceTree->isRooted)
                     {
-                    MrBayesPrint("%s   Cannot set fixed branch lengths because of mismatch in rootedness", spacer);
+                    MrBayesPrint ("%s   Cannot set fixed branch lengths because of mismatch in rootedness", spacer);
                     FreePolyTree (sourceTree);
                     return (ERROR);
                     }
                 if (CopyToTreeFromPolyTree(tree,sourceTree) == ERROR)
                     {
-                    MrBayesPrint("%s   Problem setting fixed branch lengths", spacer);
+                    MrBayesPrint ("%s   Problem setting fixed branch lengths", spacer);
                     FreePolyTree (sourceTree);
                     return (ERROR);
                     }
                 FreePolyTree (sourceTree);
-                if (tree->isClock == YES && IsClockSatisfied(tree, 0.0001) == NO)
+                if (tree->isClock == YES && IsClockSatisfied(tree, 0.001) == NO)
                     {
-                    MrBayesPrint("%s   Fixed branch lengths do not satisfy clock", spacer);
+                    MrBayesPrint ("%s   Fixed branch lengths do not satisfy clock", spacer);
                     return (ERROR);
                     }
-                if (tree->isCalibrated == YES && IsCalibratedClockSatisfied(tree,&minRate,&maxRate, 0.0001) == NO)
+                if (tree->isCalibrated == YES && IsCalibratedClockSatisfied (tree,&minRate,&maxRate, 0.001) == NO)
                     {
-                    MrBayesPrint("%s   Fixed branch lengths do not satisfy calibrations", spacer);
+                    MrBayesPrint ("%s   Fixed branch lengths do not satisfy calibrations", spacer);
                     return (ERROR);
                     }
                 if (tree->isCalibrated == YES && !strcmp(modelParams[tree->relParts[0]].clockRatePr, "Fixed"))
                     {
                     clockRate = modelParams[tree->relParts[0]].clockRateFix;
-                    if ((clockRate < minRate && AreDoublesEqual (clockRate, minRate , 0.0001) == NO) ||
-                        (clockRate > maxRate && AreDoublesEqual (clockRate, maxRate , 0.0001) == NO))
+                    if ((clockRate < minRate && AreDoublesEqual (clockRate, minRate , 0.001) == NO) ||
+                        (clockRate > maxRate && AreDoublesEqual (clockRate, maxRate , 0.001) == NO))
                         {
-                        MrBayesPrint("%s   Fixed branch lengths do not satisfy fixed clockrate", spacer);
+                        MrBayesPrint ("%s   Fixed branch lengths do not satisfy fixed clockrate", spacer);
                         return (ERROR);
                         }
                     }
@@ -12331,18 +12351,19 @@ int FillTopologySubParams (Param *param, int chn, int state, RandLong *seed)
                 }
             else
                 {
-                MrBayesPrint("%s   Fixed branch lengths can only be used for a fixed topology\n", spacer);
+                MrBayesPrint ("%s   Fixed branch lengths can only be used for a fixed topology\n", spacer);
                 return (ERROR);
                 }
             }
-        else if (tree->isCalibrated == YES || (tree->isClock == YES && (!strcmp(modelParams[tree->relParts[0]].clockPr,"Uniform") ||
-                                                                        !strcmp(modelParams[tree->relParts[0]].clockPr,"Birthdeath") ||
-                                                                        !strcmp(modelParams[tree->relParts[0]].clockPr,"Fossilization"))))
+        else if (tree->isCalibrated == YES ||
+                 (tree->isClock == YES && (!strcmp(modelParams[tree->relParts[0]].clockPr,"Uniform") ||
+                                           !strcmp(modelParams[tree->relParts[0]].clockPr,"Birthdeath") ||
+                                           !strcmp(modelParams[tree->relParts[0]].clockPr,"Fossilization"))))
             {
             assert (tree->isClock == YES);
             clockRate = *GetParamVals(modelSettings[tree->relParts[0]].clockRate, chn, state);
             returnVal = InitCalibratedBrlens (tree, clockRate, seed);
-            if (IsClockSatisfied (tree, 0.0001) == NO)
+            if (IsClockSatisfied (tree, 0.001) == NO)
                 {
                 MrBayesPrint ("%s   Branch lengths of the tree does not satisfy clock\n",  spacer);
                 return (ERROR);
@@ -14874,6 +14895,11 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
                             if (AreDoublesEqual (modelParams[part1].extinctionBeta[1], modelParams[part2].extinctionBeta[1], (MrBFlt) 0.00001) == NO)
                                 isSame = NO;
                             }
+                        else if (!strcmp(modelParams[part1].extinctionPr,"Exponential") && !strcmp(modelParams[part2].extinctionPr,"Exponential"))
+                            {
+                            if (AreDoublesEqual (modelParams[part1].extinctionExp, modelParams[part2].extinctionExp, (MrBFlt) 0.00001) == NO)
+                                isSame = NO;
+                            }
                         else if (!strcmp(modelParams[part1].extinctionPr,"Fixed") && !strcmp(modelParams[part2].extinctionPr,"Fixed"))
                             {
                             if (AreDoublesEqual (modelParams[part1].extinctionFix, modelParams[part2].extinctionFix, (MrBFlt) 0.00001) == NO)
@@ -14887,6 +14913,11 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
                             if (AreDoublesEqual (modelParams[part1].fossilizationBeta[0], modelParams[part2].fossilizationBeta[0], (MrBFlt) 0.00001) == NO)
                                 isSame = NO;
                             if (AreDoublesEqual (modelParams[part1].fossilizationBeta[1], modelParams[part2].fossilizationBeta[1], (MrBFlt) 0.00001) == NO)
+                                isSame = NO;
+                            }
+                        else if (!strcmp(modelParams[part1].fossilizationPr,"Exponential") && !strcmp(modelParams[part2].fossilizationPr,"Exponential"))
+                            {
+                            if (AreDoublesEqual (modelParams[part1].fossilizationExp, modelParams[part2].fossilizationExp, (MrBFlt) 0.00001) == NO)
                                 isSame = NO;
                             }
                         else if (!strcmp(modelParams[part1].fossilizationPr,"Fixed") && !strcmp(modelParams[part2].fossilizationPr,"Fixed"))
@@ -14998,6 +15029,11 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
             if (AreDoublesEqual (modelParams[part1].extinctionBeta[1], modelParams[part2].extinctionBeta[1], (MrBFlt) 0.00001) == NO)
                 isSame = NO;
             }
+        else if (!strcmp(modelParams[part1].extinctionPr,"Exponential") && !strcmp(modelParams[part2].extinctionPr,"Exponential"))
+            {
+            if (AreDoublesEqual (modelParams[part1].extinctionExp, modelParams[part2].extinctionExp, (MrBFlt) 0.00001) == NO)
+                isSame = NO;
+            }
         else if (!strcmp(modelParams[part1].extinctionPr,"Fixed") && !strcmp(modelParams[part2].extinctionPr,"Fixed"))
             {
             if (AreDoublesEqual (modelParams[part1].extinctionFix, modelParams[part2].extinctionFix, (MrBFlt) 0.00001) == NO)
@@ -15036,6 +15072,11 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
             if (AreDoublesEqual (modelParams[part1].fossilizationBeta[0], modelParams[part2].fossilizationBeta[0], (MrBFlt) 0.00001) == NO)
                 isSame = NO;
             if (AreDoublesEqual (modelParams[part1].fossilizationBeta[1], modelParams[part2].fossilizationBeta[1], (MrBFlt) 0.00001) == NO)
+                isSame = NO;
+            }
+        else if (!strcmp(modelParams[part1].fossilizationPr,"Exponential") && !strcmp(modelParams[part2].fossilizationPr,"Exponential"))
+            {
+            if (AreDoublesEqual (modelParams[part1].fossilizationExp, modelParams[part2].fossilizationExp, (MrBFlt) 0.00001) == NO)
                 isSame = NO;
             }
         else if (!strcmp(modelParams[part1].fossilizationPr,"Fixed") && !strcmp(modelParams[part2].fossilizationPr,"Fixed"))
@@ -16193,9 +16234,9 @@ int PrintCompMatrix (void)
                     else
                         MrBayesPrint ("%c", whichChar((int)compMatrix[pos(i,j,compMatrixRowSize)]));
                     }
-                MrBayesPrint("\n");
+                MrBayesPrint ("\n");
                 }
-            MrBayesPrint("\nNo. sites    ");
+            MrBayesPrint ("\nNo. sites    ");
             for (j=c; j<c+k; j++)
                 {
                 if (j >= m->compMatrixStop)
@@ -16206,13 +16247,13 @@ int PrintCompMatrix (void)
                 else
                     i = '0' + i;
                 if (mp->dataType == CONTINUOUS)
-                    MrBayesPrint("   %c ", i);
+                    MrBayesPrint ("   %c ", i);
                 else
                     {
                     if ((j-m->compMatrixStart) % m->nCharsPerSite == 0)
                         MrBayesPrint ("%c", i);
                     else
-                        MrBayesPrint(" ");
+                        MrBayesPrint (" ");
                     }
                 }
             MrBayesPrint ("\nOrig. char   ");
@@ -16226,7 +16267,7 @@ int PrintCompMatrix (void)
                 else
                     i = '0' +i;
                 if (mp->dataType == CONTINUOUS)
-                    MrBayesPrint("   %c ", i);
+                    MrBayesPrint ("   %c ", i);
                 else
                     MrBayesPrint ("%c", i);
                 }
@@ -16325,7 +16366,7 @@ int PrintMatrix (void)
                     MrBayesPrint ("%c", WhichStand(matrix[pos(i,j,numChar)]));
                 j++;
                 }
-            MrBayesPrint("\n");
+            MrBayesPrint ("\n");
             }
         MrBayesPrint ("\n");
         }
@@ -20260,6 +20301,8 @@ int SetModelParams (void)
             /* find the parameter x prior type */
             if (!strcmp(mp->extinctionPr,"Beta"))
                 p->paramId = EXTRATE_BETA;
+            else if (!strcmp(mp->extinctionPr,"Exponential"))
+                p->paramId = EXTRATE_EXP;
             else
                 p->paramId = EXTRATE_FIX;
 
@@ -20297,6 +20340,8 @@ int SetModelParams (void)
             /* find the parameter x prior type */
             if (!strcmp(mp->fossilizationPr,"Beta"))
                 p->paramId = FOSLRATE_BETA;
+            else if (!strcmp(mp->fossilizationPr,"Exponential"))
+                p->paramId = FOSLRATE_EXP;
             else
                 p->paramId = FOSLRATE_FIX;
             
@@ -21696,13 +21741,14 @@ void SetUpMoveTypes (void)
     mt->tuningName[0] = "Sliding window size";
     mt->shortTuningName[0] = "delta";
     mt->applicableTo[0] = EXTRATE_BETA;
-    mt->nApplicable = 1;
+    mt->applicableTo[1] = EXTRATE_EXP;
+    mt->nApplicable = 2;
     mt->moveFxn = &Move_Extinction;
     mt->relProposalProb = 3.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 0.1;  /* window size */
     mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 1.0;
+    mt->maximum[0] = 100.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneSlider;
@@ -21715,13 +21761,14 @@ void SetUpMoveTypes (void)
     mt->tuningName[0] = "Sliding window size";
     mt->shortTuningName[0] = "delta";
     mt->applicableTo[0] = FOSLRATE_BETA;
-    mt->nApplicable = 1;
+    mt->applicableTo[1] = FOSLRATE_EXP;
+    mt->nApplicable = 2;
     mt->moveFxn = &Move_Fossilization;
     mt->relProposalProb = 3.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 0.1;  /* window size */
     mt->minimum[0] = 0.00001;
-    mt->maximum[0] = 1.0;
+    mt->maximum[0] = 100.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneSlider;
@@ -22916,7 +22963,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[1] = SPECRATE_EXP;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_Speciation;
-    mt->relProposalProb = 0.0;
+    mt->relProposalProb = 3.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 0.1;  /* window size */
     mt->minimum[0] = 0.00001;
@@ -22936,7 +22983,7 @@ void SetUpMoveTypes (void)
     mt->applicableTo[1] = SPECRATE_EXP;
     mt->nApplicable = 2;
     mt->moveFxn = &Move_Speciation_M;
-    mt->relProposalProb = 3.0;
+    mt->relProposalProb = 0.0;
     mt->numTuningParams = 1;
     mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
     mt->minimum[0] = 0.0001;
@@ -24810,7 +24857,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                     {
                     if (printedCol + 5 > screenWidth)
                         {
-                        MrBayesPrint("\n%s                                   ", spacer);
+                        MrBayesPrint ("\n%s                                   ", spacer);
                         printedCol = (int)(strlen(spacer)) + 25 + 10;
                         }
                     if (n == numTrees-2)
@@ -24944,6 +24991,8 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             {
             if (!strcmp(mp->extinctionPr,"Beta"))
                 MrBayesPrint ("%s            Prior      = Beta(%1.2lf,%1.2lf)\n", spacer, mp->extinctionBeta[0], mp->extinctionBeta[1]);
+            else if (!strcmp(mp->extinctionPr,"Exponential"))
+                MrBayesPrint ("%s            Prior      = Exponential(%1.2lf)\n", spacer, mp->extinctionExp);
             else
                 MrBayesPrint ("%s            Prior      = Fixed(%1.2lf)\n", spacer, mp->extinctionFix);
             }
@@ -24951,6 +25000,8 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             {
             if (!strcmp(mp->fossilizationPr,"Beta"))
                 MrBayesPrint ("%s            Prior      = Beta(%1.2lf,%1.2lf)\n", spacer, mp->fossilizationBeta[0], mp->fossilizationBeta[1]);
+            else if (!strcmp(mp->fossilizationPr,"Exponential"))
+                MrBayesPrint ("%s            Prior      = Exponential(%1.2lf)\n", spacer, mp->fossilizationExp);
             else
                 MrBayesPrint ("%s            Prior      = Fixed(%1.2lf)\n", spacer, mp->fossilizationFix);
             }
@@ -25200,7 +25251,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                             }
                         else
                             {
-                            MrBayesPrint(", ");
+                            MrBayesPrint (", ");
                             printedCol += 2;
                             }
                         MrBayesPrint ("%s", p->subParams[k]->name);
@@ -25281,12 +25332,12 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                             {
                             if (printedCol + 11 + (int)(strlen(mv->name)) + (int)(log10(mv->relProposalProb[chainIndex])) + 3 > screenWidth)
                                 {
-                                MrBayesPrint(", \n%s                         ", spacer);
+                                MrBayesPrint (", \n%s                         ", spacer);
                                 printedCol = 25 + (int)(strlen(spacer));
                                 }
                             else
                                 {
-                                MrBayesPrint(", ");
+                                MrBayesPrint (", ");
                                 printedCol += 2;
                                 }
                             MrBayesPrint ("%s <prob %.1f>", mv->name, mv->relProposalProb[chainIndex]);
@@ -25355,7 +25406,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                         MrBayesPrint (", ");
                         printedCol += 2;
                         }
-                    MrBayesPrint("%s", mv->moveType->shortName);
+                    MrBayesPrint ("%s", mv->moveType->shortName);
                     printedCol += (int)strlen(mv->moveType->shortName);
                     numPrinted++;
                     }

@@ -7024,7 +7024,7 @@ int DoSetParm (char *parmName, char *tkn)
                         }
                     else
                         {
-                        MrBayesPrint("%s   Unrecognized argument for beaglevec\n", spacer);
+                        MrBayesPrint ("%s   Unrecognized argument for beaglevec\n", spacer);
                         }
                     MrBayesPrint ("%s   Setting beaglevec to %s\n", spacer, tempStr);
                     }
@@ -8997,32 +8997,32 @@ int DoVersion (void)
     MrBayesPrint ("   Version\n");
     MrBayesPrint ("\n");
     MrBayesPrint ("   MrBayes %s\n", VERSION_NUMBER);
-    MrBayesPrint("\n");
-    MrBayesPrint("   Features: ");
+    MrBayesPrint ("\n");
+    MrBayesPrint ("   Features: ");
 #ifdef SSE_ENABLED
-    MrBayesPrint(" SSE");
+    MrBayesPrint (" SSE");
 #endif
 #ifdef AVX_ENABLED
-    MrBayesPrint(" AVX");
+    MrBayesPrint (" AVX");
 #endif
 #ifdef FMA_ENABLED
-    MrBayesPrint(" FMA");
+    MrBayesPrint (" FMA");
 #endif
 #ifdef BEAGLE_ENABLED
-    MrBayesPrint(" Beagle");
+    MrBayesPrint (" Beagle");
 #endif
 #ifdef MPI_ENABLED
-    MrBayesPrint(" MPI");
+    MrBayesPrint (" MPI");
 #endif
 #ifdef HAVE_LIBREADLINE
-    MrBayesPrint(" readline");
+    MrBayesPrint (" readline");
 #endif
-    MrBayesPrint("\n");
+    MrBayesPrint ("\n");
 #if defined(HOST_TYPE) && defined(HOST_CPU)
-    MrBayesPrint("   Host type: %s (CPU: %s)\n", HOST_TYPE, HOST_CPU);
+    MrBayesPrint ("   Host type: %s (CPU: %s)\n", HOST_TYPE, HOST_CPU);
 #endif
 #if defined(COMPILER_VENDOR) && defined(COMPILER_VERSION)
-    MrBayesPrint("   Compiler:  %s %s\n", COMPILER_VENDOR, COMPILER_VERSION);
+    MrBayesPrint ("   Compiler:  %s %s\n", COMPILER_VENDOR, COMPILER_VERSION);
 #endif
     MrBayesPrint ("   ---------------------------------------------------------------------------\n");
 
@@ -11619,7 +11619,7 @@ int GetUserHelp (char *helpTkn)
                 MrBayesPrint (")\n");
                 }
             else if (!strcmp(mp->topologyPr, "Fixed"))
-                MrBayesPrint("(%s)\n", userTree[mp->topologyFix]->name);
+                MrBayesPrint ("(%s)\n", userTree[mp->topologyFix]->name);
             else
                 MrBayesPrint ("\n");
             MrBayesPrint ("                    Speciestree                  \n");
@@ -11648,7 +11648,7 @@ int GetUserHelp (char *helpTkn)
                     MrBayesPrint (":%s\n", mp->clockPr);
                 }
             else if (!strcmp(mp->brlensPr, "Fixed"))
-                MrBayesPrint("(%s)\n", userTree[mp->brlensFix]->name);
+                MrBayesPrint ("(%s)\n", userTree[mp->brlensFix]->name);
             
             MrBayesPrint ("   Treeagepr        Gamma/Uniform/Fixed/         %s\n", mp->treeAgePr.name);
             MrBayesPrint ("                    Truncatednormal/Lognormal/   \n");
@@ -11666,18 +11666,21 @@ int GetUserHelp (char *helpTkn)
             MrBayesPrint ("   Extinctionpr     Beta/Fixed                   %s", mp->extinctionPr);
             if (!strcmp(mp->extinctionPr, "Beta"))
                 MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->extinctionBeta[0], mp->extinctionBeta[1]);
+            else if (!strcmp(mp->extinctionPr, "Exponential"))
+                MrBayesPrint ("(%1.1lf)\n", mp->extinctionExp);
             else
                 MrBayesPrint ("(%1.1lf)\n", mp->extinctionFix);
             
             MrBayesPrint ("   Fossilizationpr  Beta/Fixed                   %s", mp->fossilizationPr);
             if (!strcmp(mp->fossilizationPr, "Beta"))
                 MrBayesPrint ("(%1.1lf,%1.1lf)\n", mp->fossilizationBeta[0], mp->fossilizationBeta[1]);
+            else if (!strcmp(mp->fossilizationPr, "Exponential"))
+                MrBayesPrint ("(%1.1lf)\n", mp->fossilizationExp);
             else
                 MrBayesPrint ("(%1.2lf)\n", mp->fossilizationFix);
             
             MrBayesPrint ("   SampleStrat      Random/Diversity/Cluster/    %s\n", mp->sampleStrat);
             MrBayesPrint ("                    FossilTip                    \n");
-            // if (!strcmp(mp->sampleStrat, "Random") || !strcmp(mp->sampleStrat, "Diversity"))
             
             MrBayesPrint ("   Sampleprob       <number>                     %1.8lf\n", mp->sampleProb);
             
@@ -14559,7 +14562,7 @@ void SetUpParms (void)
     PARAM  (67, "Topologypr",     DoPrsetParm,       "Uniform|Constraints|Fixed|Speciestree|\0");
     PARAM  (68, "Brlenspr",       DoPrsetParm,       "Unconstrained|Clock|Relaxedclock|Fixed|\0");
     PARAM  (69, "Speciationpr",   DoPrsetParm,       "Uniform|Exponential|Fixed|\0");
-    PARAM  (70, "Extinctionpr",   DoPrsetParm,       "Beta|Fixed|\0");
+    PARAM  (70, "Extinctionpr",   DoPrsetParm,       "Beta|Exponential|Fixed|\0");
     PARAM  (71, "Popsizepr",      DoPrsetParm,       "Lognormal|Uniform|Gamma|Normal|Fixed|\0");
     PARAM  (72, "Topology",       DoLinkParm,        "\0");
     PARAM  (73, "Brlens",         DoLinkParm,        "\0");
@@ -14758,7 +14761,7 @@ void SetUpParms (void)
     PARAM (266, "Smoothing",      DoSumSsParm,       "\0");
     PARAM (267, "Steptoplot",     DoSumSsParm,       "\0");
     PARAM (268, "Precision",      DoSetParm,         "\0");
-    PARAM (269, "Fossilizationpr",   DoPrsetParm,    "Beta|Fixed|\0");
+    PARAM (269, "Fossilizationpr",   DoPrsetParm,    "Beta|Exponential|Fixed|\0");
     PARAM (270, "Browncorr",      DoLinkParm,        "\0");
     PARAM (271, "Generatepr",     DoPrsetParm,       "Variable|Fixed|\0");
     PARAM (272, "Mixedvarpr",     DoPrsetParm,       "Fixed|Exponential|Uniform|\0");

@@ -4581,8 +4581,8 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
             if (p->nodeDepth == q->nodeDepth) // because clock rate could be as low as possible we can not take approximate equality. 
                 {
                 /* same depth so they must share a possible age */
-                if ((x[p->index] != -1.0 && y[q->index] !=-1.0 && AreDoublesEqual (x[p->index], y[q->index], tol) == NO && x[p->index] > y[q->index]) ||
-                    (y[p->index] != -1.0 && x[q->index] !=-1.0 && AreDoublesEqual (y[p->index], x[q->index], tol) == NO && y[p->index] < x[q->index]))
+                if ((x[p->index] != -1.0 && y[q->index] != -1.0 && AreDoublesEqual (x[p->index], y[q->index], tol) == NO && x[p->index] > y[q->index]) ||
+                    (y[p->index] != -1.0 && x[q->index] != -1.0 && AreDoublesEqual (y[p->index], x[q->index], tol) == NO && y[p->index] < x[q->index]))
                     {
                     isViolated = YES;
                     break;
@@ -4607,7 +4607,8 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
                         {
                         if (AreDoublesEqual (r->nodeDepth, s->nodeDepth, tol*0.1) == YES)
                             continue;
-                        if ((r->calibration != NULL && r->calibration->prior != fixed) || (s->calibration != NULL && s->calibration->prior != fixed))
+                        if ((r->calibration != NULL && r->calibration->prior != fixed) ||
+                            (s->calibration != NULL && s->calibration->prior != fixed))
                             continue;
                         isViolated = YES;
                         break;
@@ -13584,7 +13585,7 @@ void PrintComplexVector (int dim, MrBComplex *vec)
         {
         MrBayesPrint ("%lf + %lfi, ", vec[i].re, vec[i].im);
         if (i == 1) 
-            MrBayesPrint("\n    ");
+            MrBayesPrint ("\n    ");
         }
     MrBayesPrint ("%lf + %lfi}\n", vec[dim - 1].re, vec[dim - 1].im);
 }

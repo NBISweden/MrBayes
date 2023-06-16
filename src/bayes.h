@@ -888,6 +888,8 @@ typedef struct param
 #define BMSIGMA_UNI                     166
 #define BMSIGMA_GAMMA                   167
 #define BMSIGMA_FIX                     168
+#define EXTRATE_EXP                     169
+#define FOSLRATE_EXP                    170
 
 #if defined (BEAGLE_ENABLED)
 #define MB_BEAGLE_SCALE_ALWAYS          0
@@ -1119,9 +1121,11 @@ typedef struct model
     char        extinctionPr[100];     /* prior on relative extinction rate (turnover)      */
     MrBFlt      extinctionFix;
     MrBFlt      extinctionBeta[2];
+    MrBFlt      extinctionExp;
     char        fossilizationPr[100];  /* prior on fossilization rate (sampling proportion) */
     MrBFlt      fossilizationFix;
     MrBFlt      fossilizationBeta[2];
+    MrBFlt      fossilizationExp;
     char        sampleStrat[100];      /* taxon sampling strategy (for b-d process)         */
     int         birthRateShiftNum;     /* number of birth rate shifts                       */
     MrBFlt      birthRateShiftTime[100];    /* birth rate shifting times                    */
