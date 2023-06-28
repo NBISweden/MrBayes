@@ -1,6 +1,6 @@
 Release Note
 
-Development version  (not yet released)
+v3.2.8 (development version, not yet released)
   * Move to semantic versioning scheme (see https://semver.org/).
     Release numbers are MAJOR.MINOR.PATCH where a new MAJOR release
     number means backward incompatible changes were made, a new MINOR
@@ -9,7 +9,20 @@ Development version  (not yet released)
     made.  We may or may not use transient suffixes like "a", "b",
     "-alpha", "-beta" and "-rcN" as well at times.
   * Use latexmk to build the PDF documentation, if avaliable.
+  * Support MCMC chains longer than 2E9 generations.
+  * Correct the parameterization sigma (sd_log) in lnorm rate variation across sites.
+  * Correct the parameterization in the TK02 model.
+  * Renamed the white noise relaxed clock model to WN.
+  * Added independent lognormal (ILN) and independent gamma (IGR) relaxed clocks.
+  * Support model averaging (rjMCMC) between ILN and IGR clock models.
+  * Support unord characters up to 24 states (0-9 A-N).
+  * Extend the coalescent prior to support serially-sampled tips.
+  * Update help messages for the FBD model and parameters.
   * Bug fix to multi-partition Beagle code.
+  * Bug fix to directional state frequency models.
+  * Fix erroneous printing of header alpha_symdir.
+  * Fix setting popsizepr and growthpr for protein data.
+  * Fix disabling variable ratepr for single partition.
 
 v3.2.7a (Mar 06 2019): hotfix
   * PDF manual re-generated from already updated LaTeX sources.
@@ -27,7 +40,7 @@ v3.2.7 (Feb 13 2019)
 
 v3.2.6 (Nov 25 2015)
   * Add invertebrate mt, Echinoderm and Euplotid codes [lset code=invermt].
-  * Fix a bug of updating brls in tree-stretch move.
+  * Fix a bug of updating branch lengths in tree-stretch move.
   * Correct the proposal ratio in the add/delete branch move.
   * Add more coding options for restriction site chars.
 
