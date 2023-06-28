@@ -774,7 +774,7 @@ double LnSpeciesTreeProb(int chain)
 ------------------------------------------------------------------*/
 double LnJointGeneTreeSpeciesTreePr(Tree **geneTrees, int numGeneTrees, Tree *speciesTree, int chain)
 {
-    double      lnPrior, lnLike, clockRate, mu, *popSizePtr, sR, eR, sF;
+    double      lnPrior, lnLike, clockRate, *popSizePtr, sR, eR;
     int         i;
     ModelInfo   *m;
     ModelParams *mp;
@@ -797,21 +797,19 @@ double LnJointGeneTreeSpeciesTreePr(Tree **geneTrees, int numGeneTrees, Tree *sp
     // Calculate probability of gene trees given species tree
     // ShowNodes(speciesTree->root, 0, YES);
     lnLike = 0.0;
-    mu = clockRate;
-    for (i=0; i<numGeneTrees; i++) {
-        lnLike += LnPriorProbGeneTree(geneTrees[i], mu, speciesTree, popSizePtr);
+    for (i=0; i<numGeneTrees; i++)
+        {
+        lnLike += LnPriorProbGeneTree(geneTrees[i], clockRate, speciesTree, popSizePtr);
         }
 
     // Calculate probability of species tree given its priors
-    if (strcmp(mp->speciesTreeBrlensPr, "Birthdeath") == 0) {
+    lnPrior = 0.0;
+    if (strcmp(mp->speciesTreeBrlensPr, "Birthdeath") == 0)
+        {
         sR = *GetParamVals(m->speciationRates, chain, state[chain]);
         eR = *GetParamVals(m->extinctionRates, chain, state[chain]);
-        sF = mp->sampleProb;
-        lnPrior = 0.0;
-        LnBirthDeathPriorPr(speciesTree, clockRate, &lnPrior, sR, eR, mp->sampleStrat, sF);
+        LnBirthDeathPriorPr(speciesTree, clockRate, &lnPrior, sR, eR, mp->sampleStrat, mp->sampleProb);
         }
-    else
-        lnPrior = 0.0;
 
     // The population size is taken care of elsewhere
 

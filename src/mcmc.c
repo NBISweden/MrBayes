@@ -8765,8 +8765,13 @@ int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR,
     MrBFlt  *t_sl, *lambda, *mu, *psi, *rho;
     Model   *mp;
     
+    mp = &modelParams[t->relParts[0]];
+
     if (!strcmp(sS, "FossilTip"))
+        {
+        assert (mp->fossilSamplingNum + mp->birthRateShiftNum + mp->deathRateShiftNum == 0);
         return LnFossilizedBDPriorFossilTip (t, clockRate, prob, sR, eR, fR, sF);
+        }
     else if (strcmp(sS, "Random") && strcmp(sS, "Diversity"))
         {
         MrBayesPrint ("%s   Sampling strategy %s for fossilized birth-death process not implemented\n", spacer, sS);
@@ -8774,8 +8779,6 @@ int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR,
         }
 
     /* the following models allow rate shifts */
-    mp = &modelParams[t->relParts[0]];
-
     /* alloc memory for time of each shift */
     max_intv = mp->fossilSamplingNum + mp->birthRateShiftNum + mp->deathRateShiftNum +2;
     t_sl = (MrBFlt *)SafeMalloc(max_intv * sizeof(MrBFlt));
