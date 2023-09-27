@@ -6384,7 +6384,7 @@ int ResetRootHeight (Tree *t, MrBFlt rootHeight)
 
     if (t->isClock == NO)
         return ERROR;
-    
+
     /* make sure node depths are set */
     for (i=0; i<t->nNodes-1; i++)
         {
