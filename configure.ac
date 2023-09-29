@@ -261,19 +261,22 @@ AC_DEFINE_UNQUOTED([COMPILER_VERSION],
 # Add warning flags to compile command line.
 AX_CFLAGS_WARN_ALL
 
-# Check for SIMD (etc.) extensions supported by hardware and compiler
-# (-msse2 etc.)
+# Check for SIMD (etc.) extensions supported by hardware and compiler.
 AX_EXT
 
-AS_IF([test "x$enable_sse" = "xno"],
-    [AC_DEFINE([DISABLE_SSE], [1],
-        [SSE code path should not be compiled.])])
-AS_IF([test "x$enable_avx" = "xno"],
-    [AC_DEFINE([DISABLE_AVX], [1],
-        [AVX code path should not be compiled.])])
-AS_IF([test "x$enable_fma" = "xno"],
-    [AC_DEFINE([DISABLE_FMA], [1],
-        [FMA code path should not be compiled.])])
+# Act on the above tests (which sets the "ax_cv_support_*_ext"
+# variables), and add appropriate flags to CFLAGS, or define
+# DISABLE_SSE, DISABLE_AVX, DISABLE_FMA if the extensions are not
+# supported or disabled by the user.
+AS_IF([test "x$enable_sse" = "xno" || test "x$ax_cv_support_sse2_ext" != "xyes"],
+    [AC_DEFINE([DISABLE_SSE], [1], [SSE code path should not be compiled.])],
+    [CFLAGS="$CFLAGS -msse"])
+AS_IF([test "x$enable_avx" = "xno" || test "x$ax_cv_support_avx_ext" != "xyes"],
+    [AC_DEFINE([DISABLE_AVX], [1], [AVX code path should not be compiled.])],
+    [CFLAGS="$CFLAGS -mavx"])
+AS_IF([test "x$enable_fma" = "xno" || test "x$ax_cv_support_fma3_ext" != "xyes"],
+    [AC_DEFINE([DISABLE_FMA], [1], [FMA code path should not be compiled.])],
+    [CFLAGS="$CFLAGS -mfma"])
 
 # Checks for library functions.
 AC_CHECK_FUNCS([floor memset pow sqrt strchr])
