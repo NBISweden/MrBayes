@@ -1909,7 +1909,8 @@ int CheckModel (void)
     int         i, j, k, answer;
     Tree        *t = NULL;
     TreeNode    *p;
-    
+    MrBFlt      treeAge, clockRate;
+ 
     /* there should only be one calibrated tree */
     for (i=0; i<numTrees; i++)
         {
@@ -1938,6 +1939,52 @@ int CheckModel (void)
                 else
                     {
                     MrBayesPrint("%s   Stopping the run...\n\n", spacer);
+                    return (ERROR);
+                    }
+                }
+            }
+        }
+
+    /* 
+     * Check that the clock rate is consistent with the tree age prior. We cannot check this earlier
+     * because the clock rate and tree age are set separately, and we do not know in which order they are set.
+     */
+    for (i=0; i<numTrees; i++)
+        {
+        t = GetTreeFromIndex(i,0,0);
+        if (t->isClock == YES && t->isCalibrated == YES)
+            {
+            clockRate = *GetParamVals(modelSettings[t->relParts[0]].clockRate, 0, 0);
+            treeAge = t->root->left->nodeDepth / clockRate;
+            if (!AreDoublesEqual(treeAge, t->root->left->age, 0.000001))
+                {
+                MrBayesPrint("%s   ERROR: The tree age setting is inconsistent with the specified tree age prior.\n", spacer);
+                return (ERROR);
+                }
+            if (modelParams[t->relParts[0]].treeAgePr.prior == fixed)
+                {
+                if (!AreDoublesEqual(treeAge, modelParams[t->relParts[0]].treeAgePr.priorParams[0], 0.000001))
+                    {
+                    MrBayesPrint("%s   ERROR: The clock rate is inconsistent with the specified tree age prior.\n", spacer);
+                    return (ERROR);
+                    }
+                }
+            else if (modelParams[t->relParts[0]].treeAgePr.prior == uniform)
+                {
+                if (treeAge < modelParams[t->relParts[0]].treeAgePr.priorParams[0] || treeAge > modelParams[t->relParts[0]].treeAgePr.priorParams[1])
+                    {    
+                    MrBayesPrint("%s   ERROR: The clock rate is inconsistent with the specified tree age prior.\n", spacer);
+                    return (ERROR);
+                    }
+                }
+            else if (modelParams[t->relParts[0]].treeAgePr.prior == offsetExponential ||
+                     modelParams[t->relParts[0]].treeAgePr.prior == offsetGamma ||
+                     modelParams[t->relParts[0]].treeAgePr.prior == truncatedNormal ||
+                     modelParams[t->relParts[0]].treeAgePr.prior == offsetLogNormal)
+                {
+                if (treeAge < modelParams[t->relParts[0]].treeAgePr.priorParams[0])
+                    {    
+                    MrBayesPrint("%s   ERROR: The clock rate is inconsistent with the specified tree age prior.\n", spacer);
                     return (ERROR);
                     }
                 }
@@ -10762,7 +10809,9 @@ int DoStartvalsParm (char *parmName, char *tkn)
                             if (!strcmp(modelParams[theTree->relParts[0]].clockPr,"Uniform") ||
                                 !strcmp(modelParams[theTree->relParts[0]].clockPr,"Birthdeath") ||
                                 !strcmp(modelParams[theTree->relParts[0]].clockPr,"Fossilization"))
-                                ResetRootHeight (theTree, modelParams[theTree->relParts[0]].treeAgePr.priorParams[0]);
+                                ;
+                                // We cannot check the consistency of root age and clock rate here because they can be set in any order. Defer this
+                                // check to the CheckModel fxn, called just before starting the chain.
                             }
                         /* the test will find suitable clock rate and ages of nodes in theTree */
                         if (theTree->isClock == YES && IsClockSatisfied (theTree,0.001) == NO)
@@ -10790,7 +10839,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
                         theTree->fromUserTree=YES;
                         
                         FillBrlensSubParams (param, chainId, 0);
-                        //MrBayesPrint ("%s   Rrelaxed clock subparamiters of a parameter '%s' are reset.\n", spacer, param->name);
+                        //MrBayesPrint ("%s   Relaxed clock subparameters of a parameter '%s' are reset.\n", spacer, param->name);
                         //assert (IsTreeConsistent(param, chainId, 0) == YES);
                         if (param->paramId == BRLENS_CLOCK_SPCOAL)
                             FillSpeciesTreeParams(&globalSeed, chainId, chainId+1);
@@ -25170,7 +25219,7 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             else
                 MrBayesPrint ("%s            Prior      = Fixed(%1.6lf)\n", spacer, mp->clockRateFix);
             if (!strcmp(mp->clockVarPr,"Strict"))
-                MrBayesPrint ("%s                         The clock rate is constant (strict clock)\n", spacer);
+                MrBayesPrint ("%s                         The clock rate is constant throughout the tree (strict clock)\n", spacer);
             else if (!strcmp(mp->clockVarPr,"Cpp"))
                 MrBayesPrint ("%s                         The clock rate varies according to a CPP model\n", spacer);
             else if (!strcmp(mp->clockVarPr,"TK02"))
