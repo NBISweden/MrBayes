@@ -36,17 +36,17 @@
 #include <time.h>
 
 /* Set SSE_ENABLED if SSE SIMD extensions available. */
-#ifdef HAVE_SSE
+#if defined(HAVE_SSE) && !defined(DISABLE_SSE)
 #define SSE_ENABLED
 #endif
 
 /* Set AVX_ENABLED if AVX SIMD extensions available. */
-#ifdef HAVE_AVX
+#if defined(HAVE_AVX) && !defined(DISABLE_AVX)
 #define AVX_ENABLED
 #endif
 
 /* Set FMA_ENABLED if FMA SIMD extensions available. */
-#if defined(HAVE_FMA3) || defined(HAVE_FMA4)
+#if defined(HAVE_FMA3) && !defined(DISABLE_FMA)
 #define FMA_ENABLED
 #endif
 
