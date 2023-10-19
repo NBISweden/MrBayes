@@ -19852,16 +19852,16 @@ int SetModelParams (void)
                 {
                 p->paramTypeName = "SD of scaled lognormal distribution of site rates";
                 SafeStrcat(&p->name, "Sigma");
-                SafeStrcat (&p->paramHeader, "sigma");
+                SafeStrcat(&p->paramHeader, "sigma");
                 }
             else
                 {
                 p->paramTypeName = "Shape of scaled gamma distribution of site rates";
                 SafeStrcat(&p->name, "Alpha");
-                SafeStrcat (&p->paramHeader, "alpha");
+                SafeStrcat(&p->paramHeader, "alpha");
                 }
             SafeStrcat(&p->name, partString);
-            SafeStrcat (&p->paramHeader, partString);
+            SafeStrcat(&p->paramHeader, partString);
 
             /* find the parameter x prior type */
             mp = &modelParams[p->relParts[0]];
