@@ -184,18 +184,14 @@ Disabling the SSE, AVX and FMA code paths
 ------------------------------------------------------------------------
 
 MrBayes will use SSE, AVX and FMA instructions to speed up computations
-on CPUs that support these instruction sets, if the compiler supports
-it.  These code paths are however optional, and if you suspect a bug in
-part of this code, you may use "--disable-sse", "--disable-avx" and/or
-"--disable-fma" to disable it when running the "configure" script.
+on CPUs that support these instruction sets, if the compiler and build
+architecture supports it.  These code paths are however optional, and
+if you suspect a bug in part of this code, you may use "--disable-sse",
+"--disable-avx" and/or "--disable-fma" to disable it when running the
+"configure" script.
 
-Note however, that disabling SSE will also disable AVX and FMA, and
-disabling AVX will also disable FMA.
-
-Note also that disabling these accelerated code paths will not remove
-the "-msse" (etc.) compiler flags.  These compiler flags affects what
-instructions the compiler is allowed to generate, not what code path is
-chosen for compilation.
+Note that disabling SSE will also disable AVX and FMA, and disabling AVX
+will also disable FMA.
 
 
 Picking up the Beagle library:
