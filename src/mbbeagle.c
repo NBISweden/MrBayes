@@ -1,7 +1,7 @@
 /*
  *  MrBayes 3
  *
- *  (c) 2002-2013
+ *  (c) 2002-2023
  *
  *  This file originally contributed by:
  *

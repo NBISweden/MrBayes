@@ -1,7 +1,7 @@
 /*
  *  MrBayes 3
  *
- *  (c) 2002-2013
+ *  (c) 2002-2023
  *
  *  John P. Huelsenbeck
  *  Dept. Integrative Biology
@@ -10806,12 +10806,11 @@ int DoStartvalsParm (char *parmName, char *tkn)
                             }
                         if (theTree->isClock == YES && modelParams[theTree->relParts[0]].treeAgePr.prior == fixed)
                             {
-                            if (!strcmp(modelParams[theTree->relParts[0]].clockPr,"Uniform") ||
-                                !strcmp(modelParams[theTree->relParts[0]].clockPr,"Birthdeath") ||
-                                !strcmp(modelParams[theTree->relParts[0]].clockPr,"Fossilization"))
-                                ;
-                                // We cannot check the consistency of root age and clock rate here because they can be set in any order. Defer this
-                                // check to the CheckModel fxn, called just before starting the chain.
+                            // if (!strcmp(modelParams[theTree->relParts[0]].clockPr,"Uniform") ||
+                            //    !strcmp(modelParams[theTree->relParts[0]].clockPr,"Birthdeath") ||
+                            //    !strcmp(modelParams[theTree->relParts[0]].clockPr,"Fossilization"));
+                            // We cannot check the consistency of root age and clock rate here because they can be set in any order.
+                            // Defer this check to the CheckModel fxn, called just before starting the chain.
                             }
                         /* the test will find suitable clock rate and ages of nodes in theTree */
                         if (theTree->isClock == YES && IsClockSatisfied (theTree,0.001) == NO)
@@ -19788,7 +19787,7 @@ int SetModelParams (void)
                             p->printParam = YES;
 
                         if (FillRelPartsString (p, &partString) == YES)
-                        {
+                            {
                             SafeSprintf(&tempStr, &tempStrSize, "pi(0)%s\tpi(1)%s\trootpi(0)%s\trootpi(1)%s", partString, partString, partString, partString);
                             SafeStrcat (&p->paramHeader, tempStr);
                             if (p->paramId == DIRPI_MIX)
@@ -19796,7 +19795,7 @@ int SetModelParams (void)
                                 SafeSprintf(&tempStr, &tempStrSize, "\tstatefrmod%s", partString);
                                 SafeStrcat (&p->paramHeader, tempStr);
                                 }
-                        }
+                            }
                         else
                             {
                             SafeStrcat (&p->paramHeader, "pi(0)\tpi(1)\trootpi(0)\trootpi(1)");
@@ -19853,16 +19852,16 @@ int SetModelParams (void)
                 {
                 p->paramTypeName = "SD of scaled lognormal distribution of site rates";
                 SafeStrcat(&p->name, "Sigma");
-                SafeStrcat (&p->paramHeader, "sigma");
+                SafeStrcat(&p->paramHeader, "sigma");
                 }
             else
                 {
                 p->paramTypeName = "Shape of scaled gamma distribution of site rates";
                 SafeStrcat(&p->name, "Alpha");
-                SafeStrcat (&p->paramHeader, "alpha");
+                SafeStrcat(&p->paramHeader, "alpha");
                 }
             SafeStrcat(&p->name, partString);
-            SafeStrcat (&p->paramHeader, partString);
+            SafeStrcat(&p->paramHeader, partString);
 
             /* find the parameter x prior type */
             mp = &modelParams[p->relParts[0]];
@@ -20323,7 +20322,7 @@ int SetModelParams (void)
                 }
             else for (i = 0; i < p->nValues; i++)
                 {
-                sprintf (tempStr, "\tnet_speciation_%d", i+1);
+                SafeSprintf(&tempStr, &tempStrSize, "\tnet_speciation_%d", i+1);
                 SafeStrcat (&p->paramHeader, tempStr);
                 SafeStrcat (&p->paramHeader, partString);
                 }
@@ -20365,7 +20364,7 @@ int SetModelParams (void)
                 }
             else for (i = 0; i < p->nValues; i++)
                 {
-                sprintf (tempStr, "\trelative_extinction_%d", i+1);
+                SafeSprintf(&tempStr, &tempStrSize, "\trelative_extinction_%d", i+1);
                 SafeStrcat (&p->paramHeader, tempStr);
                 SafeStrcat (&p->paramHeader, partString);
                 }
@@ -20404,7 +20403,7 @@ int SetModelParams (void)
                 }
             else for (i = 0; i < p->nValues; i++)
                 {
-                sprintf (tempStr, "\trelative_fossilization_%d", i+1);
+                SafeSprintf(&tempStr, &tempStrSize, "\trelative_fossilization_%d", i+1);
                 SafeStrcat (&p->paramHeader, tempStr);
                 SafeStrcat (&p->paramHeader, partString);
                 }
