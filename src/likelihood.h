@@ -1,5 +1,5 @@
-#ifndef __LIKELIHOOD_H__
-#define __LIKELIHOOD_H__
+#ifndef LIKELIHOOD_H_
+#define LIKELIHOOD_H_
 
 //#define TIMING_ANALIZ
 #if defined (TIMING_ANALIZ)
@@ -161,4 +161,4 @@ int       TiProbs_JukesCantor (TreeNode *p, int division, int chain);
 int       TiProbs_Std (TreeNode *p, int division, int chain);
 int       TiProbs_Res (TreeNode *p, int division, int chain);
 
-#endif  /* __LIKELIHOOD_H__ */
+#endif  /* LIKELIHOOD_H_ */

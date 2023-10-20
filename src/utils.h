@@ -1,5 +1,5 @@
-#ifndef __UTILS_H__
-#define __UTILS_H__
+#ifndef UTILS_H_
+#define UTILS_H_
 
 /* M_PI and M_PI_2 not part of standard C */
 #ifndef M_PI
@@ -289,4 +289,4 @@ MrBFlt    LogNormalPoint (MrBFlt x, MrBFlt mu, MrBFlt sigma);
 /* qsort utility function */
 int       cmpMrBFlt(const void *a, const void *b);
 
-#endif  /* __UTILS_H__ */
+#endif  /* UTILS_H_ */

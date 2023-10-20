@@ -1,5 +1,5 @@
-#ifndef __BAYES_H__
-#define __BAYES_H__
+#ifndef BAYES_H_
+#define BAYES_H_
 
 #ifdef HAVE_CONFIG_H
 #   include "config.h"
@@ -1831,4 +1831,4 @@ extern MrBFlt           myStateInfo[7];                         /* likelihood/pr
 extern MrBFlt           partnerStateInfo[7];                    /* likelihood/prior/heat/ran/moveInfo vals of partner         */
 #endif
 
-#endif  /* __BAYES_H__ */
+#endif  /* BAYES_H_ */
