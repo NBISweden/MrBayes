@@ -1,5 +1,5 @@
-#ifndef __BEST_H__
-#define __BEST_H__
+#ifndef BEST_H_
+#define BEST_H_
 
 /* typedefs used by Fredrik's code, derived from BEST code */
 
@@ -26,4 +26,4 @@ void    ShowUpperTriangMatrix (double *values, int squareSize);
 
 /* NOTE: To add and set up more move functions, a struct needs to be added to SetUpMoveTypes in model.c */
 
-#endif  /* __BEST_H__ */
+#endif  /* BEST_H_ */

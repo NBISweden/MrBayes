@@ -1,5 +1,5 @@
-#ifndef __PROPOSAL_H__
-#define __PROPOSAL_H__
+#ifndef PROPOSAL_H_
+#define PROPOSAL_H_
 
 int     Move_Aamodel (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 int     Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
@@ -93,4 +93,4 @@ int     Move_TreeLen (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
 int     Move_WNVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 int     Move_WNBranchRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBFlt *lnProposalRatio, MrBFlt *mvp);
 
-#endif  /* __PROPOSAL_H__ */
+#endif  /* PROPOSAL_H_ */

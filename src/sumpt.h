@@ -1,5 +1,5 @@
-#ifndef __SUMPT_H__
-#define __SUMPT_H__
+#ifndef SUMPT_H_
+#define SUMPT_H_
 
 /* struct to hold info about a .p file */
 typedef struct
@@ -48,4 +48,4 @@ void    ResetTranslateTable (void);
 int     ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport);
 void    ShowParts (FILE *fp, BitsLong *p, int nTaxaToShow);
 
-#endif  /* __SUMPT_H__ */
+#endif  /* SUMPT_H_ */
