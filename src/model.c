@@ -167,6 +167,7 @@ int             *stateSize;                  /* # states for each compressed cha
 // int          foundCurly;
 // char         *plotTokenP;                 /* plotToken[CMD_STRING_LENGTH];*/
 
+extern int      numLocalChains; //for debugging
 
 /*-----------------------------------------------------------------------
 |
