@@ -167,7 +167,9 @@ int             *stateSize;                  /* # states for each compressed cha
 // int          foundCurly;
 // char         *plotTokenP;                 /* plotToken[CMD_STRING_LENGTH];*/
 
+#if defined (MPI_ENABLED)
 extern int      numLocalChains; //for debugging
+#endif
 
 /*-----------------------------------------------------------------------
 |
@@ -1952,7 +1954,11 @@ int CheckModel (void)
      */
     for (i=0; i<numTrees; i++)
         {
-        for (int chain_index=0; chain_index<numLocalChains; chain_index++) {
+#if defined (MPI_ENABLED)
+            for (int chain_index=0; chain_index<numLocalChains; chain_index++) {
+#else
+            for (int chain_index=0; chain_index<numGlobalChains; chain_index++) {
+#endif
             t = GetTreeFromIndex(i,chain_index,0);
             clockRate = *GetParamVals(modelSettings[t->relParts[0]].clockRate, chain_index, 0);
             treeAge = t->root->left->nodeDepth / clockRate;
