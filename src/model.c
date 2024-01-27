@@ -1967,14 +1967,6 @@ int CheckModel (void)
 #else
             printf("chain: %d, state 0 -- clockRate=%lf, treeAge=%lf, nodeDepth=%lf\n", chain_index, clockRate, treeAge, t->root->left->nodeDepth);
 #endif
-            t = GetTreeFromIndex(i,chain_index,1);
-            clockRate = *GetParamVals(modelSettings[t->relParts[0]].clockRate, chain_index, 1);
-            treeAge = t->root->left->nodeDepth / clockRate;
-#if defined (MPI_ENABLED)
-            printf("proc_id: %d, chain: %d, state 1 -- clockRate=%lf, treeAge=%lf, nodeDepth=%lf\n", proc_id, chain_index, clockRate, treeAge, t->root->left->nodeDepth);
-#else
-            printf("chain: %d, state 1 -- clockRate=%lf, treeAge=%lf, nodeDepth=%lf\n", chain_index, clockRate, treeAge, t->root->left->nodeDepth);
-#endif
         }
         t = GetTreeFromIndex(i,0,0);
         if (t->isClock == YES && t->isCalibrated == YES)
