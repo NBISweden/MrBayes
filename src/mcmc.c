@@ -2597,7 +2597,7 @@ int DoMcmc (void)
         }
 #endif
 
-   /* Initialize vectors of print parameters */
+    /* Initialize vectors of print parameters */
     if (InitPrintParams () == ERROR)
         goto errorExit;
     
