@@ -1954,18 +1954,14 @@ int CheckModel (void)
      */
     for (i=0; i<numTrees; i++)
         {
-#if defined (MPI_ENABLED)
-            for (int chain_index=0; chain_index<numLocalChains; chain_index++) {
-#else
-            for (int chain_index=0; chain_index<numGlobalChains; chain_index++) {
-#endif
+        for (int chain_index=0; chain_index<numGlobalChains; chain_index++) {
             t = GetTreeFromIndex(i,chain_index,0);
             clockRate = *GetParamVals(modelSettings[t->relParts[0]].clockRate, chain_index, 0);
             treeAge = t->root->left->nodeDepth / clockRate;
 #if defined (MPI_ENABLED)
-            printf("proc_id: %d, chain: %d, state 0 -- clockRate=%lf, treeAge=%lf, nodeDepth=%lf\n", proc_id, chain_index, clockRate, treeAge, t->root->left->nodeDepth);
+            printf("proc_id: %d, chain: %d, state 0 -- clockRate=%lf, treeAge=%lf, nodeDepth=%lf, treeAge=%lf\n", proc_id, chain_index, clockRate, treeAge, t->root->left->nodeDepth, t->root->left->age);
 #else
-            printf("chain: %d, state 0 -- clockRate=%lf, treeAge=%lf, nodeDepth=%lf\n", chain_index, clockRate, treeAge, t->root->left->nodeDepth);
+            printf("chain: %d, state 0 -- clockRate=%lf, treeAge=%lf, nodeDepth=%lf, treeAge=%lf\n", chain_index, clockRate, treeAge, t->root->left->nodeDepth, t->root->left->age);
 #endif
         }
         t = GetTreeFromIndex(i,0,0);
