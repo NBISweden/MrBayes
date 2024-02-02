@@ -2584,6 +2584,10 @@ int DoMcmc (void)
             goto errorExit;
         }
 
+    /* Check again that the model is consistent after potentially resetting starting values (co-dependencies etc) */
+    if (CheckModel() == ERROR)
+        goto errorExit;
+ 
 #ifndef NDEBUG
     /* checking tree consistency for debug purposes */
     for (i=0; i<numParams; i++)

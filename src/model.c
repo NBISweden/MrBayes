@@ -1906,7 +1906,7 @@ void CheckCharCodingType (Matrix *m, CharInfo *ci)
 -------------------------------------------------------------*/
 int CheckModel (void)
 {
-    int         i, j, k, answer;
+    int         ch, i, j, k, answer;
     Tree        *t = NULL;
     TreeNode    *p;
     MrBFlt      treeAge, clockRate;
@@ -1948,44 +1948,48 @@ int CheckModel (void)
     /* 
      * Check that the clock rate is consistent with the tree age prior. We cannot check this earlier
      * because the clock rate and tree age are set separately, and we do not know in which order they are set.
+     * We need to check all chains because start values are set separately for each chain.
      */
     for (i=0; i<numTrees; i++)
         {
-        t = GetTreeFromIndex(i,0,0);
-        if (t->isClock == YES && t->isCalibrated == YES)
+        for (ch=0; ch<numGlobalChains; ch++)
             {
-            clockRate = *GetParamVals(modelSettings[t->relParts[0]].clockRate, 0, 0);
-            treeAge = t->root->left->nodeDepth / clockRate;
-            if (!AreDoublesEqual(treeAge, t->root->left->age, 0.000001))
+            t = GetTreeFromIndex(i,ch,0);
+            if (t->isClock == YES && t->isCalibrated == YES)
                 {
-                MrBayesPrint("%s   ERROR: The tree age setting is inconsistent with the specified tree age prior.\n", spacer);
-                return (ERROR);
-                }
-            if (modelParams[t->relParts[0]].treeAgePr.prior == fixed)
-                {
-                if (!AreDoublesEqual(treeAge, modelParams[t->relParts[0]].treeAgePr.priorParams[0], 0.000001))
+                clockRate = *GetParamVals(modelSettings[t->relParts[0]].clockRate, ch, 0);
+                treeAge = t->root->left->nodeDepth / clockRate;
+                if (!AreDoublesEqual(treeAge, t->root->left->age, 0.000001))
                     {
-                    MrBayesPrint("%s   ERROR: The clock rate is inconsistent with the specified tree age prior.\n", spacer);
+                    MrBayesPrint("%s   ERROR: The tree age setting is inconsistent with the specified tree age prior.\n", spacer);
                     return (ERROR);
                     }
-                }
-            else if (modelParams[t->relParts[0]].treeAgePr.prior == uniform)
-                {
-                if (treeAge < modelParams[t->relParts[0]].treeAgePr.priorParams[0] || treeAge > modelParams[t->relParts[0]].treeAgePr.priorParams[1])
-                    {    
-                    MrBayesPrint("%s   ERROR: The clock rate is inconsistent with the specified tree age prior.\n", spacer);
-                    return (ERROR);
+                if (modelParams[t->relParts[0]].treeAgePr.prior == fixed)
+                    {
+                    if (!AreDoublesEqual(treeAge, modelParams[t->relParts[0]].treeAgePr.priorParams[0], 0.000001))
+                        {
+                        MrBayesPrint("%s   ERROR: The clock rate is inconsistent with the specified tree age prior.\n", spacer);
+                        return (ERROR);
+                        }
                     }
-                }
-            else if (modelParams[t->relParts[0]].treeAgePr.prior == offsetExponential ||
-                     modelParams[t->relParts[0]].treeAgePr.prior == offsetGamma ||
-                     modelParams[t->relParts[0]].treeAgePr.prior == truncatedNormal ||
-                     modelParams[t->relParts[0]].treeAgePr.prior == offsetLogNormal)
-                {
-                if (treeAge < modelParams[t->relParts[0]].treeAgePr.priorParams[0])
-                    {    
-                    MrBayesPrint("%s   ERROR: The clock rate is inconsistent with the specified tree age prior.\n", spacer);
-                    return (ERROR);
+                else if (modelParams[t->relParts[0]].treeAgePr.prior == uniform)
+                    {
+                    if (treeAge < modelParams[t->relParts[0]].treeAgePr.priorParams[0] || treeAge > modelParams[t->relParts[0]].treeAgePr.priorParams[1])
+                        {    
+                        MrBayesPrint("%s   ERROR: The clock rate is inconsistent with the specified tree age prior.\n", spacer);
+                        return (ERROR);
+                        }
+                    }
+                else if (modelParams[t->relParts[0]].treeAgePr.prior == offsetExponential ||
+                         modelParams[t->relParts[0]].treeAgePr.prior == offsetGamma ||
+                         modelParams[t->relParts[0]].treeAgePr.prior == truncatedNormal ||
+                        modelParams[t->relParts[0]].treeAgePr.prior == offsetLogNormal)
+                    {
+                    if (treeAge < modelParams[t->relParts[0]].treeAgePr.priorParams[0])
+                        {    
+                        MrBayesPrint("%s   ERROR: The clock rate is inconsistent with the specified tree age prior.\n", spacer);
+                        return (ERROR);
+                        }
                     }
                 }
             }
