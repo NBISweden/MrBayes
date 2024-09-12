@@ -4,14 +4,14 @@
 #ifdef HAVE_CONFIG_H
 #   include "config.h"
 #   define VERSION_NUMBER  PACKAGE_VERSION
-#elif !defined (XCODE_VERSION) /* some defaults that would otherwise be guessed by configure */
+#else  /* some defaults that would otherwise be guessed by configure */
 #   define PACKAGE_NAME "MrBayes"
 #   define PACKAGE_VERSION "3.2.8"
 #   define HOST_CPU "x86_64"
 #   define VERSION_NUMBER  PACKAGE_VERSION
 #   undef  HAVE_LIBREADLINE
 #   define UNIX_VERSION 1
-#   define SSE_ENABLED  1
+#   undef  SSE_ENABLED
 #   undef  AVX_ENABLED
 #   undef  FMA_ENABLED
 #   undef  MPI_ENABLED

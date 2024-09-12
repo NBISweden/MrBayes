@@ -1983,7 +1983,7 @@ int CheckModel (void)
                 else if (modelParams[t->relParts[0]].treeAgePr.prior == offsetExponential ||
                          modelParams[t->relParts[0]].treeAgePr.prior == offsetGamma ||
                          modelParams[t->relParts[0]].treeAgePr.prior == truncatedNormal ||
-                        modelParams[t->relParts[0]].treeAgePr.prior == offsetLogNormal)
+                         modelParams[t->relParts[0]].treeAgePr.prior == offsetLogNormal)
                     {
                     if (treeAge < modelParams[t->relParts[0]].treeAgePr.priorParams[0])
                         {    
