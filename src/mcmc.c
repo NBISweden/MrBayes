@@ -6910,7 +6910,7 @@ int InitParsSets (void)
 
         if (mp->dataType == CONTINUOUS)
             {
-            /* Note: This is only a placeholder since continuous characters are not implemented yet.
+            /* Note: Assuming the continuous characters are standardized (between 0 and 1)?
                Using additive parsimony would be more efficient than using multiple binary chars as here. */
             for (i=0; i<numLocalTaxa; i++)
                 {
@@ -18313,6 +18313,8 @@ int SetLikeFunctions (void)
             if (m->parsModelId == NO)
                 {
                 m->Likelihood = &Likelihood_Cont;
+                // m->PrintAncStates = &PrintAncStates_Cont;
+                // m->PrintSiteRates = &PrintSiteRates_Cont;
                 }
             }
         else
