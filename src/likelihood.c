@@ -8045,14 +8045,11 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL)
                 m->TiProbs (p->right, d, chain);
                 }
             
-            if (tree->isRooted == NO)
+            if (tree->isRooted == NO && p->anc->anc == NULL /* && p->upDateTi == YES */)
                 {
-                if (p->anc->anc == NULL /* && p->upDateTi == YES */)
-                    {
-                    /* shift state of ti probs for node */
-                    FlipTiProbsSpace (m, chain, p->index);
-                    m->TiProbs (p, d, chain);
-                    }
+                /* shift state of ti probs for node */
+                FlipTiProbsSpace (m, chain, p->index);
+                m->TiProbs (p, d, chain);
                 }
             
             if (p->upDateCl == YES)
