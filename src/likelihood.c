@@ -10761,7 +10761,7 @@ int UpDateCijk (int whichPart, int whichChain)
                     }
                 isComplex = GetEigens (n, q[0], eigenValues, eigvalsImag, eigvecs, inverseEigvecs, Ceigvecs, CinverseEigvecs);
 #   if defined (BEAGLE_ENABLED)
-                if (isComplex == YES)
+                if (isComplex != NO)
                     {
                     if (isComplex == YES)
                         MrBayesPrint ("%s   ERROR: Complex eigenvalues found!\n", spacer);
@@ -10805,7 +10805,10 @@ int UpDateCijk (int whichPart, int whichChain)
                     }
                 else
                     {
-                    MrBayesPrint ("%s   ERROR: Complex eigenvalues found!\n", spacer);
+                    if (isComplex == YES)
+                        MrBayesPrint ("%s   ERROR: Complex eigenvalues found!\n", spacer);
+                    else
+                        MrBayesPrint ("%s   ERROR: Computing eigenvalues problem!\n", spacer);
                     goto errorExit;
                     }
 #   endif
@@ -10865,7 +10868,7 @@ int UpDateCijk (int whichPart, int whichChain)
                     {
                     isComplex = GetEigens (n, q[k], eigenValues, eigvalsImag, eigvecs, inverseEigvecs, Ceigvecs, CinverseEigvecs);
 #   if defined (BEAGLE_ENABLED)
-                    if (isComplex == YES)
+                    if (isComplex != NO)
                         {
                         if (isComplex == YES)
                             MrBayesPrint ("%s   ERROR: Complex eigenvalues found!\n", spacer);
@@ -10904,7 +10907,10 @@ int UpDateCijk (int whichPart, int whichChain)
                         }
                     else
                         {
-                        MrBayesPrint ("%s   ERROR: Complex eigenvalues found!\n", spacer);
+                        if (isComplex == YES)
+                            MrBayesPrint ("%s   ERROR: Complex eigenvalues found!\n", spacer);
+                        else
+                            MrBayesPrint ("%s   ERROR: Computing eigenvalues problem!\n", spacer);
                         goto errorExit;
                         }
 #   endif

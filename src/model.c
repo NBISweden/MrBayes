@@ -16248,22 +16248,20 @@ int PrintCompMatrix (void)
 
     if (!compMatrix)
         return ERROR;
-
-    whichChar = &WhichNuc;
     
     for (d=0; d<numCurrentDivisions; d++)
         {
         m = &modelSettings[d];
         mp = &modelParams[d];
 
-        if (mp->dataType == DNA || mp->dataType == RNA)
-            whichChar = &WhichNuc;
         if (mp->dataType == PROTEIN)
             whichChar = &WhichAA;
         if (mp->dataType == RESTRICTION)
             whichChar = &WhichRes;
         if (mp->dataType == STANDARD)
             whichChar = &WhichStand;
+        else
+            whichChar = &WhichNuc;
 
         MrBayesPrint ("\nCompressed matrix for division %d\n\n", d+1);
         

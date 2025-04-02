@@ -1391,6 +1391,9 @@ typedef struct modelinfo
     MrBFlt      lnLike[MAX_CHAINS];         /* log like for chain                           */
     CLFlt       *ancStateCondLikes;         /* ancestral state cond like array              */
 
+    /* //Chi TODO: Variables for continuous traits */
+    
+
     /* Likelihood function pointers */
     LikeDownFxn         CondLikeDown;       /* function for calculating partials            */
     LikeRootFxn         CondLikeRoot;       /* function for calculating partials at root    */

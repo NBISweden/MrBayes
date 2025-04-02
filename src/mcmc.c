@@ -151,7 +151,7 @@ int       GetTotalRateShifts (Model *mp, MrBFlt *shiftTimes);
 MrBFlt    GibbsSampleGamma (int chain, int division, RandLong *seed);
 int       InitAdGamma(void);
 int       InitChainCondLikes (void);
-int       InitClockBrlens (Tree *t);
+int       InitContPICs (void);
 int       InitEigenSystemInfo (ModelInfo *m);
 int       InitInvCondLikes (void);
 int       InitParsSets (void);
@@ -2401,6 +2401,10 @@ int DoMcmc (void)
     
     /* Initialize invariable conditional likelihoods. */
     if (InitInvCondLikes() == ERROR)
+        goto errorExit;
+
+    /* Initialize independent contrasts and ancestral states for continuous traits. */
+    if (InitContPICs() == ERROR)
         goto errorExit;
 
     /* Allocate BEST chain variables */
@@ -6157,7 +6161,7 @@ int InitChainCondLikes (void)
         m->rescaleFreq = (int*) SafeMalloc((numLocalChains) * sizeof(int));
         for (i=0; i<numLocalChains; ++i)
             {
-            if (m->numModelStates == 4 )
+            if (m->numModelStates == 4)
                 m->rescaleFreq[i] = 1;
             else
                 m->rescaleFreq[i] = 1;
@@ -6505,6 +6509,33 @@ int InitChainCondLikes (void)
         }
 
     return NO_ERROR;
+}
+
+
+/*------------------------------------------------------------------------
+|   Initialize independent contrasts and ancestral states for continuous traits
+|
+|       //Chi TODO: allocate space
+-------------------------------------------------------------------------*/
+int InitContPICs (void)
+{
+    int         d, i, j, k;
+    ModelInfo   *m;
+
+    for (d=0; d<numCurrentDivisions; d++)
+    {
+        m = &modelSettings[d];
+                
+        if (m->dataType != CONTINUOUS)
+            continue;
+        
+        MrBayesPrint ("%s   Initializing independent contrasts\n", spacer);
+
+        
+        
+    }
+    
+    return (NO_ERROR);
 }
 
 

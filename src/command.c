@@ -538,12 +538,9 @@ int AllocCharacters (void)
     if (memAllocs[ALLOC_PARTITIONVARS] == YES)
         goto errorExit;
     numVars           = NULL;
-    tempLinkUnlinkVec = NULL;
     activeParts       = NULL;
     tempLinkUnlinkVec = NULL;
     tempNum           = NULL;
-    linkTable[0]      = NULL;
-    tempLinkUnlink[0] = NULL;
     for (i=0; i<NUM_LINKED; i++)
         {
         linkTable[i]      = NULL;
@@ -5323,8 +5320,7 @@ int DoMatrixParm (char *parmName, char *tkn)
             }
         }
     
-    if (taxaInfo[0].charCount > 4010)
-        i = 1;  /* FIXME: Not used (from clang static analyzer) */
+    // if (taxaInfo[0].charCount > 4010) i = 1;  // why is this here?
 
     if (foundNewLine == YES)
         {
@@ -5376,9 +5372,14 @@ int DoMatrixParm (char *parmName, char *tkn)
         /* Should be a character (either continuous or otherwise). */
         if (charInfo[taxaInfo[taxonCount-1].charCount].charType == CONTINUOUS)
             {
-            /* If we have a CONTINUOUS character, then the entire token should either be
+            /* If we have a continuous character, then the entire token should either be
                a number or a dash (for a negative sign). */
-            if (!strcmp(tkn, "-"))
+            if (!strcmp(tkn, "?"))
+                {
+                MrBayesPrint ("%s   Missing state in continuous characters not yet unsupported\n", spacer);
+                goto errorExit;
+                }
+            else if (!strcmp(tkn, "-"))
                 {
                 /* Dealing with a negative number. We will multiply the next tkn, which
                    had better be a number, by -1. */
@@ -9222,7 +9223,6 @@ int FreeCharacters (void)
         activeParams[0] = NULL;
         free (linkTable[0]);
         linkTable[0] = NULL;
-        tempLinkUnlinkVec = NULL;
         activeParts = NULL;
         tempLinkUnlinkVec = NULL;
         for (i=0; i<NUM_LINKED; i++)
@@ -13694,24 +13694,15 @@ int IsIn (char ch, char *s)
 
 int IsMissing (int charCode, int dType)
 {
-    if (dType == DNA || dType == RNA)
-        {
-        if (charCode == 15 || charCode == 16)
-            return (YES);
-        }
-    else if (dType == STANDARD || dType == PROTEIN)
+    if (dType == DNA || dType == RNA || dType == PROTEIN || dType == RESTRICTION || dType == STANDARD)
         {
         if (charCode == MISSING || charCode == GAP)
             return (YES);
         }
-    else if (dType == RESTRICTION)
-        {
-        if (charCode == 3 || charCode == 4)
-            return (YES);
-        }
     else if (dType == CONTINUOUS)
         {
-
+        if (charCode == MISSING)
+            return (YES);
         }
     else
         {
@@ -13948,7 +13939,7 @@ int ParseCommand (char *s)
                                 foundFirst = NO;
                                 paramPtr = paramTable + commandPtr->parmList[0];
                                 }
-                            if (strcmp(commandPtr->string, "Execute")==0)
+                            if (strcmp(commandPtr->string, "Execute") == 0)
                                 {
                                 /* set the tokenizer to recognize quoted strings */
                                 readWord = YES;
