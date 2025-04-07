@@ -152,7 +152,6 @@ int      SetSpeciespartition (int part);
 int      SetTaxaFromTranslateTable (void);
 int      StandID (char nuc);
 void     WhatVariableExp (BitsLong exp, char *st);
-MrBFlt   WhichCont (int x);
 
 /* globals */
 int             autoClose;             /* autoclose                                     */
@@ -15293,7 +15292,7 @@ char WhichAA (int x)
 
 MrBFlt WhichCont (int x)
 {
-    return ((MrBFlt)(x / 1000.0));
+    return ((MrBFlt)x / 1000.0);
 }
 
 

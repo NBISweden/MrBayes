@@ -16280,7 +16280,7 @@ int PrintCompMatrix (void)
                     if (j >= m->compMatrixStop)
                         break;
                     if (mp->dataType == CONTINUOUS)
-                        MrBayesPrint ("%3d ", compMatrix[pos(i,j,compMatrixRowSize)]);
+                        MrBayesPrint ("%.2lf ", WhichCont((int)compMatrix[pos(i,j,compMatrixRowSize)]));
                     else
                         MrBayesPrint ("%c", whichChar((int)compMatrix[pos(i,j,compMatrixRowSize)]));
                     }
@@ -16315,7 +16315,7 @@ int PrintCompMatrix (void)
                 if (i>9)
                     i = '0' + (i % 10);
                 else
-                    i = '0' +i;
+                    i = '0' + i;
                 if (mp->dataType == CONTINUOUS)
                     MrBayesPrint ("   %c ", i);
                 else

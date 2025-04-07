@@ -4473,6 +4473,29 @@ void FreeChainMemory (void)
             m->condLikes = NULL;
             }
 
+        if (m->contrasts)
+            {
+            for (j=0; j<m->numCondLikes; j++)
+                free (m->contrasts[j]);
+            free (m->contrasts);
+            m->contrasts = NULL;
+            }
+            
+        if (m->ancStates)
+            {
+            for (j=0; j<m->numTiProbs; j++)
+                free (m->ancStates[j]);
+            free (m->ancStates);
+            m->ancStates = NULL;
+            }
+        if (m->bmVars)
+            {
+            for (j=0; j<m->numTiProbs; j++)
+                free (m->bmVars[j]);
+            free (m->bmVars);
+            m->bmVars = NULL;
+            }
+
         if (m->scalers)
             {
             for (j=0; j<m->numScalers; j++)
@@ -5878,6 +5901,10 @@ int InitChainCondLikes (void)
         {
         m = &modelSettings[d];
 
+        /* continuous characters are dealt with in InitContPICs */
+        if (m->dataType == CONTINUOUS)
+            continue;
+
 #       if defined (BEAGLE_ENABLED)
         /* if using beagle, adjust SIMD settings */
         if (m->useBeagle == YES)
@@ -5896,15 +5923,14 @@ int InitChainCondLikes (void)
         m->condLikeIndex = (int **) SafeMalloc (numLocalChains * sizeof(int *));
         if (!m->condLikeIndex)
             return (ERROR);
-        for (i=0; i<numLocalChains; i++)
+        for (j=0; j<numLocalChains; j++)
             {
-            m->condLikeIndex[i] = (int *) SafeMalloc (nNodes * sizeof(int));
-            if (!m->condLikeIndex[i])
+            m->condLikeIndex[j] = (int *) SafeMalloc (nNodes * sizeof(int));
+            if (!m->condLikeIndex[j])
                 return (ERROR);
+            for (i=0; i<nNodes; i++)
+                m->condLikeIndex[j][i] = -1;
             }
-        for (i=0; i<numLocalChains; i++)
-            for (j=0; j<nNodes; j++)
-                m->condLikeIndex[i][j] = -1;
 
         /* set up indices for terminal nodes */
         clIndex = 0;
@@ -5953,7 +5979,7 @@ int InitChainCondLikes (void)
             }
 
         /* parsimony models need nothing of the below */
-        if (m->parsModelId == YES || m->dataType == CONTINUOUS)
+        if (m->parsModelId == YES)
             continue;
 
         /* allocate space for conditional likelihoods */
@@ -6513,25 +6539,157 @@ int InitChainCondLikes (void)
 
 
 /*------------------------------------------------------------------------
-|   Initialize independent contrasts and ancestral states for continuous traits
 |
-|       //Chi TODO: allocate space
+|   Allocate space for independent contrasts, likelihoods, BM variances,
+|       and ancestral and tip states for continuous traits
+|
 -------------------------------------------------------------------------*/
 int InitContPICs (void)
 {
-    int         d, i, j, k;
+    int         c, d, i, j, k, nIntNodes, nNodes, clIndex, tiIndex,
+                state;
     ModelInfo   *m;
-
+    Tree        *t;
+    
     for (d=0; d<numCurrentDivisions; d++)
     {
         m = &modelSettings[d];
-                
+        
         if (m->dataType != CONTINUOUS)
             continue;
         
-        MrBayesPrint ("%s   Initializing independent contrasts\n", spacer);
-
+        /* we have no SIMD code for this partition */
+        MrBayesPrint ("%s   Using standard non-SSE likelihood calculator for division %d (%s-precision)\n", spacer, d+1, (sizeof(CLFlt) == 4 ? "single" : "double"));
         
+        /* find size of tree */
+        t = GetTree(m->brlens, 0, 0);
+        nIntNodes = t->nIntNodes;
+        nNodes = t->nNodes;
+        
+        /* figure out length of likelihood array */
+        m->condLikeLength = m->numChars * m->numRateCats;
+        
+        /* allocate space for the independent contrasts and likelihoods
+         For a rooted tree, there need nIntNodes contrasts (and likelihoods);
+         but for unrooted tree, we need one more for the "root" branch. */
+        m->numCondLikes = (numLocalChains + 1) * (nIntNodes + 1);
+        m->contrasts = (CLFlt**) SafeMalloc(m->numCondLikes * sizeof(CLFlt*));
+        m->condLikes = (CLFlt**) SafeMalloc(m->numCondLikes * sizeof(CLFlt*));
+        if (!m->contrasts || !m->condLikes)
+            return (ERROR);
+        for (i=0; i<m->numCondLikes; i++)
+            {
+            m->contrasts[i] = (CLFlt*) SafeMalloc(m->condLikeLength * sizeof(CLFlt));
+            m->condLikes[i] = (CLFlt*) SafeMalloc(m->condLikeLength * sizeof(CLFlt));
+            if (!m->contrasts[i] || !m->condLikes[i])
+                return (ERROR);
+            }
+        
+        /* allocate space for the trait states and transformed branch lengths */
+        m->numTiProbs = (numLocalChains + 1) * nNodes; // temporarily use numTiProbs
+        m->ancStates = (CLFlt**) SafeMalloc(m->numTiProbs * sizeof(CLFlt*));
+        m->bmVars    = (CLFlt**) SafeMalloc(m->numTiProbs * sizeof(CLFlt*));
+        if (!m->ancStates || !m->bmVars)
+            return (ERROR);
+        for (i=0; i<m->numTiProbs; i++)
+            {
+            m->ancStates[i] = (CLFlt*) SafeMalloc(m->condLikeLength * sizeof(CLFlt));
+            m->bmVars[i]    = (CLFlt*) SafeMalloc(m->condLikeLength * sizeof(CLFlt));
+            if (!m->ancStates[i] || !m->bmVars[i])
+                return (ERROR);
+            }
+        
+        /* allocate and set indices from tree nodes to likelihood arrays */
+        m->condLikeIndex = (int **) SafeMalloc(numLocalChains * sizeof(int *));
+        if (!m->condLikeIndex)
+            return (ERROR);
+        for (j=0; j<numLocalChains; j++)
+            {
+            m->condLikeIndex[j] = (int *) SafeMalloc(nNodes * sizeof(int));
+            if (!m->condLikeIndex[j])
+                return (ERROR);
+            for (i=0; i<nNodes; i++)
+                m->condLikeIndex[j][i] = -1;
+            }
+        m->condLikeScratchIndex = (int *) SafeMalloc(nNodes * sizeof(int));
+        if (!m->condLikeScratchIndex)
+            return (ERROR);
+        for (i=0; i<nNodes; i++)
+            m->condLikeScratchIndex[i] = -1;
+        
+        /* set up indices for internal nodes
+         use the same indices for the contrasts and likes (?) */
+        clIndex = 0;
+        for (j=0; j<numLocalChains; j++)
+            {
+            for (i=0; i < nIntNodes + 1; i++)
+                {
+                m->condLikeIndex[j][i+numLocalTaxa] = clIndex;
+                clIndex += 1;
+                }
+            }
+        for (i=0; i < nIntNodes + 1; i++)
+            {
+            m->condLikeScratchIndex[i+numLocalTaxa] = clIndex;
+            clIndex += 1;
+            }
+        
+        /* allocate and set indices from tree edges to bm var arrays (temporarily use tiProbsIndex) */
+        m->tiProbsIndex = (int **) SafeMalloc(numLocalChains * sizeof(int *));
+        if (!m->tiProbsIndex)
+            return (ERROR);
+        for (j=0; j<numLocalChains; j++)
+            {
+            m->tiProbsIndex[j] = (int *) SafeMalloc(nNodes * sizeof(int));
+            if (!m->tiProbsIndex[j])
+                return (ERROR);
+            }
+        m->tiProbsScratchIndex = (int *) SafeMalloc(nNodes * sizeof(int));
+        if (!m->tiProbsScratchIndex)
+            return (ERROR);
+        
+        /* set up indices for nodes
+         use the same indices for ancStates and bmVars (?) */
+        tiIndex = 0;
+        for (j=0; j<numLocalChains; j++)
+            {
+            for (i=0; i<nNodes; i++)
+                {
+                m->tiProbsIndex[j][i] = tiIndex;
+                tiIndex += 1;
+                }
+            }
+        for (i=0; i<nNodes; i++)
+            {
+            m->tiProbsScratchIndex[i] = tiIndex;
+            tiIndex += 1;
+            }
+        
+        /* fill in tip states */
+        /* ? we do this for all chains in case we use data augmentation for missing values */
+        for (j=0; j<numLocalChains; j++)
+            {
+            for (i=0; i<numLocalTaxa; i++)  // TODO: i and tip index
+                {
+                tiIndex = m->tiProbsIndex[j][i];
+                for (k=0, c=m->compMatrixStart; c<m->compMatrixStop; c++, k++)
+                    {
+                    // (long)compMatrix[pos(i,j,compMatrixRowSize)]
+                    state = matrix[pos(i,origChar[c],numChar)];
+                    m->ancStates[tiIndex][k] = WhichCont(state);
+                    }
+                }
+            }
+        /*
+        for (j=0; j<numLocalChains; j++) {
+            printf("\n chain %d\n", j+1);
+            for (i=0; i<numLocalTaxa; i++) {
+                tiIndex = m->tiProbsIndex[j][i];
+                for (k=0; k<m->numChars; k++)
+                    printf("%.3f ", m->ancStates[tiIndex][k]);
+                printf("\n");
+            }
+        } */
         
     }
     
