@@ -70,6 +70,100 @@ int       SetProteinQMatrix (MrBFlt **a, int n, int whichChain, int division, Mr
 int       UpDateCijk (int whichPart, int whichChain);
 
 
+/* update the Brownian motion variances */
+int BMVar_Cont (TreeNode *p, int division, int chain)
+{
+    int         i, j, k, index;
+    MrBFlt      v, sigma, *catRate, baseRate, theRate, length;
+    CLFlt       *var, *v_i, *v_j;
+    ModelInfo   *m;
+    
+    m = &modelSettings[division];
+
+    /* get base rate */
+    baseRate = GetRate(division, chain);
+    
+    /* get category rates */
+    theRate = 1.0;
+    if (m->shape != NULL)
+        catRate = GetParamSubVals(m->shape, chain, state[chain]);
+    else if (m->mixtureRates != NULL)
+        catRate = GetParamSubVals(m->mixtureRates, chain, state[chain]);
+    else
+        catRate = &theRate;
+    
+    /* find length */
+    if (m->cppEvents != NULL)
+        {
+        length = GetParamSubVals(m->cppEvents, chain, state[chain])[p->index];
+        }
+    else if (m->tk02BranchRates != NULL)
+        {
+        length = GetParamSubVals(m->tk02BranchRates, chain, state[chain])[p->index];
+        }
+    else if (m->wnBranchRates != NULL)
+        {
+        length = GetParamSubVals(m->wnBranchRates, chain, state[chain])[p->index];
+        }
+    else if (m->ilnBranchRates != NULL)
+        {
+        length = GetParamSubVals(m->ilnBranchRates, chain, state[chain])[p->index];
+        }
+   else if (m->igrBranchRates != NULL)
+        {
+        length = GetParamSubVals(m->igrBranchRates, chain, state[chain])[p->index];
+        }
+    else if (m->mixedBrchRates != NULL)
+        {
+        length = GetParamSubVals(m->mixedBrchRates, chain, state[chain])[p->index];
+        }
+    else
+        length = p->length;
+
+    /* get BM sigma */
+    sigma = *GetParamVals(m->brownSigma, chain, state[chain]);
+    
+    /* find BM variance pointer */
+    var = m->bmVars[m->tiProbsIndex[chain][p->index]];
+
+    /* fill in values */
+    if (p->left != NULL && p->right != NULL)
+        {
+        v_i = m->bmVars[m->tiProbsIndex[chain][p->left->index]];
+        v_j = m->bmVars[m->tiProbsIndex[chain][p->right->index]];
+        
+        for (k=0; k<m->numRateCats; k++)
+            {
+            var[k] = sigma * sigma * length * baseRate * catRate[k];
+            var[k] += (v_i[k] * v_j[k])/(v_i[k] + v_j[k]);
+            }
+        }
+    else  // tip node
+        {
+        for (k=0; k<m->numRateCats; k++)
+            var[k] = sigma * sigma * length * baseRate * catRate[k];
+        }
+        
+    return NO_ERROR;
+}
+
+
+int CondLikeDown_Cont (TreeNode *p, int division, int chain)
+{
+    
+    
+    return NO_ERROR;
+}
+
+
+int CondLikeRoot_Cont (TreeNode *p, int division, int chain)
+{
+    
+    
+    return NO_ERROR;
+}
+
+
 /*----------------------------------------------------------------
 |
 |   CondLikeDown_Bin: binary model with or without rate variation
@@ -115,7 +209,6 @@ int CondLikeDown_Bin (TreeNode *p, int division, int chain)
         }
 
     return NO_ERROR;
-    
 }
 
 
@@ -8017,7 +8110,55 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL)
         }
 #   endif
         
-    if (m->parsModelId == NO && m->dataType != CONTINUOUS)
+    if (m->dataType == CONTINUOUS)
+    {
+        /* TODO: scalers */
+        
+        /* pass over tree */
+        for (i=0; i<tree->nIntNodes; i++)
+        {
+            p = tree->intDownPass[i];
+            
+            if (p->left->upDateTi == YES)
+                {
+                FlipTiProbsSpace (m, chain, p->left->index);
+                m->TiProbs (p->left, d, chain);
+                }
+            
+            if (p->right->upDateTi == YES)
+                {
+                FlipTiProbsSpace (m, chain, p->right->index);
+                m->TiProbs (p->right, d, chain);
+                }
+            
+            if (tree->isRooted == NO && p->anc->anc == NULL /* && p->upDateTi == YES */)
+                {
+                FlipTiProbsSpace (m, chain, p->index);
+                m->TiProbs (p, d, chain);
+                }
+            
+            if (p->upDateCl == YES)
+            {
+                if (tree->isRooted == NO)
+                {
+                    if (p->anc->anc == NULL)
+                    {
+                        TIME(m->CondLikeRoot (p, d, chain),CPUCondLikeRoot);
+                    }
+                    else
+                    {
+                        TIME(m->CondLikeDown (p, d, chain),CPUCondLikeDown);
+                    }
+                }
+                else
+                {
+                    TIME(m->CondLikeDown (p, d, chain),CPUCondLikeDown);
+                }
+                
+            }
+        }
+    }
+    else if (m->parsModelId == NO)
         {
         /* get site scalers ready */
         FlipSiteScalerSpace(m, chain);

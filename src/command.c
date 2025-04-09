@@ -9550,7 +9550,7 @@ int GetToken (char *token, int *tokenType, char **sourceH)
             else if (allNumbers == TRUE && IsIn(**sourceH,"Ee") && foundExp == NO)
                 foundExp = TRUE;
             else if (allNumbers == TRUE && IsIn(**sourceH,"+-") && IsIn((*sourceH)[-1],"Ee"))
-                foundExpSign = TRUE; /* FIXME: Not used (from clang static analyzer) */
+                foundExpSign = TRUE;
             else if (!IsIn(**sourceH,"0123456789."))
                 allNumbers = FALSE;
             *temp++ = *(*sourceH)++;

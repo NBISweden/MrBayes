@@ -4186,7 +4186,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
     treeAgeMax = POS_INFINITY;
     if (t->root->left->isDated == YES)
         {
-        treeAgeMin = t->root->left->calibration->min;   /* FIXME: Not used (from clang static analyzer) */
+        treeAgeMin = t->root->left->calibration->min;
         treeAgeMax = t->root->left->calibration->max;
         }
     else if (!strcmp(mp->clockPr, "Uniform") ||
@@ -4194,7 +4194,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
              !strcmp(mp->clockPr, "Fossilization"))
         {
         if (mp->treeAgePr.min > treeAgeMin)
-            treeAgeMin = mp->treeAgePr.min; /* FIXME: Not used (from clang static analyzer) */
+            treeAgeMin = mp->treeAgePr.min;
         if (mp->treeAgePr.max < treeAgeMax)
             treeAgeMax = mp->treeAgePr.max;
         }

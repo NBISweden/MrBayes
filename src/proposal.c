@@ -1052,7 +1052,7 @@ int Move_CPPRate (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         }
     
     /* store new value */
-    (*GetParamVals (param, chain, state[chain])) = newLambda;
+    *GetParamVals (param, chain, state[chain]) = newLambda;
 
     /* calculate prior ratio */
     (*lnPriorRatio) = 0.0;
@@ -5831,7 +5831,7 @@ int Move_IgrVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         }
     
     /* store new value */
-    (*GetParamVals (param, chain, state[chain])) = newVar;
+    *GetParamVals (param, chain, state[chain]) = newVar;
 
     /* calculate prior ratio */
     for (i=0; i<param->nSubParams; i++)
@@ -5983,7 +5983,7 @@ int Move_IlnVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, 
         }
     
     /* store new value */
-    (*GetParamVals (param, chain, state[chain])) = newVar;
+    *GetParamVals (param, chain, state[chain]) = newVar;
 
     /* calculate prior ratio */
     for (i=0; i<param->nSubParams; i++)
@@ -6142,7 +6142,7 @@ int Move_MixedVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
         }
     
     /* store new value */
-    (*GetParamVals (param, chain, state[chain])) = newVar;
+    *GetParamVals (param, chain, state[chain]) = newVar;
     
     /* calculate prior ratio */
     for (i=0; i<param->nSubParams; i++)
@@ -8965,7 +8965,7 @@ int Move_Nu (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, MrBF
         }
     
     /* store new value */
-    (*GetParamVals (param, chain, state[chain])) = newNu;
+    *GetParamVals (param, chain, state[chain]) = newNu;
 
     /* calculate prior ratio */
     for (i=0; i<param->nSubParams; i++)
@@ -14519,7 +14519,7 @@ int Move_PosRealLognormal (Param *param, int chain, RandLong *seed, MrBFlt *lnPr
     (*lnPriorRatio) = param->LnPriorRatio(newX, oldX, param->priorParams);
     
     /* copy new value back */
-    (*GetParamVals(param, chain, state[chain])) = newX;
+    *GetParamVals(param, chain, state[chain]) = newX;
 
     /* Set update flags for tree nodes if relevant */
     if (param->affectsLikelihood == YES)
@@ -17644,7 +17644,7 @@ int Move_WNVar (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, M
         }
     
     /* store new value */
-    (*GetParamVals (param, chain, state[chain])) = newVar;
+    *GetParamVals (param, chain, state[chain]) = newVar;
 
     /* calculate prior ratio */
     for (i=0; i<param->nSubParams; i++)

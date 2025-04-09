@@ -6546,8 +6546,8 @@ int InitChainCondLikes (void)
 -------------------------------------------------------------------------*/
 int InitContPICs (void)
 {
-    int         c, d, i, j, k, nIntNodes, nNodes, clIndex, tiIndex,
-                state;
+    int         c, d, i, j, k, nIntNodes, nNodes, clIndex, tiIndex;
+    long        state;
     ModelInfo   *m;
     Tree        *t;
     
@@ -6594,7 +6594,7 @@ int InitContPICs (void)
         for (i=0; i<m->numTiProbs; i++)
             {
             m->ancStates[i] = (CLFlt*) SafeMalloc(m->condLikeLength * sizeof(CLFlt));
-            m->bmVars[i]    = (CLFlt*) SafeMalloc(m->condLikeLength * sizeof(CLFlt));
+            m->bmVars[i]    = (CLFlt*) SafeMalloc(m->numRateCats * sizeof(CLFlt));
             if (!m->ancStates[i] || !m->bmVars[i])
                 return (ERROR);
             }
@@ -6674,9 +6674,12 @@ int InitContPICs (void)
                 tiIndex = m->tiProbsIndex[j][i];
                 for (k=0, c=m->compMatrixStart; c<m->compMatrixStop; c++, k++)
                     {
-                    // (long)compMatrix[pos(i,j,compMatrixRowSize)]
-                    state = matrix[pos(i,origChar[c],numChar)];
-                    m->ancStates[tiIndex][k] = WhichCont(state);
+                    /* matrix[pos(i,origChar[c],numChar)] holds the int value, but we will have trouble
+                     if some taxa or/and characters are deleted. compMatrix has the actual data used in
+                     inference, but returns unsigned long, need to make sure we get the correct value
+                     (with the sign) back here */
+                    state = (long)compMatrix[pos(i,c,compMatrixRowSize)];
+                    m->ancStates[tiIndex][k] = (MrBFlt)state / 1000.0;
                     }
                 }
             }
@@ -6689,8 +6692,8 @@ int InitContPICs (void)
                     printf("%.3f ", m->ancStates[tiIndex][k]);
                 printf("\n");
             }
-        } */
-        
+        }
+        */
     }
     
     return (NO_ERROR);
@@ -18501,7 +18504,11 @@ int SetLikeFunctions (void)
             {
             if (m->parsModelId == NO)
                 {
-                m->Likelihood = &Likelihood_Cont;
+                m->CondLikeDown   = &CondLikeDown_Cont;
+                m->CondLikeRoot   = &CondLikeRoot_Cont;
+                // m->CondLikeScaler = &CondLikeScaler_Cont;
+                m->Likelihood     = &Likelihood_Cont;
+                m->TiProbs        = &BMVar_Cont;
                 // m->PrintAncStates = &PrintAncStates_Cont;
                 // m->PrintSiteRates = &PrintSiteRates_Cont;
                 }

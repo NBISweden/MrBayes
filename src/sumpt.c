@@ -3226,7 +3226,7 @@ void CalculateTreeToTreeDistance (Tree *tree1, Tree *tree2, MrBFlt *d1, MrBFlt *
 }
 
 
-/* ConTree: Construct consensus tree FIXME: numTreeParts is not used*/
+/* ConTree: Construct consensus tree */
 int ConTree (PartCtr **treeParts, int numTreeParts)
 {
     int         i, j, targetNode, nBits, isCompat, numTerminalsEncountered;
