@@ -1392,7 +1392,6 @@ typedef struct modelinfo
     CLFlt       *ancStateCondLikes;         /* ancestral state cond like array              */
 
     /* Variables for continuous traits */
-    CLFlt       **contrasts;                /* space for the independent contrasts          */
     CLFlt       **ancStates;                /* space for the (ancestral) trait states       */
     CLFlt       **bmVars;                   /* space for the (transformed) branch lengths   */
 

@@ -70,12 +70,11 @@ int       SetProteinQMatrix (MrBFlt **a, int n, int whichChain, int division, Mr
 int       UpDateCijk (int whichPart, int whichChain);
 
 
-/* update the Brownian motion variances */
 int BMVar_Cont (TreeNode *p, int division, int chain)
 {
-    int         i, j, k, index;
-    MrBFlt      v, sigma, *catRate, baseRate, theRate, length;
-    CLFlt       *var, *v_i, *v_j;
+    int         i, k, c;
+    MrBFlt      sigma, *catRate, baseRate, theRate, length;
+    CLFlt       *vP, *vL, *vR;
     ModelInfo   *m;
     
     m = &modelSettings[division];
@@ -109,7 +108,7 @@ int BMVar_Cont (TreeNode *p, int division, int chain)
         {
         length = GetParamSubVals(m->ilnBranchRates, chain, state[chain])[p->index];
         }
-   else if (m->igrBranchRates != NULL)
+    else if (m->igrBranchRates != NULL)
         {
         length = GetParamSubVals(m->igrBranchRates, chain, state[chain])[p->index];
         }
@@ -124,24 +123,29 @@ int BMVar_Cont (TreeNode *p, int division, int chain)
     sigma = *GetParamVals(m->brownSigma, chain, state[chain]);
     
     /* find BM variance pointer */
-    var = m->bmVars[m->tiProbsIndex[chain][p->index]];
+    vP = m->bmVars[m->tiProbsIndex[chain][p->index]];
 
     /* fill in values */
     if (p->left != NULL && p->right != NULL)
         {
-        v_i = m->bmVars[m->tiProbsIndex[chain][p->left->index]];
-        v_j = m->bmVars[m->tiProbsIndex[chain][p->right->index]];
-        
+        vL = m->bmVars[m->tiProbsIndex[chain][p->left->index]];
+        vR = m->bmVars[m->tiProbsIndex[chain][p->right->index]];
         for (k=0; k<m->numRateCats; k++)
-            {
-            var[k] = sigma * sigma * length * baseRate * catRate[k];
-            var[k] += (v_i[k] * v_j[k])/(v_i[k] + v_j[k]);
-            }
+            for (c=0; c<m->numChars; c++)
+                {
+                i = k * (m->numChars) + c;
+                vP[i] = sigma * sigma * length * baseRate * catRate[k]
+                                      +(vL[i] * vR[i])/(vL[i] + vR[i]);
+                }
         }
-    else  // tip node
+    else
         {
         for (k=0; k<m->numRateCats; k++)
-            var[k] = sigma * sigma * length * baseRate * catRate[k];
+            for (c=0; c<m->numChars; c++)
+                {
+                i = k * (m->numChars) + c;
+                vP[i] = sigma * sigma * length * baseRate * catRate[k];
+                }
         }
         
     return NO_ERROR;
@@ -150,7 +154,51 @@ int BMVar_Cont (TreeNode *p, int division, int chain)
 
 int CondLikeDown_Cont (TreeNode *p, int division, int chain)
 {
+    int             i, k, c;
+    CLFlt           *lnL, *vL, *vR, mP, mL, mR;
+    ModelInfo       *m;
     
+    m = &modelSettings[division];
+
+    /* Flip log likelihood space */
+    FlipCondLikeSpace (m, chain, p->index);
+    
+    /* find log likelihood pointers */
+    lnL = m->condLikes[m->condLikeIndex[chain][p->index]];
+
+    /* find descendant variances */
+    vL = m->bmVars[m->tiProbsIndex[chain][p->left->index]];
+    vR = m->bmVars[m->tiProbsIndex[chain][p->right->index]];
+
+    /* likelihood space is arranged in numRateCats blocks, each block consists of numChars characters */
+    for (k=0; k<m->numRateCats; k++)
+        {
+        for (c=0; c<m->numChars; c++)
+            {
+            i = k * (m->numChars) + c;
+            
+            /* calculate normal density */
+            lnL[i] = log(2.0 * M_PI) + log(vL[i] + vR[i]);
+            
+            /* find descendant states */
+            if (p->left->left == NULL)
+                mL = m->ancStates[m->tiProbsIndex[chain][p->left->index]][c];
+            else
+                mL = m->ancStates[m->tiProbsIndex[chain][p->left->index]][i];
+
+            if (p->right->left == NULL)
+                mR = m->ancStates[m->tiProbsIndex[chain][p->right->index]][c];
+            else
+                mR = m->ancStates[m->tiProbsIndex[chain][p->right->index]][i];
+
+            /* save present state */
+            mP = (vR[i]*mL + vL[i]*mR) / (vL[i] + vR[i]);
+            m->ancStates[m->tiProbsIndex[chain][p->index]][i] = mP;
+            
+            lnL[i] += powf(mL - mR, 2) / (vL[i] + vR[i]);
+            lnL[i] *= -0.5;
+            }
+        }
     
     return NO_ERROR;
 }
@@ -158,7 +206,55 @@ int CondLikeDown_Cont (TreeNode *p, int division, int chain)
 
 int CondLikeRoot_Cont (TreeNode *p, int division, int chain)
 {
+    int             i, k, c;
+    CLFlt           *lnL, *vL, *vR, *vP, mP, mL, mR, mA;
+    ModelInfo       *m;
     
+    m = &modelSettings[division];
+
+    /* TODO: flap indecs
+       TODO: update vP */
+    
+    /* find log likelihood pointers */
+    lnL = m->condLikes[m->condLikeIndex[chain][p->index]];
+
+    /* find descendant and present variances */
+    vL = m->bmVars[m->tiProbsIndex[chain][p->left->index]];
+    vR = m->bmVars[m->tiProbsIndex[chain][p->right->index]];
+    vP = m->bmVars[m->tiProbsIndex[chain][p->index]];  // vP has been transformed
+
+    /* likelihood space is arranged in numRateCats blocks, each block consists of numChars characters */
+    for (k=0; k<m->numRateCats; k++)
+        {
+        for (c=0; c<m->numChars; c++)
+            {
+            i = k * (m->numChars) + c;
+            
+            /* calculate two normal densities */
+            lnL[i] = 2.0 * log(2.0 * M_PI) + log(vL[i] + vR[i]) + log(vP[i]);
+            
+            /* find descendant states */
+            if (p->left->left == NULL)
+                mL = m->ancStates[m->tiProbsIndex[chain][p->left->index]][c];
+            else
+                mL = m->ancStates[m->tiProbsIndex[chain][p->left->index]][i];
+
+            if (p->right->left == NULL)
+                mR = m->ancStates[m->tiProbsIndex[chain][p->right->index]][c];
+            else
+                mR = m->ancStates[m->tiProbsIndex[chain][p->right->index]][i];
+
+            /* save present state */
+            mP = (vR[i]*mL + vL[i]*mR) / (vL[i] + vR[i]);
+            m->ancStates[m->tiProbsIndex[chain][p->index]][i] = mP;
+            mA = m->ancStates[m->tiProbsIndex[chain][p->anc->index]][c];
+
+            lnL[i] += powf(mL - mR, 2) / (vL[i] + vR[i]) + powf(mA - mP, 2) / vP[i];
+
+            
+            lnL[i] *= -0.5;
+            }
+        }
     
     return NO_ERROR;
 }
@@ -7638,15 +7734,14 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 |   Likelihood_Cont: likelihood for continuous traits
 |
 |   This function calculates the restricted maximum likelihood (REML)
-|      using phylogenetic independent contrasts (PICs) (Felsenstein 1985).
-|   These standardized contrasts are, under a BM model, both independent and identically distributed.
+|      using phylogenetic independent contrasts (PICs) (Felsenstein 1973, 1981, 1985).
+|   These contrasts, under a BM model, are independent and normally distributed.
 |   The “restricted” part of REML refers to the fact that it calculates likelihood based on a transformed
 |      set of data where the effect of nuisance parameters (the root state in this case) has been removed.
 |
 -------------------------------------------------------------------*/
 int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
 {
-    /* start calculating phylogenetic independent contrasts (PICs) and REML */
     int             i, j;
     int             tipIndex;
     int             memIndex;
@@ -8111,53 +8206,51 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL)
 #   endif
         
     if (m->dataType == CONTINUOUS)
-    {
-        /* TODO: scalers */
-        
+        {
         /* pass over tree */
         for (i=0; i<tree->nIntNodes; i++)
-        {
+            {
             p = tree->intDownPass[i];
             
+            /* update the variances */
             if (p->left->upDateTi == YES)
                 {
                 FlipTiProbsSpace (m, chain, p->left->index);
-                m->TiProbs (p->left, d, chain);
+                BMVar_Cont (p->left, d, chain);
                 }
             
             if (p->right->upDateTi == YES)
                 {
                 FlipTiProbsSpace (m, chain, p->right->index);
-                m->TiProbs (p->right, d, chain);
+                BMVar_Cont (p->right, d, chain);
                 }
             
             if (tree->isRooted == NO && p->anc->anc == NULL /* && p->upDateTi == YES */)
                 {
                 FlipTiProbsSpace (m, chain, p->index);
-                m->TiProbs (p, d, chain);
+                BMVar_Cont (p, d, chain);
                 }
             
             if (p->upDateCl == YES)
-            {
+                {
                 if (tree->isRooted == NO)
-                {
+                    {
                     if (p->anc->anc == NULL)
-                    {
-                        TIME(m->CondLikeRoot (p, d, chain),CPUCondLikeRoot);
-                    }
+                        {
+                        TIME(m->CondLikeRoot (p, d, chain), CPUCondLikeRoot);
+                        }
                     else
+                        {
+                        TIME(m->CondLikeDown (p, d, chain), CPUCondLikeDown);
+                        }
+                    }
+                else
                     {
-                        TIME(m->CondLikeDown (p, d, chain),CPUCondLikeDown);
+                    TIME(m->CondLikeDown (p, d, chain), CPUCondLikeDown);
                     }
                 }
-                else
-                {
-                    TIME(m->CondLikeDown (p, d, chain),CPUCondLikeDown);
-                }
-                
             }
         }
-    }
     else if (m->parsModelId == NO)
         {
         /* get site scalers ready */

@@ -151,7 +151,7 @@ int       GetTotalRateShifts (Model *mp, MrBFlt *shiftTimes);
 MrBFlt    GibbsSampleGamma (int chain, int division, RandLong *seed);
 int       InitAdGamma(void);
 int       InitChainCondLikes (void);
-int       InitContPICs (void);
+int       InitContStates (void);
 int       InitEigenSystemInfo (ModelInfo *m);
 int       InitInvCondLikes (void);
 int       InitParsSets (void);
@@ -2403,8 +2403,8 @@ int DoMcmc (void)
     if (InitInvCondLikes() == ERROR)
         goto errorExit;
 
-    /* Initialize independent contrasts and ancestral states for continuous traits. */
-    if (InitContPICs() == ERROR)
+    /* Initialize node states for continuous traits. */
+    if (InitContStates() == ERROR)
         goto errorExit;
 
     /* Allocate BEST chain variables */
@@ -4472,14 +4472,6 @@ void FreeChainMemory (void)
             free (m->condLikes);
             m->condLikes = NULL;
             }
-
-        if (m->contrasts)
-            {
-            for (j=0; j<m->numCondLikes; j++)
-                free (m->contrasts[j]);
-            free (m->contrasts);
-            m->contrasts = NULL;
-            }
             
         if (m->ancStates)
             {
@@ -5901,7 +5893,7 @@ int InitChainCondLikes (void)
         {
         m = &modelSettings[d];
 
-        /* continuous characters are dealt with in InitContPICs */
+        /* continuous characters are dealt with in InitContStates */
         if (m->dataType == CONTINUOUS)
             continue;
 
@@ -6540,11 +6532,11 @@ int InitChainCondLikes (void)
 
 /*------------------------------------------------------------------------
 |
-|   Allocate space for independent contrasts, likelihoods, BM variances,
+|   Allocate space for log likelihoods, BM variances,
 |       and ancestral and tip states for continuous traits
 |
 -------------------------------------------------------------------------*/
-int InitContPICs (void)
+int InitContStates (void)
 {
     int         c, d, i, j, k, nIntNodes, nNodes, clIndex, tiIndex;
     long        state;
@@ -6569,19 +6561,15 @@ int InitContPICs (void)
         /* figure out length of likelihood array */
         m->condLikeLength = m->numChars * m->numRateCats;
         
-        /* allocate space for the independent contrasts and likelihoods
-         For a rooted tree, there need nIntNodes contrasts (and likelihoods);
-         but for unrooted tree, we need one more for the "root" branch. */
-        m->numCondLikes = (numLocalChains + 1) * (nIntNodes + 1);
-        m->contrasts = (CLFlt**) SafeMalloc(m->numCondLikes * sizeof(CLFlt*));
+        /* allocate space for the log likelihoods */
+        m->numCondLikes = (numLocalChains + 1) * nIntNodes;
         m->condLikes = (CLFlt**) SafeMalloc(m->numCondLikes * sizeof(CLFlt*));
-        if (!m->contrasts || !m->condLikes)
+        if (!m->condLikes)
             return (ERROR);
         for (i=0; i<m->numCondLikes; i++)
             {
-            m->contrasts[i] = (CLFlt*) SafeMalloc(m->condLikeLength * sizeof(CLFlt));
             m->condLikes[i] = (CLFlt*) SafeMalloc(m->condLikeLength * sizeof(CLFlt));
-            if (!m->contrasts[i] || !m->condLikes[i])
+            if (!m->condLikes[i])
                 return (ERROR);
             }
         
@@ -6594,7 +6582,7 @@ int InitContPICs (void)
         for (i=0; i<m->numTiProbs; i++)
             {
             m->ancStates[i] = (CLFlt*) SafeMalloc(m->condLikeLength * sizeof(CLFlt));
-            m->bmVars[i]    = (CLFlt*) SafeMalloc(m->numRateCats * sizeof(CLFlt));
+            m->bmVars[i]    = (CLFlt*) SafeMalloc(m->condLikeLength * sizeof(CLFlt));
             if (!m->ancStates[i] || !m->bmVars[i])
                 return (ERROR);
             }
@@ -6617,8 +6605,7 @@ int InitContPICs (void)
         for (i=0; i<nNodes; i++)
             m->condLikeScratchIndex[i] = -1;
         
-        /* set up indices for internal nodes
-         use the same indices for the contrasts and likes (?) */
+        /* set up indices for internal nodes */
         clIndex = 0;
         for (j=0; j<numLocalChains; j++)
             {
@@ -6649,7 +6636,7 @@ int InitContPICs (void)
             return (ERROR);
         
         /* set up indices for nodes
-         use the same indices for ancStates and bmVars (?) */
+         use the same indices for ancStates and bmVars (?) TODO: no, need seperate ones, use scalerIndex? */
         tiIndex = 0;
         for (j=0; j<numLocalChains; j++)
             {
@@ -6679,7 +6666,7 @@ int InitContPICs (void)
                      inference, but returns unsigned long, need to make sure we get the correct value
                      (with the sign) back here */
                     state = (long)compMatrix[pos(i,c,compMatrixRowSize)];
-                    m->ancStates[tiIndex][k] = (MrBFlt)state / 1000.0;
+                    m->ancStates[tiIndex][k] = (CLFlt)state / 1000.0;
                     }
                 }
             }
@@ -9791,7 +9778,7 @@ MrBFlt LnUniformPriorPr (Tree *t, MrBFlt clockRate)
     return lnProb;
 }
 
-
+#if 0
 /*------------------------------------------------------------------------
 |
 |   NewtonRaphsonBrlen: Find one maximum likelihood branch length using
@@ -10150,6 +10137,7 @@ int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
 
     return (NO_ERROR);
 }
+#endif
 
 
 void NodeToNodeDistances (Tree *t, TreeNode *fromNode)
@@ -18506,9 +18494,7 @@ int SetLikeFunctions (void)
                 {
                 m->CondLikeDown   = &CondLikeDown_Cont;
                 m->CondLikeRoot   = &CondLikeRoot_Cont;
-                // m->CondLikeScaler = &CondLikeScaler_Cont;
                 m->Likelihood     = &Likelihood_Cont;
-                m->TiProbs        = &BMVar_Cont;
                 // m->PrintAncStates = &PrintAncStates_Cont;
                 // m->PrintSiteRates = &PrintSiteRates_Cont;
                 }
