@@ -182,18 +182,18 @@ int CondLikeDown_Cont (TreeNode *p, int division, int chain)
             
             /* find descendant states */
             if (p->left->left == NULL)
-                mL = m->ancStates[m->tiProbsIndex[chain][p->left->index]][c];
+                mL = m->ancStates[m->condLikeIndex[chain][p->left->index]][c];
             else
-                mL = m->ancStates[m->tiProbsIndex[chain][p->left->index]][i];
+                mL = m->ancStates[m->condLikeIndex[chain][p->left->index]][i];
 
             if (p->right->left == NULL)
-                mR = m->ancStates[m->tiProbsIndex[chain][p->right->index]][c];
+                mR = m->ancStates[m->condLikeIndex[chain][p->right->index]][c];
             else
-                mR = m->ancStates[m->tiProbsIndex[chain][p->right->index]][i];
+                mR = m->ancStates[m->condLikeIndex[chain][p->right->index]][i];
 
             /* save present state */
             mP = (vR[i]*mL + vL[i]*mR) / (vL[i] + vR[i]);
-            m->ancStates[m->tiProbsIndex[chain][p->index]][i] = mP;
+            m->ancStates[m->condLikeIndex[chain][p->index]][i] = mP;
             
             lnL[i] += powf(mL - mR, 2) / (vL[i] + vR[i]);
             lnL[i] *= -0.5;
@@ -212,8 +212,8 @@ int CondLikeRoot_Cont (TreeNode *p, int division, int chain)
     
     m = &modelSettings[division];
 
-    /* TODO: flap indecs
-       TODO: update vP */
+    /* Flip log likelihood space */
+    FlipCondLikeSpace (m, chain, p->index);
     
     /* find log likelihood pointers */
     lnL = m->condLikes[m->condLikeIndex[chain][p->index]];
@@ -235,23 +235,23 @@ int CondLikeRoot_Cont (TreeNode *p, int division, int chain)
             
             /* find descendant states */
             if (p->left->left == NULL)
-                mL = m->ancStates[m->tiProbsIndex[chain][p->left->index]][c];
+                mL = m->ancStates[m->condLikeIndex[chain][p->left->index]][c];
             else
-                mL = m->ancStates[m->tiProbsIndex[chain][p->left->index]][i];
+                mL = m->ancStates[m->condLikeIndex[chain][p->left->index]][i];
 
             if (p->right->left == NULL)
-                mR = m->ancStates[m->tiProbsIndex[chain][p->right->index]][c];
+                mR = m->ancStates[m->condLikeIndex[chain][p->right->index]][c];
             else
-                mR = m->ancStates[m->tiProbsIndex[chain][p->right->index]][i];
+                mR = m->ancStates[m->condLikeIndex[chain][p->right->index]][i];
 
             /* save present state */
             mP = (vR[i]*mL + vL[i]*mR) / (vL[i] + vR[i]);
-            m->ancStates[m->tiProbsIndex[chain][p->index]][i] = mP;
-            mA = m->ancStates[m->tiProbsIndex[chain][p->anc->index]][c];
+            m->ancStates[m->condLikeIndex[chain][p->index]][i] = mP;
+            
+            /* find ancestral state */
+            mA = m->ancStates[m->condLikeIndex[chain][p->anc->index]][c];
 
             lnL[i] += powf(mL - mR, 2) / (vL[i] + vR[i]) + powf(mA - mP, 2) / vP[i];
-
-            
             lnL[i] *= -0.5;
             }
         }
@@ -7740,6 +7740,33 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 |      set of data where the effect of nuisance parameters (the root state in this case) has been removed.
 |
 -------------------------------------------------------------------*/
+int Likelihood_Cont2 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
+{
+    int         c, i, clIndex;
+    ModelInfo       *m;
+    Tree            *t;
+    
+    m = &modelSettings[division];
+    t = GetTree(m->brlens,chain,state[chain]);
+
+    *lnL = 0.0;
+
+    /* independent log likelihood values have been calculated and stored in
+       the internal nodes, we just need to sum them up */
+    for (i=0; i<t->nIntNodes; i++)
+        {
+        p = t->intDownPass[i];
+        clIndex = m->condLikeIndex[chain][p->index];
+        for (c=0; c<m->condLikeLength; c++)
+            {
+            *lnL += m->condLikes[clIndex][c];
+            }
+        }
+    
+    return NO_ERROR;
+}
+
+
 int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
 {
     int             i, j;
@@ -7751,7 +7778,7 @@ int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
     MrBFlt          vk1;            // variance of left offspring
     MrBFlt          vk2;            // variance of right offspring
     MrBFlt          normX;          // (xk)'xk for node k
-    MrBFlt          tmplnL;
+    MrBFlt          tmplnL = 0.;
 
     MrBFlt          *nodeVar;       // store node variance
     MrBFlt          *nodeVarP;      // store node variance prime
@@ -7884,7 +7911,8 @@ int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
     free(nodeVarP);
     free(charPrime);
 
-    (*lnL) += tmplnL;
+    
+    Likelihood_Cont2 (p, division, chain, &tmplnL, whichSitePats);
     
     return NO_ERROR;
 }
@@ -8225,7 +8253,7 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL)
                 BMVar_Cont (p->right, d, chain);
                 }
             
-            if (tree->isRooted == NO && p->anc->anc == NULL /* && p->upDateTi == YES */)
+            if (tree->isRooted == NO && p->anc->anc == NULL)
                 {
                 FlipTiProbsSpace (m, chain, p->index);
                 BMVar_Cont (p, d, chain);
