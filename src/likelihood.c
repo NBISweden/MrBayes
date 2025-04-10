@@ -7763,6 +7763,9 @@ int Likelihood_Cont2 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whi
             }
         }
     
+    /* account for rate cats */
+    *lnL /= m->numRateCats;
+    
     return NO_ERROR;
 }
 
