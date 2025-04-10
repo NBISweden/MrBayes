@@ -6561,29 +6561,29 @@ int InitContStates (void)
         /* figure out length of likelihood array */
         m->condLikeLength = m->numChars * m->numRateCats;
         
-        /* allocate space for the log likelihoods */
-        m->numCondLikes = (numLocalChains + 1) * nIntNodes;
+        /* allocate space for the log likelihoods and node states */
+        m->numCondLikes = (numLocalChains + 1) * nIntNodes + numLocalTaxa;
         m->condLikes = (CLFlt**) SafeMalloc(m->numCondLikes * sizeof(CLFlt*));
-        if (!m->condLikes)
+        m->ancStates = (CLFlt**) SafeMalloc(m->numCondLikes * sizeof(CLFlt*));
+        if (!m->condLikes || !m->ancStates)
             return (ERROR);
         for (i=0; i<m->numCondLikes; i++)
             {
-            m->condLikes[i] = (CLFlt*) SafeMalloc(m->condLikeLength * sizeof(CLFlt));
-            if (!m->condLikes[i])
+            m->condLikes[i] = (CLFlt*) SafeCalloc(m->condLikeLength, sizeof(CLFlt));
+            m->ancStates[i] = (CLFlt*) SafeCalloc(m->condLikeLength, sizeof(CLFlt));
+            if (!m->condLikes[i] || !m->ancStates[i])
                 return (ERROR);
             }
         
-        /* allocate space for the trait states and transformed branch lengths */
+        /* allocate space for the variances (transformed branch lengths) */
         m->numTiProbs = (numLocalChains + 1) * nNodes; // temporarily use numTiProbs
-        m->ancStates = (CLFlt**) SafeMalloc(m->numTiProbs * sizeof(CLFlt*));
-        m->bmVars    = (CLFlt**) SafeMalloc(m->numTiProbs * sizeof(CLFlt*));
-        if (!m->ancStates || !m->bmVars)
+        m->bmVars = (CLFlt**) SafeMalloc(m->numTiProbs * sizeof(CLFlt*));
+        if (!m->bmVars)
             return (ERROR);
         for (i=0; i<m->numTiProbs; i++)
             {
-            m->ancStates[i] = (CLFlt*) SafeMalloc(m->condLikeLength * sizeof(CLFlt));
-            m->bmVars[i]    = (CLFlt*) SafeMalloc(m->condLikeLength * sizeof(CLFlt));
-            if (!m->ancStates[i] || !m->bmVars[i])
+            m->bmVars[i] = (CLFlt*) SafeCalloc(m->condLikeLength, sizeof(CLFlt));
+            if (!m->bmVars[i])
                 return (ERROR);
             }
         
@@ -6605,17 +6605,23 @@ int InitContStates (void)
         for (i=0; i<nNodes; i++)
             m->condLikeScratchIndex[i] = -1;
         
-        /* set up indices for internal nodes */
+        /* set up indices for tip and internal nodes */
         clIndex = 0;
-        for (j=0; j<numLocalChains; j++)
+        for (i=0; i<numLocalTaxa; i++)
             {
-            for (i=0; i < nIntNodes + 1; i++)
+            for (j=0; j<numLocalChains; j++)
+                m->condLikeIndex[j][i] = clIndex;
+            clIndex += 1;
+            }
+        for (i=0; i<nIntNodes; i++)
+            {
+            for (j=0; j<numLocalChains; j++)
                 {
                 m->condLikeIndex[j][i+numLocalTaxa] = clIndex;
                 clIndex += 1;
                 }
             }
-        for (i=0; i < nIntNodes + 1; i++)
+        for (i=0; i<nIntNodes; i++)
             {
             m->condLikeScratchIndex[i+numLocalTaxa] = clIndex;
             clIndex += 1;
@@ -6635,8 +6641,7 @@ int InitContStates (void)
         if (!m->tiProbsScratchIndex)
             return (ERROR);
         
-        /* set up indices for nodes
-         use the same indices for ancStates and bmVars (?) TODO: no, need seperate ones, use scalerIndex? */
+        /* set up indices for nodes */
         tiIndex = 0;
         for (j=0; j<numLocalChains; j++)
             {
@@ -6653,32 +6658,26 @@ int InitContStates (void)
             }
         
         /* fill in tip states */
-        /* ? we do this for all chains in case we use data augmentation for missing values */
-        for (j=0; j<numLocalChains; j++)
+        /* we do this for one chain as all chains point to the same space */
+        for (i=0; i<numLocalTaxa; i++)
             {
-            for (i=0; i<numLocalTaxa; i++)  // TODO: i and tip index
+            clIndex = m->condLikeIndex[0][i];
+            for (k=0, c=m->compMatrixStart; c<m->compMatrixStop; c++, k++)
                 {
-                tiIndex = m->tiProbsIndex[j][i];
-                for (k=0, c=m->compMatrixStart; c<m->compMatrixStop; c++, k++)
-                    {
-                    /* matrix[pos(i,origChar[c],numChar)] holds the int value, but we will have trouble
-                     if some taxa or/and characters are deleted. compMatrix has the actual data used in
-                     inference, but returns unsigned long, need to make sure we get the correct value
-                     (with the sign) back here */
-                    state = (long)compMatrix[pos(i,c,compMatrixRowSize)];
-                    m->ancStates[tiIndex][k] = (CLFlt)state / 1000.0;
-                    }
+                /* matrix[pos(i,origChar[c],numChar)] holds the int value, but we will have trouble
+                 if some taxa or/and characters are deleted. compMatrix has the actual data used in
+                 inference, but returns unsigned long, need to make sure we get the correct value
+                 (with the sign) back here */
+                state = (long)compMatrix[pos(i,c,compMatrixRowSize)];
+                m->ancStates[clIndex][k] = (CLFlt)state / 1000.0;
                 }
             }
         /*
-        for (j=0; j<numLocalChains; j++) {
-            printf("\n chain %d\n", j+1);
-            for (i=0; i<numLocalTaxa; i++) {
-                tiIndex = m->tiProbsIndex[j][i];
-                for (k=0; k<m->numChars; k++)
-                    printf("%.3f ", m->ancStates[tiIndex][k]);
-                printf("\n");
-            }
+        for (i=0; i<numLocalTaxa; i++) {
+            clIndex = m->condLikeIndex[0][i];
+            for (k=0; k<m->numChars; k++)
+                printf("%.3f ", m->ancStates[clIndex][k]);
+            printf("\n");
         }
         */
     }

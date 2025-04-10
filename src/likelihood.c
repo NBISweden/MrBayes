@@ -8281,7 +8281,7 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL)
             
             if (tree->isRooted == NO && p->anc->anc == NULL /* && p->upDateTi == YES */)
                 {
-                /* shift state of ti probs for node */
+                /* shift state of ti probs for node (why always upDateTi?) */
                 FlipTiProbsSpace (m, chain, p->index);
                 m->TiProbs (p, d, chain);
                 }
