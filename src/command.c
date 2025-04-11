@@ -5372,9 +5372,11 @@ int DoMatrixParm (char *parmName, char *tkn)
         if (charInfo[taxaInfo[taxonCount-1].charCount].charType == CONTINUOUS)
             {
             /* If we have a continuous character, then the entire token should either be
-               a number or a dash (for a negative sign). */
+               a question mark, a number or a dash (for a negative sign). */
             if (!strcmp(tkn, "?"))
                 {
+                /* what to put in the matrix? */
+               // matrix[pos(taxonCount-1,taxaInfo[taxonCount-1].charCount++,numChar)] = (int);
                 MrBayesPrint ("%s   Missing state in continuous characters not yet unsupported\n", spacer);
                 goto errorExit;
                 }
@@ -5396,7 +5398,7 @@ int DoMatrixParm (char *parmName, char *tkn)
                         goto errorExit;
                         }
                     charCode = matrix[pos(0,taxaInfo[taxonCount-1].charCount,numChar)];
-                    matrix[pos(taxonCount-1,taxaInfo[taxonCount-1].charCount,numChar)] = charCode;
+                    matrix[pos(taxonCount-1,taxaInfo[taxonCount-1].charCount++,numChar)] = charCode;
                     }
                 else
                     {
