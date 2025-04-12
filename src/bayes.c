@@ -798,7 +798,7 @@ int InitializeMrBayes (void)
     defaultModel.brownScaleUni[0] = 0.0;
     defaultModel.brownScaleUni[1] = 100.0;
     defaultModel.brownScaleGamma[0] = 1.0;
-    defaultModel.brownScaleGamma[1] = 10.0;
+    defaultModel.brownScaleGamma[1] = 1.0;
     strcpy(defaultModel.topologyPr, "Uniform");         /* prior for tree topology                      */
     defaultModel.topologyFix = -1;                      /* user tree index to use for fixed topology    */
     defaultModel.activeConstraints = NULL;              /* which constraints are active                 */

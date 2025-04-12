@@ -7742,9 +7742,10 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 -------------------------------------------------------------------*/
 int Likelihood_Cont2 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
 {
-    int         c, i, clIndex;
-    ModelInfo       *m;
-    Tree            *t;
+    int         i, k, c, n, clIndex;
+    MrBFlt      like, lmax;
+    ModelInfo   *m;
+    Tree        *t;
     
     m = &modelSettings[division];
     t = GetTree(m->brlens,chain,state[chain]);
@@ -7753,18 +7754,39 @@ int Likelihood_Cont2 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whi
 
     /* independent log likelihood values have been calculated and stored in
        the internal nodes, we just need to sum them up */
-    for (i=0; i<t->nIntNodes; i++)
+    for (n=0; n<t->nIntNodes; n++)
         {
-        p = t->intDownPass[i];
+        p = t->intDownPass[n];
         clIndex = m->condLikeIndex[chain][p->index];
-        for (c=0; c<m->condLikeLength; c++)
+            
+        if (m->numRateCats == 1)
             {
-            *lnL += m->condLikes[clIndex][c];
+            for (c=0; c<m->numChars; c++)
+                *lnL += m->condLikes[clIndex][c];
+            }
+        else  // account for rate variation across characters
+            {
+            for (c=0; c<m->numChars; c++)
+                {
+                lmax = m->condLikes[clIndex][c];
+                for (k=1; k<m->numRateCats; k++)
+                    {
+                    i = k * (m->numChars) + c;
+                    if (lmax < m->condLikes[clIndex][i])
+                        lmax = m->condLikes[clIndex][i];
+                    }
+                
+                like = 0.0;
+                for (k=0; k<m->numRateCats; k++)
+                    {
+                    i = k * (m->numChars) + c;
+                    like += exp(m->condLikes[clIndex][i] - lmax);
+                    }
+                *lnL += log(like) + lmax;  // for numerical stability
+                }
+            *lnL -= (m->numChars) * log(m->numRateCats);
             }
         }
-    
-    /* account for rate cats */
-    *lnL /= m->numRateCats;
     
     return NO_ERROR;
 }
@@ -7914,9 +7936,10 @@ int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
     free(nodeVarP);
     free(charPrime);
 
-    
+    printf(" lnl: %lf\n", tmplnL);
     Likelihood_Cont2 (p, division, chain, &tmplnL, whichSitePats);
-    
+    printf("mine: %lf\n", tmplnL);
+
     return NO_ERROR;
 }
 
