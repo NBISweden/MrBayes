@@ -793,8 +793,8 @@ int InitializeMrBayes (void)
     defaultModel.brownCorrFix = 0.0;
     defaultModel.brownCorrUni[0] = -1.0;
     defaultModel.brownCorrUni[1] = 1.0;
-    strcpy(defaultModel.brownScalePr, "Gamma");        /* prior on scales of brownian model            */
-    defaultModel.brownScaleFix = 10.0;
+    strcpy(defaultModel.brownScalePr, "Fixed");        /* prior on scales of brownian model            */
+    defaultModel.brownScaleFix = 1.0;
     defaultModel.brownScaleUni[0] = 0.0;
     defaultModel.brownScaleUni[1] = 100.0;
     defaultModel.brownScaleGamma[0] = 1.0;

@@ -73,7 +73,7 @@ int       UpDateCijk (int whichPart, int whichChain);
 int BMVar_Cont (TreeNode *p, int division, int chain)
 {
     int         i, k, c;
-    MrBFlt      sigma, *catRate, baseRate, theRate, length;
+    MrBFlt      baseRate, *catRate, theRate, length;
     CLFlt       *vP, *vL, *vR;
     ModelInfo   *m;
     
@@ -86,12 +86,10 @@ int BMVar_Cont (TreeNode *p, int division, int chain)
     theRate = 1.0;
     if (m->shape != NULL)
         catRate = GetParamSubVals(m->shape, chain, state[chain]);
-    else if (m->mixtureRates != NULL)
-        catRate = GetParamSubVals(m->mixtureRates, chain, state[chain]);
     else
         catRate = &theRate;
     
-    /* find length */
+    /* find length which is sigma^2 * t */
     if (m->cppEvents != NULL)
         {
         length = GetParamSubVals(m->cppEvents, chain, state[chain])[p->index];
@@ -118,9 +116,6 @@ int BMVar_Cont (TreeNode *p, int division, int chain)
         }
     else
         length = p->length;
-
-    /* get BM sigma */
-    sigma = *GetParamVals(m->brownSigma, chain, state[chain]);
     
     /* find BM variance pointer */
     vP = m->bmVars[m->tiProbsIndex[chain][p->index]];
@@ -134,8 +129,7 @@ int BMVar_Cont (TreeNode *p, int division, int chain)
             for (c=0; c<m->numChars; c++)
                 {
                 i = k * (m->numChars) + c;
-                vP[i] = sigma * sigma * length * baseRate * catRate[k]
-                                      +(vL[i] * vR[i])/(vL[i] + vR[i]);
+                vP[i] = length * baseRate * catRate[k] +(vL[i] * vR[i])/(vL[i] + vR[i]);
                 }
         }
     else
@@ -144,7 +138,7 @@ int BMVar_Cont (TreeNode *p, int division, int chain)
             for (c=0; c<m->numChars; c++)
                 {
                 i = k * (m->numChars) + c;
-                vP[i] = sigma * sigma * length * baseRate * catRate[k];
+                vP[i] = length * baseRate * catRate[k];
                 }
         }
         

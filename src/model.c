@@ -15289,9 +15289,9 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         /* Check the correlation parameter for brownian motion 1 and 2. */
         
         /* Check that the data are either CONTINUOUS for partitions 1 and 2 */
-        if (modelParams[part1].dataType != CONTINUOUS)
+        // if (modelParams[part1].dataType != CONTINUOUS)
             *isApplic1 = NO; /* the correlation parameter does not make sense for part1 */
-        if (modelParams[part2].dataType != CONTINUOUS)
+        // if (modelParams[part2].dataType != CONTINUOUS)
             *isApplic2 = NO; /* the correlation parameter does not make sense for part2 */
             
         /* Now, check that the data are the same. */
@@ -15323,9 +15323,9 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         /* Check the sigma parameter for brownian motion 1 and 2. */
         
         /* Check that the data are either CONTINUOUS for partitions 1 and 2 */
-        if (modelParams[part1].dataType != CONTINUOUS)
+        // if (modelParams[part1].dataType != CONTINUOUS)
             *isApplic1 = NO; /* the sigma parameter does not make sense for part1 */
-        if (modelParams[part2].dataType != CONTINUOUS)
+        // if (modelParams[part2].dataType != CONTINUOUS)
             *isApplic2 = NO; /* the sigma parameter does not make sense for part2 */
             
         /* Now, check that the data are the same. */
@@ -21500,10 +21500,9 @@ int SetUpLinkTable (void)
                                 modelId[i] = ++paramCount;
                                 isFirst = NO;
                                 }
-                            else
+                            else if (modelId[i] == 0)
                                 {
-                                if (modelId[i] == 0)
-                                    modelId[i] = ++paramCount;
+                                modelId[i] = ++paramCount;
                                 }
                             }
                         if (modelId[k] == 0 && isApplicable2 == YES)
@@ -21718,7 +21717,7 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
 
-    /* Move_BMcorr */
+    /* // Move_BMcorr
     mt = &moveTypes[i++];
     mt->name = "Sliding window";
     mt->shortName = "Slider";
@@ -21729,7 +21728,7 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_BMcorr;
     mt->relProposalProb = 1.0;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 0.1;  /* window size */
+    mt->tuningParam[0] = 0.1;
     mt->minimum[0] = 0.00001;
     mt->maximum[0] = 100.0;
     mt->parsimonyBased = NO;
@@ -21737,7 +21736,7 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneSlider;
     mt->targetRate = 0.25;
 
-    /* Move_BMsigma */
+    // Move_BMsigma
     mt = &moveTypes[i++];
     mt->name = "Multiplier";
     mt->shortName = "Multiplier";
@@ -21749,13 +21748,13 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_BMsigma;
     mt->relProposalProb = 1.0;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
+    mt->tuningParam[0] = 2.0 * log (1.5);
     mt->minimum[0] = 0.0001;
     mt->maximum[0] = 20.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
-    mt->targetRate = 0.25;
+    mt->targetRate = 0.25; */
 
     /* Move_ClockRate_M */
     mt = &moveTypes[i++];
