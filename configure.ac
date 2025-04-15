@@ -97,12 +97,12 @@ AC_ARG_WITH([readline],
 
 AC_ARG_WITH([beagle],
     [AS_HELP_STRING([--with-beagle[[=PATH]]],
-        [Build with the Beagle library @<:@default=check@:>@.
+        [Build with the Beagle library @<:@default=no@:>@.
         The PATH argument should be the prefix path where Beagle
         was installed, e.g. @S|@HOME/local, /opt/local etc.
         The paths /usr/local and /usr are checked if no path is specified.])],
     [],
-    [with_beagle=check])
+    [with_beagle=no])
 
 # Checks for programs.
 
