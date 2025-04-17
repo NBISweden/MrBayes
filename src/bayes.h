@@ -267,8 +267,8 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 
 #define NST_MIXED              -1  /* anything other than 1, 2, or 6 */
 
-#define MISSING                1073741822  // NBits(x)=29
-#define GAP                    1073741823  // NBits(x)=30
+#define MISSING                1073741823  //  111111111111111111111111111111, 30 bits
+#define GAP                    1073741824  // 1000000000000000000000000000000
 
 #define UNORD                   0
 #define ORD                     1

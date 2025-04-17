@@ -6669,7 +6669,7 @@ int InitContStates (void)
                  inference, but returns unsigned long, need to make sure we get the correct value
                  (with the sign) back here */
                 state = (long)compMatrix[pos(i,c,compMatrixRowSize)];
-                m->ancStates[clIndex][k] = (CLFlt)state / 1000.0;
+                m->ancStates[clIndex][k] = (CLFlt)state / 10000.0;
                 }
             }
         /*
@@ -7036,6 +7036,9 @@ int InitParsSets (void)
             /* with nParsStatesForCont states, represent this character as a set */
             /* of binary characters by additive binary coding */
             m->nParsIntsPerSite = nParsStatesForCont - 1;
+                
+            /* TODO: The continuous characters are either standardized (between 0 and 1) or normalized (mean 0 and var 1), We need to add a check about this!
+               Perhaps we only support these two types to make things easy... */
             }
         else
             m->nParsIntsPerSite = 1 + m->numStates / nBitsInALong;
@@ -7090,6 +7093,7 @@ int InitParsSets (void)
             {
             /* Note: Assuming the continuous characters are standardized (between 0 and 1)?
                Using additive parsimony would be more efficient than using multiple binary chars as here. */
+            // TODO: this needs to be updated, not fully working!
             for (i=0; i<numLocalTaxa; i++)
                 {
                 for (c=0, j=m->compMatrixStart; j<m->compMatrixStop; j++, c++)

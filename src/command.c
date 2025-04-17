@@ -5375,10 +5375,9 @@ int DoMatrixParm (char *parmName, char *tkn)
                a question mark, a number or a dash (for a negative sign). */
             if (!strcmp(tkn, "?"))
                 {
-                /* what to put in the matrix? */
-               // matrix[pos(taxonCount-1,taxaInfo[taxonCount-1].charCount++,numChar)] = (int);
-                MrBayesPrint ("%s   Missing state in continuous characters not yet unsupported\n", spacer);
-                goto errorExit;
+                /* store a very large number to represent missing state for now
+                   should be fine when data are standardized (between 0 and 1) or normalized */
+                matrix[pos(taxonCount-1,taxaInfo[taxonCount-1].charCount++,numChar)] = INT_MAX;
                 }
             else if (!strcmp(tkn, "-"))
                 {
@@ -5408,19 +5407,17 @@ int DoMatrixParm (char *parmName, char *tkn)
                         MrBayesPrint ("%s   Expecting a number for the continuous character\n", spacer);
                         goto errorExit;
                         }
-                    /* ... and then put the character into the matrix. Note that matrix
-                       is defined as an integer, but we may have floating precision continuous
-                       characters. To get around this, we multiply the value of the character
-                       by 1000 before putting it into matrix. We will divide by 1000 later on
-                       when/if we use the characters. */
+                    /* ... and then put the character into the matrix. Note that matrix is defined as an integer,
+                       but we have floating precision continuous characters. To get around this, we multiply the
+                       value of the character by 10000 before putting it into the matrix. We will divide by 10000
+                       later on when/if we use the characters. */
                     sscanf (tkn, "%lf", &charValue);
-                    charValue *= 1000.0;
+                    charValue = charValue * 10000.0 + 0.5;
                     if (isNegative == YES)
                         {
                         charValue *= -1.0;
                         isNegative = NO;
                         }
-                    /*MrBayesPrint ("%d \n", (int)charValue);*/
                     matrix[pos(taxonCount-1,taxaInfo[taxonCount-1].charCount++,numChar)] = (int)charValue;
                     }
                 }
@@ -13702,7 +13699,7 @@ int IsMissing (int charCode, int dType)
         }
     else if (dType == CONTINUOUS)
         {
-        if (charCode == MISSING)
+        if (charCode == INT_MAX)
             return (YES);
         }
     else
@@ -15294,7 +15291,7 @@ char WhichAA (int x)
 
 MrBFlt WhichCont (int x)
 {
-    return ((MrBFlt)x / 1000.0);
+    return ((MrBFlt)x / 10000.0);
 }
 
 
