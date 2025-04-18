@@ -4475,7 +4475,7 @@ void FreeChainMemory (void)
             
         if (m->ancStates)
             {
-            for (j=0; j<m->numTiProbs; j++)
+            for (j=0; j<m->numCondLikes; j++)
                 free (m->ancStates[j]);
             free (m->ancStates);
             m->ancStates = NULL;
@@ -6675,6 +6675,26 @@ int InitContStates (void)
                     m->ancStates[clIndex][k] = (CLFlt)state / 10000.0;
                 }
             }
+        
+        /* check values if continuous characters are standardized (between 0 and 1) */
+        if (!strcmp(modelParams[d].nst, "1"))
+            {
+            for (i=0; i<numLocalTaxa; i++)
+                {
+                clIndex = m->condLikeIndex[0][i];
+                for (k=0; k<m->numChars; k++)
+                    {
+                    if (m->ancStates[clIndex][k] < 0.0 ||
+                        (m->ancStates[clIndex][k] > 1.0 &&
+                         m->ancStates[clIndex][k] < (CLFlt)INT_MAX - 1.0)) {
+                        MrBayesPrint ("%s   Continuous characters are assumed standardized (between 0 and 1), but found\n", spacer);
+                        MrBayesPrint ("%s    %.3f in taxon %d char %d ...\n", spacer, m->ancStates[clIndex][k], i+1, k+1);
+                        MrBayesPrint ("%s   Please set 'nst=2' in 'lset' if the characters are normalized or unscaled.\n", spacer);
+                        return ERROR;
+                        }
+                    }
+                }
+            }
         /*
         for (i=0; i<numLocalTaxa; i++) {
             clIndex = m->condLikeIndex[0][i];
@@ -7014,17 +7034,11 @@ int InitInvCondLikes (void)
 -------------------------------------------------------------------------*/
 int InitParsSets (void)
 {
-    int             c, i, j, k, d, nParsStatesForCont, nIntNodes, nNodes,
+    int             c, i, j, k, d, nIntNodes, nNodes,
                     nuc1, nuc2, nuc3, codingNucCode, allNucCode;
-    BitsLong        allAmbig, x, x1, x2, x3, *longPtr, bitsLongOne;
+    BitsLong        allAmbig, x, x1, x2, x3, *longPtr, bitsLongOne=1;
     ModelInfo       *m;
     ModelParams     *mp;
-
-    bitsLongOne = 1;
-
-    /* this variable determines how many parsimony states are used           */
-    /* to represent continuous characters (determines weight of these chars) */
-    nParsStatesForCont = 3;
 
     /* find number and size of parsimony sets and node lengths */
     for (d=0; d<numCurrentDivisions; d++)
@@ -7038,10 +7052,10 @@ int InitParsSets (void)
             /* scale continuous characters down to an ordered parsimony character */
             /* with nParsStatesForCont states, represent this character as a set */
             /* of binary characters by additive binary coding */
-            m->nParsIntsPerSite = nParsStatesForCont - 1;
-                
-            /* TODO: The continuous characters are either standardized (between 0 and 1) or normalized (mean 0 and var 1), We need to add a check about this!
-               Perhaps we only support these two types to make things easy... */
+            if (!strcmp(mp->nst, "1")) // standardized (between 0 and 1)
+                m->nParsIntsPerSite = 2;
+            else  // normalized
+                m->nParsIntsPerSite = 1;
             }
         else
             m->nParsIntsPerSite = 1 + m->numStates / nBitsInALong;
@@ -12333,11 +12347,9 @@ void PrintParamValues (Param *p, int chain, char *s)
 int PrintParsMatrix (void)
 {
     int             i, j=0, k, c, d, printWidth, nextColumn, nChars, inputChar;
-    BitsLong        x, y, bitsLongOne;
+    BitsLong        x, y, bitsLongOne=1;
     char            ch;
     ModelInfo       *m;
-
-    bitsLongOne = 1;
 
     printWidth = 79;
 

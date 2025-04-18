@@ -8393,9 +8393,7 @@ int ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport)
 void ShowParts (FILE *fp, BitsLong *p, int nTaxaToShow)
 {
     int         i;
-    BitsLong    x, y, bitsLongOne;
-
-    bitsLongOne = 1;
+    BitsLong    x, y, bitsLongOne=1;
     
     for (i=0; i<nTaxaToShow; i++)
         {
@@ -8412,9 +8410,7 @@ void ShowParts (FILE *fp, BitsLong *p, int nTaxaToShow)
 void ShowSomeParts (FILE *fp, BitsLong *p, int offset, int nTaxaToShow)
 {
     int         i;
-    BitsLong    x, y, bitsLongOne;
-
-    bitsLongOne = 1;
+    BitsLong    x, y, bitsLongOne=1;
     
     for (i=offset; i<offset+nTaxaToShow; i++)
         {

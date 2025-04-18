@@ -178,7 +178,7 @@ int AddDummyChars (void)
     int         i, j, k, d, numIncompatible, numDeleted, oldRowSize,
                 newRowSize, numDummyChars, newColumn, newChar, oldColumn, oldChar, 
                 isCompat, *tempChar, numIncompatibleChars;
-    BitsLong    *tempMatrix, bitsLongOne = 1;
+    BitsLong    *tempMatrix, bitsLongOne=1;
     CLFlt       *tempSitesOfPat;
     ModelInfo   *m;
     ModelParams *mp;
@@ -3317,6 +3317,25 @@ int DoLsetParm (char *parmName, char *tkn)
                                     MrBayesPrint ("%s   Setting Nst to %s\n", spacer, modelParams[i].nst);
                                 else
                                     MrBayesPrint ("%s   Setting Nst to %s for partition %d\n", spacer, modelParams[i].nst, i+1);
+                                }
+                            else if (modelParams[i].dataType == CONTINUOUS)
+                                {
+                                strcpy(modelParams[i].nst, tempStr);
+                                if (!strcmp(tempStr, "1"))
+                                    {
+                                    /* hack to use nst=1 for standardized (between 0 and 1, default) */
+                                    if (nApplied == 0 && numCurrentDivisions == 1)
+                                        MrBayesPrint ("%s   Characters are standardized\n", spacer);
+                                    else
+                                        MrBayesPrint ("%s   Characters are standardized for partition %d\n", spacer, i+1);
+                                    }
+                                else
+                                    {
+                                    if (nApplied == 0 && numCurrentDivisions == 1)
+                                        MrBayesPrint ("%s   Characters are not standardized\n", spacer);
+                                    else
+                                        MrBayesPrint ("%s   Characters are not standardized for partition %d\n", spacer, i+1);
+                                    }
                                 }
                             else {
                                 if (nApplied == 0 && numCurrentDivisions == 1)
@@ -6556,7 +6575,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                     nApplied = NumActiveParts ();
                     for (i=0; i<numCurrentDivisions; i++)
                         {
-                        if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType != CONTINUOUS)
+                        if (activeParts[i] == YES || nApplied == 0)
                             {
                             if (!strcmp(tempStr,"Variable"))
                                 strcpy(modelParams[i].ratePr, "Dirichlet");
@@ -6685,7 +6704,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                     nApplied = NumActiveParts ();
                     for (i=0; i<numCurrentDivisions; i++)
                         {
-                        if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType != CONTINUOUS)
+                        if (activeParts[i] == YES || nApplied == 0)
                             {
                             if (!strcmp(tempStr,"Variable"))
                                 strcpy(modelParams[i].generatePr, "Dirichlet");
@@ -7070,12 +7089,6 @@ int DoPrsetParm (char *parmName, char *tkn)
                             if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType != CONTINUOUS)
                                 strcpy(modelParams[i].stateFreqPr, tempStr);
                             }
-                        /* if (flag == 0)
-                            {
-                            MrBayesPrint ("%s   Warning: %s can be set only for partition containing CONTINUOUS data.\
-                            Currently there is no active partition with such data. ", spacer, parmName);
-                            return (ERROR);
-                            } */
                         }
                     else
                         {
@@ -23624,15 +23637,20 @@ int ShowModel (void)
             {
             MrBayesPrint ("%s         Datatype  = Continuous\n", spacer);
             }
-            
+        
         if (modelSettings[i].dataType == CONTINUOUS)
             {
             /* begin description of continuous models */
-              if (!strcmp(modelParams[i].brownCorrPr, "Fixed") && AreDoublesEqual(modelParams[i].brownCorrFix, 0.0, ETA)==YES)
+            if (!strcmp(modelParams[i].nst, "1"))
+                MrBayesPrint ("%s                     Characters are standardized (between 0 and 1)\n", spacer);
+            else
+                MrBayesPrint ("%s                     Characters are not standardized\n", spacer);
+            
+            if (!strcmp(modelParams[i].brownCorrPr, "Fixed") && AreDoublesEqual(modelParams[i].brownCorrFix, 0.0, ETA)==YES)
                 MrBayesPrint ("%s         Model     = Independent Brownian motion\n", spacer);
             else
                 MrBayesPrint ("%s         Model     = Correlated Brownian motion\n", spacer);
-                
+            
             MrBayesPrint ("%s         Rates     = %s\n", spacer, modelParams[i].ratesModel);
             if (!strcmp(modelParams[i].ratesModel, "Gamma") || !strcmp(modelParams[i].ratesModel, "LNorm"))
                 {

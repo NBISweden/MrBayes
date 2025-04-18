@@ -236,9 +236,7 @@ int AreBitfieldsEqual (BitsLong *p, BitsLong *q, int length)
 -----------------------------------------------------------------*/
 int Bit (int n, BitsLong *p)
 {
-    BitsLong        x, bitsLongOne;
-
-    bitsLongOne = 1;
+    BitsLong    x, bitsLongOne=1;
 
     p += n / nBitsInALong;
     x = bitsLongOne << (n % nBitsInALong);
@@ -254,7 +252,7 @@ int Bit (int n, BitsLong *p)
 /* ClearBit: Clear one bit in a bitfield */
 void ClearBit (int i, BitsLong *bits)
 {
-    BitsLong        x, bitsLongOne=1;
+    BitsLong    x, bitsLongOne=1;
 
     bits += i / nBitsInALong;
 
@@ -505,7 +503,7 @@ void FlipBits (BitsLong *partition, int length, BitsLong *mask)
 ------------------------------------------------------------------*/
 void FlipOneBit (int n, BitsLong *p)
 {
-    BitsLong        x, bitsLongOne=1;
+    BitsLong    x, bitsLongOne=1;
 
     p += n/nBitsInALong;
     x = bitsLongOne << (n % nBitsInALong);
@@ -774,7 +772,7 @@ int HarmonicArithmeticMeanOnLogs (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt 
 /* IsBitSet: Is bit i set in BitsLong *bits ? */
 int IsBitSet (int i, BitsLong *bits)
 {
-    BitsLong        x, bitsLongOne=1;
+    BitsLong    x, bitsLongOne=1;
 
     bits += i / nBitsInALong;
 
@@ -1623,7 +1621,7 @@ char *SafeStrcpy (char **target, const char *source)
 /* SetBit: Set a particular bit in a series of longs */
 void SetBit (int i, BitsLong *bits)
 {
-    BitsLong        x, bitsLongOne=1;
+    BitsLong    x, bitsLongOne=1;
 
     bits += i / nBitsInALong;
 
