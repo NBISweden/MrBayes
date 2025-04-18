@@ -6676,7 +6676,7 @@ int InitContStates (void)
                 }
             }
         
-        /* check values if continuous characters are standardized (between 0 and 1) */
+        /* check values if continuous characters are normalized (between 0 and 1) */
         if (!strcmp(modelParams[d].nst, "1"))
             {
             for (i=0; i<numLocalTaxa; i++)
@@ -6687,9 +6687,9 @@ int InitContStates (void)
                     if (m->ancStates[clIndex][k] < 0.0 ||
                         (m->ancStates[clIndex][k] > 1.0 &&
                          m->ancStates[clIndex][k] < (CLFlt)INT_MAX - 1.0)) {
-                        MrBayesPrint ("%s   Continuous characters are assumed standardized (between 0 and 1), but found\n", spacer);
+                        MrBayesPrint ("%s   Continuous characters are assumed normalized (between 0 and 1), but found\n", spacer);
                         MrBayesPrint ("%s    %.3f in taxon %d char %d ...\n", spacer, m->ancStates[clIndex][k], i+1, k+1);
-                        MrBayesPrint ("%s   Please set 'nst=2' in 'lset' if the characters are normalized or unscaled.\n", spacer);
+                        MrBayesPrint ("%s   Please set 'nst=2' in 'lset' if the characters are standardized or unscaled.\n", spacer);
                         return ERROR;
                         }
                     }
@@ -7052,9 +7052,9 @@ int InitParsSets (void)
             /* scale continuous characters down to an ordered parsimony character */
             /* with nParsStatesForCont states, represent this character as a set */
             /* of binary characters by additive binary coding */
-            if (!strcmp(mp->nst, "1")) // standardized (between 0 and 1)
+            if (!strcmp(mp->nst, "1")) // normalized (between 0 and 1)
                 m->nParsIntsPerSite = 2;
-            else  // normalized
+            else  // standardized (mean 0 and sd 1)
                 m->nParsIntsPerSite = 1;
             }
         else
@@ -7108,7 +7108,7 @@ int InitParsSets (void)
 
         if (mp->dataType == CONTINUOUS)
             {
-            /* Note: Assuming the continuous characters are standardized (between 0 and 1)?
+            /* Note: Assuming the continuous characters are normalized (between 0 and 1)?
                Using additive parsimony would be more efficient than using multiple binary chars as here. */
             // TODO: this needs to be updated, not fully working!
             for (i=0; i<numLocalTaxa; i++)

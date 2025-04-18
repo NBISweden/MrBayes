@@ -5376,7 +5376,7 @@ int DoMatrixParm (char *parmName, char *tkn)
             if (!strcmp(tkn, "?"))
                 {
                 /* store a very large number to represent missing state for now
-                   should be fine when data are standardized (between 0 and 1) or normalized */
+                   should be fine when data are normalized (between 0 and 1) or standardized */
                 matrix[pos(taxonCount-1,taxaInfo[taxonCount-1].charCount++,numChar)] = INT_MAX;
                 }
             else if (!strcmp(tkn, "-"))

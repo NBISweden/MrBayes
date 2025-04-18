@@ -3323,18 +3323,18 @@ int DoLsetParm (char *parmName, char *tkn)
                                 strcpy(modelParams[i].nst, tempStr);
                                 if (!strcmp(tempStr, "1"))
                                     {
-                                    /* hack to use nst=1 for standardized (between 0 and 1, default) */
+                                    /* hack to use nst=1 for normalized (between 0 and 1, default) */
                                     if (nApplied == 0 && numCurrentDivisions == 1)
-                                        MrBayesPrint ("%s   Characters are standardized\n", spacer);
+                                        MrBayesPrint ("%s   Characters are normalized\n", spacer);
                                     else
-                                        MrBayesPrint ("%s   Characters are standardized for partition %d\n", spacer, i+1);
+                                        MrBayesPrint ("%s   Characters are normalized for partition %d\n", spacer, i+1);
                                     }
                                 else
                                     {
                                     if (nApplied == 0 && numCurrentDivisions == 1)
-                                        MrBayesPrint ("%s   Characters are not standardized\n", spacer);
+                                        MrBayesPrint ("%s   Characters are not normalized\n", spacer);
                                     else
-                                        MrBayesPrint ("%s   Characters are not standardized for partition %d\n", spacer, i+1);
+                                        MrBayesPrint ("%s   Characters are not normalized for partition %d\n", spacer, i+1);
                                     }
                                 }
                             else {
@@ -23642,9 +23642,9 @@ int ShowModel (void)
             {
             /* begin description of continuous models */
             if (!strcmp(modelParams[i].nst, "1"))
-                MrBayesPrint ("%s                     Characters are standardized (between 0 and 1)\n", spacer);
+                MrBayesPrint ("%s                     Characters are normalized (between 0 and 1)\n", spacer);
             else
-                MrBayesPrint ("%s                     Characters are not standardized\n", spacer);
+                MrBayesPrint ("%s                     Characters are not normalized\n", spacer);
             
             if (!strcmp(modelParams[i].brownCorrPr, "Fixed") && AreDoublesEqual(modelParams[i].brownCorrFix, 0.0, ETA)==YES)
                 MrBayesPrint ("%s         Model     = Independent Brownian motion\n", spacer);
