@@ -6669,7 +6669,10 @@ int InitContStates (void)
                  inference, but returns unsigned long, need to make sure we get the correct value
                  (with the sign) back here */
                 state = (long)compMatrix[pos(i,c,compMatrixRowSize)];
-                m->ancStates[clIndex][k] = (CLFlt)state / 10000.0;
+                if (state == INT_MAX)
+                    m->ancStates[clIndex][k] = (CLFlt)INT_MAX;
+                else
+                    m->ancStates[clIndex][k] = (CLFlt)state / 10000.0;
                 }
             }
         /*

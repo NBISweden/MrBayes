@@ -70,11 +70,20 @@ int       SetProteinQMatrix (MrBFlt **a, int n, int whichChain, int division, Mr
 int       UpDateCijk (int whichPart, int whichChain);
 
 
+static int IsMissing (CLFlt value)
+{
+    if (value > (CLFlt)INT_MAX - 1.0)
+        return YES;
+    else
+        return NO;
+}
+
+
 int BMVar_Cont (TreeNode *p, int division, int chain)
 {
     int         i, k, c;
     MrBFlt      baseRate, *catRate, theRate, length;
-    CLFlt       *vP, *vL, *vR;
+    CLFlt       *vP, *vL, *vR, *mP, *mL, *mR, m_l, m_r;
     ModelInfo   *m;
     
     m = &modelSettings[division];
@@ -119,29 +128,54 @@ int BMVar_Cont (TreeNode *p, int division, int chain)
     
     /* find BM variance pointer */
     vP = m->bmVars[m->tiProbsIndex[chain][p->index]];
-
+    mP = m->ancStates[m->condLikeIndex[chain][p->index]];
+    
     /* fill in values */
-    if (p->left != NULL && p->right != NULL)
+    if (p->left != NULL && p->right != NULL)  // internal node
         {
         vL = m->bmVars[m->tiProbsIndex[chain][p->left->index]];
         vR = m->bmVars[m->tiProbsIndex[chain][p->right->index]];
+        mL = m->ancStates[m->condLikeIndex[chain][p->left->index]];
+        mR = m->ancStates[m->condLikeIndex[chain][p->right->index]];
         for (k=0; k<m->numRateCats; k++)
             for (c=0; c<m->numChars; c++)
                 {
                 i = k * (m->numChars) + c;
-                vP[i] = length * baseRate * catRate[k] +(vL[i] * vR[i])/(vL[i] + vR[i]);
+                
+                /* find descendant states */
+                if (p->left->left == NULL)
+                    m_l = mL[c];
+                else
+                    m_l = mL[i];
+                if (p->right->left == NULL)
+                    m_r = mR[c];
+                else
+                    m_r = mR[i];
+                
+                /* update BM variances accordingly */
+                if (IsMissing(m_l) && IsMissing(m_r))
+                    vP[i] = 0.0;
+                else if (IsMissing(m_l))
+                    vP[i] = length * baseRate * catRate[k] + vR[i];
+                else if (IsMissing(m_r))
+                    vP[i] = length * baseRate * catRate[k] + vL[i];
+                else
+                    vP[i] = length * baseRate * catRate[k] + (vL[i] * vR[i])/(vL[i] + vR[i]);
                 }
         }
-    else
+    else  // tip
         {
         for (k=0; k<m->numRateCats; k++)
             for (c=0; c<m->numChars; c++)
                 {
                 i = k * (m->numChars) + c;
-                vP[i] = length * baseRate * catRate[k];
+                if (IsMissing(mP[c]))
+                    vP[i] = 0.0;
+                else
+                    vP[i] = length * baseRate * catRate[k];
                 }
         }
-        
+    
     return NO_ERROR;
 }
 
@@ -149,7 +183,7 @@ int BMVar_Cont (TreeNode *p, int division, int chain)
 int CondLikeDown_Cont (TreeNode *p, int division, int chain)
 {
     int             i, k, c;
-    CLFlt           *lnL, *vL, *vR, mP, mL, mR;
+    CLFlt           *lnL, *vL, *vR, *mP, *mL, *mR, m_l, m_r;
     ModelInfo       *m;
     
     m = &modelSettings[division];
@@ -164,6 +198,11 @@ int CondLikeDown_Cont (TreeNode *p, int division, int chain)
     vL = m->bmVars[m->tiProbsIndex[chain][p->left->index]];
     vR = m->bmVars[m->tiProbsIndex[chain][p->right->index]];
 
+    /* find character states */
+    mL = m->ancStates[m->condLikeIndex[chain][p->left->index]];
+    mR = m->ancStates[m->condLikeIndex[chain][p->right->index]];
+    mP = m->ancStates[m->condLikeIndex[chain][p->index]];
+    
     /* likelihood space is arranged in numRateCats blocks, each block consists of numChars characters */
     for (k=0; k<m->numRateCats; k++)
         {
@@ -171,26 +210,32 @@ int CondLikeDown_Cont (TreeNode *p, int division, int chain)
             {
             i = k * (m->numChars) + c;
             
-            /* calculate normal density */
-            lnL[i] = log(2.0 * M_PI) + log(vL[i] + vR[i]);
-            
             /* find descendant states */
             if (p->left->left == NULL)
-                mL = m->ancStates[m->condLikeIndex[chain][p->left->index]][c];
+                m_l = mL[c];
             else
-                mL = m->ancStates[m->condLikeIndex[chain][p->left->index]][i];
-
+                m_l = mL[i];
             if (p->right->left == NULL)
-                mR = m->ancStates[m->condLikeIndex[chain][p->right->index]][c];
+                m_r = mR[c];
             else
-                mR = m->ancStates[m->condLikeIndex[chain][p->right->index]][i];
-
-            /* save present state */
-            mP = (vR[i]*mL + vL[i]*mR) / (vL[i] + vR[i]);
-            m->ancStates[m->condLikeIndex[chain][p->index]][i] = mP;
+                m_r = mR[i];
             
-            lnL[i] += powf(mL - mR, 2) / (vL[i] + vR[i]);
-            lnL[i] *= -0.5;
+            lnL[i] = 0.0;
+            
+            /* save present state and update lnL accordingly */
+            if (IsMissing(m_l) && IsMissing(m_r))
+                mP[i] = (CLFlt)INT_MAX;  // missing
+            else if (IsMissing(m_l))
+                mP[i] = m_r;
+            else if (IsMissing(m_r))
+                mP[i] = m_l;
+            else
+                {
+                mP[i] = (vR[i]*m_l + vL[i]*m_r) / (vL[i] + vR[i]);
+                lnL[i] += log(2.0 * M_PI) + log(vL[i] + vR[i]);
+                lnL[i] += powf(m_l - m_r, 2) / (vL[i] + vR[i]);
+                lnL[i] *= -0.5;
+                }
             }
         }
     
@@ -201,7 +246,7 @@ int CondLikeDown_Cont (TreeNode *p, int division, int chain)
 int CondLikeRoot_Cont (TreeNode *p, int division, int chain)
 {
     int             i, k, c;
-    CLFlt           *lnL, *vL, *vR, *vP, mP, mL, mR, mA;
+    CLFlt           *lnL, *vL, *vR, *vP, *mP, *mL, *mR, *mA, m_l, m_r, m_a;
     ModelInfo       *m;
     
     m = &modelSettings[division];
@@ -217,6 +262,12 @@ int CondLikeRoot_Cont (TreeNode *p, int division, int chain)
     vR = m->bmVars[m->tiProbsIndex[chain][p->right->index]];
     vP = m->bmVars[m->tiProbsIndex[chain][p->index]];  // vP has been transformed
 
+    /* find character states */
+    mL = m->ancStates[m->condLikeIndex[chain][p->left->index]];
+    mR = m->ancStates[m->condLikeIndex[chain][p->right->index]];
+    mP = m->ancStates[m->condLikeIndex[chain][p->index]];
+    mA = m->ancStates[m->condLikeIndex[chain][p->anc->index]];
+    
     /* likelihood space is arranged in numRateCats blocks, each block consists of numChars characters */
     for (k=0; k<m->numRateCats; k++)
         {
@@ -224,29 +275,53 @@ int CondLikeRoot_Cont (TreeNode *p, int division, int chain)
             {
             i = k * (m->numChars) + c;
             
-            /* calculate two normal densities */
-            lnL[i] = 2.0 * log(2.0 * M_PI) + log(vL[i] + vR[i]) + log(vP[i]);
-            
             /* find descendant states */
+            m_a = mA[c];
             if (p->left->left == NULL)
-                mL = m->ancStates[m->condLikeIndex[chain][p->left->index]][c];
+                m_l = mL[c];
             else
-                mL = m->ancStates[m->condLikeIndex[chain][p->left->index]][i];
-
+                m_l = mL[i];
             if (p->right->left == NULL)
-                mR = m->ancStates[m->condLikeIndex[chain][p->right->index]][c];
+                m_r = mR[c];
             else
-                mR = m->ancStates[m->condLikeIndex[chain][p->right->index]][i];
-
-            /* save present state */
-            mP = (vR[i]*mL + vL[i]*mR) / (vL[i] + vR[i]);
-            m->ancStates[m->condLikeIndex[chain][p->index]][i] = mP;
+                m_r = mR[i];
             
-            /* find ancestral state */
-            mA = m->ancStates[m->condLikeIndex[chain][p->anc->index]][c];
-
-            lnL[i] += powf(mL - mR, 2) / (vL[i] + vR[i]) + powf(mA - mP, 2) / vP[i];
-            lnL[i] *= -0.5;
+            lnL[i] = 0.0;
+            
+            /* save present state and update lnL accordingly */
+            if ((IsMissing(m_l) && IsMissing(m_r)) ||
+                (IsMissing(m_l) && IsMissing(m_a)) ||
+                (IsMissing(m_r) && IsMissing(m_a))) {
+                mP[i] = (CLFlt)INT_MAX;  // missing
+                }
+            else if (IsMissing(m_a))
+                {
+                mP[i] = (vR[i]*m_l + vL[i]*m_r) / (vL[i] + vR[i]);
+                lnL[i] += log(2.0 * M_PI) + log(vL[i] + vR[i]);
+                lnL[i] += powf(m_l - m_r, 2) / (vL[i] + vR[i]);
+                lnL[i] *= -0.5;
+                }
+            else if (IsMissing(m_r))
+                {
+                mP[i] = m_l;
+                lnL[i] += log(2.0 * M_PI) + log(vP[i]);
+                lnL[i] += powf(m_a - mP[i], 2) / vP[i];
+                lnL[i] *= -0.5;
+                }
+            else if (IsMissing(m_l))
+                {
+                mP[i] = m_r;
+                lnL[i] += log(2.0 * M_PI) + log(vP[i]);
+                lnL[i] += powf(m_a - mP[i], 2) / vP[i];
+                lnL[i] *= -0.5;
+                }
+            else  // calculate two normal densities
+                {
+                mP[i] = (vR[i]*m_l + vL[i]*m_r) / (vL[i] + vR[i]);
+                lnL[i] += 2.0 * log(2.0 * M_PI) + log(vL[i] + vR[i]) + log(vP[i]);
+                lnL[i] += powf(m_l - m_r, 2) / (vL[i] + vR[i]) + powf(m_a - mP[i], 2) / vP[i];
+                lnL[i] *= -0.5;
+                }
             }
         }
     
@@ -7734,7 +7809,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 |      set of data where the effect of nuisance parameters (the root state in this case) has been removed.
 |
 -------------------------------------------------------------------*/
-int Likelihood_Cont2 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
+int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
 {
     int         i, k, c, n, clIndex;
     MrBFlt      like, lmax;
@@ -7781,12 +7856,13 @@ int Likelihood_Cont2 (TreeNode *p, int division, int chain, MrBFlt *lnL, int whi
             *lnL -= (m->numChars) * log(m->numRateCats);
             }
         }
-    
+    // printf("-> lnL(cont): %lf\n", *lnL);
+
     return NO_ERROR;
 }
 
 
-int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
+int Likelihood_Cont_zy (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
 {
     int             i, j;
     int             tipIndex;
@@ -7929,10 +8005,6 @@ int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
     free(nodeVar);
     free(nodeVarP);
     free(charPrime);
-
-    printf(" lnl: %lf\n", tmplnL);
-    Likelihood_Cont2 (p, division, chain, &tmplnL, whichSitePats);
-    printf("mine: %lf\n", tmplnL);
 
     return NO_ERROR;
 }
