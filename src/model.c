@@ -22581,8 +22581,8 @@ void SetUpMoveTypes (void)
 
     /* Move_ParsSPR asym */
     mt = &moveTypes[i++];
-    mt->name = "Parsimony-biased SPR";
-    mt->shortName = "ParsSPR";
+    mt->name = "Parsimony-biased SPR variant 3";
+    mt->shortName = "ParsSPR3";
     mt->subParams = YES;
     mt->tuningName[0] = "parsimony warp factor";
     mt->shortTuningName[0] = "warp";
@@ -22611,7 +22611,7 @@ void SetUpMoveTypes (void)
     mt->minimum[3] = 0.0001;
     mt->maximum[3] = 20.0;
     mt->parsimonyBased = YES;
-    mt->level = STANDARD_USER;
+    mt->level = DEVELOPER;
     mt->isApplicable = &IsApplicable_FourTaxaOrMore;
 
     /* Move_ParsSPR1 e^{-S} */

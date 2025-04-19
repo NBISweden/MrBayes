@@ -277,6 +277,7 @@ int             recalcScalers;               /* should we recalculate scalers fo
 extern CLFlt     *preLikeL;                  /* precalculated cond likes for left descendant */
 extern CLFlt     *preLikeR;                  /* precalculated cond likes for right descendant*/
 extern CLFlt     *preLikeA;                  /* precalculated cond likes for ancestor        */
+extern int IsMissingC (CLFlt value);
 
 /* local (to this file) variables */
 int             numLocalChains;              /* number of Markov chains                      */
@@ -6538,7 +6539,7 @@ int InitChainCondLikes (void)
 -------------------------------------------------------------------------*/
 int InitContStates (void)
 {
-    int         c, d, i, j, k, nIntNodes, nNodes, clIndex, tiIndex;
+    int         c, d, i, j, nIntNodes, nNodes, clIndex, tiIndex;
     long        state;
     ModelInfo   *m;
     Tree        *t;
@@ -6662,17 +6663,17 @@ int InitContStates (void)
         for (i=0; i<numLocalTaxa; i++)
             {
             clIndex = m->condLikeIndex[0][i];
-            for (k=0, c=m->compMatrixStart; c<m->compMatrixStop; c++, k++)
+            for (c=0, j=m->compMatrixStart; j<m->compMatrixStop; j++, c++)
                 {
                 /* matrix[pos(i,origChar[c],numChar)] holds the int value, but we will have trouble
                  if some taxa or/and characters are deleted. compMatrix has the actual data used in
                  inference, but returns unsigned long, need to make sure we get the correct value
                  (with the sign) back here */
-                state = (long)compMatrix[pos(i,c,compMatrixRowSize)];
+                state = (long)compMatrix[pos(i,j,compMatrixRowSize)];
                 if (state == INT_MAX)
-                    m->ancStates[clIndex][k] = (CLFlt)INT_MAX;
+                    m->ancStates[clIndex][c] = (CLFlt)INT_MAX;
                 else
-                    m->ancStates[clIndex][k] = (CLFlt)state / 10000.0;
+                    m->ancStates[clIndex][c] = (CLFlt)state / 10000.0;
                 }
             }
         
@@ -6682,13 +6683,13 @@ int InitContStates (void)
             for (i=0; i<numLocalTaxa; i++)
                 {
                 clIndex = m->condLikeIndex[0][i];
-                for (k=0; k<m->numChars; k++)
+                for (c=0; c<m->numChars; c++)
                     {
-                    if (m->ancStates[clIndex][k] < 0.0 ||
-                        (m->ancStates[clIndex][k] > 1.0 &&
-                         m->ancStates[clIndex][k] < (CLFlt)INT_MAX - 1.0)) {
+                    if (!IsMissingC(m->ancStates[clIndex][c]) &&
+                        (m->ancStates[clIndex][c] < 0.0 || m->ancStates[clIndex][c] > 1.0))
+                        {
                         MrBayesPrint ("%s   Continuous characters are assumed normalized (between 0 and 1), but found\n", spacer);
-                        MrBayesPrint ("%s    %.3f in taxon %d char %d ...\n", spacer, m->ancStates[clIndex][k], i+1, k+1);
+                        MrBayesPrint ("%s    %.3f in taxon %d char %d ...\n", spacer, m->ancStates[clIndex][c], i+1, c+1);
                         MrBayesPrint ("%s   Please set 'nst=2' in 'lset' if the characters are standardized or unscaled.\n", spacer);
                         return ERROR;
                         }
@@ -6698,8 +6699,8 @@ int InitContStates (void)
         /*
         for (i=0; i<numLocalTaxa; i++) {
             clIndex = m->condLikeIndex[0][i];
-            for (k=0; k<m->numChars; k++)
-                printf("%.3f ", m->ancStates[clIndex][k]);
+            for (c=0; c<m->numChars; c++)
+                printf("%.3f ", m->ancStates[clIndex][c]);
             printf("\n");
         }
         */
@@ -7037,6 +7038,7 @@ int InitParsSets (void)
     int             c, i, j, k, d, nIntNodes, nNodes,
                     nuc1, nuc2, nuc3, codingNucCode, allNucCode;
     BitsLong        allAmbig, x, x1, x2, x3, *longPtr, bitsLongOne=1;
+    long            state;
     ModelInfo       *m;
     ModelParams     *mp;
 
@@ -7108,21 +7110,33 @@ int InitParsSets (void)
 
         if (mp->dataType == CONTINUOUS)
             {
-            /* Note: Assuming the continuous characters are normalized (between 0 and 1)?
-               Using additive parsimony would be more efficient than using multiple binary chars as here. */
-            // TODO: this needs to be updated, not fully working!
             for (i=0; i<numLocalTaxa; i++)
                 {
                 for (c=0, j=m->compMatrixStart; j<m->compMatrixStop; j++, c++)
                     {
-                    x = compMatrix[pos(i,j,compMatrixRowSize)];
-
-                    for (k=0; k<m->nParsIntsPerSite; k++)
+                    state = (long)compMatrix[pos(i,j,compMatrixRowSize)];
+                    
+                    /* Using additive parsimony would be more efficient than using multiple binary chars as here. */
+                    if (!strcmp(mp->nst, "1")) // normalized (between 0 and 1)
                         {
-                        if (x > (unsigned int)(k + 1) * 1000 / (m->nParsIntsPerSite + 1))
-                            m->parsSets[i][c*m->nParsIntsPerSite + k] = 1;
+                        for (k=0; k<2; k++)
+                            {
+                            if (state == INT_MAX)  // missing
+                                m->parsSets[i][c*2+k] = 3;
+                            else if ((CLFlt)state > (k + 1.0) * 10000.0 / 3.0)
+                                m->parsSets[i][c*2+k] = 2;
+                            else
+                                m->parsSets[i][c*2+k] = 1;
+                            }
+                        }
+                    else  // standardized
+                        {
+                        if (state == INT_MAX)  // missing
+                            m->parsSets[i][c] = 3;
+                        else if ((CLFlt)state > 0.0)
+                            m->parsSets[i][c] = 2;
                         else
-                            m->parsSets[i][c*m->nParsIntsPerSite + k] = 2;
+                            m->parsSets[i][c] = 1;
                         }
                     }
                 }

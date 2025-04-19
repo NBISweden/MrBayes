@@ -70,7 +70,7 @@ int       SetProteinQMatrix (MrBFlt **a, int n, int whichChain, int division, Mr
 int       UpDateCijk (int whichPart, int whichChain);
 
 
-static int IsMissing (CLFlt value)
+int IsMissingC (CLFlt value)
 {
     if (value > (CLFlt)INT_MAX - 1.0)
         return YES;
@@ -153,11 +153,11 @@ int BMVar_Cont (TreeNode *p, int division, int chain)
                     m_r = mR[i];
                 
                 /* update BM variances accordingly */
-                if (IsMissing(m_l) && IsMissing(m_r))
+                if (IsMissingC(m_l) && IsMissingC(m_r))
                     vP[i] = 0.0;
-                else if (IsMissing(m_l))
+                else if (IsMissingC(m_l))
                     vP[i] = length * baseRate * catRate[k] + vR[i];
-                else if (IsMissing(m_r))
+                else if (IsMissingC(m_r))
                     vP[i] = length * baseRate * catRate[k] + vL[i];
                 else
                     vP[i] = length * baseRate * catRate[k] + (vL[i] * vR[i])/(vL[i] + vR[i]);
@@ -169,7 +169,7 @@ int BMVar_Cont (TreeNode *p, int division, int chain)
             for (c=0; c<m->numChars; c++)
                 {
                 i = k * (m->numChars) + c;
-                if (IsMissing(mP[c]))
+                if (IsMissingC(mP[c]))
                     vP[i] = 0.0;
                 else
                     vP[i] = length * baseRate * catRate[k];
@@ -223,11 +223,11 @@ int CondLikeDown_Cont (TreeNode *p, int division, int chain)
             lnL[i] = 0.0;
             
             /* save present state and update lnL accordingly */
-            if (IsMissing(m_l) && IsMissing(m_r))
+            if (IsMissingC(m_l) && IsMissingC(m_r))
                 mP[i] = (CLFlt)INT_MAX;  // missing
-            else if (IsMissing(m_l))
+            else if (IsMissingC(m_l))
                 mP[i] = m_r;
-            else if (IsMissing(m_r))
+            else if (IsMissingC(m_r))
                 mP[i] = m_l;
             else
                 {
@@ -289,26 +289,26 @@ int CondLikeRoot_Cont (TreeNode *p, int division, int chain)
             lnL[i] = 0.0;
             
             /* save present state and update lnL accordingly */
-            if ((IsMissing(m_l) && IsMissing(m_r)) ||
-                (IsMissing(m_l) && IsMissing(m_a)) ||
-                (IsMissing(m_r) && IsMissing(m_a))) {
+            if ((IsMissingC(m_l) && IsMissingC(m_r)) ||
+                (IsMissingC(m_l) && IsMissingC(m_a)) ||
+                (IsMissingC(m_r) && IsMissingC(m_a))) {
                 mP[i] = (CLFlt)INT_MAX;  // missing
                 }
-            else if (IsMissing(m_a))
+            else if (IsMissingC(m_a))
                 {
                 mP[i] = (vR[i]*m_l + vL[i]*m_r) / (vL[i] + vR[i]);
                 lnL[i] += log(2.0 * M_PI) + log(vL[i] + vR[i]);
                 lnL[i] += powf(m_l - m_r, 2) / (vL[i] + vR[i]);
                 lnL[i] *= -0.5;
                 }
-            else if (IsMissing(m_r))
+            else if (IsMissingC(m_r))
                 {
                 mP[i] = m_l;
                 lnL[i] += log(2.0 * M_PI) + log(vP[i]);
                 lnL[i] += powf(m_a - mP[i], 2) / vP[i];
                 lnL[i] *= -0.5;
                 }
-            else if (IsMissing(m_l))
+            else if (IsMissingC(m_l))
                 {
                 mP[i] = m_r;
                 lnL[i] += log(2.0 * M_PI) + log(vP[i]);
