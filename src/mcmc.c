@@ -7050,15 +7050,7 @@ int InitParsSets (void)
 
         /* find how many parsimony ints (BitsLong) are needed for each model site */
         if (mp->dataType == CONTINUOUS)
-            {
-            /* scale continuous characters down to an ordered parsimony character */
-            /* with nParsStatesForCont states, represent this character as a set */
-            /* of binary characters by additive binary coding */
-            if (!strcmp(mp->nst, "1")) // normalized (between 0 and 1)
-                m->nParsIntsPerSite = 2;
-            else  // standardized (mean 0 and sd 1)
-                m->nParsIntsPerSite = 1;
-            }
+            m->nParsIntsPerSite = 1;
         else
             m->nParsIntsPerSite = 1 + m->numStates / nBitsInALong;
 
@@ -7116,18 +7108,18 @@ int InitParsSets (void)
                     {
                     state = (long)compMatrix[pos(i,j,compMatrixRowSize)];
                     
-                    /* Using additive parsimony would be more efficient than using multiple binary chars as here. */
                     if (!strcmp(mp->nst, "1")) // normalized (between 0 and 1)
                         {
-                        for (k=0; k<2; k++)
-                            {
-                            if (state == INT_MAX)  // missing
-                                m->parsSets[i][c*2+k] = 3;
-                            else if ((CLFlt)state > (k + 1.0) * 10000.0 / 3.0)
-                                m->parsSets[i][c*2+k] = 2;
-                            else
-                                m->parsSets[i][c*2+k] = 1;
-                            }
+                        if (state == INT_MAX)  // missing
+                            m->parsSets[i][c] = 15;
+                        else if ((CLFlt)state > 7500.0)
+                            m->parsSets[i][c] = 8;
+                        else if ((CLFlt)state > 5000.0)
+                            m->parsSets[i][c] = 4;
+                        else if ((CLFlt)state > 2500.0)
+                            m->parsSets[i][c] = 2;
+                        else
+                            m->parsSets[i][c] = 1;
                         }
                     else  // standardized
                         {
