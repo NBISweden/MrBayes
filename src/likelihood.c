@@ -7816,10 +7816,15 @@ int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
     ModelInfo   *m;
     Tree        *t;
     
+
+
     m = &modelSettings[division];
     t = GetTree(m->brlens,chain,state[chain]);
 
     *lnL = 0.0;
+
+    /* use the straightforward way of calculation for debugging */
+    Likelihood_Cont_Zy (p, division, chain, lnL, whichSitePats);
 
     /* independent log likelihood values have been calculated and stored in
        the internal nodes, we just need to sum them up */
@@ -7856,157 +7861,136 @@ int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
             *lnL -= (m->numChars) * log(m->numRateCats);
             }
         }
-    // printf("-> lnL(cont): %lf\n", *lnL);
+    printf("-> lnL(cont): %lf\n", *lnL);
 
+    
     return NO_ERROR;
 }
 
+int Likelihood_Cont_Zy (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
+{   
+    int             i, c, tipIndex, memIndex;
+    MrBFlt          vL, vR, vA, ml, mr, ma;
+    MrBFlt          tmplnL;
 
-int Likelihood_Cont_zy (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-{
-    int             i, j;
-    int             tipIndex;
-    int             memIndex;
-
-    MrBFlt          sigma;          // diffusion coefficient
-    MrBFlt          r;              // diffusion rate (sigma square)
-    MrBFlt          vk1;            // variance of left offspring
-    MrBFlt          vk2;            // variance of right offspring
-    MrBFlt          normX;          // (xk)'xk for node k
-    MrBFlt          tmplnL = 0.;
-
-    MrBFlt          *nodeVar;       // store node variance
-    MrBFlt          *nodeVarP;      // store node variance prime
-    MrBFlt          *charPrime;     // store node morphological data
-    MrBFlt          *mtmp;
+    MrBFlt          *vP, *mP, *mtmp;
+    Tree            *tree;
+    TreeNode        *tp, *pL, *pR, *pA, *root;
     ModelInfo       *m;
-    Tree            *t;
-    TreeNode        *curNode;
-    TreeNode        *root;          // store real tree root (the node with trichotomy)
+
+    tmplnL = 0.0;
 
     m = &modelSettings[division];
-    
-    /* get the diffusion coefficient for brownian motion */
-    sigma = *(GetParamVals(m->brownSigma, chain, state[chain]));
-
-    /* calculate diffusion rate */
-    r = pow(sigma, 2);
-    r = 1;  // set r to 1 to make life easier
-
-    /* get current tree */    
-    t = GetTree(m->brlens,chain,state[chain]);
-    
-    /* allocate memory for node variance */
-    nodeVar = (MrBFlt*) SafeCalloc(t->nNodes, sizeof(MrBFlt)); 
-
-    /* postorder traverse tree t to calculate node variance */
-    for (i = 0; i < t->nNodes-1; i++) {
-        p = t->allDownPass[i];
-        memIndex = p->memoryIndex;
-        curNode= p;
-        while (curNode-> anc != NULL) {
-            nodeVar[memIndex] += curNode->length;
-            curNode = curNode->anc;
-        }        
-        nodeVar[memIndex] *= r;
-    }
+    tree = GetTree(m->brlens,chain,state[chain]);
 
 
-    /* allocate memory for node variance prime */
-    nodeVarP = (MrBFlt*) SafeCalloc(t->nNodes, sizeof(MrBFlt));
+    /* allocate memory for BM variance */
+    vP = (MrBFlt*) SafeCalloc(tree->nNodes, sizeof(MrBFlt)); 
 
-    /* postorder traverse tree t to calculate node variance prime */
-    for (i=0; i < t->nNodes-1; i++) {
-        p = t->allDownPass[i];
-        memIndex = p->memoryIndex;
-        if ((p->left == NULL) && (p->right == NULL)){   // tip node
-           nodeVarP[memIndex] = nodeVar[memIndex]; 
-        }
-        else{                                           // internal node
-            vk1 = 0.0;
-            vk2 = 0.0;
-            if (p->left != NULL) {
-                vk1 = nodeVar[p->left->memoryIndex];
-            }
-            if (p->right != NULL) {
-                vk2 = nodeVar[p->right->memoryIndex];
-            }
-            nodeVarP[memIndex] = nodeVar[memIndex] + (vk1*vk2)/(vk1+vk2);
-        }
-    }
-
-
-    /* allocate space for mk' */
-    charPrime = (MrBFlt*) SafeCalloc((t->nNodes)*m->numChars, sizeof(MrBFlt));
-
-    /* allocate space for a temporary array to store original data */
+    /* allocate memory for continuous characters */
+    mP = (MrBFlt*) SafeCalloc((tree->nNodes)*m->numChars, sizeof(MrBFlt));
+    /* allocate memory for a temporary array to store original data */
     mtmp = (MrBFlt*) SafeCalloc(m->numChars, sizeof(MrBFlt));
 
-    /* postorder traverse tree t to calculate mk' */
-    for (i = 0; i < t->nNodes-1; i++) {           
-        p = t->allDownPass[i];
-        if (p->left == NULL && p->right == NULL) { // tip node
-            tipIndex = p->index;                   // get its taxa index (0-4 for test.nex)
-            memIndex = p->memoryIndex;
-            for (j = 0; j < m->numChars; j++) {
-                mtmp[j] = matrix[numChar - m->numChars + tipIndex * numChar + j] / 1000.0;  // get original data for tip node (not sure this is the right way)
+    /* read in continuous characters */
+    for (i=0; i<tree->nNodes; i++)
+    {
+    p = tree->allDownPass[i];
+    if (p->anc == NULL || (p->left == NULL && p->right ==NULL))
+        {
+        tipIndex = p->index;                   
+        memIndex = p->memoryIndex;
+        for (c=0; c<m->numChars; c++) 
+            {
+            mtmp[c] = matrix[numChar-m->numChars+tipIndex*numChar+c] / 10000.0;  // get original data for tip node
             }
-            memcpy(&charPrime[memIndex*m->numChars], &mtmp[0], m->numChars* sizeof(MrBFlt));
-        }
-        else{                                      // internal node
-            MrBFlt *ptrl = charPrime + (p->left->memoryIndex)*m->numChars;      // pointer to left offspring (mk1)
-            MrBFlt *ptrr = charPrime + (p->right->memoryIndex)*m->numChars;     // pointer to right offspring (mk2)
-            MrBFlt *ptrp = charPrime + (p->memoryIndex)*m->numChars;            // pointer to the internal node itself (mk')
-            
-            for(j = 0; j < m->numChars; j++){
-                MrBFlt lnodeVar = nodeVar[p->left->memoryIndex];
-                MrBFlt rnodeVar = nodeVar[p->right->memoryIndex];
-                ptrp[j] = ((ptrl[j] * rnodeVar) + (ptrr[j] * lnodeVar)) / (lnodeVar + rnodeVar);
-            }
+        memcpy(&mP[memIndex*m->numChars], &mtmp[0], m->numChars*sizeof(MrBFlt));
         }
     }
+    
+    /* calculate BM variance */
+    for (i=0; i<tree->nIntNodes; i++)
+            {
+            p = tree->intDownPass[i];
+            
+            /* find BM variance for left node */
+            tp = p->left;
+            if (tp->left != NULL && tp->right != NULL)  // internal node
+                {
+                vL = vP[tp->left->memoryIndex];
+                vR = vP[tp->right->memoryIndex];
+                vP[tp->memoryIndex] = tp->length + (vL * vR)/(vL + vR);  
+                }
+            else  // tip node
+                {
+                vP[tp->memoryIndex] = tp->length;
+                }
 
+            /* find BM variance for right node */
+            tp = p->right;
+            if (tp->left != NULL && tp->right != NULL)  // internal node
+                {
+                vL = vP[tp->left->memoryIndex];
+                vR = vP[tp->right->memoryIndex];
+                vP[tp->memoryIndex] = tp->length + (vL * vR)/(vL + vR);  
+                }
+            else  // tip node
+                {
+                vP[tp->memoryIndex] = tp->length;
+                }
+
+            /* calculate likelihood */    
+            if (p->anc->anc == NULL)    // we reach the trichotomy
+                {
+                pA = p->anc;
+                root = p;
+                pL = root->left;
+                pR = root->right;
+                for (c=0; c<m->numChars; c++)
+                {
+                ml = mP[pL->memoryIndex*m->numChars+c];  // c-th character of left node
+                mr = mP[pR->memoryIndex*m->numChars+c];  // c-th character of right node
+                ma = mP[pA->memoryIndex*m->numChars+c];  // c-th character of ancestral node
+                vL = vP[pL->memoryIndex];
+                vR = vP[pR->memoryIndex];
+                vA = root->length;
+
+                tmplnL += 2.0 * log(2.0 * M_PI);
+                tmplnL += log(vL*vR + vR*vA + vA*vL);
+                tmplnL += (vL*powf(mr-ma, 2) + vR*powf(ml-ma, 2) + vA*powf(mr-ml, 2))/(vL*vR + vR*vA + vA*vL);
+                }
+
+                }
+            else
+                {
+                vL = vP[p->left->memoryIndex];
+                vR = vP[p->right->memoryIndex];
+                for (c=0; c<m->numChars; c++)
+                    {
+                    ml = mP[p->left->memoryIndex*m->numChars+c];   // c-th character of left node
+                    mr = mP[p->right->memoryIndex*m->numChars+c];  // c-th character of right node
+                    /* update likelihood */
+                    tmplnL += log(2.0 * M_PI) + log(vL + vR);
+                    tmplnL += powf(ml - mr, 2) / (vL + vR);
+                    // *-0.5 is performed at the end
+                    /* update character of parent node */
+                    mP[p->memoryIndex*m->numChars+c] = (vR*ml + vL*mr) / (vL + vR);
+                    }
+
+                }
+            }
+    tmplnL *= -0.5;
+    *lnL = tmplnL;
+
+    free(vP);
+    free(mP);
     free(mtmp);
 
-    /* calculate likelihood for internal nodes*/
-    for (i = 0; i < t->nIntNodes; i++) {
-        p = t->intDownPass[i];
-        memIndex = p->memoryIndex;
-        tmplnL += - (m->numChars/2) * log (2*M_PI);
-        tmplnL += - (m->numChars/2) * log (nodeVarP[p->left->memoryIndex] + nodeVarP[p->right->memoryIndex]);
-        normX = 0;
-        for (j = 0; j < m->numChars; j++){
-            normX += pow(charPrime[(p->left->memoryIndex)*m->numChars + j] - charPrime[(p->right->memoryIndex)*m->numChars + j], 2);
-        }
-        tmplnL += - (1/(nodeVarP[p->left->memoryIndex] + nodeVarP[p->right->memoryIndex])) * normX / 2;
-    }
-
-    /* calculate likelihood for root node */
-    p = t->allDownPass[t->nNodes-1];        // the tip node that is used as root
-    tipIndex = p->index;
-    memIndex = p->memoryIndex;
-    if (p->left == NULL) {
-        root = p->right;                    // the real root with trichotomy
-        nodeVar[memIndex] = p->right->length;
-    }
-    else{
-        root = p->left;
-        nodeVar[memIndex] = p->left->length;
-    }
-    tmplnL += - (m->numChars/2) * log (2*M_PI);
-    tmplnL += - (m->numChars/2) * log(nodeVar[memIndex]);
-    normX = 0;
-    for (j = 0; j < m->numChars; j++){
-        normX += pow(charPrime[(root->memoryIndex)*m->numChars + j] - (matrix[numChar - m->numChars + tipIndex * numChar + j] / 1000.0), 2);
-    }
-    tmplnL += - (1/(nodeVar[memIndex])) * normX / 2;
-    
-    /* free memory */
-    free(nodeVar);
-    free(nodeVarP);
-    free(charPrime);
+    //printf("-> lnL(zy): %lf\n", *lnL);
 
     return NO_ERROR;
+
+
 }
 
 
