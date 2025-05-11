@@ -88,6 +88,9 @@ int BMVar_Cont (TreeNode *p, int division, int chain)
     
     m = &modelSettings[division];
 
+    /* Flip BM var space */
+    FlipTiProbsSpace (m, chain, p->index);
+
     /* get base rate */
     baseRate = GetRate(division, chain);
     
@@ -7809,6 +7812,121 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 |      set of data where the effect of nuisance parameters (the root state in this case) has been removed.
 |
 -------------------------------------------------------------------*/
+int Likelihood_Cont_Zy (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
+{
+    int             i, c, tipIndex, memIndex;
+    MrBFlt          vL, vR, vA, ml, mr, ma;
+    MrBFlt          tmplnL;
+
+    MrBFlt          *vP, *mP, *mtmp;
+    Tree            *tree;
+    TreeNode        *tp, *pL, *pR, *pA, *root;
+    ModelInfo       *m;
+
+    tmplnL = 0.0;
+
+    m = &modelSettings[division];
+    tree = GetTree(m->brlens,chain,state[chain]);
+
+    /* allocate memory for BM variance */
+    vP = (MrBFlt*) SafeCalloc(tree->nNodes, sizeof(MrBFlt));
+
+    /* allocate memory for continuous characters */
+    mP = (MrBFlt*) SafeCalloc((tree->nNodes)*m->numChars, sizeof(MrBFlt));
+    /* allocate memory for a temporary array to store original data */
+    mtmp = (MrBFlt*) SafeCalloc(m->numChars, sizeof(MrBFlt));
+
+    /* read in continuous characters */
+    for (i=0; i<tree->nNodes; i++) {
+        p = tree->allDownPass[i];
+        if (p->right == NULL) {
+            tipIndex = p->index;
+            memIndex = p->memoryIndex;
+            for (c=0; c<m->numChars; c++) {
+                mtmp[c] = matrix[pos(tipIndex,c,numChar)] / 10000.0;  // get original data for tip node
+            }
+            memcpy(&mP[memIndex*m->numChars], &mtmp[0], m->numChars*sizeof(MrBFlt));
+        }
+    }
+    
+    /* calculate BM variance */
+    for (i=0; i<tree->nIntNodes; i++)
+        {
+        p = tree->intDownPass[i];
+        
+        /* find BM variance for left node */
+        tp = p->left;
+        if (tp->left != NULL && tp->right != NULL)  // internal node
+            {
+            vL = vP[tp->left->memoryIndex];
+            vR = vP[tp->right->memoryIndex];
+            vP[tp->memoryIndex] = tp->length + (vL * vR)/(vL + vR);
+            }
+        else  // tip node
+            {
+            vP[tp->memoryIndex] = tp->length;
+            }
+
+        /* find BM variance for right node */
+        tp = p->right;
+        if (tp->left != NULL && tp->right != NULL)  // internal node
+            {
+            vL = vP[tp->left->memoryIndex];
+            vR = vP[tp->right->memoryIndex];
+            vP[tp->memoryIndex] = tp->length + (vL * vR)/(vL + vR);
+            }
+        else  // tip node
+            {
+            vP[tp->memoryIndex] = tp->length;
+            }
+
+        /* calculate likelihood */
+        if (p->anc->anc == NULL)    // we reach the trichotomy
+            {
+            pA = p->anc;
+            root = p;
+            pL = root->left;
+            pR = root->right;
+            for (c=0; c<m->numChars; c++)
+                {
+                ml = mP[pL->memoryIndex*m->numChars+c];  // c-th character of left node
+                mr = mP[pR->memoryIndex*m->numChars+c];  // c-th character of right node
+                ma = mP[pA->memoryIndex*m->numChars+c];  // c-th character of ancestral node
+                vL = vP[pL->memoryIndex];
+                vR = vP[pR->memoryIndex];
+                vA = root->length;
+
+                tmplnL += 2.0 * log(2.0 * M_PI);
+                tmplnL += log(vL*vR + vR*vA + vA*vL);
+                tmplnL += (vL*powf(mr-ma, 2) + vR*powf(ml-ma, 2) + vA*powf(mr-ml, 2))/(vL*vR + vR*vA + vA*vL);
+                }
+            }
+        else
+            {
+            vL = vP[p->left->memoryIndex];
+            vR = vP[p->right->memoryIndex];
+            for (c=0; c<m->numChars; c++)
+                {
+                ml = mP[p->left->memoryIndex*m->numChars+c];   // c-th character of left node
+                mr = mP[p->right->memoryIndex*m->numChars+c];  // c-th character of right node
+                /* update likelihood */
+                tmplnL += log(2.0 * M_PI) + log(vL + vR);
+                tmplnL += powf(ml - mr, 2) / (vL + vR);
+
+                /* update character of parent node */
+                mP[p->memoryIndex*m->numChars+c] = (vR*ml + vL*mr) / (vL + vR);
+                }
+            }
+        }
+    *lnL = -0.5 * tmplnL;
+
+    free(vP);
+    free(mP);
+    free(mtmp);
+
+    return NO_ERROR;
+}
+
 int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
 {
     int         i, k, c, n, clIndex;
@@ -7816,15 +7934,10 @@ int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
     ModelInfo   *m;
     Tree        *t;
     
-
-
     m = &modelSettings[division];
     t = GetTree(m->brlens,chain,state[chain]);
 
     *lnL = 0.0;
-
-    /* use the straightforward way of calculation for debugging */
-    Likelihood_Cont_Zy (p, division, chain, lnL, whichSitePats);
 
     /* independent log likelihood values have been calculated and stored in
        the internal nodes, we just need to sum them up */
@@ -7861,136 +7974,16 @@ int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
             *lnL -= (m->numChars) * log(m->numRateCats);
             }
         }
-    printf("-> lnL(cont): %lf\n", *lnL);
-
     
-    return NO_ERROR;
-}
-
-int Likelihood_Cont_Zy (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
-{   
-    int             i, c, tipIndex, memIndex;
-    MrBFlt          vL, vR, vA, ml, mr, ma;
-    MrBFlt          tmplnL;
-
-    MrBFlt          *vP, *mP, *mtmp;
-    Tree            *tree;
-    TreeNode        *tp, *pL, *pR, *pA, *root;
-    ModelInfo       *m;
-
-    tmplnL = 0.0;
-
-    m = &modelSettings[division];
-    tree = GetTree(m->brlens,chain,state[chain]);
-
-
-    /* allocate memory for BM variance */
-    vP = (MrBFlt*) SafeCalloc(tree->nNodes, sizeof(MrBFlt)); 
-
-    /* allocate memory for continuous characters */
-    mP = (MrBFlt*) SafeCalloc((tree->nNodes)*m->numChars, sizeof(MrBFlt));
-    /* allocate memory for a temporary array to store original data */
-    mtmp = (MrBFlt*) SafeCalloc(m->numChars, sizeof(MrBFlt));
-
-    /* read in continuous characters */
-    for (i=0; i<tree->nNodes; i++)
-    {
-    p = tree->allDownPass[i];
-    if (p->anc == NULL || (p->left == NULL && p->right ==NULL))
-        {
-        tipIndex = p->index;                   
-        memIndex = p->memoryIndex;
-        for (c=0; c<m->numChars; c++) 
-            {
-            mtmp[c] = matrix[numChar-m->numChars+tipIndex*numChar+c] / 10000.0;  // get original data for tip node
-            }
-        memcpy(&mP[memIndex*m->numChars], &mtmp[0], m->numChars*sizeof(MrBFlt));
-        }
-    }
-    
-    /* calculate BM variance */
-    for (i=0; i<tree->nIntNodes; i++)
-            {
-            p = tree->intDownPass[i];
-            
-            /* find BM variance for left node */
-            tp = p->left;
-            if (tp->left != NULL && tp->right != NULL)  // internal node
-                {
-                vL = vP[tp->left->memoryIndex];
-                vR = vP[tp->right->memoryIndex];
-                vP[tp->memoryIndex] = tp->length + (vL * vR)/(vL + vR);  
-                }
-            else  // tip node
-                {
-                vP[tp->memoryIndex] = tp->length;
-                }
-
-            /* find BM variance for right node */
-            tp = p->right;
-            if (tp->left != NULL && tp->right != NULL)  // internal node
-                {
-                vL = vP[tp->left->memoryIndex];
-                vR = vP[tp->right->memoryIndex];
-                vP[tp->memoryIndex] = tp->length + (vL * vR)/(vL + vR);  
-                }
-            else  // tip node
-                {
-                vP[tp->memoryIndex] = tp->length;
-                }
-
-            /* calculate likelihood */    
-            if (p->anc->anc == NULL)    // we reach the trichotomy
-                {
-                pA = p->anc;
-                root = p;
-                pL = root->left;
-                pR = root->right;
-                for (c=0; c<m->numChars; c++)
-                {
-                ml = mP[pL->memoryIndex*m->numChars+c];  // c-th character of left node
-                mr = mP[pR->memoryIndex*m->numChars+c];  // c-th character of right node
-                ma = mP[pA->memoryIndex*m->numChars+c];  // c-th character of ancestral node
-                vL = vP[pL->memoryIndex];
-                vR = vP[pR->memoryIndex];
-                vA = root->length;
-
-                tmplnL += 2.0 * log(2.0 * M_PI);
-                tmplnL += log(vL*vR + vR*vA + vA*vL);
-                tmplnL += (vL*powf(mr-ma, 2) + vR*powf(ml-ma, 2) + vA*powf(mr-ml, 2))/(vL*vR + vR*vA + vA*vL);
-                }
-
-                }
-            else
-                {
-                vL = vP[p->left->memoryIndex];
-                vR = vP[p->right->memoryIndex];
-                for (c=0; c<m->numChars; c++)
-                    {
-                    ml = mP[p->left->memoryIndex*m->numChars+c];   // c-th character of left node
-                    mr = mP[p->right->memoryIndex*m->numChars+c];  // c-th character of right node
-                    /* update likelihood */
-                    tmplnL += log(2.0 * M_PI) + log(vL + vR);
-                    tmplnL += powf(ml - mr, 2) / (vL + vR);
-                    // *-0.5 is performed at the end
-                    /* update character of parent node */
-                    mP[p->memoryIndex*m->numChars+c] = (vR*ml + vL*mr) / (vL + vR);
-                    }
-
-                }
-            }
-    tmplnL *= -0.5;
-    *lnL = tmplnL;
-
-    free(vP);
-    free(mP);
-    free(mtmp);
-
-    //printf("-> lnL(zy): %lf\n", *lnL);
+    // MrBFlt tmpLnL = 0.0;
+    /* use the straightforward way of calculation for debugging */
+    // Likelihood_Cont_Zy (p, division, chain, &tmpLnL, whichSitePats);
+    // printf("-> lnL(zy_w): %lf", tmpLnL);
+    // printf("   lnL(cont): %lf", *lnL);
+    // if (fabs(*lnL - tmpLnL) > 0.01) printf("   diff!\n");
+    // else                            printf("\n");
 
     return NO_ERROR;
-
-
 }
 
 
@@ -8312,41 +8305,21 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL)
     if (m->dataType == CONTINUOUS)
         {
         /* pass over tree */
-        for (i=0; i<tree->nIntNodes; i++)
+        for (i=0; i<tree->nNodes; i++)
             {
-            p = tree->intDownPass[i];
+            p = tree->allDownPass[i];
             
             /* update the variances */
-            if (p->left->upDateTi == YES)
+            if (p->upDateTi == YES || p->upDateCl == YES)
                 {
-                FlipTiProbsSpace (m, chain, p->left->index);
-                BMVar_Cont (p->left, d, chain);
-                }
-            
-            if (p->right->upDateTi == YES)
-                {
-                FlipTiProbsSpace (m, chain, p->right->index);
-                BMVar_Cont (p->right, d, chain);
-                }
-            
-            if (tree->isRooted == NO && p->anc->anc == NULL)
-                {
-                FlipTiProbsSpace (m, chain, p->index);
                 BMVar_Cont (p, d, chain);
                 }
             
-            if (p->upDateCl == YES)
+            if (p->right != NULL && p->upDateCl == YES)
                 {
-                if (tree->isRooted == NO)
+                if (tree->isRooted == NO && p->anc->anc == NULL)
                     {
-                    if (p->anc->anc == NULL)
-                        {
-                        TIME(m->CondLikeRoot (p, d, chain), CPUCondLikeRoot);
-                        }
-                    else
-                        {
-                        TIME(m->CondLikeDown (p, d, chain), CPUCondLikeDown);
-                        }
+                    TIME(m->CondLikeRoot (p, d, chain), CPUCondLikeRoot);
                     }
                 else
                     {

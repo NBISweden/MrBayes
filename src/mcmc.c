@@ -7035,7 +7035,7 @@ int InitInvCondLikes (void)
 -------------------------------------------------------------------------*/
 int InitParsSets (void)
 {
-    int             c, i, j, k, d, nIntNodes, nNodes,
+    int             c, i, j, d, nIntNodes, nNodes,
                     nuc1, nuc2, nuc3, codingNucCode, allNucCode;
     BitsLong        allAmbig, x, x1, x2, x3, *longPtr, bitsLongOne=1;
     long            state;
@@ -15915,7 +15915,7 @@ void ResetFlips (int chain)
 #endif
 
         /* skip the following if we have irrelevant model or data types */
-        if (m->upDateCl != YES || m->parsModelId == YES || m->dataType == CONTINUOUS)
+        if (m->upDateCl != YES || m->parsModelId == YES)
             continue;
         
 #if defined (BEAGLE_ENABLED)
@@ -15928,7 +15928,8 @@ void ResetFlips (int chain)
                 m->rescaleFreq[chain] = m->rescaleFreqOld;
             }
 #else
-        FlipSiteScalerSpace (m, chain);
+        if (m->dataType != CONTINUOUS)
+            FlipSiteScalerSpace (m, chain);
 #endif
         if (m->upDateCijk == YES && m->nCijkParts > 0)
             FlipCijkSpace (m, chain);
@@ -15938,10 +15939,12 @@ void ResetFlips (int chain)
         for (i=0; i<tree->nNodes; i++)
             {
             p = tree->allDownPass[i];
-            if (p->upDateTi == YES)
+            if (p->upDateTi == YES || (m->dataType == CONTINUOUS && p->upDateCl == YES))
                 FlipTiProbsSpace (m, chain, p->index);
-            if (p->right != NULL)    /* do not flip terminals in case these flags are inappropriately set by moves */
+            if (p->right != NULL)
                 {
+                /* do not flip terminals in case these flags are inappropriately set by moves
+                   do not consider continuous data using beagle either */
                 if (p->upDateCl == YES)
                     {
                     FlipCondLikeSpace (m, chain, p->index);
@@ -15951,7 +15954,8 @@ void ResetFlips (int chain)
                         (m->rescaleBeagleAll == YES && isScalerNode[p->index] == YES))
                         FlipNodeScalerSpace (m, chain, p->index);
 #else
-                    FlipNodeScalerSpace (m, chain, p->index);
+                    if (m->dataType != CONTINUOUS)
+                        FlipNodeScalerSpace (m, chain, p->index);
 #endif
                     }
 
