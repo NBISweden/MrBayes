@@ -332,6 +332,13 @@ int CondLikeRoot_Cont (TreeNode *p, int division, int chain)
 }
 
 
+int CondLikeUp_Cont (TreeNode *p, int division, int chain)
+{
+    /* place holder, do nothing at the moment */
+    return NO_ERROR;
+}
+
+
 /*----------------------------------------------------------------
 |
 |   CondLikeDown_Bin: binary model with or without rate variation
@@ -7803,7 +7810,7 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 
 /*------------------------------------------------------------------
 |
-|   Likelihood_Cont: likelihood for continuous traits
+|   Likelihood_Cont: likelihood for continuous traits   //chi
 |
 |   This function calculates the restricted maximum likelihood (REML)
 |      using phylogenetic independent contrasts (PICs) (Felsenstein 1973, 1981, 1985).

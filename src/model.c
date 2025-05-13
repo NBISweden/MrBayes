@@ -18968,7 +18968,7 @@ int SetModelInfo (void)
                 if (!strcmp(mp->nucModel,"Codon") && !strcmp(mp->omegaVar,"Equal"))
                     m->printAncStates = YES;
                 }
-            else if (m->dataType == STANDARD || m->dataType == RESTRICTION)
+            else if (m->dataType == STANDARD || m->dataType == RESTRICTION || m->dataType == CONTINUOUS)
                 m->printAncStates = YES;
             if (m->printAncStates == YES)
                 inferAncStates = YES;

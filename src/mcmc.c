@@ -187,6 +187,7 @@ int       PrintAncStates_Bin (TreeNode *p, int division, int chain);
 int       PrintAncStates_Gen (TreeNode *p, int division, int chain);
 int       PrintAncStates_NUC4 (TreeNode *p, int division, int chain);
 int       PrintAncStates_Std (TreeNode *p, int division, int chain);
+int       PrintAncStates_Cont (TreeNode *p, int division, int chain);
 int       PrintCheckPoint (long long gen);
 int       PrintMCMCDiagnosticsToFile (long long curGen);
 #if defined (MPI_ENABLED)
@@ -11110,7 +11111,7 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
     int             c, i, k, *rateCat, hasPInvar, nGammaCats;
     MrBFlt          *bsVals;
     CLFlt           *cL, sum, pInvar=0.0, bs[4], freq, f;
-    const CLFlt     *clFP, *clInvar=NULL, *lnScaler,**clP;
+    const CLFlt     *clFP, *clInvar=NULL, *lnScaler, **clP;
     char            *tempStr;
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
@@ -11281,7 +11282,7 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 {
     int             c, i, j, k, s, nStates, numReps;
     MrBFlt          *bsBase, *bs, freq;
-    CLFlt           *clFP, *cL, sum,** clP;
+    CLFlt           *clFP, *cL, sum, **clP;
     char            *tempStr;
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
@@ -11385,6 +11386,51 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
             if (AddToPrintString (tempStr) == ERROR) return (ERROR);
             }
         }
+    free (tempStr);
+    return NO_ERROR;
+}
+
+
+/*----------------------------------------------------------------
+|
+|   PrintAncStates_Cont: print ancestral states of continuous
+|       characters with or without rate variation
+|
+-----------------------------------------------------------------*/
+int PrintAncStates_Cont (TreeNode *p, int division, int chain)
+{
+    int             c, k, i;
+    CLFlt           *mP, avg;
+    char            *tempStr;
+    int             tempStrSize = TEMPSTRSIZE;
+    ModelInfo       *m;
+    
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
+    if (!tempStr)
+        {
+        MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
+        return (ERROR);
+        }
+
+    /* find model settings for this division */
+    m = &modelSettings[division];
+
+    mP = m->ancStates[m->condLikeIndex[chain][p->index]];
+    
+    /* print the ancestral states */
+    for (c=0; c<m->numChars; c++)
+        {
+        avg = mP[c];
+        for (k=1; k<m->numRateCats; k++)
+            {
+            i = k * (m->numChars) + c;
+            avg = (avg * k + mP[i]) / (k + 1.0);
+            }
+
+        SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(avg));
+        if (AddToPrintString (tempStr) == ERROR) return (ERROR);
+        }
+    
     free (tempStr);
     return NO_ERROR;
 }
@@ -12910,7 +12956,12 @@ int PrintStates (long long curGen, int coldId)
                         {
                         if (partitionId[j][partitionNum] - 1 != d || charInfo[j].isExcluded == YES || printedChar[j] == YES)
                             continue;
-                        if (mp->dataType == STANDARD)
+                        if (mp->dataType == CONTINUOUS)
+                            {
+                            SafeSprintf (&tempStr, &tempStrSize, "\tm'{%d@%s}", j+1, constraintNames[i]);
+                            if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+                            }
+                        else if (mp->dataType == STANDARD)
                             {
                             for (k=0; k<m->nStates[compCharPos[j] - m->compCharStart]; k++)
                                 {
@@ -18523,7 +18574,8 @@ int SetLikeFunctions (void)
                 m->CondLikeDown   = &CondLikeDown_Cont;
                 m->CondLikeRoot   = &CondLikeRoot_Cont;
                 m->Likelihood     = &Likelihood_Cont;
-                // m->PrintAncStates = &PrintAncStates_Cont;
+                m->CondLikeUp     = &CondLikeUp_Cont;
+                m->PrintAncStates = &PrintAncStates_Cont;
                 // m->PrintSiteRates = &PrintSiteRates_Cont;
                 }
             }
