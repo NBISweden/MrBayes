@@ -7208,7 +7208,7 @@ int Move_LSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio, Mr
             m = &modelSettings[division];
 
             nStates = m->numModelStates;
-            if (m->dataType == STANDARD)
+            if (m->dataType == STANDARD || m->dataType == CONTINUOUS)
                 nStates = 2;
             rateMult = GetRate(division, chain);
 
@@ -10173,7 +10173,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 
             /* find nStates and ratemult */
             nStates = m->numModelStates;
-            if (m->dataType == STANDARD)
+            if (m->dataType == STANDARD || m->dataType == CONTINUOUS)
                 nStates = 2;
             rateMult = GetRate(division, chain);
 
@@ -11452,7 +11452,7 @@ int Move_ParsSPR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
                 
                 /* find nStates and ratemult */
                 nStates = m->numModelStates;
-                if (m->dataType == STANDARD)
+                if (m->dataType == STANDARD || m->dataType == CONTINUOUS)
                     nStates = 2;
                 v_typical = length/m->numUncompressedChars + 0.0001;
                 
@@ -12111,7 +12111,7 @@ int Move_ParsSPRClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorR
 
             /* find nStates and v approximation using parsimony-based s/n approximation */
             nStates = m->numModelStates;
-            if (m->dataType == STANDARD)
+            if (m->dataType == STANDARD || m->dataType == CONTINUOUS)
                 nStates = 2;
             v_approx = length/m->numUncompressedChars + 0.0001;
             
@@ -12772,7 +12772,7 @@ int Move_ParsSPRClock_Fossil (Param *param, int chain, RandLong *seed, MrBFlt *l
             
             /* find nStates and v approximation using parsimony-based s/n approximation */
             nStates = m->numModelStates;
-            if (m->dataType == STANDARD)
+            if (m->dataType == STANDARD || m->dataType == CONTINUOUS)
                 nStates = 2;
             v_approx = length/m->numUncompressedChars + 0.0001;
             
@@ -13891,7 +13891,7 @@ int Move_ParsTBR2 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio
                     
                 /* find nStates and ratemult */
                 nStates = m->numModelStates;
-                if (m->dataType == STANDARD)
+                if (m->dataType == STANDARD || m->dataType == CONTINUOUS)
                     nStates = 2;
                 v_typical = length/m->numUncompressedChars + 0.0001;
                 

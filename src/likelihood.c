@@ -7975,8 +7975,8 @@ int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
             }
         }
     
-    // MrBFlt tmpLnL = 0.0;
     /* use the straightforward way of calculation for debugging */
+    // MrBFlt tmpLnL = 0.0;
     // Likelihood_Cont_Zy (p, division, chain, &tmpLnL, whichSitePats);
     // printf("-> lnL(zy_w): %lf", tmpLnL);
     // printf("   lnL(cont): %lf", *lnL);
@@ -8310,12 +8310,12 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL)
             p = tree->allDownPass[i];
             
             /* update the variances */
-            if (p->upDateTi == YES || p->upDateCl == YES)
+            if (p->anc != NULL && (p->upDateTi == YES || p->upDateCl == YES))
                 {
                 BMVar_Cont (p, d, chain);
                 }
             
-            if (p->right != NULL && p->upDateCl == YES)
+            if (p->right != NULL && p->upDateCl == YES)  // internal node
                 {
                 if (tree->isRooted == NO && p->anc->anc == NULL)
                     {
