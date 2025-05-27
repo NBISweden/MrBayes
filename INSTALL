@@ -197,15 +197,10 @@ will also disable FMA.
 Picking up the Beagle library:
 ------------------------------------------------------------------------
 
-MrBayes uses the Beagle library
+If configured using "--with-beagle", MrBayes uses the Beagle library
 (https://github.com/beagle-dev/beagle-lib) if it is available.  It will
 make use of release 3.1.2 of Beagle but should also work with release
 2.1.3 of the library.
-
-Assuming Beagle was compiled and installed in a standard location, it
-will be picked up by the "configure" script automatically.  If it isn't
-found, or the "configure" script is run with "--without-beagle", Beagle
-will not be used.
 
 If Beagle is installed in a non-default location, there are three ways
 of telling the "configure" script how to find it:
