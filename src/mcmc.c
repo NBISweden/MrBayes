@@ -197,6 +197,7 @@ void      PrintParamValues (Param *p, int chain, char *s);
 int       PrintParsMatrix (void);
 int       PrintSiteRates_Gen (TreeNode *p, int division, int chain);
 int       PrintSiteRates_Std (TreeNode *p, int division, int chain);
+int       PrintSiteRates_Cont (TreeNode *p, int division, int chain);
 int       PrintStates (long long curGen, int coldId);
 int       PrintStatesToFiles (long long curGen);
 int       PrintSwapInfo (void);
@@ -11400,7 +11401,7 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 int PrintAncStates_Cont (TreeNode *p, int division, int chain)
 {
     int             c, k, i;
-    CLFlt           *mP, avg;
+    CLFlt           *aStates, avg;
     char            *tempStr;
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
@@ -11415,16 +11416,16 @@ int PrintAncStates_Cont (TreeNode *p, int division, int chain)
     /* find model settings for this division */
     m = &modelSettings[division];
 
-    mP = m->ancStates[m->condLikeIndex[chain][p->index]];
+    aStates = m->ancStates[m->condLikeIndex[chain][p->index]];
     
     /* print the ancestral states */
     for (c=0; c<m->numChars; c++)
         {
-        avg = mP[c];
+        avg = aStates[c];
         for (k=1; k<m->numRateCats; k++)
             {
             i = k * (m->numChars) + c;
-            avg = (avg * k + mP[i]) / (k + 1.0);
+            avg = (avg * k + aStates[i]) / (k + 1.0);
             }
 
         SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(avg));
@@ -12556,7 +12557,8 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
                 siteRates[c] += (CLFlt) (catLike * catRate[k]);
                 siteLike += catLike;
                 }
-            siteRates[c] *= (CLFlt) (baseRate / siteLike);  /* category frequencies and site scaler cancel out */
+            /* category frequencies and site scaler cancel out */
+            siteRates[c] *= (CLFlt) (baseRate / siteLike);
             }
         }
     else
@@ -12580,7 +12582,8 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
                 invLike += (*(clInvar++)) * bs[j];
             siteLike += (invLike /  exp (lnScaler[c]) * pInvar);
             /* we do not need to add the invariable category into siteRates before rescaling because the rate is 0.0 */
-            siteRates[c] *= (CLFlt) (baseRate / siteLike);  /* site scaler cancels out; category frequencies dealt with above */
+            /* site scaler cancels out; category frequencies dealt with above */
+            siteRates[c] *= (CLFlt) (baseRate / siteLike);
             }
         }
         
@@ -12652,7 +12655,8 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
             siteRates[c] += (CLFlt) (catLike * catRate[k]);
             siteLike += catLike;
             }
-        siteRates[c] *= (CLFlt)(baseRate / siteLike);   /* category frequencies and site scaler cancel out */
+        /* category frequencies and site scaler cancel out */
+        siteRates[c] *= (CLFlt) (baseRate / siteLike);
         }
         
     /* print the resulting site rates cycling over uncompressed chars */
@@ -12665,6 +12669,44 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
         if (AddToPrintString (tempStr) == ERROR) return (ERROR);
         }
 
+    free (tempStr);
+    return NO_ERROR;
+}
+
+
+/*------------------------------------------------------------------
+|
+|   PrintSiteRates_Cont: continuous model with rate variation
+|
+-------------------------------------------------------------------*/
+int PrintSiteRates_Cont (TreeNode *p, int division, int chain)
+{
+    int             c;
+    CLFlt           *siteRates;
+    char            *tempStr;
+    int             tempStrSize = TEMPSTRSIZE;
+    ModelInfo       *m;
+    
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
+    if (!tempStr)
+        {
+        MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
+        return (ERROR);
+        }
+
+    /* find model settings for this division */
+    m = &modelSettings[division];
+    
+    /* find the site rates already calculated */
+    siteRates = m->condLikes[m->condLikeIndex[0][0]];
+    
+    /* print the site rates */
+    for (c=0; c<m->numChars; c++)
+        {
+        SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(siteRates[c]));
+        if (AddToPrintString (tempStr) == ERROR) return (ERROR);
+        }
+    
     free (tempStr);
     return NO_ERROR;
 }
@@ -18576,7 +18618,7 @@ int SetLikeFunctions (void)
                 m->Likelihood     = &Likelihood_Cont;
                 m->CondLikeUp     = &CondLikeUp_Cont;
                 m->PrintAncStates = &PrintAncStates_Cont;
-                // m->PrintSiteRates = &PrintSiteRates_Cont;
+                m->PrintSiteRates = &PrintSiteRates_Cont;
                 }
             }
         else

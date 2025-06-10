@@ -7937,7 +7937,8 @@ int Likelihood_Cont_Zy (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
 int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
 {
     int         i, k, c, n, clIndex;
-    MrBFlt      like, lmax;
+    MrBFlt      siteLike, catLike, *catRate, baseRate, lmax, lnCatL[20];
+    CLFlt       *siteRates;
     ModelInfo   *m;
     Tree        *t;
     
@@ -7948,37 +7949,55 @@ int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
 
     /* independent log likelihood values have been calculated and stored in
        the internal nodes, we just need to sum them up */
-    for (n=0; n<t->nIntNodes; n++)
+    for (c=0; c<m->numChars; c++)
         {
-        p = t->intDownPass[n];
-        clIndex = m->condLikeIndex[chain][p->index];
-            
         if (m->numRateCats == 1)
             {
-            for (c=0; c<m->numChars; c++)
+            for (n=0; n<t->nIntNodes; n++)
+                {
+                p = t->intDownPass[n];
+                clIndex = m->condLikeIndex[chain][p->index];
                 *lnL += m->condLikes[clIndex][c];
+                }
             }
         else  // account for rate variation across characters
             {
-            for (c=0; c<m->numChars; c++)
+            siteRates = m->condLikes[m->condLikeIndex[0][0]];
+            baseRate = GetRate(division, chain);
+            catRate = GetParamSubVals (m->shape, chain, state[chain]);
+            
+            for (k=0; k<m->numRateCats; k++)
                 {
-                lmax = m->condLikes[clIndex][c];
-                for (k=1; k<m->numRateCats; k++)
+                lnCatL[k] = 0.0;  // log likelihood of category k
+                for (n=0; n<t->nIntNodes; n++)
                     {
+                    p = t->intDownPass[n];
+                    clIndex = m->condLikeIndex[chain][p->index];
                     i = k * (m->numChars) + c;
-                    if (lmax < m->condLikes[clIndex][i])
-                        lmax = m->condLikes[clIndex][i];
+                    lnCatL[k] += m->condLikes[clIndex][i];
                     }
-                
-                like = 0.0;
-                for (k=0; k<m->numRateCats; k++)
-                    {
-                    i = k * (m->numChars) + c;
-                    like += exp(m->condLikes[clIndex][i] - lmax);
-                    }
-                *lnL += log(like) + lmax;  // for numerical stability
                 }
-            *lnL -= (m->numChars) * log(m->numRateCats);
+            
+            lmax = lnCatL[0];
+            for (k=1; k<m->numRateCats; k++)
+                {
+                if (lmax < lnCatL[k])
+                    lmax = lnCatL[k];
+                }  // for numerical stability
+            
+            siteLike = siteRates[c] = 0.0;
+            for (k=0; k<m->numRateCats; k++)
+                {
+                catLike = exp(lnCatL[k] - lmax);
+                siteLike += catLike;
+                siteRates[c] += (CLFlt) (catLike * catRate[k]);
+                }
+            
+            /* average over the rate categories */
+            *lnL += log(siteLike) + lmax - log(m->numRateCats);
+           
+            /* also calculate and store the site rates */
+            siteRates[c] *= (CLFlt) (baseRate / siteLike);
             }
         }
     
