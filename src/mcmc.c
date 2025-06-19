@@ -6692,7 +6692,7 @@ int InitContStates (void)
                         {
                         MrBayesPrint ("%s   Continuous characters are assumed normalized (between 0 and 1), but found\n", spacer);
                         MrBayesPrint ("%s    %.3f in taxon %d char %d ...\n", spacer, m->ancStates[clIndex][c], i+1, c+1);
-                        MrBayesPrint ("%s   Please set 'nst=2' in 'lset' if the characters are standardized or unscaled.\n", spacer);
+                        MrBayesPrint ("%s   Please set 'nst=2' in 'lset' if the characters are standardized (or unscaled).\n", spacer);
                         return ERROR;
                         }
                     }

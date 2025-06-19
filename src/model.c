@@ -3332,9 +3332,9 @@ int DoLsetParm (char *parmName, char *tkn)
                                 else
                                     {
                                     if (nApplied == 0 && numCurrentDivisions == 1)
-                                        MrBayesPrint ("%s   Characters are not normalized\n", spacer);
+                                        MrBayesPrint ("%s   Characters are standardized\n", spacer);
                                     else
-                                        MrBayesPrint ("%s   Characters are not normalized for partition %d\n", spacer, i+1);
+                                        MrBayesPrint ("%s   Characters are standardized for partition %d\n", spacer, i+1);
                                     }
                                 }
                             else {
@@ -23644,7 +23644,7 @@ int ShowModel (void)
             if (!strcmp(modelParams[i].nst, "1"))
                 MrBayesPrint ("%s                     Characters are normalized (between 0 and 1)\n", spacer);
             else
-                MrBayesPrint ("%s                     Characters are not normalized\n", spacer);
+                MrBayesPrint ("%s                     Characters are standardized (mean 0 stdev 1)\n", spacer);
             
             if (!strcmp(modelParams[i].brownCorrPr, "Fixed") && AreDoublesEqual(modelParams[i].brownCorrFix, 0.0, ETA)==YES)
                 MrBayesPrint ("%s         Model     = Independent Brownian motion\n", spacer);
