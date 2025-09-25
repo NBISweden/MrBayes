@@ -7808,19 +7808,12 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 }
 
 
-/*------------------------------------------------------------------
-|
-|   Likelihood_Cont: likelihood for continuous traits   //chi
-|
-|   This function calculates the restricted maximum likelihood (REML)
-|      using phylogenetic independent contrasts (PICs) (Felsenstein 1973, 1981, 1985).
-|   These contrasts, under a BM model, are independent and normally distributed.
-|   The “restricted” part of REML refers to the fact that it calculates likelihood based on a transformed
-|      set of data where the effect of nuisance parameters (the root state in this case) has been removed.
-|
--------------------------------------------------------------------*/
-int Likelihood_Cont_Zy (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
+int Likelihood_Cont_Debug (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
 {
+    /* Debug function for continuous-trait likelihood.
+        This works only for a single partition without among-character rate variation.
+        Programmed by Ziye Wang */
+    
     int             i, c, tipIndex, memIndex;
     MrBFlt          vL, vR, vA, ml, mr, ma;
     MrBFlt          tmplnL;
@@ -7934,6 +7927,17 @@ int Likelihood_Cont_Zy (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     return NO_ERROR;
 }
 
+/*------------------------------------------------------------------
+|
+|   Likelihood_Cont: likelihood for continuous traits   //chi
+|
+|   This function calculates the restricted maximum likelihood (REML)
+|      using phylogenetic independent contrasts (PICs) (Felsenstein 1973, 1981, 1985).
+|   These contrasts, under a BM model, are independent and normally distributed.
+|   The “restricted” part of REML refers to the fact that it calculates likelihood based on a transformed
+|      set of data where the effect of nuisance parameters (the root state in this case) has been removed.
+|
+-------------------------------------------------------------------*/
 int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
 {
     int         i, k, c, n, clIndex;
@@ -8001,13 +8005,15 @@ int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
             }
         }
     
+#if defined (DEBUG_LIKELIHOOD_CONT)
     /* use the straightforward way of calculation for debugging */
-    // MrBFlt tmpLnL = 0.0;
-    // Likelihood_Cont_Zy (p, division, chain, &tmpLnL, whichSitePats);
-    // printf("-> lnL(zy_w): %lf", tmpLnL);
-    // printf("   lnL(cont): %lf", *lnL);
-    // if (fabs(*lnL - tmpLnL) > 0.01) printf("   diff!\n");
-    // else                            printf("\n");
+    MrBFlt tmpLnL = 0.0;
+    Likelihood_Cont_Debug (p, division, chain, &tmpLnL, whichSitePats);
+    printf("-> lnL(dbug): %lf", tmpLnL);
+    printf("   lnL(cont): %lf", *lnL);
+    if (fabs(*lnL - tmpLnL) > 0.01) printf("\tdiff!\n");
+    else                            printf("\n");
+#endif
 
     return NO_ERROR;
 }
