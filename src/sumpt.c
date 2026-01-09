@@ -7916,7 +7916,7 @@ int ShowConPhylogram (FILE *fp, PolyTree *t, int screenWidth)
     maxLabelLength = 20;
 
     /* allocate space for label, printLine and markLine */
-    printLine = (char *) SafeCalloc ((2*screenWidth+2),sizeof(char)); 
+    printLine = (char *) SafeCalloc (2*screenWidth+2, sizeof(char)); 
     label = (char *) SafeCalloc (maxLabelLength+1, sizeof(char));
     if (!printLine || !label)
         return ERROR;
@@ -8152,11 +8152,11 @@ int ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport)
     isTreeDivided = NO;
     
     /* allocate space for printLine, markLine and label */
-    printLine = (char *) SafeCalloc (maxLength+1+(2*screenWidth+2),sizeof(char));
-    if (!printLine)
+    printLine = (char *) SafeCalloc (2*screenWidth+2, sizeof(char)); 
+    label = (char *) SafeCalloc (maxLength+1, sizeof(char));
+    if (!printLine || !label)
         return ERROR;
     markLine = printLine + screenWidth + 1;
-    label = markLine + screenWidth + 1;
 
     /* get fresh internal node indices */
     k = t->nNodes - t->nIntNodes;
