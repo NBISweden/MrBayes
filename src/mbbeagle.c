@@ -290,7 +290,7 @@ int createBeagleInstance(ModelInfo *m, int nCijkParts, int numRateCats, int numM
             fprintf(stdout, "\n");
 #       endif
 
-        if (rBList != NULL)
+        if (rBList != NULL && rBList->length > 0)
             {
             double fastestTime = rBList->list[0].benchmarkResult;
             resource = rBList->list[0].number;
@@ -360,7 +360,7 @@ MrBayesPrint ("%s      MODEL STATES: %d", spacer, numModelStates);
 
 #if defined (BEAGLE_V3_ENABLED)
     /* use level-order traversal with CUDA implementation or OpenCL with multi-partition */
-    if(((details.flags & BEAGLE_FLAG_FRAMEWORK_CUDA) && division < 1 ) ||
+    if (((details.flags & BEAGLE_FLAG_FRAMEWORK_CUDA) && division < 1 ) ||
         ((details.flags & BEAGLE_FLAG_FRAMEWORK_OPENCL) && division < 0))
         {
         for (i=0; i<(numTrees * 2 * numGlobalChains); i++)
@@ -1277,7 +1277,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
 #   if defined (MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT)
     countALL++;
 #   endif
-    if (*lnL > DBL_MAX || *lnL < -DBL_MAX) {
+    if (*lnL > DBL_MAX || *lnL < -DBL_MAX || *lnL != *lnL) {
         beagleReturn = BEAGLE_ERROR_FLOATING_POINT;
     }
     if (beagleReturn == BEAGLE_ERROR_FLOATING_POINT)
@@ -1312,6 +1312,12 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
             for (c=0; c<m->numDummyChars; c++)
                 {
                 pUnobserved +=  exp((double)m->logLikelihoods[c]);
+                }
+            if (1.0 - pUnobserved < LIKE_EPSILON)
+                {
+                abortMove = YES;
+                (*lnL) = MRBFLT_NEG_MAX;
+                return NO_ERROR;
                 }
             /* correct for absent characters */
             (*lnL) -= log (1-pUnobserved) * (m->numUncompressedChars);
@@ -1905,6 +1911,7 @@ void LaunchBEAGLELogLikeMultiPartition(int* divisions, int divisionCount, int ch
                 {
                 dIndex = rescaleDivisions[d];
                 m = &modelSettings[dIndex];
+                tree = GetTree(m->brlens, chain, state[chain]);
 
                 isScalerNode = m->isScalerNode[chain];
                 ResetScalersPartition (isScalerNode, tree, m->rescaleFreqNew);
@@ -2854,7 +2861,7 @@ int TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, int 
     countALL++;
 #   endif
 
-    if (*lnL > DBL_MAX || *lnL < -DBL_MAX) {
+    if (*lnL > DBL_MAX || *lnL < -DBL_MAX || *lnL != *lnL) {
         beagleReturn = BEAGLE_ERROR_FLOATING_POINT;
     }
 
@@ -2929,6 +2936,11 @@ int TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, int 
                             {
                             pUnobserved +=  exp((double)modelSettings[0].logLikelihoodsAll[site]);
                             site++;
+                            }
+                        if (1.0 - pUnobserved < LIKE_EPSILON)
+                            {
+                            abortMove = YES;
+                            return NO_ERROR;
                             }
                         /* correct for absent characters */
                         (*lnLDiv) -= log (1-pUnobserved) * (m->numUncompressedChars);
