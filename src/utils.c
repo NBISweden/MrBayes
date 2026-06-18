@@ -4740,7 +4740,7 @@ int IsClockSatisfied (Tree *t, MrBFlt tol)
             {
             if (p->isDated == YES)
                 {
-                continue;
+                length = p->nodeDepth;
                 }
             else
                 length = 0.0;
@@ -4766,7 +4766,7 @@ int IsClockSatisfied (Tree *t, MrBFlt tol)
                 }
             }
         }
-    if (foundFirstLength == YES && firstLength < BRLENS_MIN)
+    if (firstLength < BRLENS_MIN)
         isClockLike = NO;
 
     return (isClockLike);
