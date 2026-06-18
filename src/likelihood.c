@@ -10543,10 +10543,10 @@ int TiProbs_Res (TreeNode *p, int division, int chain)
 ------------------------------------------------------------------*/
 int TiProbs_Std (TreeNode *p, int division, int chain)
 {
-    int         b, c, i, j, k, n, s, nStates, index=0, index2;
-    MrBFlt      v, eV1, eV2, eV3, eV4, eV5, *catRate,
-                baseRate, theRate, pi, f1, f2, f3, f4, f5, f6, f7, root,
-                *eigenValues, *cijk, sum, *bs, mu, length;
+    int         b, c, i, j, k, n, s, nStates, index=0;
+    MrBFlt      v, eV1, *catRate, baseRate, theRate,
+                *eigenValues, *cijk, sum, *bs, mu, length,
+                stdEv[MAX_STD_STATES][MAX_STD_STATES], expEig[MAX_STD_STATES];
     CLFlt       pNoChange, pChange, *tiP;
     ModelInfo   *m;
 #   if defined (DEBUG_TIPROBS_STD)
@@ -10650,225 +10650,53 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
 #   endif
             }
 
-        /* TODO: need a general algorithm for ordered characters */
-        /* 3-state ordered character */
-        if (m->isTiNeeded[MAX_STD_STATES-1] == YES)
+        /* general algorithm for ordered characters (3 or more states).     */
+        /* The ordered model with equal state frequencies is a continuous-  */
+        /* time random walk on a path graph with reflecting boundaries. Its */
+        /* symmetric rate matrix, rescaled to a mean rate of 1, has a known */
+        /* eigendecomposition: the eigenvectors form the orthonormal DCT-II */
+        /* basis                                                            */
+        /*     u_0(a) = sqrt(1/n)                                           */
+        /*     u_s(a) = sqrt(2/n) * cos((2a+1)*s*pi/(2n)),  s = 1..n-1      */
+        /* and the eigenvalues are                                          */
+        /*     mu_s = (n/(n-1)) * (1 - cos(s*pi/n)),  s = 0..n-1.           */
+        /* P(v)[a][b] = sum_s u_s(a) u_s(b) exp(-mu_s * v).                 */
+        for (nStates=3; nStates<=MAX_STD_STATES; nStates++)
             {
-            nStates = 3;
-            for (k=0; k<m->numRateCats; k++)
+            if (m->isTiNeeded[nStates+MAX_STD_STATES-4] == NO)
+                continue;
+
+            /* compute orthonormal eigenvectors (independent of branch length) */
+            for (i=0; i<nStates; i++)
                 {
-                /* calculate probabilities */
-                v =  length * catRate[k] * baseRate;
-                eV1 =  exp (-(3.0 / 4.0) * v);
-                eV2 =  exp (-(9.0 / 4.0) * v);
-                
-                /* pij(0,0) */
-                tiP[index] = (CLFlt) ((1.0 / 3.0) + (eV1 / 2.0) + (eV2 / 6.0));
-                /* pij(0,1) = pij(1,0) */
-                tiP[index+1] = tiP[index+3] = (CLFlt) ((1.0 / 3.0) - (eV2 / 3.0));
-                /* pij(0,2) */
-                tiP[index+2] = (CLFlt) ((1.0 / 3.0) - (eV1 / 2.0) + (eV2 / 6.0));
-                /* pij(1,1) */
-                tiP[index+4] = (CLFlt) ((1.0 / 3.0) + (2.0 * eV2 / 3.0));
-                
-                /* fill in mirror part of matrix */
-                index += 5;
-                index2 = index - 2;
-                for (i=0; i<4; i++)
-                    tiP[index++] = tiP[index2--];
-
-                /* make sure no value is negative */
-                for (i=index-(nStates*nStates); i<index; i++) {
-                    if (tiP[i] < 0.0)
-                        tiP[i] = (CLFlt) 0.0;
+                stdEv[0][i] = sqrt(1.0 / nStates);
+                for (s=1; s<nStates; s++)
+                    stdEv[s][i] = sqrt(2.0 / nStates) * cos((2*i+1) * s * M_PI / (2.0 * nStates));
                 }
-#   if defined (DEBUG_TIPROBS_STD)
-                PrintTiProbs (tiP+index-(nStates*nStates), bs+index3, nStates);
-#   endif
-                }
-
-#   if defined (DEBUG_TIPROBS_STD)
-            index3 += nStates;
-#   endif
-            }
-
-        /* 4-state ordered character */
-        if (m->isTiNeeded[MAX_STD_STATES] == YES)
-            {
-            nStates = 4;
-            pi = 1.0 / 4.0;
-            root =  sqrt (2.0);
-            f1 = root +  1.0;
-            f2 = root -  1.0;
 
             for (k=0; k<m->numRateCats; k++)
                 {
                 /* calculate probabilities */
-                v =  length * catRate[k] * baseRate;
-                eV1 =  1.0 / (exp ((4.0 * v) / 3.0));
-                eV2 =  exp ((2.0 * (root - 2.0) * v) / 3.0) / root;
-                eV3 =  1.0 / (root *  exp ((2.0 * (root + 2.0) * v) / 3.0));
-                
-                /* pij(0,0) */
-                tiP[index] = (CLFlt) (pi * (1.0 + eV1 + (f1*eV2) + (f2*eV3)));
-                /* pij(0,1) = pij(1,0) */
-                tiP[index+1] = tiP[index+4] = (CLFlt) (pi * (1.0 - eV1 + eV2 - eV3));
-                /* pij(0,2) = tiP(1,3) */
-                tiP[index+2] = tiP[index+7] = (CLFlt) (pi * (1.0 - eV1 - eV2 + eV3));
-                /* pij(0,3) */
-                tiP[index+3] = (CLFlt) (pi * (1.0 + eV1 - (f1*eV2) - (f2*eV3)));
-                /* pij(1,1) */
-                tiP[index+5] = (CLFlt) (pi * (1.0 + eV1 + (f2*eV2) + (f1*eV3)));
-                /* pij(1,2) */
-                tiP[index+6] = (CLFlt) (pi * (1.0 + eV1 - (f2*eV2) - (f1*eV3)));
+                v = length * catRate[k] * baseRate;
 
-                /* fill in mirror part of matrix */
-                index += 8;
-                index2 = index - 1;
-                for (i=0; i<8; i++)
-                    tiP[index++] = tiP[index2--];
-        
-                /* make sure no value is negative */
-                for (i=index-(nStates*nStates); i<index; i++) {
-                    if (tiP[i] < 0.0)
-                        tiP[i] = (CLFlt) 0.0;
-                }
-#   if defined (DEBUG_TIPROBS_STD)
-                PrintTiProbs (tiP+index-(nStates*nStates), bs+index3, nStates);
-#   endif
-                }
-#   if defined (DEBUG_TIPROBS_STD)
-            index3 += nStates;
-#   endif
-            }
+                /* precompute exp(-mu_s * v) for each eigenvalue (mu_0 = 0) */
+                expEig[0] = 1.0;
+                for (s=1; s<nStates; s++)
+                    {
+                    mu = (nStates / (nStates - 1.0)) * (1.0 - cos(s * M_PI / nStates));
+                    expEig[s] = exp(-mu * v);
+                    }
 
-        /* 5-state ordered character */
-        if (m->isTiNeeded[MAX_STD_STATES+1] == YES)
-            {
-            nStates = 5;
-            pi = 1.0 / 5.0;
-            root =  sqrt (5.0);
-
-            f5 = root /  4.0;
-            f1 =  0.75 + f5;;
-            f2 =  1.25 + f5;
-            f3 =  1.25 - f5;
-            f4 =  0.75 - f5;
-            f5 = f5 *  2.0;
-            f6 = f5 +  0.5;
-            f7 = f5 -  0.5;
-
-            for (k=0; k<m->numRateCats; k++)
-                {
-                /* calculate probabilities */
-                v =  length * catRate[k] * baseRate;
-                v *=  5.0 /  16.0;
-
-                eV1 =  exp ((root -  3.0) * v);
-                eV2 =  exp (-(root +  3.0) * v);
-                eV3 =  exp ((root -  5.0) * v);
-                eV4 =  exp (-(root +  5.0) * v);
-
-                /* pij(0,0) */
-                tiP[index] = (CLFlt) (pi* (1.0 + (f1*eV3) + (f2*eV1) + (f3*eV2) + (f4*eV4)));
-                /* pij(0,1) = pij(1,0) */
-                tiP[index+1] = tiP[index+5] = (CLFlt) (pi*(1.0 - (eV3/2.0) + (f5*eV1) - (f5*eV2) - (eV4/2.0)));
-                /* pij(0,2) = pij(2,0) */
-                tiP[index+2] = tiP[index+10] = (CLFlt) (pi*(1.0 - (f6*eV3) + (f7*eV4)));
-                /* pij(0,3) = pij(1,4) */
-                tiP[index+3] = tiP[index+9] = (CLFlt) (pi*(1.0 - (eV3/2.0) - (f5*eV1) + (f5*eV2) - (eV4/2.0)));
-                /* pij(0,4) */
-                tiP[index+4] = (CLFlt) (pi*(1.0 + (f1*eV3) - (f2*eV1) - (f3*eV2) + (f4*eV4)));
-                /* pij(1,1) */
-                tiP[index+6] = (CLFlt) (pi*(1.0 + (f4*eV3) + (f3*eV1) + (f2*eV2) + (f1*eV4)));
-                /* pij(1,2) = pij(2,1) */
-                tiP[index+7] = tiP[index+11] = (CLFlt) (pi*(1.0 + (f7*eV3) - (f6*eV4)));
-                /* pij(1,3) */
-                tiP[index+8] = (CLFlt) (pi*(1.0 + (f4*eV3) - (f3*eV1) - (f2*eV2) + (f1*eV4)));
-                /* pij(2,2) */
-                tiP[index+12] = (CLFlt) (pi*(1.0 + (2.0*eV3) + (2.0*eV4)));
-
-                /* fill in mirror part of matrix */
-                index += 13;
-                index2 = index - 2;
-                for (i=0; i<12; i++)
-                    tiP[index++] = tiP[index2--];
-
-                /* make sure no value is negative */
-                for (i=index-(nStates*nStates); i<index; i++) {
-                    if (tiP[i] < 0.0)
-                        tiP[i] = (CLFlt) 0.0;
-                }
-#   if defined (DEBUG_TIPROBS_STD)
-                PrintTiProbs (tiP+index-(nStates*nStates), bs+index3, nStates);
-#   endif
-                }
-#   if defined (DEBUG_TIPROBS_STD)
-            index3 += nStates;
-#   endif
-            }
-
-        /* 6-state ordered character */
-        if (m->isTiNeeded[MAX_STD_STATES+2] == YES)
-            {
-            nStates = 6;
-            pi =  1.0 / 6.0;
-            root =  sqrt (3.0);
-
-            f4 = (3.0 / (2.0 * root));
-            f1 =  1.0 + f4;
-            f2 =  1.0 - f4;
-            f3 =  0.5 + f4;
-            f4 =  0.5 - f4;
-
-            for (k=0; k<m->numRateCats; k++)
-                {
-                /* calculate probabilities */
-                v =  length * catRate[k] * baseRate;
-                v /=  5.0;
-
-                eV1 =  exp (-9 * v);
-                eV2 =  exp (-6 * v);
-                eV3 =  exp (-3 * v);
-                eV4 =  exp (3.0 * (root - 2.0) * v);
-                eV5 =  exp (-3.0 * (root + 2.0) * v);
-
-                /* pij(0,0) */
-                tiP[index] = (CLFlt) (pi* (1.0 + (0.5*eV1) + eV2 + (1.5*eV3) + (f1*eV4) + (f2*eV5)));
-                /* pij(0,1) = pij(1,0) */
-                tiP[index+1] = tiP[index+6] = (CLFlt) (pi*(1.0 - eV1 - eV2 + (f3*eV4) + (f4*eV5)));
-                /* pij(0,2) = pij(2,0) */
-                tiP[index+2] = tiP[index+12] = (CLFlt) (pi*(1.0 + (0.5*eV1) - eV2 - (1.5*eV3) + (0.5*eV4) + (0.5*eV5)));
-                /* pij(0,3) = pij(2,5) */
-                tiP[index+3] = tiP[index+17] = (CLFlt) (pi*(1.0 + (0.5*eV1) + eV2 - (1.5*eV3) - (0.5*eV4) - (0.5*eV5)));
-                /* pij(0,4) = pij(1,5) */
-                tiP[index+4] = tiP[index+11] = (CLFlt) (pi*(1.0 - eV1 + eV2 - (f3*eV4) - (f4*eV5)));
-                /* pij(0,5) */
-                tiP[index+5] = (CLFlt) (pi*(1.0 + (0.5*eV1) - eV2 + (1.5*eV3) - (f1*eV4) - (f2*eV5)));
-                /* pij(1,1) */
-                tiP[index+7] = (CLFlt) (pi*(1.0 + (2.0*eV1) + eV2 + eV4 + eV5));
-                /* pij(1,2) = pij(2,1) */
-                tiP[index+8] = tiP[index+13] = (CLFlt) (pi*(1.0 - eV1 + eV2 - (f4*eV4) - (f3*eV5)));
-                /* pij(1,3) = pij(2,4) */
-                tiP[index+9] = tiP[index+16] = (CLFlt) (pi*(1.0 - eV1 - eV2 + (f4*eV4) + (f3*eV5)));
-                /* pij(1,4) */
-                tiP[index+10] = (CLFlt) (pi*(1.0 + (2.0*eV1) - eV2 - eV4 - eV5));
-                /* pij(2,2) */
-                tiP[index+14] = (CLFlt) (pi*(1.0 + (0.5*eV1) + eV2 + (1.5*eV3) + (f2*eV4) + (f1*eV5)));
-                /* pij(2,3) */
-                tiP[index+15] = (CLFlt) (pi*(1.0 + (0.5*eV1) - eV2 + (1.5*eV3) - (f2*eV4) - (f1*eV5)));
-
-                /* fill in mirror part of matrix */
-                index += 18;
-                index2 = index - 1;
-                for (i=0; i<18; i++)
-                    tiP[index++] = tiP[index2--];
-
-                /* make sure no value is negative */
-                for (i=index-(nStates*nStates); i<index; i++) {
-                    if (tiP[i] < 0.0)
-                        tiP[i] = (CLFlt) 0.0;
-                }
+                for (i=0; i<nStates; i++)
+                    {
+                    for (j=0; j<nStates; j++)
+                        {
+                        sum = 0.0;
+                        for (s=0; s<nStates; s++)
+                            sum += stdEv[s][i] * stdEv[s][j] * expEig[s];
+                        tiP[index++] = (CLFlt) (sum < 0.0 ? 0.0 : sum);
+                        }
+                    }
 #   if defined (DEBUG_TIPROBS_STD)
                 PrintTiProbs (tiP+index-(nStates*nStates), bs+index3, nStates);
 #   endif
