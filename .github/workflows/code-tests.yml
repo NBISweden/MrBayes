@@ -23,7 +23,9 @@ jobs:
 
       - name: Install Beagle if needed
         if: ${{ matrix.beagle == '--with-beagle' }}
-        run: sudo apt-get install libhmsbeagle-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install libhmsbeagle-dev
 
       - name: Configure project
         run: ./configure --disable-doc --without-mpi ${{ matrix.beagle }} CC=clang
@@ -51,7 +53,9 @@ jobs:
 
       - name: Install Beagle if needed
         if: ${{ matrix.beagle == '--with-beagle' }}
-        run: sudo apt-get install libhmsbeagle-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install libhmsbeagle-dev
 
       - name: Install MPI if needed
         run: sudo apt-get install libopenmpi-dev
