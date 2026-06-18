@@ -3706,7 +3706,7 @@ void findAllowedClockrate (Tree *t, MrBFlt *minClockRate, MrBFlt *maxClockRate)
 {
     int i;
     TreeNode *p;
-    MrBFlt min, max, tmp;
+    MrBFlt min, max, tmp, ageDelta;
 
     min=0.0;
     max=MRBFLT_MAX;
@@ -3721,13 +3721,15 @@ void findAllowedClockrate (Tree *t, MrBFlt *minClockRate, MrBFlt *maxClockRate)
             p = t->allDownPass[i];
             if (p->anc->anc != NULL)
                 {
-                tmp = BRLENS_MIN/(p->anc->age - p->age);
-                assert (tmp > 0);
+                ageDelta = p->anc->age - p->age;
+                /* fbd trees can legitimately contain sampled ancestors with (near) zero branch length */
+                if (ageDelta <= TIME_MIN)
+                    continue;
+
+                tmp = BRLENS_MIN / ageDelta;
                 if (tmp > min)
                     min = tmp;
-
-                tmp = BRLENS_MAX/(p->anc->age - p->age);
-                assert (tmp > 0);
+                tmp = BRLENS_MAX / ageDelta;
                 if (tmp > max)
                     max = tmp;
                 }
