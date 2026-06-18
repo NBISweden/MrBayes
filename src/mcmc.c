@@ -5905,7 +5905,9 @@ int InitChainCondLikes (void)
         if (m->useBeagle == YES)
             {
             m->useVec = VEC_NONE;
+#           if defined (SSE_ENABLED)
             m->numFloatsPerVec = 0;
+#           endif
             }
 #       endif
 
