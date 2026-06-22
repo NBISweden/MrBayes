@@ -1313,12 +1313,6 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
                 {
                 pUnobserved +=  exp((double)m->logLikelihoods[c]);
                 }
-            if (1.0 - pUnobserved < LIKE_EPSILON)
-                {
-                abortMove = YES;
-                (*lnL) = MRBFLT_NEG_MAX;
-                return NO_ERROR;
-                }
             /* correct for absent characters */
             (*lnL) -= log (1-pUnobserved) * (m->numUncompressedChars);
             for (; c<m->numChars; c++)
@@ -2936,11 +2930,6 @@ int TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, int 
                             {
                             pUnobserved +=  exp((double)modelSettings[0].logLikelihoodsAll[site]);
                             site++;
-                            }
-                        if (1.0 - pUnobserved < LIKE_EPSILON)
-                            {
-                            abortMove = YES;
-                            return NO_ERROR;
                             }
                         /* correct for absent characters */
                         (*lnLDiv) -= log (1-pUnobserved) * (m->numUncompressedChars);
