@@ -11130,7 +11130,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
                 return (ERROR);
                 }
             /* Post processing needed for some parameters */
-            /* FIXME: param is NULL here (from clang static analyzer) */
+            assert (param != NULL);  // param is non-NULL here
             if (param->paramType == P_SHAPE || param->paramType == P_CORREL)
                 {
                 for (i=0; i<chainParams.numRuns; i++)
@@ -11170,7 +11170,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
         foundName = YES;
 
         /* we now know that the name is complete; try to find the parameter with this name (case insensitive) */
-        /* FIXME: tempName is NULL? (from clang static analyzer) */
+        assert (tempName != NULL);  // tempName is non-NULL here
         for (i=0; i<(int)strlen(tempName); i++)
             tempName[i] = (char)(tolower(tempName[i]));
         
@@ -13061,20 +13061,10 @@ int FreeModel (void)
 
     if (memAllocs[ALLOC_MCMCTREES] == YES)
         {
-            /* FIXME: Trees needs to be deallocated, but I can't figure
-                out how many there are.  The loop below tries to free
-                unallocated memory...
-             */
-            /*
-        for (i = 0; i < numParams; ++i)
-            {
-            p = &params[i];
-
-            for (j = 0; j < numGlobalChains; ++j)
-                FreeTree (GetTree (p, j, 0));
-            }
-            */
-
+        /* mcmcTree holds numTrees * 2 * numGlobalChains pointers; free each tree.
+           Note: params[] is already freed above, so we iterate the flat array directly. */
+        for (i = 0; i < numTrees * 2 * numGlobalChains; i++)
+            FreeTree (mcmcTree[i]);
         SAFEFREE (mcmcTree);
         SAFEFREE (subParamPtrs);
         memAllocs[ALLOC_MCMCTREES] = NO;

@@ -873,8 +873,8 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
         }
     index = 0;
     lnProb = 0.0;
-    for (i=0; i<speciesTree->nNodes-1; i++) {
-
+    for (i=0; i<speciesTree->nNodes-1; i++)
+        {
         p = speciesTree->allDownPass[i];
 
         // Get theta
@@ -886,8 +886,8 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
         // Calculate probability
         lnProb += nEvents * log (2.0 / theta);
 
-        for (k=p->x; k > p->x - p->y; k--) {
-
+        for (k=p->x; k > p->x - p->y; k--)
+            {
             q = geneTree->intDownPass[index];
             assert (q->x == p->index);
 
@@ -902,15 +902,12 @@ double LnPriorProbGeneTree (Tree *geneTree, double mu, Tree *speciesTree, double
             index++;
             }
 
-        if (p->x - p->y > 1) {
-
+        if (p->x - p->y > 1)
+            {
             if (nEvents == 0)
                 timeInterval = p->anc->nodeDepth - p->nodeDepth;
             else
-                {
-                /* FIXME: q == NULL if above loop not run (from clang static analyzer) */
                 timeInterval = p->anc->nodeDepth - q->nodeDepth;
-                }
 
             assert (p->anc->anc != NULL);
             assert (timeInterval >= 0.0);
@@ -1483,7 +1480,7 @@ int Move_NodeSliderGeneTree (Param *param, int chain, RandLong *seed, MrBFlt *ln
     assert (q != NULL && p->x == q->index);
 
     /* determine lower and upper bound */
-    /* FIXME: p->left == NULL?  (from clang static analyzer) */
+    /* p is interior node, so p->left is non-NULL */
     minDepth = p->left->nodeDepth + POS_MIN;
     if (p->right->nodeDepth + POS_MIN > minDepth)
         minDepth = p->right->nodeDepth + POS_MIN;

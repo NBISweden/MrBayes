@@ -4569,9 +4569,9 @@ int Move_ExtSSClock (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     /* set up pointers for nodes around the picked branch */
     a = p;
     if (p->anc->left == p)
-        q = p->anc->right;  /* FIXME: Not used? (from clang static analyzer) */
+        q = p->anc->right;      /* FIXME: Not used? (from clang static analyzer) */
     else
-        q = p->anc->left;   /* FIXME: Not used? (from clang static analyzer) */
+        q = p->anc->left;       /* FIXME: Not used? (from clang static analyzer) */
     if (p->anc->anc->left == p->anc)
         c = p->anc->anc->right; /* FIXME: Not used? (from clang static analyzer) */
     else
@@ -9694,11 +9694,11 @@ int Move_ParsEraser1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
     tInfo.leaf = NULL;
 
     /* Set alpha Pi for Dirichlet p generator */
-    alphaPi = mvp[0];   /* FIXME: Not used (from clang static analyzer) */
+    alphaPi = mvp[0];
     alphaPi = 0.05;
     
     /* Set the parsimony warp factor */
-    warp = mvp[1];  /* FIXME: Not used (from clang static analyzer) */
+    warp = mvp[1];
     warp = 0.2;
     
     /* Set the number of terminals (nSubTerminals, column 3) in erased tree */
@@ -9708,7 +9708,7 @@ int Move_ParsEraser1 (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRa
                   4 => 5      => 6         => 14             => 24 = 4!            => 105 = 1*3*5*7
                   5 => 6      => 7         => 42             => 120 = 5!           => 945 = 1*3*5*7*9
                   etc               */  
-    nSubTerminals = (int) (RandomNumber(seed) * 4) + 4; /* FIXME: Not used (from clang static analyzer) */
+    nSubTerminals = (int) (RandomNumber(seed) * 4) + 4;
     nSubTerminals = 7;
 
     /* initialize log prior and log proposal probabilities */
@@ -10030,7 +10030,7 @@ int Move_ParsSPR (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
 #   endif
     
     /* set topologyHasChanged to NO */
-    topologyHasChanged = NO;    /* FIXME: Not used (from clang static analyzer) */
+    topologyHasChanged = NO;
     
     /* reset node variables that will be used */
     for (i=0; i<t->nNodes; i++)

@@ -1842,13 +1842,16 @@ int WantTo (const char *msg)
 /* AddToTreeList: Add tree at end of tree list */
 int AddToTreeList (TreeList *treeList, Tree *tree)
 {
-    TreeListElement     *listElement = (TreeListElement *) SafeCalloc (1, sizeof(TreeListElement));
+    TreeListElement *listElement = (TreeListElement *) SafeCalloc (1, sizeof(TreeListElement));
     if (!listElement)
         return (ERROR);
 
     listElement->order = (int *) SafeCalloc (tree->nIntNodes-1, sizeof(int));
     if (!listElement->order)
+        {
+        SAFEFREE (listElement);
         return (ERROR);
+        }
     listElement->next = NULL;
 
     if (treeList->last == NULL)
@@ -2714,6 +2717,7 @@ int CheckConstraints (Tree *t)
     if (AllocateTreePartitions(t) == ERROR)
         {
         MrBayesPrint ("%s   Problems allocating tree partitions in CheckConstraints", spacer);
+        free (constraintPartition);
         return (ERROR);
         }
 

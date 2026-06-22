@@ -8191,7 +8191,18 @@ int DoTreeParm (char *parmName, char *tkn)
         MrBayesPrint ("%s   You must be in a trees block to read a tree\n", spacer);
         return (ERROR);
         }
-    
+
+    /* All static parser-state variables (t, pp, qq, nextAvailableNode, etc.) are
+       initialised only when the PARAMETER (tree-name) token is processed.  Every
+       other branch dereferences t and/or pp and therefore requires that
+       initialisation to have happened first.  If it has not, the call sequence is
+       wrong and we must not proceed. */
+    if (expecting != Expecting(PARAMETER) && t == NULL)
+        {
+        MrBayesPrint ("%s   Unexpected tree token received before tree name was read\n", spacer);
+        return (ERROR);
+        }
+
     if (expecting == Expecting(PARAMETER))
         {
         /* this is the name of the tree */
@@ -8273,7 +8284,6 @@ int DoTreeParm (char *parmName, char *tkn)
                     FreePolyTree (userTree[treeIndex]);
                 return (ERROR);
                 }
-            /* FIXME: t == NULL here (from clang static analyzer) */
             qq = &t->nodes[nextAvailableNode++];
             qq->anc = pp;
             pp->left = qq;
@@ -8444,7 +8454,6 @@ int DoTreeParm (char *parmName, char *tkn)
                     return (ERROR);
                     }
                 tempSet[index] = YES;
-                /* FIXME: pp is NULL here (from clang static analyzer) */
                 strcpy (pp->label, tempName);
                 pp->index = index;
                 }
@@ -8466,7 +8475,6 @@ int DoTreeParm (char *parmName, char *tkn)
                     return (ERROR);
                     }
                 tempSet[index] = YES;
-                /* FIXME: pp is NULL here (from clang static analyzer) */
                 strcpy (pp->label, tkn);
                 pp->index = index;
                 }
@@ -8596,7 +8604,6 @@ int DoTreeParm (char *parmName, char *tkn)
                     FreePolyTree (userTree[treeIndex]);
                 return (ERROR);
                 }
-            /* FIXME: t is NULL here (from clang static analyzer) */
             qq = &t->nodes[nextAvailableNode++];
             pp->sib = qq;
             qq->anc = pp->anc;
@@ -8769,7 +8776,6 @@ int DoTreeParm (char *parmName, char *tkn)
                     return (ERROR);
                     }
                 tempSet[index] = YES;
-                /* FIXME: pp is NULL here (from clang static analyzer) */
                 strcpy (pp->label, tempName);
                 pp->index = index;
                 }
@@ -8816,7 +8822,6 @@ int DoTreeParm (char *parmName, char *tkn)
                         }
                     }
                 tempSet[index] = YES;
-                /* FIXME: pp is NULL here (from clang static analyzer) */
                 strcpy (pp->label, taxaNames[index]);
                 pp->index = index;
                 }
@@ -8860,7 +8865,6 @@ int DoTreeParm (char *parmName, char *tkn)
             }
         else
             {
-            /* FIXME: pp is NULL here (from clang static analyzer) */
             if (pp->anc == NULL)
                 {
                 if (pp->left == NULL)
