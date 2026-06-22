@@ -10,19 +10,20 @@ v3.2.8 (development version, not yet released)
     "-alpha", "-beta" and "-rcN" as well at times.
   * Use latexmk to build the PDF documentation, if avaliable.
   * Support MCMC chains longer than 2E9 generations.
-  * Correct the parameterization sigma (sd_log) in lnorm rate variation across sites.
-  * Correct the parameterization in the TK02 model.
+  * Support unordered discrete characters up to 24 states (0-9 A-N).
+  * Support continuous characters with missing states (Brownian motion model).
+  * Support serially-sampled tips in the coalescent prior.
+  * Support independent lognormal (ILN) and independent gamma (IGR) clocks.
+  * Support model averaging (rjMCMC) between ILN and IGR relaxed clock models.
   * Renamed the white noise relaxed clock model to WN.
-  * Added independent lognormal (ILN) and independent gamma (IGR) relaxed clocks.
-  * Support model averaging (rjMCMC) between ILN and IGR clock models.
-  * Support unord characters up to 24 states (0-9 A-N).
-  * Extend the coalescent prior to support serially-sampled tips.
-  * Update help messages for the FBD model and parameters.
+  * Updated the parameterization in the TK02 model.
+  * Updated help messages for the FBD model and parameters.
+  * Bug fix to the sigma (sd_log) in lnorm rate variation across sites.
   * Bug fix to multi-partition Beagle code.
   * Bug fix to directional state frequency models.
-  * Fix erroneous printing of header alpha_symdir.
-  * Fix setting popsizepr and growthpr for protein data.
-  * Fix disabling variable ratepr for single partition.
+  * Bug fix to erroneous printing of header alpha_symdir.
+  * Bug fix to setting popsizepr and growthpr for protein data.
+  * Bug fix to setting ratepr for single partition.
 
 v3.2.7a (Mar 06 2019): hotfix
   * PDF manual re-generated from already updated LaTeX sources.

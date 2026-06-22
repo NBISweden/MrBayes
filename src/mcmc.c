@@ -151,7 +151,7 @@ int       GetTotalRateShifts (Model *mp, MrBFlt *shiftTimes);
 MrBFlt    GibbsSampleGamma (int chain, int division, RandLong *seed);
 int       InitAdGamma(void);
 int       InitChainCondLikes (void);
-int       InitClockBrlens (Tree *t);
+int       InitContStates (void);
 int       InitEigenSystemInfo (ModelInfo *m);
 int       InitInvCondLikes (void);
 int       InitParsSets (void);
@@ -187,6 +187,7 @@ int       PrintAncStates_Bin (TreeNode *p, int division, int chain);
 int       PrintAncStates_Gen (TreeNode *p, int division, int chain);
 int       PrintAncStates_NUC4 (TreeNode *p, int division, int chain);
 int       PrintAncStates_Std (TreeNode *p, int division, int chain);
+int       PrintAncStates_Cont (TreeNode *p, int division, int chain);
 int       PrintCheckPoint (long long gen);
 int       PrintMCMCDiagnosticsToFile (long long curGen);
 #if defined (MPI_ENABLED)
@@ -196,6 +197,7 @@ void      PrintParamValues (Param *p, int chain, char *s);
 int       PrintParsMatrix (void);
 int       PrintSiteRates_Gen (TreeNode *p, int division, int chain);
 int       PrintSiteRates_Std (TreeNode *p, int division, int chain);
+int       PrintSiteRates_Cont (TreeNode *p, int division, int chain);
 int       PrintStates (long long curGen, int coldId);
 int       PrintStatesToFiles (long long curGen);
 int       PrintSwapInfo (void);
@@ -277,6 +279,7 @@ int             recalcScalers;               /* should we recalculate scalers fo
 extern CLFlt     *preLikeL;                  /* precalculated cond likes for left descendant */
 extern CLFlt     *preLikeR;                  /* precalculated cond likes for right descendant*/
 extern CLFlt     *preLikeA;                  /* precalculated cond likes for ancestor        */
+extern int IsMissingC (CLFlt value);
 
 /* local (to this file) variables */
 int             numLocalChains;              /* number of Markov chains                      */
@@ -2403,6 +2406,10 @@ int DoMcmc (void)
     if (InitInvCondLikes() == ERROR)
         goto errorExit;
 
+    /* Initialize node states for continuous traits. */
+    if (InitContStates() == ERROR)
+        goto errorExit;
+
     /* Allocate BEST chain variables */
     if (numTopologies > 1 && !strcmp(modelParams[0].topologyPr,"Speciestree"))
         AllocateBestChainVariables();
@@ -4468,6 +4475,21 @@ void FreeChainMemory (void)
             free (m->condLikes);
             m->condLikes = NULL;
             }
+            
+        if (m->ancStates)
+            {
+            for (j=0; j<m->numCondLikes; j++)
+                free (m->ancStates[j]);
+            free (m->ancStates);
+            m->ancStates = NULL;
+            }
+        if (m->bmVars)
+            {
+            for (j=0; j<m->numTiProbs; j++)
+                free (m->bmVars[j]);
+            free (m->bmVars);
+            m->bmVars = NULL;
+            }
 
         if (m->scalers)
             {
@@ -5874,12 +5896,18 @@ int InitChainCondLikes (void)
         {
         m = &modelSettings[d];
 
+        /* continuous characters are dealt with in InitContStates */
+        if (m->dataType == CONTINUOUS)
+            continue;
+
 #       if defined (BEAGLE_ENABLED)
         /* if using beagle, adjust SIMD settings */
         if (m->useBeagle == YES)
             {
             m->useVec = VEC_NONE;
+#           if defined (SSE_ENABLED)
             m->numFloatsPerVec = 0;
+#           endif
             }
 #       endif
 
@@ -5892,15 +5920,14 @@ int InitChainCondLikes (void)
         m->condLikeIndex = (int **) SafeMalloc (numLocalChains * sizeof(int *));
         if (!m->condLikeIndex)
             return (ERROR);
-        for (i=0; i<numLocalChains; i++)
+        for (j=0; j<numLocalChains; j++)
             {
-            m->condLikeIndex[i] = (int *) SafeMalloc (nNodes * sizeof(int));
-            if (!m->condLikeIndex[i])
+            m->condLikeIndex[j] = (int *) SafeMalloc (nNodes * sizeof(int));
+            if (!m->condLikeIndex[j])
                 return (ERROR);
+            for (i=0; i<nNodes; i++)
+                m->condLikeIndex[j][i] = -1;
             }
-        for (i=0; i<numLocalChains; i++)
-            for (j=0; j<nNodes; j++)
-                m->condLikeIndex[i][j] = -1;
 
         /* set up indices for terminal nodes */
         clIndex = 0;
@@ -5949,7 +5976,7 @@ int InitChainCondLikes (void)
             }
 
         /* parsimony models need nothing of the below */
-        if (m->parsModelId == YES || m->dataType == CONTINUOUS)
+        if (m->parsModelId == YES)
             continue;
 
         /* allocate space for conditional likelihoods */
@@ -6157,7 +6184,7 @@ int InitChainCondLikes (void)
         m->rescaleFreq = (int*) SafeMalloc((numLocalChains) * sizeof(int));
         for (i=0; i<numLocalChains; ++i)
             {
-            if (m->numModelStates == 4 )
+            if (m->numModelStates == 4)
                 m->rescaleFreq[i] = 1;
             else
                 m->rescaleFreq[i] = 1;
@@ -6510,6 +6537,185 @@ int InitChainCondLikes (void)
 
 /*------------------------------------------------------------------------
 |
+|   Allocate space for log likelihoods, BM variances,
+|       and ancestral and tip states for continuous traits
+|
+-------------------------------------------------------------------------*/
+int InitContStates (void)
+{
+    int         c, d, i, j, nIntNodes, nNodes, clIndex, tiIndex;
+    long        state;
+    ModelInfo   *m;
+    Tree        *t;
+    
+    for (d=0; d<numCurrentDivisions; d++)
+    {
+        m = &modelSettings[d];
+        
+        if (m->dataType != CONTINUOUS)
+            continue;
+        
+        /* we have no SIMD code for this partition */
+        MrBayesPrint ("%s   Using standard non-SSE likelihood calculator for division %d (%s-precision)\n", spacer, d+1, (sizeof(CLFlt) == 4 ? "single" : "double"));
+        
+        /* find size of tree */
+        t = GetTree(m->brlens, 0, 0);
+        nIntNodes = t->nIntNodes;
+        nNodes = t->nNodes;
+        
+        /* figure out length of likelihood array */
+        m->condLikeLength = m->numChars * m->numRateCats;
+        
+        /* allocate space for the log likelihoods and node states */
+        m->numCondLikes = (numLocalChains + 1) * nIntNodes + numLocalTaxa;
+        m->condLikes = (CLFlt**) SafeMalloc(m->numCondLikes * sizeof(CLFlt*));
+        m->ancStates = (CLFlt**) SafeMalloc(m->numCondLikes * sizeof(CLFlt*));
+        if (!m->condLikes || !m->ancStates)
+            return (ERROR);
+        for (i=0; i<m->numCondLikes; i++)
+            {
+            m->condLikes[i] = (CLFlt*) SafeCalloc(m->condLikeLength, sizeof(CLFlt));
+            m->ancStates[i] = (CLFlt*) SafeCalloc(m->condLikeLength, sizeof(CLFlt));
+            if (!m->condLikes[i] || !m->ancStates[i])
+                return (ERROR);
+            }
+        
+        /* allocate space for the variances (transformed branch lengths) */
+        m->numTiProbs = (numLocalChains + 1) * nNodes; // temporarily use numTiProbs
+        m->bmVars = (CLFlt**) SafeMalloc(m->numTiProbs * sizeof(CLFlt*));
+        if (!m->bmVars)
+            return (ERROR);
+        for (i=0; i<m->numTiProbs; i++)
+            {
+            m->bmVars[i] = (CLFlt*) SafeCalloc(m->condLikeLength, sizeof(CLFlt));
+            if (!m->bmVars[i])
+                return (ERROR);
+            }
+        
+        /* allocate and set indices from tree nodes to likelihood arrays */
+        m->condLikeIndex = (int **) SafeMalloc(numLocalChains * sizeof(int *));
+        if (!m->condLikeIndex)
+            return (ERROR);
+        for (j=0; j<numLocalChains; j++)
+            {
+            m->condLikeIndex[j] = (int *) SafeMalloc(nNodes * sizeof(int));
+            if (!m->condLikeIndex[j])
+                return (ERROR);
+            for (i=0; i<nNodes; i++)
+                m->condLikeIndex[j][i] = -1;
+            }
+        m->condLikeScratchIndex = (int *) SafeMalloc(nNodes * sizeof(int));
+        if (!m->condLikeScratchIndex)
+            return (ERROR);
+        for (i=0; i<nNodes; i++)
+            m->condLikeScratchIndex[i] = -1;
+        
+        /* set up indices for tip and internal nodes */
+        clIndex = 0;
+        for (i=0; i<numLocalTaxa; i++)
+            {
+            for (j=0; j<numLocalChains; j++)
+                m->condLikeIndex[j][i] = clIndex;
+            clIndex += 1;
+            }
+        for (i=0; i<nIntNodes; i++)
+            {
+            for (j=0; j<numLocalChains; j++)
+                {
+                m->condLikeIndex[j][i+numLocalTaxa] = clIndex;
+                clIndex += 1;
+                }
+            }
+        for (i=0; i<nIntNodes; i++)
+            {
+            m->condLikeScratchIndex[i+numLocalTaxa] = clIndex;
+            clIndex += 1;
+            }
+        
+        /* allocate and set indices from tree edges to bm var arrays (temporarily use tiProbsIndex) */
+        m->tiProbsIndex = (int **) SafeMalloc(numLocalChains * sizeof(int *));
+        if (!m->tiProbsIndex)
+            return (ERROR);
+        for (j=0; j<numLocalChains; j++)
+            {
+            m->tiProbsIndex[j] = (int *) SafeMalloc(nNodes * sizeof(int));
+            if (!m->tiProbsIndex[j])
+                return (ERROR);
+            }
+        m->tiProbsScratchIndex = (int *) SafeMalloc(nNodes * sizeof(int));
+        if (!m->tiProbsScratchIndex)
+            return (ERROR);
+        
+        /* set up indices for nodes */
+        tiIndex = 0;
+        for (j=0; j<numLocalChains; j++)
+            {
+            for (i=0; i<nNodes; i++)
+                {
+                m->tiProbsIndex[j][i] = tiIndex;
+                tiIndex += 1;
+                }
+            }
+        for (i=0; i<nNodes; i++)
+            {
+            m->tiProbsScratchIndex[i] = tiIndex;
+            tiIndex += 1;
+            }
+        
+        /* fill in tip states */
+        /* we do this for one chain as all chains point to the same space */
+        for (i=0; i<numLocalTaxa; i++)
+            {
+            clIndex = m->condLikeIndex[0][i];
+            for (c=0, j=m->compMatrixStart; j<m->compMatrixStop; j++, c++)
+                {
+                /* matrix[pos(i,origChar[c],numChar)] holds the int value, but we will have trouble
+                 if some taxa or/and characters are deleted. compMatrix has the actual data used in
+                 inference, but returns unsigned long, need to make sure we get the correct value
+                 (with the sign) back here */
+                state = (long)compMatrix[pos(i,j,compMatrixRowSize)];
+                if (state == INT_MAX)
+                    m->ancStates[clIndex][c] = (CLFlt)INT_MAX;
+                else
+                    m->ancStates[clIndex][c] = (CLFlt)state / 10000.0;
+                }
+            }
+        
+        /* check values if continuous characters are normalized (between 0 and 1) */
+        if (!strcmp(modelParams[d].nst, "1"))
+            {
+            for (i=0; i<numLocalTaxa; i++)
+                {
+                clIndex = m->condLikeIndex[0][i];
+                for (c=0; c<m->numChars; c++)
+                    {
+                    if (!IsMissingC(m->ancStates[clIndex][c]) &&
+                        (m->ancStates[clIndex][c] < 0.0 || m->ancStates[clIndex][c] > 1.0))
+                        {
+                        MrBayesPrint ("%s   Continuous characters are assumed normalized (between 0 and 1), but found\n", spacer);
+                        MrBayesPrint ("%s    %.3f in taxon %d char %d ...\n", spacer, m->ancStates[clIndex][c], i+1, c+1);
+                        MrBayesPrint ("%s   Please set 'nst=2' in 'lset' if the characters are standardized (or unscaled).\n", spacer);
+                        return ERROR;
+                        }
+                    }
+                }
+            }
+        /*
+        for (i=0; i<numLocalTaxa; i++) {
+            clIndex = m->condLikeIndex[0][i];
+            for (c=0; c<m->numChars; c++)
+                printf("%.3f ", m->ancStates[clIndex][c]);
+            printf("\n");
+        }
+        */
+    }
+    
+    return (NO_ERROR);
+}
+
+
+/*------------------------------------------------------------------------
+|
 |   InitEigenSystemInfo: set info about eigen decompositions
 |
 -------------------------------------------------------------------------*/
@@ -6833,17 +7039,12 @@ int InitInvCondLikes (void)
 -------------------------------------------------------------------------*/
 int InitParsSets (void)
 {
-    int             c, i, j, k, d, nParsStatesForCont, nIntNodes, nNodes,
+    int             c, i, j, d, nIntNodes, nNodes,
                     nuc1, nuc2, nuc3, codingNucCode, allNucCode;
-    BitsLong        allAmbig, x, x1, x2, x3, *longPtr, bitsLongOne;
+    BitsLong        allAmbig, x, x1, x2, x3, *longPtr, bitsLongOne=1;
+    long            state;
     ModelInfo       *m;
     ModelParams     *mp;
-
-    bitsLongOne = 1;
-
-    /* this variable determines how many parsimony states are used           */
-    /* to represent continuous characters (determines weight of these chars) */
-    nParsStatesForCont = 3;
 
     /* find number and size of parsimony sets and node lengths */
     for (d=0; d<numCurrentDivisions; d++)
@@ -6853,12 +7054,7 @@ int InitParsSets (void)
 
         /* find how many parsimony ints (BitsLong) are needed for each model site */
         if (mp->dataType == CONTINUOUS)
-            {
-            /* scale continuous characters down to an ordered parsimony character */
-            /* with nParsStatesForCont states, represent this character as a set */
-            /* of binary characters by additive binary coding */
-            m->nParsIntsPerSite = nParsStatesForCont - 1;
-            }
+            m->nParsIntsPerSite = 1;
         else
             m->nParsIntsPerSite = 1 + m->numStates / nBitsInALong;
 
@@ -6910,20 +7106,33 @@ int InitParsSets (void)
 
         if (mp->dataType == CONTINUOUS)
             {
-            /* Note: This is only a placeholder since continuous characters are not implemented yet.
-               Using additive parsimony would be more efficient than using multiple binary chars as here. */
             for (i=0; i<numLocalTaxa; i++)
                 {
                 for (c=0, j=m->compMatrixStart; j<m->compMatrixStop; j++, c++)
                     {
-                    x = compMatrix[pos(i,j,compMatrixRowSize)];
-
-                    for (k=0; k<m->nParsIntsPerSite; k++)
+                    state = (long)compMatrix[pos(i,j,compMatrixRowSize)];
+                    
+                    if (!strcmp(mp->nst, "1")) // normalized (between 0 and 1)
                         {
-                        if (x > (unsigned int)(k + 1) * 1000 / (m->nParsIntsPerSite + 1))
-                            m->parsSets[i][c*m->nParsIntsPerSite + k] = 1;
+                        if (state == INT_MAX)  // missing
+                            m->parsSets[i][c] = 15;
+                        else if ((CLFlt)state > 7500.0)
+                            m->parsSets[i][c] = 8;
+                        else if ((CLFlt)state > 5000.0)
+                            m->parsSets[i][c] = 4;
+                        else if ((CLFlt)state > 2500.0)
+                            m->parsSets[i][c] = 2;
                         else
-                            m->parsSets[i][c*m->nParsIntsPerSite + k] = 2;
+                            m->parsSets[i][c] = 1;
+                        }
+                    else  // standardized
+                        {
+                        if (state == INT_MAX)  // missing
+                            m->parsSets[i][c] = 3;
+                        else if ((CLFlt)state > 0.0)
+                            m->parsSets[i][c] = 2;
+                        else
+                            m->parsSets[i][c] = 1;
                         }
                     }
                 }
@@ -9599,7 +9808,7 @@ MrBFlt LnUniformPriorPr (Tree *t, MrBFlt clockRate)
     return lnProb;
 }
 
-
+#if 0
 /*------------------------------------------------------------------------
 |
 |   NewtonRaphsonBrlen: Find one maximum likelihood branch length using
@@ -9958,6 +10167,7 @@ int NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain)
 
     return (NO_ERROR);
 }
+#endif
 
 
 void NodeToNodeDistances (Tree *t, TreeNode *fromNode)
@@ -10904,7 +11114,7 @@ int PrintAncStates_NUC4 (TreeNode *p, int division, int chain)
     int             c, i, k, *rateCat, hasPInvar, nGammaCats;
     MrBFlt          *bsVals;
     CLFlt           *cL, sum, pInvar=0.0, bs[4], freq, f;
-    const CLFlt     *clFP, *clInvar=NULL, *lnScaler,**clP;
+    const CLFlt     *clFP, *clInvar=NULL, *lnScaler, **clP;
     char            *tempStr;
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
@@ -11075,7 +11285,7 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 {
     int             c, i, j, k, s, nStates, numReps;
     MrBFlt          *bsBase, *bs, freq;
-    CLFlt           *clFP, *cL, sum,** clP;
+    CLFlt           *clFP, *cL, sum, **clP;
     char            *tempStr;
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
@@ -11179,6 +11389,51 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
             if (AddToPrintString (tempStr) == ERROR) return (ERROR);
             }
         }
+    free (tempStr);
+    return NO_ERROR;
+}
+
+
+/*----------------------------------------------------------------
+|
+|   PrintAncStates_Cont: print ancestral states of continuous
+|       characters with or without rate variation
+|
+-----------------------------------------------------------------*/
+int PrintAncStates_Cont (TreeNode *p, int division, int chain)
+{
+    int             c, k, i;
+    CLFlt           *aStates, avg;
+    char            *tempStr;
+    int             tempStrSize = TEMPSTRSIZE;
+    ModelInfo       *m;
+    
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
+    if (!tempStr)
+        {
+        MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
+        return (ERROR);
+        }
+
+    /* find model settings for this division */
+    m = &modelSettings[division];
+
+    aStates = m->ancStates[m->condLikeIndex[chain][p->index]];
+    
+    /* print the ancestral states */
+    for (c=0; c<m->numChars; c++)
+        {
+        avg = aStates[c];
+        for (k=1; k<m->numRateCats; k++)
+            {
+            i = k * (m->numChars) + c;
+            avg = (avg * k + aStates[i]) / (k + 1.0);
+            }
+
+        SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(avg));
+        if (AddToPrintString (tempStr) == ERROR) return (ERROR);
+        }
+    
     free (tempStr);
     return NO_ERROR;
 }
@@ -12147,11 +12402,9 @@ void PrintParamValues (Param *p, int chain, char *s)
 int PrintParsMatrix (void)
 {
     int             i, j=0, k, c, d, printWidth, nextColumn, nChars, inputChar;
-    BitsLong        x, y, bitsLongOne;
+    BitsLong        x, y, bitsLongOne=1;
     char            ch;
     ModelInfo       *m;
-
-    bitsLongOne = 1;
 
     printWidth = 79;
 
@@ -12306,7 +12559,8 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
                 siteRates[c] += (CLFlt) (catLike * catRate[k]);
                 siteLike += catLike;
                 }
-            siteRates[c] *= (CLFlt) (baseRate / siteLike);  /* category frequencies and site scaler cancel out */
+            /* category frequencies and site scaler cancel out */
+            siteRates[c] *= (CLFlt) (baseRate / siteLike);
             }
         }
     else
@@ -12330,7 +12584,8 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
                 invLike += (*(clInvar++)) * bs[j];
             siteLike += (invLike /  exp (lnScaler[c]) * pInvar);
             /* we do not need to add the invariable category into siteRates before rescaling because the rate is 0.0 */
-            siteRates[c] *= (CLFlt) (baseRate / siteLike);  /* site scaler cancels out; category frequencies dealt with above */
+            /* site scaler cancels out; category frequencies dealt with above */
+            siteRates[c] *= (CLFlt) (baseRate / siteLike);
             }
         }
         
@@ -12402,7 +12657,8 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
             siteRates[c] += (CLFlt) (catLike * catRate[k]);
             siteLike += catLike;
             }
-        siteRates[c] *= (CLFlt)(baseRate / siteLike);   /* category frequencies and site scaler cancel out */
+        /* category frequencies and site scaler cancel out */
+        siteRates[c] *= (CLFlt) (baseRate / siteLike);
         }
         
     /* print the resulting site rates cycling over uncompressed chars */
@@ -12415,6 +12671,44 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
         if (AddToPrintString (tempStr) == ERROR) return (ERROR);
         }
 
+    free (tempStr);
+    return NO_ERROR;
+}
+
+
+/*------------------------------------------------------------------
+|
+|   PrintSiteRates_Cont: continuous model with rate variation
+|
+-------------------------------------------------------------------*/
+int PrintSiteRates_Cont (TreeNode *p, int division, int chain)
+{
+    int             c;
+    CLFlt           *siteRates;
+    char            *tempStr;
+    int             tempStrSize = TEMPSTRSIZE;
+    ModelInfo       *m;
+    
+    tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
+    if (!tempStr)
+        {
+        MrBayesPrint ("%s   Problem allocating tempString (%d)\n", spacer, tempStrSize * sizeof(char));
+        return (ERROR);
+        }
+
+    /* find model settings for this division */
+    m = &modelSettings[division];
+    
+    /* find the site rates already calculated */
+    siteRates = m->condLikes[m->condLikeIndex[0][0]];
+    
+    /* print the site rates */
+    for (c=0; c<m->numChars; c++)
+        {
+        SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(siteRates[c]));
+        if (AddToPrintString (tempStr) == ERROR) return (ERROR);
+        }
+    
     free (tempStr);
     return NO_ERROR;
 }
@@ -12706,7 +13000,12 @@ int PrintStates (long long curGen, int coldId)
                         {
                         if (partitionId[j][partitionNum] - 1 != d || charInfo[j].isExcluded == YES || printedChar[j] == YES)
                             continue;
-                        if (mp->dataType == STANDARD)
+                        if (mp->dataType == CONTINUOUS)
+                            {
+                            SafeSprintf (&tempStr, &tempStrSize, "\tm'{%d@%s}", j+1, constraintNames[i]);
+                            if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+                            }
+                        else if (mp->dataType == STANDARD)
                             {
                             for (k=0; k<m->nStates[compCharPos[j] - m->compCharStart]; k++)
                                 {
@@ -15711,7 +16010,7 @@ void ResetFlips (int chain)
 #endif
 
         /* skip the following if we have irrelevant model or data types */
-        if (m->upDateCl != YES || m->parsModelId == YES || m->dataType == CONTINUOUS)
+        if (m->upDateCl != YES || m->parsModelId == YES)
             continue;
         
 #if defined (BEAGLE_ENABLED)
@@ -15724,7 +16023,8 @@ void ResetFlips (int chain)
                 m->rescaleFreq[chain] = m->rescaleFreqOld;
             }
 #else
-        FlipSiteScalerSpace (m, chain);
+        if (m->dataType != CONTINUOUS)
+            FlipSiteScalerSpace (m, chain);
 #endif
         if (m->upDateCijk == YES && m->nCijkParts > 0)
             FlipCijkSpace (m, chain);
@@ -15734,10 +16034,12 @@ void ResetFlips (int chain)
         for (i=0; i<tree->nNodes; i++)
             {
             p = tree->allDownPass[i];
-            if (p->upDateTi == YES)
+            if (p->upDateTi == YES || (m->dataType == CONTINUOUS && p->upDateCl == YES))
                 FlipTiProbsSpace (m, chain, p->index);
-            if (p->right != NULL)    /* do not flip terminals in case these flags are inappropriately set by moves */
+            if (p->right != NULL)
                 {
+                /* do not flip terminals in case these flags are inappropriately set by moves
+                   do not consider continuous data using beagle either */
                 if (p->upDateCl == YES)
                     {
                     FlipCondLikeSpace (m, chain, p->index);
@@ -15747,7 +16049,8 @@ void ResetFlips (int chain)
                         (m->rescaleBeagleAll == YES && isScalerNode[p->index] == YES))
                         FlipNodeScalerSpace (m, chain, p->index);
 #else
-                    FlipNodeScalerSpace (m, chain, p->index);
+                    if (m->dataType != CONTINUOUS)
+                        FlipNodeScalerSpace (m, chain, p->index);
 #endif
                     }
 
@@ -18312,7 +18615,12 @@ int SetLikeFunctions (void)
             {
             if (m->parsModelId == NO)
                 {
-                m->Likelihood = &Likelihood_Cont;
+                m->CondLikeDown   = &CondLikeDown_Cont;
+                m->CondLikeRoot   = &CondLikeRoot_Cont;
+                m->Likelihood     = &Likelihood_Cont;
+                m->CondLikeUp     = &CondLikeUp_Cont;
+                m->PrintAncStates = &PrintAncStates_Cont;
+                m->PrintSiteRates = &PrintSiteRates_Cont;
                 }
             }
         else

@@ -3226,7 +3226,7 @@ void CalculateTreeToTreeDistance (Tree *tree1, Tree *tree2, MrBFlt *d1, MrBFlt *
 }
 
 
-/* ConTree: Construct consensus tree FIXME: numTreeParts is not used*/
+/* ConTree: Construct consensus tree */
 int ConTree (PartCtr **treeParts, int numTreeParts)
 {
     int         i, j, targetNode, nBits, isCompat, numTerminalsEncountered;
@@ -7916,7 +7916,7 @@ int ShowConPhylogram (FILE *fp, PolyTree *t, int screenWidth)
     maxLabelLength = 20;
 
     /* allocate space for label, printLine and markLine */
-    printLine = (char *) SafeCalloc ((2*screenWidth+2),sizeof(char)); 
+    printLine = (char *) SafeCalloc (2*screenWidth+2, sizeof(char)); 
     label = (char *) SafeCalloc (maxLabelLength+1, sizeof(char));
     if (!printLine || !label)
         return ERROR;
@@ -8152,11 +8152,11 @@ int ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport)
     isTreeDivided = NO;
     
     /* allocate space for printLine, markLine and label */
-    printLine = (char *) SafeCalloc (maxLength+1+(2*screenWidth+2),sizeof(char));
-    if (!printLine)
+    printLine = (char *) SafeCalloc (2*screenWidth+2, sizeof(char)); 
+    label = (char *) SafeCalloc (maxLength+1, sizeof(char));
+    if (!printLine || !label)
         return ERROR;
     markLine = printLine + screenWidth + 1;
-    label = markLine + screenWidth + 1;
 
     /* get fresh internal node indices */
     k = t->nNodes - t->nIntNodes;
@@ -8393,9 +8393,7 @@ int ShowConTree (FILE *fp, PolyTree *t, int screenWidth, int showSupport)
 void ShowParts (FILE *fp, BitsLong *p, int nTaxaToShow)
 {
     int         i;
-    BitsLong    x, y, bitsLongOne;
-
-    bitsLongOne = 1;
+    BitsLong    x, y, bitsLongOne=1;
     
     for (i=0; i<nTaxaToShow; i++)
         {
@@ -8412,9 +8410,7 @@ void ShowParts (FILE *fp, BitsLong *p, int nTaxaToShow)
 void ShowSomeParts (FILE *fp, BitsLong *p, int offset, int nTaxaToShow)
 {
     int         i;
-    BitsLong    x, y, bitsLongOne;
-
-    bitsLongOne = 1;
+    BitsLong    x, y, bitsLongOne=1;
     
     for (i=offset; i<offset+nTaxaToShow; i++)
         {

@@ -178,7 +178,7 @@ int AddDummyChars (void)
     int         i, j, k, d, numIncompatible, numDeleted, oldRowSize,
                 newRowSize, numDummyChars, newColumn, newChar, oldColumn, oldChar, 
                 isCompat, *tempChar, numIncompatibleChars;
-    BitsLong    *tempMatrix, bitsLongOne = 1;
+    BitsLong    *tempMatrix, bitsLongOne=1;
     CLFlt       *tempSitesOfPat;
     ModelInfo   *m;
     ModelParams *mp;
@@ -3318,6 +3318,25 @@ int DoLsetParm (char *parmName, char *tkn)
                                 else
                                     MrBayesPrint ("%s   Setting Nst to %s for partition %d\n", spacer, modelParams[i].nst, i+1);
                                 }
+                            else if (modelParams[i].dataType == CONTINUOUS)
+                                {
+                                strcpy(modelParams[i].nst, tempStr);
+                                if (!strcmp(tempStr, "1"))
+                                    {
+                                    /* hack to use nst=1 for normalized (between 0 and 1, default) */
+                                    if (nApplied == 0 && numCurrentDivisions == 1)
+                                        MrBayesPrint ("%s   Characters are normalized\n", spacer);
+                                    else
+                                        MrBayesPrint ("%s   Characters are normalized for partition %d\n", spacer, i+1);
+                                    }
+                                else
+                                    {
+                                    if (nApplied == 0 && numCurrentDivisions == 1)
+                                        MrBayesPrint ("%s   Characters are standardized\n", spacer);
+                                    else
+                                        MrBayesPrint ("%s   Characters are standardized for partition %d\n", spacer, i+1);
+                                    }
+                                }
                             else {
                                 if (nApplied == 0 && numCurrentDivisions == 1)
                                     MrBayesPrint ("%s   Nst =%s unchanged ", spacer, modelParams[i].nst);
@@ -3351,7 +3370,7 @@ int DoLsetParm (char *parmName, char *tkn)
                     nApplied = NumActiveParts ();
                     for (i=0; i<numCurrentDivisions; i++)
                         {
-                        if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType != CONTINUOUS))
+                        if (activeParts[i] == YES || nApplied == 0)
                             {
                             modelParams[i].numGammaCats = tempInt;
                             if (nApplied == 0 && numCurrentDivisions == 1)
@@ -3384,7 +3403,7 @@ int DoLsetParm (char *parmName, char *tkn)
                     nApplied = NumActiveParts ();
                     for (i=0; i<numCurrentDivisions; i++)
                         {
-                        if ((activeParts[i] == YES || nApplied == 0) && (modelParams[i].dataType != CONTINUOUS))
+                        if (activeParts[i] == YES || nApplied == 0)
                             {
                             modelParams[i].numLnormCats = tempInt;
                             if (nApplied == 0 && numCurrentDivisions == 1)
@@ -3666,7 +3685,7 @@ int DoLsetParm (char *parmName, char *tkn)
                     nApplied = NumActiveParts ();
                     for (i=0; i<numCurrentDivisions; i++)
                         {
-                        if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType != CONTINUOUS)
+                        if (activeParts[i] == YES || nApplied == 0)
                             {
                             if (!strcmp(tempStr, "Yes"))
                                 strcpy(modelParams[i].augmentData, "Yes");
@@ -3801,13 +3820,14 @@ int DoLsetParm (char *parmName, char *tkn)
                     nApplied = NumActiveParts ();
                     for (i=0; i<numCurrentDivisions; i++)
                         {
-                        if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType != CONTINUOUS)
+                        if (activeParts[i] == YES || nApplied == 0)
                             {
                             if (!strcmp(tempStr, "Adgamma") && (modelParams[i].dataType != DNA && modelParams[i].dataType != RNA && modelParams[i].dataType != PROTEIN))
                                 {
                                 /* we won't apply an adgamma model to anything but DNA, RNA, or PROTEIN data */
                                 }
-                            else if ((!strcmp(tempStr, "Propinv") ||  !strcmp(tempStr, "Invgamma")) && (modelParams[i].dataType == STANDARD || modelParams[i].dataType == RESTRICTION))
+                            else if ((!strcmp(tempStr, "Propinv") || !strcmp(tempStr, "Invgamma")) &&
+                                     (modelParams[i].dataType == STANDARD || modelParams[i].dataType == RESTRICTION || modelParams[i].dataType == CONTINUOUS))
                                 {
                                 /* we will not apply pinvar to standard or restriction site data */
                                 }
@@ -3960,7 +3980,7 @@ int DoLsetParm (char *parmName, char *tkn)
 
                     for (i=0; i<numCurrentDivisions; i++)
                         {
-                        if ((activeParts[i] == YES || nApplied == 0))
+                        if (activeParts[i] == YES || nApplied == 0)
                             {     
                             strcpy(modelParams[i].statefreqModel, tempStr);
                             modelParams[i].nStates = NumStates (i);
@@ -5229,7 +5249,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                         nApplied = NumActiveParts ();
                         for (i=0; i<numCurrentDivisions; i++)
                             {
-                            if ((activeParts[i] == YES || nApplied == 0))
+                            if (activeParts[i] == YES || nApplied == 0)
                                 {
                                 strcpy(modelParams[i].aaModelPr, tempStr);
                                 if (!strcmp(modelParams[i].aaModelPr, "Mixed"))
@@ -5298,7 +5318,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                         nApplied = NumActiveParts ();
                         for (i=0; i<numCurrentDivisions; i++)
                             {
-                            if ((activeParts[i] == YES || nApplied == 0))
+                            if (activeParts[i] == YES || nApplied == 0)
                                 {
                                 if (!strcmp(modelParams[i].aaModelPr, "Fixed"))
                                     {
@@ -6555,7 +6575,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                     nApplied = NumActiveParts ();
                     for (i=0; i<numCurrentDivisions; i++)
                         {
-                        if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType != CONTINUOUS)
+                        if (activeParts[i] == YES || nApplied == 0)
                             {
                             if (!strcmp(tempStr,"Variable"))
                                 strcpy(modelParams[i].ratePr, "Dirichlet");
@@ -6684,7 +6704,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                     nApplied = NumActiveParts ();
                     for (i=0; i<numCurrentDivisions; i++)
                         {
-                        if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType != CONTINUOUS)
+                        if (activeParts[i] == YES || nApplied == 0)
                             {
                             if (!strcmp(tempStr,"Variable"))
                                 strcpy(modelParams[i].generatePr, "Dirichlet");
@@ -7069,12 +7089,6 @@ int DoPrsetParm (char *parmName, char *tkn)
                             if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType != CONTINUOUS)
                                 strcpy(modelParams[i].stateFreqPr, tempStr);
                             }
-                        /* if (flag == 0)
-                            {
-                            MrBayesPrint ("%s   Warning: %s can be set only for partition containing CONTINUOUS data.\
-                            Currently there is no active partition with such data. ", spacer, parmName);
-                            return (ERROR);
-                            } */
                         }
                     else
                         {
@@ -8548,7 +8562,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                 nApplied = NumActiveParts ();
                 for (i=0; i<numCurrentDivisions; i++)
                     {
-                    if ((activeParts[i] == YES || nApplied == 0))
+                    if (activeParts[i] == YES || nApplied == 0)
                         {
                         sscanf (tkn, "%lf", &tempD);
                         if (tempD < 0.0 || tempD > 1.0)
@@ -11116,7 +11130,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
                 return (ERROR);
                 }
             /* Post processing needed for some parameters */
-            /* FIXME: param is NULL here (from clang static analyzer) */
+            assert (param != NULL);  // param is non-NULL here
             if (param->paramType == P_SHAPE || param->paramType == P_CORREL)
                 {
                 for (i=0; i<chainParams.numRuns; i++)
@@ -11156,7 +11170,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
         foundName = YES;
 
         /* we now know that the name is complete; try to find the parameter with this name (case insensitive) */
-        /* FIXME: tempName is NULL? (from clang static analyzer) */
+        assert (tempName != NULL);  // tempName is non-NULL here
         for (i=0; i<(int)strlen(tempName); i++)
             tempName[i] = (char)(tolower(tempName[i]));
         
@@ -13047,20 +13061,10 @@ int FreeModel (void)
 
     if (memAllocs[ALLOC_MCMCTREES] == YES)
         {
-            /* FIXME: Trees needs to be deallocated, but I can't figure
-                out how many there are.  The loop below tries to free
-                unallocated memory...
-             */
-            /*
-        for (i = 0; i < numParams; ++i)
-            {
-            p = &params[i];
-
-            for (j = 0; j < numGlobalChains; ++j)
-                FreeTree (GetTree (p, j, 0));
-            }
-            */
-
+        /* mcmcTree holds numTrees * 2 * numGlobalChains pointers; free each tree.
+           Note: params[] is already freed above, so we iterate the flat array directly. */
+        for (i = 0; i < numTrees * 2 * numGlobalChains; i++)
+            FreeTree (mcmcTree[i]);
         SAFEFREE (mcmcTree);
         SAFEFREE (subParamPtrs);
         memAllocs[ALLOC_MCMCTREES] = NO;
@@ -14391,12 +14395,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         if (!strcmp(modelParams[part2].parsModel, "Yes"))
             *isApplic2 = NO; /* part2 has a parsimony model and shape parameter does not apply */
 
-        /* Check that the data are not CONTINUOUS for partitions 1 and 2 */
-        if (modelParams[part1].dataType == CONTINUOUS)
-            *isApplic1 = NO; /* the shape parameter does not make sense for part1 */
-        if (modelParams[part2].dataType == CONTINUOUS)
-            *isApplic2 = NO; /* the shape parameter does not make sense for part2 */
-
         /* Now, check that the data are the same (i.e., both nucleotide or both amino acid, or whatever). */
         if (isFirstNucleotide != isSecondNucleotide)
             isSame = NO; /* data are not both nucleotide */
@@ -14412,9 +14410,9 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
             *isApplic2 = NO; /* the shape parameter does not make sense for part2 */
 
         /* Check that the model is either lnorm or gamma for both partitions */
-        if (!strcmp(modelParams[part1].ratesModel, "Lnorm") && strcmp(modelParams[part1].ratesModel, "Lnorm") != 0)
+        if (!strcmp(modelParams[part1].ratesModel, "Lnorm") && strcmp(modelParams[part2].ratesModel, "Lnorm") != 0)
             isSame = NO;    /* if the first is lnorm, the second must be lnorm */
-        if (strcmp(modelParams[part1].ratesModel, "Lnorm") != 0 && !strcmp(modelParams[part1].ratesModel, "Lnorm"))
+        if (strcmp(modelParams[part2].ratesModel, "Lnorm") != 0 && !strcmp(modelParams[part1].ratesModel, "Lnorm"))
             isSame = NO;    /* if the first is not lnorm, the second cannot be lnorm */
 
         /* We may have a nucleotide model. Make certain the models are not of type codon. */
@@ -15294,9 +15292,9 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         /* Check the correlation parameter for brownian motion 1 and 2. */
         
         /* Check that the data are either CONTINUOUS for partitions 1 and 2 */
-        if (modelParams[part1].dataType != CONTINUOUS)
+        // if (modelParams[part1].dataType != CONTINUOUS)
             *isApplic1 = NO; /* the correlation parameter does not make sense for part1 */
-        if (modelParams[part2].dataType != CONTINUOUS)
+        // if (modelParams[part2].dataType != CONTINUOUS)
             *isApplic2 = NO; /* the correlation parameter does not make sense for part2 */
             
         /* Now, check that the data are the same. */
@@ -15328,9 +15326,9 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         /* Check the sigma parameter for brownian motion 1 and 2. */
         
         /* Check that the data are either CONTINUOUS for partitions 1 and 2 */
-        if (modelParams[part1].dataType != CONTINUOUS)
+        // if (modelParams[part1].dataType != CONTINUOUS)
             *isApplic1 = NO; /* the sigma parameter does not make sense for part1 */
-        if (modelParams[part2].dataType != CONTINUOUS)
+        // if (modelParams[part2].dataType != CONTINUOUS)
             *isApplic2 = NO; /* the sigma parameter does not make sense for part2 */
             
         /* Now, check that the data are the same. */
@@ -16248,22 +16246,20 @@ int PrintCompMatrix (void)
 
     if (!compMatrix)
         return ERROR;
-
-    whichChar = &WhichNuc;
     
     for (d=0; d<numCurrentDivisions; d++)
         {
         m = &modelSettings[d];
         mp = &modelParams[d];
 
-        if (mp->dataType == DNA || mp->dataType == RNA)
-            whichChar = &WhichNuc;
         if (mp->dataType == PROTEIN)
             whichChar = &WhichAA;
         if (mp->dataType == RESTRICTION)
             whichChar = &WhichRes;
         if (mp->dataType == STANDARD)
             whichChar = &WhichStand;
+        else
+            whichChar = &WhichNuc;
 
         MrBayesPrint ("\nCompressed matrix for division %d\n\n", d+1);
         
@@ -16282,7 +16278,7 @@ int PrintCompMatrix (void)
                     if (j >= m->compMatrixStop)
                         break;
                     if (mp->dataType == CONTINUOUS)
-                        MrBayesPrint ("%3d ", compMatrix[pos(i,j,compMatrixRowSize)]);
+                        MrBayesPrint ("%.2lf ", WhichCont((int)compMatrix[pos(i,j,compMatrixRowSize)]));
                     else
                         MrBayesPrint ("%c", whichChar((int)compMatrix[pos(i,j,compMatrixRowSize)]));
                     }
@@ -16317,7 +16313,7 @@ int PrintCompMatrix (void)
                 if (i>9)
                     i = '0' + (i % 10);
                 else
-                    i = '0' +i;
+                    i = '0' + i;
                 if (mp->dataType == CONTINUOUS)
                     MrBayesPrint ("   %c ", i);
                 else
@@ -16517,9 +16513,9 @@ int ProcessStdChars (RandLong *seed)
                 MrBayesPrint ("%s            less than two observed states; it will be assumed to have two states.\n", spacer);
                 m->nStates[c] = 2;
                 }
-            if (m->nStates[c] > 6 && m->cType[c] != UNORD)
+            if (m->nStates[c] > MAX_STD_STATES)
                 {
-                MrBayesPrint ("%s   Only unordered model supported for characters with more than 6 states\n", spacer);
+                MrBayesPrint ("%s   Standard characters with more than %d states are not supported\n", spacer, MAX_STD_STATES);
                 return ERROR;
                 }
             if (m->nStates[c] == 2 && m->cType[c] == ORD)
@@ -18962,7 +18958,7 @@ int SetModelInfo (void)
                 if (!strcmp(mp->nucModel,"Codon") && !strcmp(mp->omegaVar,"Equal"))
                     m->printAncStates = YES;
                 }
-            else if (m->dataType == STANDARD || m->dataType == RESTRICTION)
+            else if (m->dataType == STANDARD || m->dataType == RESTRICTION || m->dataType == CONTINUOUS)
                 m->printAncStates = YES;
             if (m->printAncStates == YES)
                 inferAncStates = YES;
@@ -21507,10 +21503,9 @@ int SetUpLinkTable (void)
                                 modelId[i] = ++paramCount;
                                 isFirst = NO;
                                 }
-                            else
+                            else if (modelId[i] == 0)
                                 {
-                                if (modelId[i] == 0)
-                                    modelId[i] = ++paramCount;
+                                modelId[i] = ++paramCount;
                                 }
                             }
                         if (modelId[k] == 0 && isApplicable2 == YES)
@@ -21725,7 +21720,7 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25;
 
-    /* Move_BMcorr */
+    /* // Move_BMcorr
     mt = &moveTypes[i++];
     mt->name = "Sliding window";
     mt->shortName = "Slider";
@@ -21736,7 +21731,7 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_BMcorr;
     mt->relProposalProb = 1.0;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 0.1;  /* window size */
+    mt->tuningParam[0] = 0.1;
     mt->minimum[0] = 0.00001;
     mt->maximum[0] = 100.0;
     mt->parsimonyBased = NO;
@@ -21744,7 +21739,7 @@ void SetUpMoveTypes (void)
     mt->Autotune = &AutotuneSlider;
     mt->targetRate = 0.25;
 
-    /* Move_BMsigma */
+    // Move_BMsigma
     mt = &moveTypes[i++];
     mt->name = "Multiplier";
     mt->shortName = "Multiplier";
@@ -21756,13 +21751,13 @@ void SetUpMoveTypes (void)
     mt->moveFxn = &Move_BMsigma;
     mt->relProposalProb = 1.0;
     mt->numTuningParams = 1;
-    mt->tuningParam[0] = 2.0 * log (1.5);  /* lambda */
+    mt->tuningParam[0] = 2.0 * log (1.5);
     mt->minimum[0] = 0.0001;
     mt->maximum[0] = 20.0;
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneMultiplier;
-    mt->targetRate = 0.25;
+    mt->targetRate = 0.25; */
 
     /* Move_ClockRate_M */
     mt = &moveTypes[i++];
@@ -22576,8 +22571,8 @@ void SetUpMoveTypes (void)
 
     /* Move_ParsSPR asym */
     mt = &moveTypes[i++];
-    mt->name = "Parsimony-biased SPR";
-    mt->shortName = "ParsSPR";
+    mt->name = "Parsimony-biased SPR variant 3";
+    mt->shortName = "ParsSPR3";
     mt->subParams = YES;
     mt->tuningName[0] = "parsimony warp factor";
     mt->shortTuningName[0] = "warp";
@@ -22606,7 +22601,7 @@ void SetUpMoveTypes (void)
     mt->minimum[3] = 0.0001;
     mt->maximum[3] = 20.0;
     mt->parsimonyBased = YES;
-    mt->level = STANDARD_USER;
+    mt->level = DEVELOPER;
     mt->isApplicable = &IsApplicable_FourTaxaOrMore;
 
     /* Move_ParsSPR1 e^{-S} */
@@ -23632,14 +23627,44 @@ int ShowModel (void)
             {
             MrBayesPrint ("%s         Datatype  = Continuous\n", spacer);
             }
-            
+        
         if (modelSettings[i].dataType == CONTINUOUS)
             {
             /* begin description of continuous models */
-              if (!strcmp(modelParams[i].brownCorrPr, "Fixed") && AreDoublesEqual(modelParams[i].brownCorrFix, 0.0, ETA)==YES)
+            if (!strcmp(modelParams[i].nst, "1"))
+                MrBayesPrint ("%s                     Characters are normalized (between 0 and 1)\n", spacer);
+            else
+                MrBayesPrint ("%s                     Characters are standardized (mean 0 stdev 1)\n", spacer);
+            
+            if (!strcmp(modelParams[i].brownCorrPr, "Fixed") && AreDoublesEqual(modelParams[i].brownCorrFix, 0.0, ETA)==YES)
                 MrBayesPrint ("%s         Model     = Independent Brownian motion\n", spacer);
             else
                 MrBayesPrint ("%s         Model     = Correlated Brownian motion\n", spacer);
+            
+            MrBayesPrint ("%s         Rates     = %s\n", spacer, modelParams[i].ratesModel);
+            if (!strcmp(modelParams[i].ratesModel, "Gamma") || !strcmp(modelParams[i].ratesModel, "LNorm"))
+                {
+                /* how many categories is the continuous gamma/lnorm approximated by? */
+                if (!strcmp(modelParams[i].ratesModel, "Lnorm"))
+                    MrBayesPrint ("%s                     The distribution is approximated using %d categories.\n", spacer, modelParams[i].numLnormCats);
+                else
+                    MrBayesPrint ("%s                     The distribution is approximated using %d categories.\n", spacer, modelParams[i].numGammaCats);
+                /* distribution on shape parameter, if appropriate */
+                if (!strcmp(modelParams[i].shapePr,"Uniform"))
+                    {
+                    MrBayesPrint ("%s                     Shape parameter is uniformly distributed\n", spacer);
+                    MrBayesPrint ("%s                     on the interval (%1.2lf,%1.2lf).\n", spacer, modelParams[i].shapeUni[0], modelParams[i].shapeUni[1]);
+                    }
+                else if (!strcmp(modelParams[i].shapePr,"Exponential"))
+                    {
+                    MrBayesPrint ("%s                     Shape parameter is exponentially\n", spacer);
+                    MrBayesPrint ("%s                     distributed with parameter (%1.2lf).\n", spacer, modelParams[i].shapeExp);
+                    }
+                else
+                    {
+                    MrBayesPrint ("%s                     Shape parameter is fixed to %1.2lf.\n", spacer, modelParams[i].shapeFix);
+                    }
+                }
             /* end description of continuous models */
             }
         else
@@ -23915,146 +23940,90 @@ int ShowModel (void)
                     }
 
                 /* what assumptions are made about the state frequencies? */
-                if (modelParams[i].dataType != CONTINUOUS)
+                if (modelParams[i].dataType == STANDARD)
+                    MrBayesPrint ("%s         # States  = Variable, up to %d\n", spacer, MAX_STD_STATES);
+                else if (modelSettings[i].numStates != modelSettings[i].numModelStates)
+                    MrBayesPrint ("%s         # States  = %d (in the model)\n", spacer, modelSettings[i].numModelStates);
+                else
+                    MrBayesPrint ("%s         # States  = %d\n", spacer, ns);
+                if (modelSettings[i].dataType == STANDARD)
                     {
-                    if (modelParams[i].dataType == STANDARD)
-                        MrBayesPrint ("%s         # States  = Variable, up to %d\n", spacer, MAX_STD_STATES);
-                    else if (modelSettings[i].numStates != modelSettings[i].numModelStates)
-                        MrBayesPrint ("%s         # States  = %d (in the model)\n", spacer, modelSettings[i].numModelStates);
-                    else
-                        MrBayesPrint ("%s         # States  = %d\n", spacer, ns);
-                    if (modelSettings[i].dataType == STANDARD)
+                    if (!strcmp(modelParams[i].symPiPr,"Fixed"))
                         {
-                        if (!strcmp(modelParams[i].symPiPr,"Fixed"))
-                            {
-                            if (AreDoublesEqual(modelParams[i].symBetaFix, -1.0, ETA)==YES)
-                                MrBayesPrint ("%s                     State frequencies are fixed to be equal\n", spacer);
-                            else
-                                MrBayesPrint ("%s                     Symmetric Dirichlet alpha is fixed to %1.2lf\n", spacer, modelParams[i].symBetaFix);
-                            }
-                        else if (!strcmp(modelParams[i].symPiPr,"Uniform"))
-                            {
-                            MrBayesPrint ("%s                     Symmetric Dirichlet alpha has a Uniform(%1.2lf,%1.2lf) prior\n", spacer, modelParams[i].symBetaUni[0], modelParams[i].symBetaUni[1]);
-                            }
-                        else
-                            {
-                            MrBayesPrint ("%s                     Symmetric Dirichlet alpha has a Exponential(%1.2lf) prior\n", spacer, modelParams[i].symBetaExp);
-                            }
-                        }
-                    else if (modelSettings[i].dataType == RESTRICTION)
-                        {
-                        /* distribution on state frequencies for restriction site model */
-                        if (!strcmp(modelParams[i].stateFreqPr,"Dirichlet"))
-                            {
-                            MrBayesPrint ("%s                     State frequencies have a Dirichlet (%1.2lf,%1.2lf) prior\n", spacer,
-                                modelParams[i].stateFreqsDir[0], modelParams[i].stateFreqsDir[1]);
-                            }
-                        else if (!strcmp(modelParams[i].stateFreqPr,"Fixed") && !strcmp(modelParams[i].stateFreqsFixType,"Equal"))
-                            {
+                        if (AreDoublesEqual(modelParams[i].symBetaFix, -1.0, ETA)==YES)
                             MrBayesPrint ("%s                     State frequencies are fixed to be equal\n", spacer);
-                            }
-                        else if (!strcmp(modelParams[i].stateFreqPr,"Fixed") && !strcmp(modelParams[i].stateFreqsFixType,"User"))
-                            {
-                            MrBayesPrint ("%s                     State frequencies are fixed(%1.2lf,%1.2lf)\n", spacer,
-                                modelParams[i].stateFreqsFix[0], modelParams[i].stateFreqsFix[1]);
-                            MrBayesPrint ("%s                     State frequencies have been fixed by the user\n", spacer);
-                            }
-                        else if (!strcmp(modelParams[i].stateFreqPr,"Fixed") && !strcmp(modelParams[i].stateFreqsFixType,"Empirical"))
-                            {
-                            MrBayesPrint ("%s                     State frequencies are fixed(%1.2lf,%1.2lf)\n", spacer,
-                                modelParams[i].stateFreqsFix[0], modelParams[i].stateFreqsFix[1]);
-                            MrBayesPrint ("%s                     State frequencies have been fixed to the empirical frequencies in the data\n", spacer);
-                            }
-                        if (!strcmp(modelParams[i].statefreqModel,"Directional") || !strcmp(modelParams[i].statefreqModel,"Mixed"))
-                            {
-                            MrBayesPrint ("%s                     State frequencies are potentially different for the root (directional model)\n", spacer);
-                            if (!strcmp(modelParams[i].statefreqModel,"Directional") && !strcmp(modelParams[i].rootFreqPr,"Fixed"))
-                                MrBayesPrint ("%s                     Root state frequencies are fixed(%1.2lf,%1.2lf)\n", spacer,
-                                    modelParams[i].rootFreqsFix[0], modelParams[i].rootFreqsFix[1]);
-                            else if (!strcmp(modelParams[i].statefreqModel,"Directional") && !strcmp(modelParams[i].rootFreqPr,"Dirichlet"))
-                                MrBayesPrint ("%s                     Root state frequencies have a Dirichlet (%1.2lf,%1.2lf) prior\n", spacer,
-                                    modelParams[i].rootFreqsDir[0], modelParams[i].rootFreqsDir[1]);
-                            }
-                        else if (!strcmp(modelParams[i].statefreqModel,"Mixed"))
-                            {
-                            MrBayesPrint ("%s                     State frequencies are potentially different for the root\n", spacer);
-                            }
-                        }
-                    else if (modelSettings[i].dataType == PROTEIN)
-                        {
-                        /* distribution on state frequencies for aminoacid model */
-                        if (!strcmp(modelParams[i].aaModelPr, "Fixed") && (strcmp(modelParams[i].aaModel, "Equalin")==0 ||
-                            strcmp(modelParams[i].aaModel, "Gtr")==0))
-                            {
-                            if (!strcmp(modelParams[i].stateFreqPr,"Dirichlet"))
-                                {
-                                MrBayesPrint ("%s                     State frequencies have a Dirichlet prior\n", spacer);
-                                MrBayesPrint ("%s                     (%1.2lf,%1.2lf,%1.2lf,%1.2lf,%1.2lf,", spacer,
-                                    modelParams[i].stateFreqsDir[0], modelParams[i].stateFreqsDir[1], modelParams[i].stateFreqsDir[2],
-                                    modelParams[i].stateFreqsDir[3], modelParams[i].stateFreqsDir[4]);
-                                MrBayesPrint ("%1.2lf,%1.2lf,%1.2lf,%1.2lf,%1.2lf,\n",
-                                    modelParams[i].stateFreqsDir[5], modelParams[i].stateFreqsDir[6], modelParams[i].stateFreqsDir[7],
-                                    modelParams[i].stateFreqsDir[8], modelParams[i].stateFreqsDir[9]);
-                                MrBayesPrint ("%s                     %1.2lf,%1.2lf,%1.2lf,%1.2lf,%1.2lf,", spacer,
-                                    modelParams[i].stateFreqsDir[10], modelParams[i].stateFreqsDir[11], modelParams[i].stateFreqsDir[12],
-                                    modelParams[i].stateFreqsDir[13], modelParams[i].stateFreqsDir[14]);
-                                MrBayesPrint ("%1.2lf,%1.2lf,%1.2lf,%1.2lf,%1.2lf)\n",
-                                    modelParams[i].stateFreqsDir[15], modelParams[i].stateFreqsDir[16], modelParams[i].stateFreqsDir[17],
-                                    modelParams[i].stateFreqsDir[18], modelParams[i].stateFreqsDir[19]);
-                                }
-                            else if (!strcmp(modelParams[i].stateFreqPr,"Fixed") && !strcmp(modelParams[i].stateFreqsFixType,"Equal"))
-                                {
-                                MrBayesPrint ("%s                     State frequencies are fixed to be equal\n", spacer);
-                                }
-                            else if (!strcmp(modelParams[i].stateFreqPr,"Fixed") && !strcmp(modelParams[i].stateFreqsFixType,"User"))
-                                {
-                                MrBayesPrint ("%s                     State frequencies have been fixed by the user\n", spacer);
-                                }
-                            else if (!strcmp(modelParams[i].stateFreqPr,"Fixed") && !strcmp(modelParams[i].stateFreqsFixType,"Empirical"))
-                                {
-                                MrBayesPrint ("%s                     State frequencies have been fixed to the empirical frequencies in the data\n", spacer);
-                                }
-                            }
-                        else if (!strcmp(modelParams[i].aaModelPr, "Fixed") && !strcmp(modelParams[i].aaModel, "Poisson"))
-                            {
-                            MrBayesPrint ("%s                     State frequencies are fixed to be equal\n", spacer);
-                            }
-                        else if (!strcmp(modelParams[i].aaModelPr, "Fixed") && strcmp(modelParams[i].aaModel, "Equalin") && strcmp(modelParams[i].aaModel, "Poisson"))
-                            {
-                            MrBayesPrint ("%s                     State frequencies are fixed to the %s frequencies\n", spacer, modelParams[i].aaModel);
-                            }
                         else
-                            {
-                            MrBayesPrint ("%s                     State frequencies come from the mixture of models\n", spacer);
-                            }
+                            MrBayesPrint ("%s                     Symmetric Dirichlet alpha is fixed to %1.2lf\n", spacer, modelParams[i].symBetaFix);
+                        }
+                    else if (!strcmp(modelParams[i].symPiPr,"Uniform"))
+                        {
+                        MrBayesPrint ("%s                     Symmetric Dirichlet alpha has a Uniform(%1.2lf,%1.2lf) prior\n", spacer, modelParams[i].symBetaUni[0], modelParams[i].symBetaUni[1]);
                         }
                     else
                         {
-                        /* distribution on state frequencies for all other models */
+                        MrBayesPrint ("%s                     Symmetric Dirichlet alpha has a Exponential(%1.2lf) prior\n", spacer, modelParams[i].symBetaExp);
+                        }
+                    }
+                else if (modelSettings[i].dataType == RESTRICTION)
+                    {
+                    /* distribution on state frequencies for restriction site model */
+                    if (!strcmp(modelParams[i].stateFreqPr,"Dirichlet"))
+                        {
+                        MrBayesPrint ("%s                     State frequencies have a Dirichlet (%1.2lf,%1.2lf) prior\n", spacer,
+                            modelParams[i].stateFreqsDir[0], modelParams[i].stateFreqsDir[1]);
+                        }
+                    else if (!strcmp(modelParams[i].stateFreqPr,"Fixed") && !strcmp(modelParams[i].stateFreqsFixType,"Equal"))
+                        {
+                        MrBayesPrint ("%s                     State frequencies are fixed to be equal\n", spacer);
+                        }
+                    else if (!strcmp(modelParams[i].stateFreqPr,"Fixed") && !strcmp(modelParams[i].stateFreqsFixType,"User"))
+                        {
+                        MrBayesPrint ("%s                     State frequencies are fixed(%1.2lf,%1.2lf)\n", spacer,
+                            modelParams[i].stateFreqsFix[0], modelParams[i].stateFreqsFix[1]);
+                        MrBayesPrint ("%s                     State frequencies have been fixed by the user\n", spacer);
+                        }
+                    else if (!strcmp(modelParams[i].stateFreqPr,"Fixed") && !strcmp(modelParams[i].stateFreqsFixType,"Empirical"))
+                        {
+                        MrBayesPrint ("%s                     State frequencies are fixed(%1.2lf,%1.2lf)\n", spacer,
+                            modelParams[i].stateFreqsFix[0], modelParams[i].stateFreqsFix[1]);
+                        MrBayesPrint ("%s                     State frequencies have been fixed to the empirical frequencies in the data\n", spacer);
+                        }
+                    if (!strcmp(modelParams[i].statefreqModel,"Directional") || !strcmp(modelParams[i].statefreqModel,"Mixed"))
+                        {
+                        MrBayesPrint ("%s                     State frequencies are potentially different for the root (directional model)\n", spacer);
+                        if (!strcmp(modelParams[i].statefreqModel,"Directional") && !strcmp(modelParams[i].rootFreqPr,"Fixed"))
+                            MrBayesPrint ("%s                     Root state frequencies are fixed(%1.2lf,%1.2lf)\n", spacer,
+                                modelParams[i].rootFreqsFix[0], modelParams[i].rootFreqsFix[1]);
+                        else if (!strcmp(modelParams[i].statefreqModel,"Directional") && !strcmp(modelParams[i].rootFreqPr,"Dirichlet"))
+                            MrBayesPrint ("%s                     Root state frequencies have a Dirichlet (%1.2lf,%1.2lf) prior\n", spacer,
+                                modelParams[i].rootFreqsDir[0], modelParams[i].rootFreqsDir[1]);
+                        }
+                    else if (!strcmp(modelParams[i].statefreqModel,"Mixed"))
+                        {
+                        MrBayesPrint ("%s                     State frequencies are potentially different for the root\n", spacer);
+                        }
+                    }
+                else if (modelSettings[i].dataType == PROTEIN)
+                    {
+                    /* distribution on state frequencies for aminoacid model */
+                    if (!strcmp(modelParams[i].aaModelPr, "Fixed") && (strcmp(modelParams[i].aaModel, "Equalin")==0 ||
+                        strcmp(modelParams[i].aaModel, "Gtr")==0))
+                        {
                         if (!strcmp(modelParams[i].stateFreqPr,"Dirichlet"))
                             {
                             MrBayesPrint ("%s                     State frequencies have a Dirichlet prior\n", spacer);
-                            if (!strcmp(modelParams[i].nucModel, "Doublet"))
-                                {
-                                MrBayesPrint ("%s                     (%1.2lf,%1.2lf,%1.2lf,%1.2lf,\n", spacer,
-                                    modelParams[i].stateFreqsDir[0], modelParams[i].stateFreqsDir[1], modelParams[i].stateFreqsDir[2],
-                                    modelParams[i].stateFreqsDir[3]);
-                                MrBayesPrint ("%s                     %1.2lf,%1.2lf,%1.2lf,%1.2lf,\n", spacer,
-                                    modelParams[i].stateFreqsDir[4], modelParams[i].stateFreqsDir[5], modelParams[i].stateFreqsDir[6],
-                                    modelParams[i].stateFreqsDir[7]);
-                                MrBayesPrint ("%s                     %1.2lf,%1.2lf,%1.2lf,%1.2lf,\n", spacer,
-                                    modelParams[i].stateFreqsDir[8], modelParams[i].stateFreqsDir[9], modelParams[i].stateFreqsDir[10],
-                                    modelParams[i].stateFreqsDir[11]);
-                                MrBayesPrint ("%s                     %1.2lf,%1.2lf,%1.2lf,%1.2lf)\n", spacer,
-                                    modelParams[i].stateFreqsDir[12], modelParams[i].stateFreqsDir[13], modelParams[i].stateFreqsDir[14],
-                                    modelParams[i].stateFreqsDir[15]);
-                                }
-                            else if (!strcmp(modelParams[i].nucModel, "4by4"))
-                                {
-                                MrBayesPrint ("%s                     (%1.2lf,%1.2lf,%1.2lf,%1.2lf)\n", spacer,
-                                    modelParams[i].stateFreqsDir[0], modelParams[i].stateFreqsDir[1], modelParams[i].stateFreqsDir[2],
-                                    modelParams[i].stateFreqsDir[3]);
-                                }
+                            MrBayesPrint ("%s                     (%1.2lf,%1.2lf,%1.2lf,%1.2lf,%1.2lf,", spacer,
+                                modelParams[i].stateFreqsDir[0], modelParams[i].stateFreqsDir[1], modelParams[i].stateFreqsDir[2],
+                                modelParams[i].stateFreqsDir[3], modelParams[i].stateFreqsDir[4]);
+                            MrBayesPrint ("%1.2lf,%1.2lf,%1.2lf,%1.2lf,%1.2lf,\n",
+                                modelParams[i].stateFreqsDir[5], modelParams[i].stateFreqsDir[6], modelParams[i].stateFreqsDir[7],
+                                modelParams[i].stateFreqsDir[8], modelParams[i].stateFreqsDir[9]);
+                            MrBayesPrint ("%s                     %1.2lf,%1.2lf,%1.2lf,%1.2lf,%1.2lf,", spacer,
+                                modelParams[i].stateFreqsDir[10], modelParams[i].stateFreqsDir[11], modelParams[i].stateFreqsDir[12],
+                                modelParams[i].stateFreqsDir[13], modelParams[i].stateFreqsDir[14]);
+                            MrBayesPrint ("%1.2lf,%1.2lf,%1.2lf,%1.2lf,%1.2lf)\n",
+                                modelParams[i].stateFreqsDir[15], modelParams[i].stateFreqsDir[16], modelParams[i].stateFreqsDir[17],
+                                modelParams[i].stateFreqsDir[18], modelParams[i].stateFreqsDir[19]);
                             }
                         else if (!strcmp(modelParams[i].stateFreqPr,"Fixed") && !strcmp(modelParams[i].stateFreqsFixType,"Equal"))
                             {
@@ -24069,88 +24038,136 @@ int ShowModel (void)
                             MrBayesPrint ("%s                     State frequencies have been fixed to the empirical frequencies in the data\n", spacer);
                             }
                         }
+                    else if (!strcmp(modelParams[i].aaModelPr, "Fixed") && !strcmp(modelParams[i].aaModel, "Poisson"))
+                        {
+                        MrBayesPrint ("%s                     State frequencies are fixed to be equal\n", spacer);
+                        }
+                    else if (!strcmp(modelParams[i].aaModelPr, "Fixed") && strcmp(modelParams[i].aaModel, "Equalin") && strcmp(modelParams[i].aaModel, "Poisson"))
+                        {
+                        MrBayesPrint ("%s                     State frequencies are fixed to the %s frequencies\n", spacer, modelParams[i].aaModel);
+                        }
+                    else
+                        {
+                        MrBayesPrint ("%s                     State frequencies come from the mixture of models\n", spacer);
+                        }
                     }
                 else
-                    MrBayesPrint ("%s         # States  = Infinity\n", spacer);
+                    {
+                    /* distribution on state frequencies for all other models */
+                    if (!strcmp(modelParams[i].stateFreqPr,"Dirichlet"))
+                        {
+                        MrBayesPrint ("%s                     State frequencies have a Dirichlet prior\n", spacer);
+                        if (!strcmp(modelParams[i].nucModel, "Doublet"))
+                            {
+                            MrBayesPrint ("%s                     (%1.2lf,%1.2lf,%1.2lf,%1.2lf,\n", spacer,
+                                modelParams[i].stateFreqsDir[0], modelParams[i].stateFreqsDir[1], modelParams[i].stateFreqsDir[2],
+                                modelParams[i].stateFreqsDir[3]);
+                            MrBayesPrint ("%s                     %1.2lf,%1.2lf,%1.2lf,%1.2lf,\n", spacer,
+                                modelParams[i].stateFreqsDir[4], modelParams[i].stateFreqsDir[5], modelParams[i].stateFreqsDir[6],
+                                modelParams[i].stateFreqsDir[7]);
+                            MrBayesPrint ("%s                     %1.2lf,%1.2lf,%1.2lf,%1.2lf,\n", spacer,
+                                modelParams[i].stateFreqsDir[8], modelParams[i].stateFreqsDir[9], modelParams[i].stateFreqsDir[10],
+                                modelParams[i].stateFreqsDir[11]);
+                            MrBayesPrint ("%s                     %1.2lf,%1.2lf,%1.2lf,%1.2lf)\n", spacer,
+                                modelParams[i].stateFreqsDir[12], modelParams[i].stateFreqsDir[13], modelParams[i].stateFreqsDir[14],
+                                modelParams[i].stateFreqsDir[15]);
+                            }
+                        else if (!strcmp(modelParams[i].nucModel, "4by4"))
+                            {
+                            MrBayesPrint ("%s                     (%1.2lf,%1.2lf,%1.2lf,%1.2lf)\n", spacer,
+                                modelParams[i].stateFreqsDir[0], modelParams[i].stateFreqsDir[1], modelParams[i].stateFreqsDir[2],
+                                modelParams[i].stateFreqsDir[3]);
+                            }
+                        }
+                    else if (!strcmp(modelParams[i].stateFreqPr,"Fixed") && !strcmp(modelParams[i].stateFreqsFixType,"Equal"))
+                        {
+                        MrBayesPrint ("%s                     State frequencies are fixed to be equal\n", spacer);
+                        }
+                    else if (!strcmp(modelParams[i].stateFreqPr,"Fixed") && !strcmp(modelParams[i].stateFreqsFixType,"User"))
+                        {
+                        MrBayesPrint ("%s                     State frequencies have been fixed by the user\n", spacer);
+                        }
+                    else if (!strcmp(modelParams[i].stateFreqPr,"Fixed") && !strcmp(modelParams[i].stateFreqsFixType,"Empirical"))
+                        {
+                        MrBayesPrint ("%s                     State frequencies have been fixed to the empirical frequencies in the data\n", spacer);
+                        }
+                    }
 
                 /* now, let's deal with rate variation across sites */
-                if (modelSettings[i].dataType != CONTINUOUS)
+                if (((modelSettings[i].dataType == DNA || modelSettings[i].dataType == RNA) && strcmp(modelParams[i].nucModel,"Codon")!=0) ||
+                      modelSettings[i].dataType == PROTEIN || modelSettings[i].dataType == RESTRICTION || modelSettings[i].dataType == STANDARD)
                     {
-                    if (((modelSettings[i].dataType == DNA || modelSettings[i].dataType == RNA) && strcmp(modelParams[i].nucModel,"Codon")!=0) ||
-                          modelSettings[i].dataType == PROTEIN || modelSettings[i].dataType == RESTRICTION || modelSettings[i].dataType == STANDARD)
+                    if (!strcmp(modelParams[i].covarionModel, "No"))
+                        MrBayesPrint ("%s         Rates     = %s\n", spacer, modelParams[i].ratesModel);
+                    else
                         {
-                        if (!strcmp(modelParams[i].covarionModel, "No"))
-                            MrBayesPrint ("%s         Rates     = %s\n", spacer, modelParams[i].ratesModel);
+                        if (!strcmp(modelParams[i].ratesModel, "Propinv"))
+                            MrBayesPrint ("%s         Rates     = Equal ", spacer);
+                        else if (!strcmp(modelParams[i].ratesModel, "Invgamma"))
+                            MrBayesPrint ("%s         Rates     = Gamma ", spacer);
                         else
-                            {
-                            if (!strcmp(modelParams[i].ratesModel, "Propinv"))
-                                MrBayesPrint ("%s         Rates     = Equal ", spacer);
-                            else if (!strcmp(modelParams[i].ratesModel, "Invgamma"))
-                                MrBayesPrint ("%s         Rates     = Gamma ", spacer);
-                            else
-                                MrBayesPrint ("%s         Rates     = %s ", spacer, modelParams[i].ratesModel);
-                            MrBayesPrint ("(+ Propinv induced by covarion model)\n");
-                            }
+                            MrBayesPrint ("%s         Rates     = %s ", spacer, modelParams[i].ratesModel);
+                        MrBayesPrint ("(+ Propinv induced by covarion model)\n");
+                        }
+                    
+                    if ((modelParams[i].dataType == RESTRICTION || modelParams[i].dataType == STANDARD) && !strcmp(modelParams[i].ratesModel, "Adgamma"))
+                        {
                         
-                        if ((modelParams[i].dataType == RESTRICTION || modelParams[i].dataType == STANDARD) && !strcmp(modelParams[i].ratesModel, "Adgamma"))
+                        }
+                    else
+                        {
+                        if (!strcmp(modelParams[i].ratesModel, "Gamma") || !strcmp(modelParams[i].ratesModel, "Invgamma") ||
+                            !strcmp(modelParams[i].ratesModel, "LNorm") || !strcmp(modelParams[i].ratesModel, "Adgamma") ||
+                            !strcmp(modelParams[i].ratesModel, "Kmixture"))
                             {
-                            
+                            /* how many categories is the continuous gamma/lnorm approximated by? or how many components are there in the mixture? */
+                            if (!strcmp(modelParams[i].ratesModel, "Kmixture"))
+                                MrBayesPrint ("%s                     There are %d components in the mixture.\n", spacer, modelParams[i].numMixtCats);
+                            else if (!strcmp(modelParams[i].ratesModel, "Lnorm"))
+                                MrBayesPrint ("%s                     The distribution is approximated using %d categories.\n", spacer, modelParams[i].numLnormCats);
+                            else
+                                MrBayesPrint ("%s                     The distribution is approximated using %d categories.\n", spacer, modelParams[i].numGammaCats);
+                            /* distribution on shape parameter, if appropriate */
+                            if (!strcmp(modelParams[i].shapePr,"Uniform"))
+                                {
+                                MrBayesPrint ("%s                     Shape parameter is uniformly distributed\n", spacer);
+                                MrBayesPrint ("%s                     on the interval (%1.2lf,%1.2lf).\n", spacer, modelParams[i].shapeUni[0], modelParams[i].shapeUni[1]);
+                                }
+                            else if (!strcmp(modelParams[i].shapePr,"Exponential"))
+                                {
+                                MrBayesPrint ("%s                     Shape parameter is exponentially\n", spacer);
+                                MrBayesPrint ("%s                     distributed with parameter (%1.2lf).\n", spacer, modelParams[i].shapeExp);
+                                }
+                            else
+                                {
+                                MrBayesPrint ("%s                     Shape parameter is fixed to %1.2lf.\n", spacer, modelParams[i].shapeFix);
+                                }
                             }
-                        else
-                            {
-                            if (!strcmp(modelParams[i].ratesModel, "Gamma") || !strcmp(modelParams[i].ratesModel, "Invgamma") ||
-                                !strcmp(modelParams[i].ratesModel, "LNorm") || !strcmp(modelParams[i].ratesModel, "Adgamma") ||
-                                !strcmp(modelParams[i].ratesModel, "Kmixture"))
-                                {
-                                /* how many categories is the continuous gamma/lnorm approximated by? or how many components are there in the mixture? */
-                                if (!strcmp(modelParams[i].ratesModel, "Kmixture"))
-                                    MrBayesPrint ("%s                     There are %d components in the mixture.\n", spacer, modelParams[i].numMixtCats);
-                                else if (!strcmp(modelParams[i].ratesModel, "Lnorm"))
-                                    MrBayesPrint ("%s                     The distribution is approximated using %d categories.\n", spacer, modelParams[i].numLnormCats);
-                                else
-                                    MrBayesPrint ("%s                     The distribution is approximated using %d categories.\n", spacer, modelParams[i].numGammaCats);
-                                /* distribution on shape parameter, if appropriate */
-                                if (!strcmp(modelParams[i].shapePr,"Uniform"))
-                                    {
-                                    MrBayesPrint ("%s                     Shape parameter is uniformly distributed\n", spacer);
-                                    MrBayesPrint ("%s                     on the interval (%1.2lf,%1.2lf).\n", spacer, modelParams[i].shapeUni[0], modelParams[i].shapeUni[1]);
-                                    }
-                                else if (!strcmp(modelParams[i].shapePr,"Exponential"))
-                                    {
-                                    MrBayesPrint ("%s                     Shape parameter is exponentially\n", spacer);
-                                    MrBayesPrint ("%s                     distributed with parameter (%1.2lf).\n", spacer, modelParams[i].shapeExp);
-                                    }
-                                else
-                                    {
-                                    MrBayesPrint ("%s                     Shape parameter is fixed to %1.2lf.\n", spacer, modelParams[i].shapeFix);
-                                    }
-                                }
 
-                            if ((!strcmp(modelParams[i].ratesModel, "Propinv") || !strcmp(modelParams[i].ratesModel, "Invgamma")) && !strcmp(modelParams[i].covarionModel, "No"))
+                        if ((!strcmp(modelParams[i].ratesModel, "Propinv") || !strcmp(modelParams[i].ratesModel, "Invgamma")) && !strcmp(modelParams[i].covarionModel, "No"))
+                            {
+                            /* distribution on pInvar parameter, if appropriate */
+                            if (!strcmp(modelParams[i].pInvarPr,"Uniform"))
                                 {
-                                /* distribution on pInvar parameter, if appropriate */
-                                if (!strcmp(modelParams[i].pInvarPr,"Uniform"))
-                                    {
-                                    MrBayesPrint ("%s                     Proportion of invariable sites is uniformly dist-\n", spacer);
-                                    MrBayesPrint ("%s                     ributed on the interval (%1.2lf,%1.2lf).\n", spacer, modelParams[i].pInvarUni[0], modelParams[i].pInvarUni[1]);
-                                    }
-                                else
-                                    {
-                                    MrBayesPrint ("%s                     Proportion of invariable sites is fixed to %1.2lf.\n", spacer, modelParams[i].pInvarFix);
-                                    }
+                                MrBayesPrint ("%s                     Proportion of invariable sites is uniformly dist-\n", spacer);
+                                MrBayesPrint ("%s                     ributed on the interval (%1.2lf,%1.2lf).\n", spacer, modelParams[i].pInvarUni[0], modelParams[i].pInvarUni[1]);
                                 }
-                            if (!strcmp(modelParams[i].ratesModel, "Adgamma"))
+                            else
                                 {
-                                /* distribution on correlation parameter, if appropriate */
-                                if (!strcmp(modelParams[i].adGammaCorPr,"Uniform"))
-                                    {
-                                    MrBayesPrint ("%s                     Rate correlation parameter is uniformly dist-\n", spacer);
-                                    MrBayesPrint ("%s                     ributed on the interval (%1.2lf,%1.2lf).\n", spacer, modelParams[i].adgCorrUni[0], modelParams[i].adgCorrUni[1]);
-                                    }
-                                else
-                                    {
-                                    MrBayesPrint ("%s                     Rate correlation parameter is fixed to %1.2lf.\n", spacer, modelParams[i].adgCorrFix);
-                                    }
+                                MrBayesPrint ("%s                     Proportion of invariable sites is fixed to %1.2lf.\n", spacer, modelParams[i].pInvarFix);
+                                }
+                            }
+                        if (!strcmp(modelParams[i].ratesModel, "Adgamma"))
+                            {
+                            /* distribution on correlation parameter, if appropriate */
+                            if (!strcmp(modelParams[i].adGammaCorPr,"Uniform"))
+                                {
+                                MrBayesPrint ("%s                     Rate correlation parameter is uniformly dist-\n", spacer);
+                                MrBayesPrint ("%s                     ributed on the interval (%1.2lf,%1.2lf).\n", spacer, modelParams[i].adgCorrUni[0], modelParams[i].adgCorrUni[1]);
+                                }
+                            else
+                                {
+                                MrBayesPrint ("%s                     Rate correlation parameter is fixed to %1.2lf.\n", spacer, modelParams[i].adgCorrFix);
                                 }
                             }
                         }

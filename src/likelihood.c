@@ -70,6 +70,275 @@ int       SetProteinQMatrix (MrBFlt **a, int n, int whichChain, int division, Mr
 int       UpDateCijk (int whichPart, int whichChain);
 
 
+int IsMissingC (CLFlt value)
+{
+    if (value > (CLFlt)INT_MAX - 1.0)
+        return YES;
+    else
+        return NO;
+}
+
+
+int BMVar_Cont (TreeNode *p, int division, int chain)
+{
+    int         i, k, c;
+    MrBFlt      baseRate, *catRate, theRate, length;
+    CLFlt       *vP, *vL, *vR, *mP, *mL, *mR, m_l, m_r;
+    ModelInfo   *m;
+    
+    m = &modelSettings[division];
+
+    /* Flip BM var space */
+    FlipTiProbsSpace (m, chain, p->index);
+
+    /* get base rate */
+    baseRate = GetRate(division, chain);
+    
+    /* get category rates */
+    theRate = 1.0;
+    if (m->shape != NULL)
+        catRate = GetParamSubVals(m->shape, chain, state[chain]);
+    else
+        catRate = &theRate;
+    
+    /* find length which is sigma^2 * t */
+    if (m->cppEvents != NULL)
+        {
+        length = GetParamSubVals(m->cppEvents, chain, state[chain])[p->index];
+        }
+    else if (m->tk02BranchRates != NULL)
+        {
+        length = GetParamSubVals(m->tk02BranchRates, chain, state[chain])[p->index];
+        }
+    else if (m->wnBranchRates != NULL)
+        {
+        length = GetParamSubVals(m->wnBranchRates, chain, state[chain])[p->index];
+        }
+    else if (m->ilnBranchRates != NULL)
+        {
+        length = GetParamSubVals(m->ilnBranchRates, chain, state[chain])[p->index];
+        }
+    else if (m->igrBranchRates != NULL)
+        {
+        length = GetParamSubVals(m->igrBranchRates, chain, state[chain])[p->index];
+        }
+    else if (m->mixedBrchRates != NULL)
+        {
+        length = GetParamSubVals(m->mixedBrchRates, chain, state[chain])[p->index];
+        }
+    else
+        length = p->length;
+    
+    /* find BM variance pointer */
+    vP = m->bmVars[m->tiProbsIndex[chain][p->index]];
+    mP = m->ancStates[m->condLikeIndex[chain][p->index]];
+    
+    /* fill in values */
+    if (p->left != NULL && p->right != NULL)  // internal node
+        {
+        vL = m->bmVars[m->tiProbsIndex[chain][p->left->index]];
+        vR = m->bmVars[m->tiProbsIndex[chain][p->right->index]];
+        mL = m->ancStates[m->condLikeIndex[chain][p->left->index]];
+        mR = m->ancStates[m->condLikeIndex[chain][p->right->index]];
+        for (k=0; k<m->numRateCats; k++)
+            for (c=0; c<m->numChars; c++)
+                {
+                i = k * (m->numChars) + c;
+                
+                /* find descendant states */
+                if (p->left->left == NULL)
+                    m_l = mL[c];
+                else
+                    m_l = mL[i];
+                if (p->right->left == NULL)
+                    m_r = mR[c];
+                else
+                    m_r = mR[i];
+                
+                /* update BM variances accordingly */
+                if (IsMissingC(m_l) && IsMissingC(m_r))
+                    vP[i] = 0.0;
+                else if (IsMissingC(m_l))
+                    vP[i] = length * baseRate * catRate[k] + vR[i];
+                else if (IsMissingC(m_r))
+                    vP[i] = length * baseRate * catRate[k] + vL[i];
+                else
+                    vP[i] = length * baseRate * catRate[k] + (vL[i] * vR[i])/(vL[i] + vR[i]);
+                }
+        }
+    else  // tip
+        {
+        for (k=0; k<m->numRateCats; k++)
+            for (c=0; c<m->numChars; c++)
+                {
+                i = k * (m->numChars) + c;
+                if (IsMissingC(mP[c]))
+                    vP[i] = 0.0;
+                else
+                    vP[i] = length * baseRate * catRate[k];
+                }
+        }
+    
+    return NO_ERROR;
+}
+
+
+int CondLikeDown_Cont (TreeNode *p, int division, int chain)
+{
+    int             i, k, c;
+    CLFlt           *lnL, *vL, *vR, *mP, *mL, *mR, m_l, m_r;
+    ModelInfo       *m;
+    
+    m = &modelSettings[division];
+
+    /* Flip log likelihood space */
+    FlipCondLikeSpace (m, chain, p->index);
+    
+    /* find log likelihood pointers */
+    lnL = m->condLikes[m->condLikeIndex[chain][p->index]];
+
+    /* find descendant variances */
+    vL = m->bmVars[m->tiProbsIndex[chain][p->left->index]];
+    vR = m->bmVars[m->tiProbsIndex[chain][p->right->index]];
+
+    /* find character states */
+    mL = m->ancStates[m->condLikeIndex[chain][p->left->index]];
+    mR = m->ancStates[m->condLikeIndex[chain][p->right->index]];
+    mP = m->ancStates[m->condLikeIndex[chain][p->index]];
+    
+    /* likelihood space is arranged in numRateCats blocks, each block consists of numChars characters */
+    for (k=0; k<m->numRateCats; k++)
+        {
+        for (c=0; c<m->numChars; c++)
+            {
+            i = k * (m->numChars) + c;
+            
+            /* find descendant states */
+            if (p->left->left == NULL)
+                m_l = mL[c];
+            else
+                m_l = mL[i];
+            if (p->right->left == NULL)
+                m_r = mR[c];
+            else
+                m_r = mR[i];
+            
+            lnL[i] = 0.0;
+            
+            /* save present state and update lnL accordingly */
+            if (IsMissingC(m_l) && IsMissingC(m_r))
+                mP[i] = (CLFlt)INT_MAX;  // missing
+            else if (IsMissingC(m_l))
+                mP[i] = m_r;
+            else if (IsMissingC(m_r))
+                mP[i] = m_l;
+            else
+                {
+                mP[i] = (vR[i]*m_l + vL[i]*m_r) / (vL[i] + vR[i]);
+                lnL[i] += log(2.0 * M_PI) + log(vL[i] + vR[i]);
+                lnL[i] += powf(m_l - m_r, 2) / (vL[i] + vR[i]);
+                lnL[i] *= -0.5;
+                }
+            }
+        }
+    
+    return NO_ERROR;
+}
+
+
+int CondLikeRoot_Cont (TreeNode *p, int division, int chain)
+{
+    int             i, k, c;
+    CLFlt           *lnL, *vL, *vR, *vP, *mP, *mL, *mR, *mA, m_l, m_r, m_a;
+    ModelInfo       *m;
+    
+    m = &modelSettings[division];
+
+    /* Flip log likelihood space */
+    FlipCondLikeSpace (m, chain, p->index);
+    
+    /* find log likelihood pointers */
+    lnL = m->condLikes[m->condLikeIndex[chain][p->index]];
+
+    /* find descendant and present variances */
+    vL = m->bmVars[m->tiProbsIndex[chain][p->left->index]];
+    vR = m->bmVars[m->tiProbsIndex[chain][p->right->index]];
+    vP = m->bmVars[m->tiProbsIndex[chain][p->index]];  // vP has been transformed
+
+    /* find character states */
+    mL = m->ancStates[m->condLikeIndex[chain][p->left->index]];
+    mR = m->ancStates[m->condLikeIndex[chain][p->right->index]];
+    mP = m->ancStates[m->condLikeIndex[chain][p->index]];
+    mA = m->ancStates[m->condLikeIndex[chain][p->anc->index]];
+    
+    /* likelihood space is arranged in numRateCats blocks, each block consists of numChars characters */
+    for (k=0; k<m->numRateCats; k++)
+        {
+        for (c=0; c<m->numChars; c++)
+            {
+            i = k * (m->numChars) + c;
+            
+            /* find descendant states */
+            m_a = mA[c];
+            if (p->left->left == NULL)
+                m_l = mL[c];
+            else
+                m_l = mL[i];
+            if (p->right->left == NULL)
+                m_r = mR[c];
+            else
+                m_r = mR[i];
+            
+            lnL[i] = 0.0;
+            
+            /* save present state and update lnL accordingly */
+            if ((IsMissingC(m_l) && IsMissingC(m_r)) ||
+                (IsMissingC(m_l) && IsMissingC(m_a)) ||
+                (IsMissingC(m_r) && IsMissingC(m_a))) {
+                mP[i] = (CLFlt)INT_MAX;  // missing
+                }
+            else if (IsMissingC(m_a))
+                {
+                mP[i] = (vR[i]*m_l + vL[i]*m_r) / (vL[i] + vR[i]);
+                lnL[i] += log(2.0 * M_PI) + log(vL[i] + vR[i]);
+                lnL[i] += powf(m_l - m_r, 2) / (vL[i] + vR[i]);
+                lnL[i] *= -0.5;
+                }
+            else if (IsMissingC(m_r))
+                {
+                mP[i] = m_l;
+                lnL[i] += log(2.0 * M_PI) + log(vP[i]);
+                lnL[i] += powf(m_a - mP[i], 2) / vP[i];
+                lnL[i] *= -0.5;
+                }
+            else if (IsMissingC(m_l))
+                {
+                mP[i] = m_r;
+                lnL[i] += log(2.0 * M_PI) + log(vP[i]);
+                lnL[i] += powf(m_a - mP[i], 2) / vP[i];
+                lnL[i] *= -0.5;
+                }
+            else  // calculate two normal densities
+                {
+                mP[i] = (vR[i]*m_l + vL[i]*m_r) / (vL[i] + vR[i]);
+                lnL[i] += 2.0 * log(2.0 * M_PI) + log(vL[i] + vR[i]) + log(vP[i]);
+                lnL[i] += powf(m_l - m_r, 2) / (vL[i] + vR[i]) + powf(m_a - mP[i], 2) / vP[i];
+                lnL[i] *= -0.5;
+                }
+            }
+        }
+    
+    return NO_ERROR;
+}
+
+
+int CondLikeUp_Cont (TreeNode *p, int division, int chain)
+{
+    /* place holder, do nothing at the moment */
+    return NO_ERROR;
+}
+
+
 /*----------------------------------------------------------------
 |
 |   CondLikeDown_Bin: binary model with or without rate variation
@@ -115,7 +384,6 @@ int CondLikeDown_Bin (TreeNode *p, int division, int chain)
         }
 
     return NO_ERROR;
-    
 }
 
 
@@ -7540,26 +7808,213 @@ int Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
 }
 
 
+int Likelihood_Cont_Debug (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
+{
+    /* Debug function for continuous-trait likelihood.
+        This works only for a single partition without among-character rate variation.
+        Programmed by Ziye Wang */
+    
+    int             i, c, tipIndex, memIndex;
+    MrBFlt          vL, vR, vA, ml, mr, ma;
+    MrBFlt          tmplnL;
+
+    MrBFlt          *vP, *mP, *mtmp;
+    Tree            *tree;
+    TreeNode        *tp, *pL, *pR, *pA, *root;
+    ModelInfo       *m;
+
+    tmplnL = 0.0;
+
+    m = &modelSettings[division];
+    tree = GetTree(m->brlens,chain,state[chain]);
+
+    /* allocate memory for BM variance */
+    vP = (MrBFlt*) SafeCalloc(tree->nNodes, sizeof(MrBFlt));
+
+    /* allocate memory for continuous characters */
+    mP = (MrBFlt*) SafeCalloc((tree->nNodes)*m->numChars, sizeof(MrBFlt));
+    /* allocate memory for a temporary array to store original data */
+    mtmp = (MrBFlt*) SafeCalloc(m->numChars, sizeof(MrBFlt));
+
+    /* read in continuous characters */
+    for (i=0; i<tree->nNodes; i++) {
+        p = tree->allDownPass[i];
+        if (p->right == NULL) {
+            tipIndex = p->index;
+            memIndex = p->memoryIndex;
+            for (c=0; c<m->numChars; c++) {
+                mtmp[c] = matrix[pos(tipIndex,c,numChar)] / 10000.0;  // get original data for tip node
+            }
+            memcpy(&mP[memIndex*m->numChars], &mtmp[0], m->numChars*sizeof(MrBFlt));
+        }
+    }
+    
+    /* calculate BM variance */
+    for (i=0; i<tree->nIntNodes; i++)
+        {
+        p = tree->intDownPass[i];
+        
+        /* find BM variance for left node */
+        tp = p->left;
+        if (tp->left != NULL && tp->right != NULL)  // internal node
+            {
+            vL = vP[tp->left->memoryIndex];
+            vR = vP[tp->right->memoryIndex];
+            vP[tp->memoryIndex] = tp->length + (vL * vR)/(vL + vR);
+            }
+        else  // tip node
+            {
+            vP[tp->memoryIndex] = tp->length;
+            }
+
+        /* find BM variance for right node */
+        tp = p->right;
+        if (tp->left != NULL && tp->right != NULL)  // internal node
+            {
+            vL = vP[tp->left->memoryIndex];
+            vR = vP[tp->right->memoryIndex];
+            vP[tp->memoryIndex] = tp->length + (vL * vR)/(vL + vR);
+            }
+        else  // tip node
+            {
+            vP[tp->memoryIndex] = tp->length;
+            }
+
+        /* calculate likelihood */
+        if (p->anc->anc == NULL)    // we reach the trichotomy
+            {
+            pA = p->anc;
+            root = p;
+            pL = root->left;
+            pR = root->right;
+            for (c=0; c<m->numChars; c++)
+                {
+                ml = mP[pL->memoryIndex*m->numChars+c];  // c-th character of left node
+                mr = mP[pR->memoryIndex*m->numChars+c];  // c-th character of right node
+                ma = mP[pA->memoryIndex*m->numChars+c];  // c-th character of ancestral node
+                vL = vP[pL->memoryIndex];
+                vR = vP[pR->memoryIndex];
+                vA = root->length;
+
+                tmplnL += 2.0 * log(2.0 * M_PI);
+                tmplnL += log(vL*vR + vR*vA + vA*vL);
+                tmplnL += (vL*powf(mr-ma, 2) + vR*powf(ml-ma, 2) + vA*powf(mr-ml, 2))/(vL*vR + vR*vA + vA*vL);
+                }
+            }
+        else
+            {
+            vL = vP[p->left->memoryIndex];
+            vR = vP[p->right->memoryIndex];
+            for (c=0; c<m->numChars; c++)
+                {
+                ml = mP[p->left->memoryIndex*m->numChars+c];   // c-th character of left node
+                mr = mP[p->right->memoryIndex*m->numChars+c];  // c-th character of right node
+                /* update likelihood */
+                tmplnL += log(2.0 * M_PI) + log(vL + vR);
+                tmplnL += powf(ml - mr, 2) / (vL + vR);
+
+                /* update character of parent node */
+                mP[p->memoryIndex*m->numChars+c] = (vR*ml + vL*mr) / (vL + vR);
+                }
+            }
+        }
+    *lnL = -0.5 * tmplnL;
+
+    free(vP);
+    free(mP);
+    free(mtmp);
+
+    return NO_ERROR;
+}
+
 /*------------------------------------------------------------------
 |
-|   Likelihood_Cont: likelihood for continuous traits
+|   Likelihood_Cont: likelihood for continuous traits   //chi
 |
 |   This function calculates the restricted maximum likelihood (REML)
-|      using phylogenetic independent contrasts (PICs) (Felsenstein 1985).
-|   These standardized contrasts are, under a BM model, both independent and identically distributed.
+|      using phylogenetic independent contrasts (PICs) (Felsenstein 1973, 1981, 1985).
+|   These contrasts, under a BM model, are independent and normally distributed.
 |   The “restricted” part of REML refers to the fact that it calculates likelihood based on a transformed
 |      set of data where the effect of nuisance parameters (the root state in this case) has been removed.
 |
 -------------------------------------------------------------------*/
 int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
 {
-    /* start calculating phylogenetic independent contrasts (PICs) and REML */
+    int         i, k, c, n, clIndex;
+    MrBFlt      siteLike, catLike, *catRate, baseRate, lmax, lnCatL[20];
+    CLFlt       *siteRates;
+    ModelInfo   *m;
+    Tree        *t;
+    
+    m = &modelSettings[division];
+    t = GetTree(m->brlens,chain,state[chain]);
 
-    /* reset log likelihood */
-    (*lnL) = 0.0;
+    *lnL = 0.0;
 
-	//chi TODO
-	
+    /* independent log likelihood values have been calculated and stored in
+       the internal nodes, we just need to sum them up */
+    for (c=0; c<m->numChars; c++)
+        {
+        if (m->numRateCats == 1)
+            {
+            for (n=0; n<t->nIntNodes; n++)
+                {
+                p = t->intDownPass[n];
+                clIndex = m->condLikeIndex[chain][p->index];
+                *lnL += m->condLikes[clIndex][c];
+                }
+            }
+        else  // account for rate variation across characters
+            {
+            siteRates = m->condLikes[m->condLikeIndex[0][0]];
+            baseRate = GetRate(division, chain);
+            catRate = GetParamSubVals (m->shape, chain, state[chain]);
+            
+            for (k=0; k<m->numRateCats; k++)
+                {
+                lnCatL[k] = 0.0;  // log likelihood of category k
+                for (n=0; n<t->nIntNodes; n++)
+                    {
+                    p = t->intDownPass[n];
+                    clIndex = m->condLikeIndex[chain][p->index];
+                    i = k * (m->numChars) + c;
+                    lnCatL[k] += m->condLikes[clIndex][i];
+                    }
+                }
+            
+            lmax = lnCatL[0];
+            for (k=1; k<m->numRateCats; k++)
+                {
+                if (lmax < lnCatL[k])
+                    lmax = lnCatL[k];
+                }  // for numerical stability
+            
+            siteLike = siteRates[c] = 0.0;
+            for (k=0; k<m->numRateCats; k++)
+                {
+                catLike = exp(lnCatL[k] - lmax);
+                siteLike += catLike;
+                siteRates[c] += (CLFlt) (catLike * catRate[k]);
+                }
+            
+            /* average over the rate categories */
+            *lnL += log(siteLike) + lmax - log(m->numRateCats);
+           
+            /* also calculate and store the site rates */
+            siteRates[c] *= (CLFlt) (baseRate / siteLike);
+            }
+        }
+    
+#if defined (DEBUG_LIKELIHOOD_CONT)
+    /* use the straightforward way of calculation for debugging */
+    MrBFlt tmpLnL = 0.0;
+    Likelihood_Cont_Debug (p, division, chain, &tmpLnL, whichSitePats);
+    printf("-> lnL(dbug): %lf", tmpLnL);
+    printf("   lnL(cont): %lf", *lnL);
+    if (fabs(*lnL - tmpLnL) > 0.01) printf("\tdiff!\n");
+    else                            printf("\n");
+#endif
+
     return NO_ERROR;
 }
 
@@ -7879,7 +8334,33 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL)
         }
 #   endif
         
-    if (m->parsModelId == NO && m->dataType != CONTINUOUS)
+    if (m->dataType == CONTINUOUS)
+        {
+        /* pass over tree */
+        for (i=0; i<tree->nNodes; i++)
+            {
+            p = tree->allDownPass[i];
+            
+            /* update the variances */
+            if (p->anc != NULL && (p->upDateTi == YES || p->upDateCl == YES))
+                {
+                BMVar_Cont (p, d, chain);
+                }
+            
+            if (p->right != NULL && p->upDateCl == YES)  // internal node
+                {
+                if (tree->isRooted == NO && p->anc->anc == NULL)
+                    {
+                    TIME(m->CondLikeRoot (p, d, chain), CPUCondLikeRoot);
+                    }
+                else
+                    {
+                    TIME(m->CondLikeDown (p, d, chain), CPUCondLikeDown);
+                    }
+                }
+            }
+        }
+    else if (m->parsModelId == NO)
         {
         /* get site scalers ready */
         FlipSiteScalerSpace(m, chain);
@@ -7907,14 +8388,11 @@ void LaunchLogLikeForDivision(int chain, int d, MrBFlt* lnL)
                 m->TiProbs (p->right, d, chain);
                 }
             
-            if (tree->isRooted == NO)
+            if (tree->isRooted == NO && p->anc->anc == NULL /* && p->upDateTi == YES */)
                 {
-                if (p->anc->anc == NULL /* && p->upDateTi == YES */)
-                    {
-                    /* shift state of ti probs for node */
-                    FlipTiProbsSpace (m, chain, p->index);
-                    m->TiProbs (p, d, chain);
-                    }
+                /* shift state of ti probs for node (why always upDateTi?) */
+                FlipTiProbsSpace (m, chain, p->index);
+                m->TiProbs (p, d, chain);
                 }
             
             if (p->upDateCl == YES)
@@ -10065,10 +10543,10 @@ int TiProbs_Res (TreeNode *p, int division, int chain)
 ------------------------------------------------------------------*/
 int TiProbs_Std (TreeNode *p, int division, int chain)
 {
-    int         b, c, i, j, k, n, s, nStates, index=0, index2;
-    MrBFlt      v, eV1, eV2, eV3, eV4, eV5, *catRate,
-                baseRate, theRate, pi, f1, f2, f3, f4, f5, f6, f7, root,
-                *eigenValues, *cijk, sum, *bs, mu, length;
+    int         b, c, i, j, k, n, s, nStates, index=0;
+    MrBFlt      v, eV1, *catRate, baseRate, theRate,
+                *eigenValues, *cijk, sum, *bs, mu, length,
+                stdEv[MAX_STD_STATES][MAX_STD_STATES], expEig[MAX_STD_STATES];
     CLFlt       pNoChange, pChange, *tiP;
     ModelInfo   *m;
 #   if defined (DEBUG_TIPROBS_STD)
@@ -10172,225 +10650,53 @@ int TiProbs_Std (TreeNode *p, int division, int chain)
 #   endif
             }
 
-        /* TODO: need a general algorithm for ordered characters */
-        /* 3-state ordered character */
-        if (m->isTiNeeded[MAX_STD_STATES-1] == YES)
+        /* general algorithm for ordered characters (3 or more states).     */
+        /* The ordered model with equal state frequencies is a continuous-  */
+        /* time random walk on a path graph with reflecting boundaries. Its */
+        /* symmetric rate matrix, rescaled to a mean rate of 1, has a known */
+        /* eigendecomposition: the eigenvectors form the orthonormal DCT-II */
+        /* basis                                                            */
+        /*     u_0(a) = sqrt(1/n)                                           */
+        /*     u_s(a) = sqrt(2/n) * cos((2a+1)*s*pi/(2n)),  s = 1..n-1      */
+        /* and the eigenvalues are                                          */
+        /*     mu_s = (n/(n-1)) * (1 - cos(s*pi/n)),  s = 0..n-1.           */
+        /* P(v)[a][b] = sum_s u_s(a) u_s(b) exp(-mu_s * v).                 */
+        for (nStates=3; nStates<=MAX_STD_STATES; nStates++)
             {
-            nStates = 3;
-            for (k=0; k<m->numRateCats; k++)
+            if (m->isTiNeeded[nStates+MAX_STD_STATES-4] == NO)
+                continue;
+
+            /* compute orthonormal eigenvectors (independent of branch length) */
+            for (i=0; i<nStates; i++)
                 {
-                /* calculate probabilities */
-                v =  length * catRate[k] * baseRate;
-                eV1 =  exp (-(3.0 / 4.0) * v);
-                eV2 =  exp (-(9.0 / 4.0) * v);
-                
-                /* pij(0,0) */
-                tiP[index] = (CLFlt) ((1.0 / 3.0) + (eV1 / 2.0) + (eV2 / 6.0));
-                /* pij(0,1) = pij(1,0) */
-                tiP[index+1] = tiP[index+3] = (CLFlt) ((1.0 / 3.0) - (eV2 / 3.0));
-                /* pij(0,2) */
-                tiP[index+2] = (CLFlt) ((1.0 / 3.0) - (eV1 / 2.0) + (eV2 / 6.0));
-                /* pij(1,1) */
-                tiP[index+4] = (CLFlt) ((1.0 / 3.0) + (2.0 * eV2 / 3.0));
-                
-                /* fill in mirror part of matrix */
-                index += 5;
-                index2 = index - 2;
-                for (i=0; i<4; i++)
-                    tiP[index++] = tiP[index2--];
-
-                /* make sure no value is negative */
-                for (i=index-(nStates*nStates); i<index; i++) {
-                    if (tiP[i] < 0.0)
-                        tiP[i] = (CLFlt) 0.0;
+                stdEv[0][i] = sqrt(1.0 / nStates);
+                for (s=1; s<nStates; s++)
+                    stdEv[s][i] = sqrt(2.0 / nStates) * cos((2*i+1) * s * M_PI / (2.0 * nStates));
                 }
-#   if defined (DEBUG_TIPROBS_STD)
-                PrintTiProbs (tiP+index-(nStates*nStates), bs+index3, nStates);
-#   endif
-                }
-
-#   if defined (DEBUG_TIPROBS_STD)
-            index3 += nStates;
-#   endif
-            }
-
-        /* 4-state ordered character */
-        if (m->isTiNeeded[MAX_STD_STATES] == YES)
-            {
-            nStates = 4;
-            pi = 1.0 / 4.0;
-            root =  sqrt (2.0);
-            f1 = root +  1.0;
-            f2 = root -  1.0;
 
             for (k=0; k<m->numRateCats; k++)
                 {
                 /* calculate probabilities */
-                v =  length * catRate[k] * baseRate;
-                eV1 =  1.0 / (exp ((4.0 * v) / 3.0));
-                eV2 =  exp ((2.0 * (root - 2.0) * v) / 3.0) / root;
-                eV3 =  1.0 / (root *  exp ((2.0 * (root + 2.0) * v) / 3.0));
-                
-                /* pij(0,0) */
-                tiP[index] = (CLFlt) (pi * (1.0 + eV1 + (f1*eV2) + (f2*eV3)));
-                /* pij(0,1) = pij(1,0) */
-                tiP[index+1] = tiP[index+4] = (CLFlt) (pi * (1.0 - eV1 + eV2 - eV3));
-                /* pij(0,2) = tiP(1,3) */
-                tiP[index+2] = tiP[index+7] = (CLFlt) (pi * (1.0 - eV1 - eV2 + eV3));
-                /* pij(0,3) */
-                tiP[index+3] = (CLFlt) (pi * (1.0 + eV1 - (f1*eV2) - (f2*eV3)));
-                /* pij(1,1) */
-                tiP[index+5] = (CLFlt) (pi * (1.0 + eV1 + (f2*eV2) + (f1*eV3)));
-                /* pij(1,2) */
-                tiP[index+6] = (CLFlt) (pi * (1.0 + eV1 - (f2*eV2) - (f1*eV3)));
+                v = length * catRate[k] * baseRate;
 
-                /* fill in mirror part of matrix */
-                index += 8;
-                index2 = index - 1;
-                for (i=0; i<8; i++)
-                    tiP[index++] = tiP[index2--];
-        
-                /* make sure no value is negative */
-                for (i=index-(nStates*nStates); i<index; i++) {
-                    if (tiP[i] < 0.0)
-                        tiP[i] = (CLFlt) 0.0;
-                }
-#   if defined (DEBUG_TIPROBS_STD)
-                PrintTiProbs (tiP+index-(nStates*nStates), bs+index3, nStates);
-#   endif
-                }
-#   if defined (DEBUG_TIPROBS_STD)
-            index3 += nStates;
-#   endif
-            }
+                /* precompute exp(-mu_s * v) for each eigenvalue (mu_0 = 0) */
+                expEig[0] = 1.0;
+                for (s=1; s<nStates; s++)
+                    {
+                    mu = (nStates / (nStates - 1.0)) * (1.0 - cos(s * M_PI / nStates));
+                    expEig[s] = exp(-mu * v);
+                    }
 
-        /* 5-state ordered character */
-        if (m->isTiNeeded[MAX_STD_STATES+1] == YES)
-            {
-            nStates = 5;
-            pi = 1.0 / 5.0;
-            root =  sqrt (5.0);
-
-            f5 = root /  4.0;
-            f1 =  0.75 + f5;;
-            f2 =  1.25 + f5;
-            f3 =  1.25 - f5;
-            f4 =  0.75 - f5;
-            f5 = f5 *  2.0;
-            f6 = f5 +  0.5;
-            f7 = f5 -  0.5;
-
-            for (k=0; k<m->numRateCats; k++)
-                {
-                /* calculate probabilities */
-                v =  length * catRate[k] * baseRate;
-                v *=  5.0 /  16.0;
-
-                eV1 =  exp ((root -  3.0) * v);
-                eV2 =  exp (-(root +  3.0) * v);
-                eV3 =  exp ((root -  5.0) * v);
-                eV4 =  exp (-(root +  5.0) * v);
-
-                /* pij(0,0) */
-                tiP[index] = (CLFlt) (pi* (1.0 + (f1*eV3) + (f2*eV1) + (f3*eV2) + (f4*eV4)));
-                /* pij(0,1) = pij(1,0) */
-                tiP[index+1] = tiP[index+5] = (CLFlt) (pi*(1.0 - (eV3/2.0) + (f5*eV1) - (f5*eV2) - (eV4/2.0)));
-                /* pij(0,2) = pij(2,0) */
-                tiP[index+2] = tiP[index+10] = (CLFlt) (pi*(1.0 - (f6*eV3) + (f7*eV4)));
-                /* pij(0,3) = pij(1,4) */
-                tiP[index+3] = tiP[index+9] = (CLFlt) (pi*(1.0 - (eV3/2.0) - (f5*eV1) + (f5*eV2) - (eV4/2.0)));
-                /* pij(0,4) */
-                tiP[index+4] = (CLFlt) (pi*(1.0 + (f1*eV3) - (f2*eV1) - (f3*eV2) + (f4*eV4)));
-                /* pij(1,1) */
-                tiP[index+6] = (CLFlt) (pi*(1.0 + (f4*eV3) + (f3*eV1) + (f2*eV2) + (f1*eV4)));
-                /* pij(1,2) = pij(2,1) */
-                tiP[index+7] = tiP[index+11] = (CLFlt) (pi*(1.0 + (f7*eV3) - (f6*eV4)));
-                /* pij(1,3) */
-                tiP[index+8] = (CLFlt) (pi*(1.0 + (f4*eV3) - (f3*eV1) - (f2*eV2) + (f1*eV4)));
-                /* pij(2,2) */
-                tiP[index+12] = (CLFlt) (pi*(1.0 + (2.0*eV3) + (2.0*eV4)));
-
-                /* fill in mirror part of matrix */
-                index += 13;
-                index2 = index - 2;
-                for (i=0; i<12; i++)
-                    tiP[index++] = tiP[index2--];
-
-                /* make sure no value is negative */
-                for (i=index-(nStates*nStates); i<index; i++) {
-                    if (tiP[i] < 0.0)
-                        tiP[i] = (CLFlt) 0.0;
-                }
-#   if defined (DEBUG_TIPROBS_STD)
-                PrintTiProbs (tiP+index-(nStates*nStates), bs+index3, nStates);
-#   endif
-                }
-#   if defined (DEBUG_TIPROBS_STD)
-            index3 += nStates;
-#   endif
-            }
-
-        /* 6-state ordered character */
-        if (m->isTiNeeded[MAX_STD_STATES+2] == YES)
-            {
-            nStates = 6;
-            pi =  1.0 / 6.0;
-            root =  sqrt (3.0);
-
-            f4 = (3.0 / (2.0 * root));
-            f1 =  1.0 + f4;
-            f2 =  1.0 - f4;
-            f3 =  0.5 + f4;
-            f4 =  0.5 - f4;
-
-            for (k=0; k<m->numRateCats; k++)
-                {
-                /* calculate probabilities */
-                v =  length * catRate[k] * baseRate;
-                v /=  5.0;
-
-                eV1 =  exp (-9 * v);
-                eV2 =  exp (-6 * v);
-                eV3 =  exp (-3 * v);
-                eV4 =  exp (3.0 * (root - 2.0) * v);
-                eV5 =  exp (-3.0 * (root + 2.0) * v);
-
-                /* pij(0,0) */
-                tiP[index] = (CLFlt) (pi* (1.0 + (0.5*eV1) + eV2 + (1.5*eV3) + (f1*eV4) + (f2*eV5)));
-                /* pij(0,1) = pij(1,0) */
-                tiP[index+1] = tiP[index+6] = (CLFlt) (pi*(1.0 - eV1 - eV2 + (f3*eV4) + (f4*eV5)));
-                /* pij(0,2) = pij(2,0) */
-                tiP[index+2] = tiP[index+12] = (CLFlt) (pi*(1.0 + (0.5*eV1) - eV2 - (1.5*eV3) + (0.5*eV4) + (0.5*eV5)));
-                /* pij(0,3) = pij(2,5) */
-                tiP[index+3] = tiP[index+17] = (CLFlt) (pi*(1.0 + (0.5*eV1) + eV2 - (1.5*eV3) - (0.5*eV4) - (0.5*eV5)));
-                /* pij(0,4) = pij(1,5) */
-                tiP[index+4] = tiP[index+11] = (CLFlt) (pi*(1.0 - eV1 + eV2 - (f3*eV4) - (f4*eV5)));
-                /* pij(0,5) */
-                tiP[index+5] = (CLFlt) (pi*(1.0 + (0.5*eV1) - eV2 + (1.5*eV3) - (f1*eV4) - (f2*eV5)));
-                /* pij(1,1) */
-                tiP[index+7] = (CLFlt) (pi*(1.0 + (2.0*eV1) + eV2 + eV4 + eV5));
-                /* pij(1,2) = pij(2,1) */
-                tiP[index+8] = tiP[index+13] = (CLFlt) (pi*(1.0 - eV1 + eV2 - (f4*eV4) - (f3*eV5)));
-                /* pij(1,3) = pij(2,4) */
-                tiP[index+9] = tiP[index+16] = (CLFlt) (pi*(1.0 - eV1 - eV2 + (f4*eV4) + (f3*eV5)));
-                /* pij(1,4) */
-                tiP[index+10] = (CLFlt) (pi*(1.0 + (2.0*eV1) - eV2 - eV4 - eV5));
-                /* pij(2,2) */
-                tiP[index+14] = (CLFlt) (pi*(1.0 + (0.5*eV1) + eV2 + (1.5*eV3) + (f2*eV4) + (f1*eV5)));
-                /* pij(2,3) */
-                tiP[index+15] = (CLFlt) (pi*(1.0 + (0.5*eV1) - eV2 + (1.5*eV3) - (f2*eV4) - (f1*eV5)));
-
-                /* fill in mirror part of matrix */
-                index += 18;
-                index2 = index - 1;
-                for (i=0; i<18; i++)
-                    tiP[index++] = tiP[index2--];
-
-                /* make sure no value is negative */
-                for (i=index-(nStates*nStates); i<index; i++) {
-                    if (tiP[i] < 0.0)
-                        tiP[i] = (CLFlt) 0.0;
-                }
+                for (i=0; i<nStates; i++)
+                    {
+                    for (j=0; j<nStates; j++)
+                        {
+                        sum = 0.0;
+                        for (s=0; s<nStates; s++)
+                            sum += stdEv[s][i] * stdEv[s][j] * expEig[s];
+                        tiP[index++] = (CLFlt) (sum < 0.0 ? 0.0 : sum);
+                        }
+                    }
 #   if defined (DEBUG_TIPROBS_STD)
                 PrintTiProbs (tiP+index-(nStates*nStates), bs+index3, nStates);
 #   endif
@@ -10623,7 +10929,7 @@ int UpDateCijk (int whichPart, int whichChain)
                     }
                 isComplex = GetEigens (n, q[0], eigenValues, eigvalsImag, eigvecs, inverseEigvecs, Ceigvecs, CinverseEigvecs);
 #   if defined (BEAGLE_ENABLED)
-                if (isComplex == YES)
+                if (isComplex != NO)
                     {
                     if (isComplex == YES)
                         MrBayesPrint ("%s   ERROR: Complex eigenvalues found!\n", spacer);
@@ -10667,7 +10973,10 @@ int UpDateCijk (int whichPart, int whichChain)
                     }
                 else
                     {
-                    MrBayesPrint ("%s   ERROR: Complex eigenvalues found!\n", spacer);
+                    if (isComplex == YES)
+                        MrBayesPrint ("%s   ERROR: Complex eigenvalues found!\n", spacer);
+                    else
+                        MrBayesPrint ("%s   ERROR: Computing eigenvalues problem!\n", spacer);
                     goto errorExit;
                     }
 #   endif
@@ -10727,7 +11036,7 @@ int UpDateCijk (int whichPart, int whichChain)
                     {
                     isComplex = GetEigens (n, q[k], eigenValues, eigvalsImag, eigvecs, inverseEigvecs, Ceigvecs, CinverseEigvecs);
 #   if defined (BEAGLE_ENABLED)
-                    if (isComplex == YES)
+                    if (isComplex != NO)
                         {
                         if (isComplex == YES)
                             MrBayesPrint ("%s   ERROR: Complex eigenvalues found!\n", spacer);
@@ -10766,7 +11075,10 @@ int UpDateCijk (int whichPart, int whichChain)
                         }
                     else
                         {
-                        MrBayesPrint ("%s   ERROR: Complex eigenvalues found!\n", spacer);
+                        if (isComplex == YES)
+                            MrBayesPrint ("%s   ERROR: Complex eigenvalues found!\n", spacer);
+                        else
+                            MrBayesPrint ("%s   ERROR: Computing eigenvalues problem!\n", spacer);
                         goto errorExit;
                         }
 #   endif

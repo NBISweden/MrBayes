@@ -236,9 +236,7 @@ int AreBitfieldsEqual (BitsLong *p, BitsLong *q, int length)
 -----------------------------------------------------------------*/
 int Bit (int n, BitsLong *p)
 {
-    BitsLong        x, bitsLongOne;
-
-    bitsLongOne = 1;
+    BitsLong    x, bitsLongOne=1;
 
     p += n / nBitsInALong;
     x = bitsLongOne << (n % nBitsInALong);
@@ -254,7 +252,7 @@ int Bit (int n, BitsLong *p)
 /* ClearBit: Clear one bit in a bitfield */
 void ClearBit (int i, BitsLong *bits)
 {
-    BitsLong        x, bitsLongOne=1;
+    BitsLong    x, bitsLongOne=1;
 
     bits += i / nBitsInALong;
 
@@ -505,7 +503,7 @@ void FlipBits (BitsLong *partition, int length, BitsLong *mask)
 ------------------------------------------------------------------*/
 void FlipOneBit (int n, BitsLong *p)
 {
-    BitsLong        x, bitsLongOne=1;
+    BitsLong    x, bitsLongOne=1;
 
     p += n/nBitsInALong;
     x = bitsLongOne << (n % nBitsInALong);
@@ -774,7 +772,7 @@ int HarmonicArithmeticMeanOnLogs (MrBFlt *vals, int nVals, MrBFlt *mean, MrBFlt 
 /* IsBitSet: Is bit i set in BitsLong *bits ? */
 int IsBitSet (int i, BitsLong *bits)
 {
-    BitsLong        x, bitsLongOne=1;
+    BitsLong    x, bitsLongOne=1;
 
     bits += i / nBitsInALong;
 
@@ -1623,7 +1621,7 @@ char *SafeStrcpy (char **target, const char *source)
 /* SetBit: Set a particular bit in a series of longs */
 void SetBit (int i, BitsLong *bits)
 {
-    BitsLong        x, bitsLongOne=1;
+    BitsLong    x, bitsLongOne=1;
 
     bits += i / nBitsInALong;
 
@@ -1844,13 +1842,16 @@ int WantTo (const char *msg)
 /* AddToTreeList: Add tree at end of tree list */
 int AddToTreeList (TreeList *treeList, Tree *tree)
 {
-    TreeListElement     *listElement = (TreeListElement *) SafeCalloc (1, sizeof(TreeListElement));
+    TreeListElement *listElement = (TreeListElement *) SafeCalloc (1, sizeof(TreeListElement));
     if (!listElement)
         return (ERROR);
 
     listElement->order = (int *) SafeCalloc (tree->nIntNodes-1, sizeof(int));
     if (!listElement->order)
+        {
+        SAFEFREE (listElement);
         return (ERROR);
+        }
     listElement->next = NULL;
 
     if (treeList->last == NULL)
@@ -2716,6 +2717,7 @@ int CheckConstraints (Tree *t)
     if (AllocateTreePartitions(t) == ERROR)
         {
         MrBayesPrint ("%s   Problems allocating tree partitions in CheckConstraints", spacer);
+        free (constraintPartition);
         return (ERROR);
         }
 
@@ -3708,7 +3710,7 @@ void findAllowedClockrate (Tree *t, MrBFlt *minClockRate, MrBFlt *maxClockRate)
 {
     int i;
     TreeNode *p;
-    MrBFlt min, max, tmp;
+    MrBFlt min, max, tmp, ageDelta;
 
     min=0.0;
     max=MRBFLT_MAX;
@@ -3723,13 +3725,15 @@ void findAllowedClockrate (Tree *t, MrBFlt *minClockRate, MrBFlt *maxClockRate)
             p = t->allDownPass[i];
             if (p->anc->anc != NULL)
                 {
-                tmp = BRLENS_MIN/(p->anc->age - p->age);
-                assert (tmp > 0);
+                ageDelta = p->anc->age - p->age;
+                /* fbd trees can legitimately contain sampled ancestors with (near) zero branch length */
+                if (ageDelta <= TIME_MIN)
+                    continue;
+
+                tmp = BRLENS_MIN / ageDelta;
                 if (tmp > min)
                     min = tmp;
-
-                tmp = BRLENS_MAX/(p->anc->age - p->age);
-                assert (tmp > 0);
+                tmp = BRLENS_MAX / ageDelta;
                 if (tmp > max)
                     max = tmp;
                 }
@@ -4186,7 +4190,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
     treeAgeMax = POS_INFINITY;
     if (t->root->left->isDated == YES)
         {
-        treeAgeMin = t->root->left->calibration->min;   /* FIXME: Not used (from clang static analyzer) */
+        treeAgeMin = t->root->left->calibration->min;
         treeAgeMax = t->root->left->calibration->max;
         }
     else if (!strcmp(mp->clockPr, "Uniform") ||
@@ -4194,7 +4198,7 @@ int InitCalibratedBrlens (Tree *t, MrBFlt clockRate, RandLong *seed)
              !strcmp(mp->clockPr, "Fossilization"))
         {
         if (mp->treeAgePr.min > treeAgeMin)
-            treeAgeMin = mp->treeAgePr.min; /* FIXME: Not used (from clang static analyzer) */
+            treeAgeMin = mp->treeAgePr.min;
         if (mp->treeAgePr.max < treeAgeMax)
             treeAgeMax = mp->treeAgePr.max;
         }
@@ -4740,7 +4744,6 @@ int IsClockSatisfied (Tree *t, MrBFlt tol)
             {
             if (p->isDated == YES)
                 {
-                //continue;
                 length = p->nodeDepth;
                 }
             else

@@ -290,7 +290,7 @@ int createBeagleInstance(ModelInfo *m, int nCijkParts, int numRateCats, int numM
             fprintf(stdout, "\n");
 #       endif
 
-        if (rBList != NULL)
+        if (rBList != NULL && rBList->length > 0)
             {
             double fastestTime = rBList->list[0].benchmarkResult;
             resource = rBList->list[0].number;
@@ -360,7 +360,7 @@ MrBayesPrint ("%s      MODEL STATES: %d", spacer, numModelStates);
 
 #if defined (BEAGLE_V3_ENABLED)
     /* use level-order traversal with CUDA implementation or OpenCL with multi-partition */
-    if(((details.flags & BEAGLE_FLAG_FRAMEWORK_CUDA) && division < 1 ) ||
+    if (((details.flags & BEAGLE_FLAG_FRAMEWORK_CUDA) && division < 1 ) ||
         ((details.flags & BEAGLE_FLAG_FRAMEWORK_OPENCL) && division < 0))
         {
         for (i=0; i<(numTrees * 2 * numGlobalChains); i++)
@@ -1277,7 +1277,7 @@ int TreeLikelihood_Beagle (Tree *t, int division, int chain, MrBFlt *lnL, int wh
 #   if defined (MB_PRINT_DYNAMIC_RESCALE_FAIL_STAT)
     countALL++;
 #   endif
-    if (*lnL > DBL_MAX || *lnL < -DBL_MAX) {
+    if (*lnL > DBL_MAX || *lnL < -DBL_MAX || *lnL != *lnL) {
         beagleReturn = BEAGLE_ERROR_FLOATING_POINT;
     }
     if (beagleReturn == BEAGLE_ERROR_FLOATING_POINT)
@@ -1905,6 +1905,7 @@ void LaunchBEAGLELogLikeMultiPartition(int* divisions, int divisionCount, int ch
                 {
                 dIndex = rescaleDivisions[d];
                 m = &modelSettings[dIndex];
+                tree = GetTree(m->brlens, chain, state[chain]);
 
                 isScalerNode = m->isScalerNode[chain];
                 ResetScalersPartition (isScalerNode, tree, m->rescaleFreqNew);
@@ -2854,7 +2855,7 @@ int TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, int 
     countALL++;
 #   endif
 
-    if (*lnL > DBL_MAX || *lnL < -DBL_MAX) {
+    if (*lnL > DBL_MAX || *lnL < -DBL_MAX || *lnL != *lnL) {
         beagleReturn = BEAGLE_ERROR_FLOATING_POINT;
     }
 

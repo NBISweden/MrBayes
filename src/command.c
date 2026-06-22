@@ -152,7 +152,6 @@ int      SetSpeciespartition (int part);
 int      SetTaxaFromTranslateTable (void);
 int      StandID (char nuc);
 void     WhatVariableExp (BitsLong exp, char *st);
-MrBFlt   WhichCont (int x);
 
 /* globals */
 int             autoClose;             /* autoclose                                     */
@@ -538,12 +537,9 @@ int AllocCharacters (void)
     if (memAllocs[ALLOC_PARTITIONVARS] == YES)
         goto errorExit;
     numVars           = NULL;
-    tempLinkUnlinkVec = NULL;
     activeParts       = NULL;
     tempLinkUnlinkVec = NULL;
     tempNum           = NULL;
-    linkTable[0]      = NULL;
-    tempLinkUnlink[0] = NULL;
     for (i=0; i<NUM_LINKED; i++)
         {
         linkTable[i]      = NULL;
@@ -4119,11 +4115,7 @@ int DoFormatParm (char *parmName, char *tkn)
                         else if (!strcmp(tempStr, "Standard"))
                             dataType = STANDARD;
                         else if (!strcmp(tempStr, "Continuous"))
-                            {
-                            MrBayesPrint ("%s   MrBayes currently does not support the use of the 'Continuous' datatype\n", spacer);
-                            return ERROR;
-                            /* dataType = CONTINUOUS; */
-                            }
+                            dataType = CONTINUOUS;
                         else if (!strcmp(tempStr, "Mixed"))
                             {
                             dataType = MIXED;
@@ -4153,11 +4145,7 @@ int DoFormatParm (char *parmName, char *tkn)
                         else if (!strcmp(tempStr, "Standard"))
                             dataType = STANDARD;
                         else if (!strcmp(tempStr, "Continuous"))
-                            {
-                            MrBayesPrint ("%s   MrBayes currently does not support the use of the 'Continuous' datatype\n", spacer);
-                            return ERROR;
-                            /* dataType = CONTINUOUS; */
-                            }
+                            dataType = CONTINUOUS;
                         else if (!strcmp(tempStr, "Mixed"))
                             {
                             MrBayesPrint ("%s   Cannot have mixed datatype within a mixed datatype\n", spacer);
@@ -5331,8 +5319,7 @@ int DoMatrixParm (char *parmName, char *tkn)
             }
         }
     
-    if (taxaInfo[0].charCount > 4010)
-        i = 1;  /* FIXME: Not used (from clang static analyzer) */
+    // if (taxaInfo[0].charCount > 4010) i = 1;  // why is this here?
 
     if (foundNewLine == YES)
         {
@@ -5384,9 +5371,15 @@ int DoMatrixParm (char *parmName, char *tkn)
         /* Should be a character (either continuous or otherwise). */
         if (charInfo[taxaInfo[taxonCount-1].charCount].charType == CONTINUOUS)
             {
-            /* If we have a CONTINUOUS character, then the entire token should either be
-               a number or a dash (for a negative sign). */
-            if (!strcmp(tkn, "-"))
+            /* If we have a continuous character, then the entire token should either be
+               a question mark, a number or a dash (for a negative sign). */
+            if (!strcmp(tkn, "?"))
+                {
+                /* store a very large number to represent missing state for now
+                   should be fine when data are normalized (between 0 and 1) or standardized */
+                matrix[pos(taxonCount-1,taxaInfo[taxonCount-1].charCount++,numChar)] = INT_MAX;
+                }
+            else if (!strcmp(tkn, "-"))
                 {
                 /* Dealing with a negative number. We will multiply the next tkn, which
                    had better be a number, by -1. */
@@ -5404,7 +5397,7 @@ int DoMatrixParm (char *parmName, char *tkn)
                         goto errorExit;
                         }
                     charCode = matrix[pos(0,taxaInfo[taxonCount-1].charCount,numChar)];
-                    matrix[pos(taxonCount-1,taxaInfo[taxonCount-1].charCount,numChar)] = charCode;
+                    matrix[pos(taxonCount-1,taxaInfo[taxonCount-1].charCount++,numChar)] = charCode;
                     }
                 else
                     {
@@ -5414,19 +5407,17 @@ int DoMatrixParm (char *parmName, char *tkn)
                         MrBayesPrint ("%s   Expecting a number for the continuous character\n", spacer);
                         goto errorExit;
                         }
-                    /* ... and then put the character into the matrix. Note that matrix
-                       is defined as an integer, but we may have floating precision continuous
-                       characters. To get around this, we multiply the value of the character
-                       by 1000 before putting it into matrix. We will divide by 1000 later on
-                       when/if we use the characters. */
+                    /* ... and then put the character into the matrix. Note that matrix is defined as an integer,
+                       but we have floating precision continuous characters. To get around this, we multiply the
+                       value of the character by 10000 before putting it into the matrix. We will divide by 10000
+                       later on when/if we use the characters. */
                     sscanf (tkn, "%lf", &charValue);
-                    charValue *= 1000.0;
+                    charValue = charValue * 10000.0 + 0.5;
                     if (isNegative == YES)
                         {
                         charValue *= -1.0;
                         isNegative = NO;
                         }
-                    /*MrBayesPrint ("%d \n", (int)charValue);*/
                     matrix[pos(taxonCount-1,taxaInfo[taxonCount-1].charCount++,numChar)] = (int)charValue;
                     }
                 }
@@ -8200,7 +8191,18 @@ int DoTreeParm (char *parmName, char *tkn)
         MrBayesPrint ("%s   You must be in a trees block to read a tree\n", spacer);
         return (ERROR);
         }
-    
+
+    /* All static parser-state variables (t, pp, qq, nextAvailableNode, etc.) are
+       initialised only when the PARAMETER (tree-name) token is processed.  Every
+       other branch dereferences t and/or pp and therefore requires that
+       initialisation to have happened first.  If it has not, the call sequence is
+       wrong and we must not proceed. */
+    if (expecting != Expecting(PARAMETER) && t == NULL)
+        {
+        MrBayesPrint ("%s   Unexpected tree token received before tree name was read\n", spacer);
+        return (ERROR);
+        }
+
     if (expecting == Expecting(PARAMETER))
         {
         /* this is the name of the tree */
@@ -8282,7 +8284,6 @@ int DoTreeParm (char *parmName, char *tkn)
                     FreePolyTree (userTree[treeIndex]);
                 return (ERROR);
                 }
-            /* FIXME: t == NULL here (from clang static analyzer) */
             qq = &t->nodes[nextAvailableNode++];
             qq->anc = pp;
             pp->left = qq;
@@ -8453,7 +8454,6 @@ int DoTreeParm (char *parmName, char *tkn)
                     return (ERROR);
                     }
                 tempSet[index] = YES;
-                /* FIXME: pp is NULL here (from clang static analyzer) */
                 strcpy (pp->label, tempName);
                 pp->index = index;
                 }
@@ -8475,7 +8475,6 @@ int DoTreeParm (char *parmName, char *tkn)
                     return (ERROR);
                     }
                 tempSet[index] = YES;
-                /* FIXME: pp is NULL here (from clang static analyzer) */
                 strcpy (pp->label, tkn);
                 pp->index = index;
                 }
@@ -8605,7 +8604,6 @@ int DoTreeParm (char *parmName, char *tkn)
                     FreePolyTree (userTree[treeIndex]);
                 return (ERROR);
                 }
-            /* FIXME: t is NULL here (from clang static analyzer) */
             qq = &t->nodes[nextAvailableNode++];
             pp->sib = qq;
             qq->anc = pp->anc;
@@ -8778,7 +8776,6 @@ int DoTreeParm (char *parmName, char *tkn)
                     return (ERROR);
                     }
                 tempSet[index] = YES;
-                /* FIXME: pp is NULL here (from clang static analyzer) */
                 strcpy (pp->label, tempName);
                 pp->index = index;
                 }
@@ -8825,7 +8822,6 @@ int DoTreeParm (char *parmName, char *tkn)
                         }
                     }
                 tempSet[index] = YES;
-                /* FIXME: pp is NULL here (from clang static analyzer) */
                 strcpy (pp->label, taxaNames[index]);
                 pp->index = index;
                 }
@@ -8869,7 +8865,6 @@ int DoTreeParm (char *parmName, char *tkn)
             }
         else
             {
-            /* FIXME: pp is NULL here (from clang static analyzer) */
             if (pp->anc == NULL)
                 {
                 if (pp->left == NULL)
@@ -9230,7 +9225,6 @@ int FreeCharacters (void)
         activeParams[0] = NULL;
         free (linkTable[0]);
         linkTable[0] = NULL;
-        tempLinkUnlinkVec = NULL;
         activeParts = NULL;
         tempLinkUnlinkVec = NULL;
         for (i=0; i<NUM_LINKED; i++)
@@ -9559,7 +9553,7 @@ int GetToken (char *token, int *tokenType, char **sourceH)
             else if (allNumbers == TRUE && IsIn(**sourceH,"Ee") && foundExp == NO)
                 foundExp = TRUE;
             else if (allNumbers == TRUE && IsIn(**sourceH,"+-") && IsIn((*sourceH)[-1],"Ee"))
-                foundExpSign = TRUE; /* FIXME: Not used (from clang static analyzer) */
+                foundExpSign = TRUE;
             else if (!IsIn(**sourceH,"0123456789."))
                 allNumbers = FALSE;
             *temp++ = *(*sourceH)++;
@@ -13702,24 +13696,15 @@ int IsIn (char ch, char *s)
 
 int IsMissing (int charCode, int dType)
 {
-    if (dType == DNA || dType == RNA)
-        {
-        if (charCode == 15 || charCode == 16)
-            return (YES);
-        }
-    else if (dType == STANDARD || dType == PROTEIN)
+    if (dType == DNA || dType == RNA || dType == PROTEIN || dType == RESTRICTION || dType == STANDARD)
         {
         if (charCode == MISSING || charCode == GAP)
             return (YES);
         }
-    else if (dType == RESTRICTION)
-        {
-        if (charCode == 3 || charCode == 4)
-            return (YES);
-        }
     else if (dType == CONTINUOUS)
         {
-
+        if (charCode == INT_MAX)
+            return (YES);
         }
     else
         {
@@ -13956,7 +13941,7 @@ int ParseCommand (char *s)
                                 foundFirst = NO;
                                 paramPtr = paramTable + commandPtr->parmList[0];
                                 }
-                            if (strcmp(commandPtr->string, "Execute")==0)
+                            if (strcmp(commandPtr->string, "Execute") == 0)
                                 {
                                 /* set the tokenizer to recognize quoted strings */
                                 readWord = YES;
@@ -15310,7 +15295,7 @@ char WhichAA (int x)
 
 MrBFlt WhichCont (int x)
 {
-    return ((MrBFlt)(x / 1000.0));
+    return ((MrBFlt)x / 10000.0);
 }
 
 
