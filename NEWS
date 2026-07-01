@@ -10,7 +10,8 @@ v3.2.8 (development version, not yet released)
     "-alpha", "-beta" and "-rcN" as well at times.
   * Use latexmk to build the PDF documentation, if avaliable.
   * Support MCMC chains longer than 2E9 generations.
-  * Support unordered discrete characters up to 24 states (0-9 A-N).
+  * Support discrete characters up to 24 states (0-9,A-N
+    for both unordered and ordered characters).
   * Support continuous characters with missing states (Brownian motion model).
   * Support serially-sampled tips in the coalescent prior.
   * Support independent lognormal (ILN) and independent gamma (IGR) clocks.
