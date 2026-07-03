@@ -48,6 +48,8 @@ void      FlipNodeScalerSpace (ModelInfo *m, int chain, int nodeIndex);
 void      FlipSiteScalerSpace (ModelInfo *m, int chain);
 void      FlipTiProbsSpace (ModelInfo *m, int chain, int nodeIndex);
 
+int       IsMissingC (CLFlt value);
+
 int       CondLikeDown_Cont (TreeNode *p, int division, int chain);
 int       CondLikeRoot_Cont (TreeNode *p, int division, int chain);
 int       CondLikeUp_Cont (TreeNode *p, int division, int chain);

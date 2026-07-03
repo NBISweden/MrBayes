@@ -360,7 +360,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 /* SK:
  * Used when doing reversible jump over stationary and directional
  * model: root frequencies are not used when in stationary model. */
-#define NOT_APPLICABLE -9999.0
+#define NOT_APPLICABLE          -9999.0
 
 #define CMD_STRING_LENGTH       100000
 

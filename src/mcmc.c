@@ -7975,7 +7975,8 @@ MrBFlt LogPrior (int chain)
                     lnPrior += LnDirichlet(st, sst, nStates);
                     }
                 /* now same for the respective values of root frequencies */
-                if (p->paramId == DIRPI_DIRxDIR || p->paramId == DIRPI_FIXEDxDIR || (p->paramId == DIRPI_MIX && sst[nStates] != NOT_APPLICABLE)) //SK todo: check if this works! 
+                if (p->paramId == DIRPI_DIRxDIR || p->paramId == DIRPI_FIXEDxDIR ||
+                    (p->paramId == DIRPI_MIX && sst[nStates] != NOT_APPLICABLE)) //SK todo: check if this works! 
                     {
                     lnPrior += LnDirichlet(&st[nStates], &sst[nStates], nStates);
                     }
@@ -11402,11 +11403,14 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 -----------------------------------------------------------------*/
 int PrintAncStates_Cont (TreeNode *p, int division, int chain)
 {
-    int             c, k, i;
-    CLFlt           *aStates, avg;
+    int             c, k, i, n, clIndex;
+    CLFlt           *mDP, *vDP, *mUp, *vUp;
+    MrBFlt          m_d, v_d, m_u, v_u, m_f, v_f, avg, lmax, catLike, siteLike,
+                    mFVals[MAX_RATE_CATS], lnCatL[MAX_RATE_CATS];
     char            *tempStr;
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
+    Tree            *t;
     
     tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
@@ -11417,17 +11421,87 @@ int PrintAncStates_Cont (TreeNode *p, int division, int chain)
 
     /* find model settings for this division */
     m = &modelSettings[division];
+    t = GetTree (m->brlens, chain, state[chain]);
 
-    aStates = m->ancStates[m->condLikeIndex[chain][p->index]];
-    
-    /* print the ancestral states */
+    /* this node's own down-pass estimate (based on its descendants only) */
+    mDP = m->ancStates[m->condLikeIndex[chain][p->index]];
+    vDP = m->bmVars[m->tiProbsIndex[chain][p->index]];
+
+    /* the "up message" computed by CondLikeUp_Cont: information from
+       everywhere else in the tree, excluding this node's own subtree */
+    mUp = m->ancStates[m->condLikeScratchIndex[p->index]];
+    vUp = m->bmVars[m->tiProbsScratchIndex[p->index]];
+
+    /* combine the down-pass estimate with the up message
+      (additive, precision-weighted, to avoid the numerical instability
+       of "dividing out" a contribution from an already-combined estimate)
+       to get the final marginal estimate for each rate category, then
+       average the estimates weighted by the posterior probability */
     for (c=0; c<m->numChars; c++)
         {
-        avg = aStates[c];
-        for (k=1; k<m->numRateCats; k++)
+        for (k=0; k<m->numRateCats; k++)
             {
             i = k * (m->numChars) + c;
-            avg = (avg * k + aStates[i]) / (k + 1.0);
+
+            m_d = mDP[i];
+            v_d = vDP[i];
+            m_u = mUp[i];
+            v_u = vUp[i];
+
+            if (IsMissingC((CLFlt)m_d) && IsMissingC((CLFlt)m_u))
+                m_f = (CLFlt) INT_MAX;
+            else if (IsMissingC((CLFlt)m_d))
+                m_f = m_u;
+            else if (IsMissingC((CLFlt)m_u))
+                m_f = m_d;
+            else if (v_d < TIME_MIN && v_u < TIME_MIN)
+                m_f = 0.5 * (m_d + m_u);
+            else if (v_d < TIME_MIN)
+                m_f = m_d;
+            else if (v_u < TIME_MIN)
+                m_f = m_u;
+            else
+                {
+                v_f = v_d * v_u / (v_d + v_u);
+                m_f = v_f * (m_d/v_d + m_u/v_u);
+                }
+
+            mFVals[k] = m_f;
+            }
+
+        if (m->numRateCats == 1)
+            {
+            avg = mFVals[0];
+            }
+        else
+            {
+            for (k=0; k<m->numRateCats; k++)
+                {
+                lnCatL[k] = 0.0;  // log likelihood of category k
+                for (n=0; n<t->nIntNodes; n++)
+                    {
+                    p = t->intDownPass[n];
+                    clIndex = m->condLikeIndex[chain][p->index];
+                    i = k * (m->numChars) + c;
+                    lnCatL[k] += m->condLikes[clIndex][i];
+                    }
+                }
+
+            lmax = lnCatL[0];
+            for (k=1; k<m->numRateCats; k++)
+                {
+                if (lmax < lnCatL[k])
+                    lmax = lnCatL[k];
+                }
+
+            avg = siteLike = 0.0;
+            for (k=0; k<m->numRateCats; k++)
+                {
+                catLike = exp(lnCatL[k] - lmax);
+                siteLike += catLike;
+                avg += catLike * mFVals[k];
+                }
+            avg /= siteLike;
             }
 
         SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(avg));
@@ -16606,6 +16680,8 @@ int RunChain (RandLong *seed)
             }
         TouchAllTrees (chn);
         TouchAllCijks (chn);
+
+        abortMove = NO;
         curLnL[chn] = LogLike(chn);
         curLnPr[chn] = LogPrior(chn);
         for (i=0; i<numCurrentDivisions; i++)

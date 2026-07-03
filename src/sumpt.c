@@ -37,6 +37,7 @@
 
 #include "bayes.h"
 #include "command.h"
+#include "likelihood.h"
 #include "mcmc.h"
 #include "sumpt.h"
 #include "utils.h"
@@ -2472,7 +2473,7 @@ int PrintOverlayPlot (MrBFlt **xVals, MrBFlt **yVals, int nRuns,  int startingFr
 /* PrintParamStats: Print parameter table (not model indicator params) to screen and .pstat file */
 int PrintParamStats (char *fileName, char **headerNames, int nHeaders, ParameterSample *parameterSamples, int nRuns, int nSamples)
 {
-    int     i, j, k, l, len, longestHeader, *sampleCounts=NULL, *validSampleCounts=NULL;
+    int     i, j, k, l, len, longestHeader, *sampleCounts=NULL, *validSampleCounts=NULL, nValidTotal;
     static char *temp=NULL;
     char    tempf[120];
     MrBFlt  **validVals=NULL;
@@ -2561,8 +2562,10 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
         if (!strcmp (temp, "Gen") || !strcmp (temp, "lnLike") || !strcmp (temp, "lnPrior"))
             continue;
 
-        if (IsSame (temp, "rootpi(0)") == SAME || IsSame (temp, "rootpi(1)") == SAME) // Currently only doing NA removal for root freqs. Can be extended in the future.
+        nValidTotal = -1;  // reset to -1 (not applicable) for "m'{...}" column
+        if (IsSame (temp, "rootpi(0)") == SAME || IsSame (temp, "rootpi(1)") == SAME)
             {
+            // Currently only doing NA removal for root freqs. Can be extended in the future.
             for (k=0; k<nRuns; k++)
                 {
                 validSampleCounts[k] = 0;
@@ -2577,21 +2580,49 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
                 }
             GetSummary (validVals, nRuns, validSampleCounts, &theStats, sumpParams.HPD);
             }
+        else if (!strncmp (temp, "m'{", 3))
+            {
+            // check missing state for continuous characters
+            nValidTotal = 0;
+            for (k=0; k<nRuns; k++)
+                {
+                validSampleCounts[k] = 0;
+                for (l=0; l<nSamples; l++)
+                    {
+                    if (!IsMissingC ((CLFlt) parameterSamples[i].values[k][l]))
+                        {
+                        validVals[k][validSampleCounts[k]] = parameterSamples[i].values[k][l];
+                        validSampleCounts[k]++;
+                        }
+                    }
+                nValidTotal += validSampleCounts[k];
+                }
+            if (nValidTotal != 0)
+                GetSummary (validVals, nRuns, validSampleCounts, &theStats, sumpParams.HPD);
+            }
         else
             {
             GetSummary (parameterSamples[i].values, nRuns, sampleCounts, &theStats, sumpParams.HPD);
             }
 
         MrBayesPrint ("%s   %-*s ", spacer, longestHeader, temp);
-        MrBayesPrint ("%10.6lf  %10.6lf  %10.6lf  %10.6lf  %10.6lf", theStats.mean, theStats.var, theStats.lower, theStats.upper, theStats.median);
         MrBayesPrintf (fp, "%s", temp);
-        MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.mean));
-        MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.var));
-        MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.lower));
-        MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.upper));
-        MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.median));
+        if (nValidTotal == 0)
+            {
+            MrBayesPrint ("        NA          NA          NA          NA          NA");
+            MrBayesPrintf (fp, "\tNA\tNA\tNA\tNA\tNA");
+            }
+        else
+            {
+            MrBayesPrint ("%10.6lf  %10.6lf  %10.6lf  %10.6lf  %10.6lf", theStats.mean, theStats.var, theStats.lower, theStats.upper, theStats.median);
+            MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.mean));
+            MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.var));
+            MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.lower));
+            MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.upper));
+            MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.median));
+            }
 
-        if (theStats.minESS == theStats.minESS)
+        if (nValidTotal != 0 && theStats.minESS == theStats.minESS)
             {
             MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.minESS));
             MrBayesPrint ("  %8.2lf", theStats.minESS);
@@ -2599,11 +2630,11 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
         else
             {
             MrBayesPrint ("       NA ");
-            MrBayesPrintf (fp, "NA");
+            MrBayesPrintf (fp, "\tNA");
             }
         if (nRuns > 1)
             {
-            if (theStats.minESS == theStats.minESS)
+            if (nValidTotal != 0 && theStats.minESS == theStats.minESS)
                 {
                 MrBayesPrint ("  %8.2lf", theStats.avrESS);
                 MrBayesPrintf (fp, "\t%s", MbPrintNum(theStats.avrESS));
@@ -2611,12 +2642,12 @@ int PrintParamStats (char *fileName, char **headerNames, int nHeaders, Parameter
             else
                 {
                 MrBayesPrint ("       NA ");
-                MrBayesPrintf (fp, "NA");
+                MrBayesPrintf (fp, "\tNA");
                 }
-            if (theStats.PSRF < 0.0)
+            if (nValidTotal == 0 || theStats.PSRF < 0.0)
                 {
                 MrBayesPrint ("     NA   ");
-                MrBayesPrintf (fp, "NA");
+                MrBayesPrintf (fp, "\tNA");
                 }
             else
                 {

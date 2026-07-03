@@ -103,29 +103,17 @@ int BMVar_Cont (TreeNode *p, int division, int chain)
     
     /* find length which is sigma^2 * t */
     if (m->cppEvents != NULL)
-        {
         length = GetParamSubVals(m->cppEvents, chain, state[chain])[p->index];
-        }
     else if (m->tk02BranchRates != NULL)
-        {
         length = GetParamSubVals(m->tk02BranchRates, chain, state[chain])[p->index];
-        }
     else if (m->wnBranchRates != NULL)
-        {
         length = GetParamSubVals(m->wnBranchRates, chain, state[chain])[p->index];
-        }
     else if (m->ilnBranchRates != NULL)
-        {
         length = GetParamSubVals(m->ilnBranchRates, chain, state[chain])[p->index];
-        }
     else if (m->igrBranchRates != NULL)
-        {
         length = GetParamSubVals(m->igrBranchRates, chain, state[chain])[p->index];
-        }
     else if (m->mixedBrchRates != NULL)
-        {
         length = GetParamSubVals(m->mixedBrchRates, chain, state[chain])[p->index];
-        }
     else
         length = p->length;
     
@@ -334,7 +322,159 @@ int CondLikeRoot_Cont (TreeNode *p, int division, int chain)
 
 int CondLikeUp_Cont (TreeNode *p, int division, int chain)
 {
-    /* place holder, do nothing at the moment */
+    /* This function computes, for every node, the "up message": a Gaussian
+       belief about that node's own value based EXCLUSIVELY on information
+       from outside its own subtree (i.e. excluding its own descendants).
+       Combined with the node's own down-pass estimate (from
+       CondLikeDown_Cont/CondLikeRoot_Cont, which only look at descendants),
+       this gives the final (marginal posterior) ancestral state estimate --
+       see PrintAncStates_Cont, which performs that last combination at
+       print time. */
+
+    int         i, k, c;
+    MrBFlt      baseRate, *catRate, theRate, length,
+                m1, v1, mA, vA, mS, vS;
+    CLFlt       *mUp, *vUp, *mSib, *vSib, *mUpA, *vUpA, *mAnchor;
+    TreeNode    *sib;
+    ModelInfo   *m;
+    Tree        *tree;
+
+    m = &modelSettings[division];
+    tree = GetTree (m->brlens, chain, state[chain]);
+
+    /* get base rate */
+    baseRate = GetRate(division, chain);
+
+    /* get category rates */
+    theRate = 1.0;
+    if (m->shape != NULL)
+        catRate = GetParamSubVals(m->shape, chain, state[chain]);
+    else
+        catRate = &theRate;
+
+    /* find length which is sigma^2 * t */
+    if (m->cppEvents != NULL)
+        length = GetParamSubVals(m->cppEvents, chain, state[chain])[p->index];
+    else if (m->tk02BranchRates != NULL)
+        length = GetParamSubVals(m->tk02BranchRates, chain, state[chain])[p->index];
+    else if (m->wnBranchRates != NULL)
+        length = GetParamSubVals(m->wnBranchRates, chain, state[chain])[p->index];
+    else if (m->ilnBranchRates != NULL)
+        length = GetParamSubVals(m->ilnBranchRates, chain, state[chain])[p->index];
+    else if (m->igrBranchRates != NULL)
+        length = GetParamSubVals(m->igrBranchRates, chain, state[chain])[p->index];
+    else if (m->mixedBrchRates != NULL)
+        length = GetParamSubVals(m->mixedBrchRates, chain, state[chain])[p->index];
+    else
+        length = p->length;
+
+    /* find where to store this node's up message */
+    mUp = m->ancStates[m->condLikeScratchIndex[p->index]];
+    vUp = m->bmVars[m->tiProbsScratchIndex[p->index]];
+
+    if (p->anc->anc == NULL)
+        {
+        mAnchor = m->ancStates[m->condLikeIndex[chain][p->anc->index]];
+
+        for (k=0; k<m->numRateCats; k++)
+            {
+            for (c=0; c<m->numChars; c++)
+                {
+                i = k * (m->numChars) + c;
+                if (tree->isRooted == YES || IsMissingC(mAnchor[c]))
+                    {
+                    mUp[i] = (CLFlt) INT_MAX;
+                    vUp[i] = 0.0;
+                    }
+                else
+                    {
+                    mUp[i] = mAnchor[c];
+                    vUp[i] = (CLFlt) (length * baseRate * catRate[k]);
+                    }
+                }
+            }
+        }
+    else  // p is not at the root, combine ancestor's up message with sibling's down message
+        {
+        if (p->anc->left == p)
+            sib = p->anc->right;
+        else
+            sib = p->anc->left;
+
+        /* find the already-computed up message of the ancestor */
+        mUpA = m->ancStates[m->condLikeScratchIndex[p->anc->index]];
+        vUpA = m->bmVars[m->tiProbsScratchIndex[p->anc->index]];
+
+        mSib = m->ancStates[m->condLikeIndex[chain][sib->index]];
+        vSib = m->bmVars[m->tiProbsIndex[chain][sib->index]];
+
+        for (k=0; k<m->numRateCats; k++)
+            {
+            for (c=0; c<m->numChars; c++)
+                {
+                i = k * (m->numChars) + c;
+
+                mA = mUpA[i];
+                vA = vUpA[i];
+                mS = (sib->left == NULL) ? mSib[c] : mSib[i];
+                vS = vSib[i];
+
+                if (IsMissingC(mUpA[i]) && IsMissingC((CLFlt)mS))
+                    {
+                    m1 = (CLFlt) INT_MAX;
+                    v1 = 0.0;
+                    }
+                else if (IsMissingC(mUpA[i]))
+                    {
+                    m1 = mS;
+                    v1 = vS;
+                    }
+                else if (IsMissingC((CLFlt)mS))
+                    {
+                    m1 = mA;
+                    v1 = vA;
+                    }
+                else if (vS < TIME_MIN && vA < TIME_MIN)
+                    {
+                    /* both sources are exact observations (e.g. both fossil ancestors)
+                       this should not happen at all! just in case, average them */
+                    m1 = 0.5 * (mA + mS);
+                    v1 = 0.0;
+                    }
+                else if (vS < TIME_MIN)
+                    {
+                    /* sibling is an exact observation */
+                    m1 = mS;
+                    v1 = 0.0;
+                    }
+                else if (vA < TIME_MIN)
+                    {
+                    /* ancestor's up message is an exact observation */
+                    m1 = mA;
+                    v1 = 0.0;
+                    }
+                else
+                    {
+                    /* additive precision-weighted combination */
+                    v1 = vA * vS / (vA + vS);
+                    m1 = v1 * (mA/vA + mS/vS);
+                    }
+
+                /* propagate down across p's own branch */
+                if (IsMissingC((CLFlt) m1))
+                    {
+                    mUp[i] = (CLFlt) INT_MAX;
+                    vUp[i] = 0.0;
+                    }
+                else
+                    {
+                    mUp[i] = (CLFlt) m1;
+                    vUp[i] = (CLFlt) (v1 + length * baseRate * catRate[k]);
+                    }
+                }
+            }
+        }
+
     return NO_ERROR;
 }
 
@@ -7941,7 +8081,7 @@ int Likelihood_Cont_Debug (TreeNode *p, int division, int chain, MrBFlt *lnL, in
 int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
 {
     int         i, k, c, n, clIndex;
-    MrBFlt      siteLike, catLike, *catRate, baseRate, lmax, lnCatL[20];
+    MrBFlt      *catRate, baseRate, lmax, catLike, siteLike, lnCatL[MAX_RATE_CATS];
     CLFlt       *siteRates;
     ModelInfo   *m;
     Tree        *t;
