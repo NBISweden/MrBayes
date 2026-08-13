@@ -1,6 +1,6 @@
 Release Note
 
-v3.2.8 (development version, not yet released)
+v3.2.8 (Aug 18 2026)
   * Move to semantic versioning scheme (see https://semver.org/).
     Release numbers are MAJOR.MINOR.PATCH where a new MAJOR release
     number means backward incompatible changes were made, a new MINOR
