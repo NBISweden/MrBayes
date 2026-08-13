@@ -1,4 +1,4 @@
-MrBayes 3.2.7a
+MrBayes 3.2.8
 
 This document describes how to install the most recent release of
 MrBayes using Homebrew on macOS, Linux, or on Window subsystem for
@@ -136,10 +136,10 @@ and/or any of the "Makefile.am" files and then want to regenerate the
 "configure" script and associated files, there are some prerequisites
 that need to be in place:
 
-* Make sure Automake 1.15 (http://www.gnu.org/software/automake/)
+* Make sure Automake 1.17 (http://www.gnu.org/software/automake/)
   is installed.
 
-* Make sure Autoconf 2.69 (http://www.gnu.org/software/autoconf/)
+* Make sure Autoconf 2.72 (http://www.gnu.org/software/autoconf/)
   is installed.
 
 The "configure.ac" script uses the "pkg-config" tool for detection
@@ -156,8 +156,8 @@ architecture-dependent compiler flags.  Therefore,
 * On some systems that uses metaauto for wrapping multiple versions of
   the GNU autotools (OpenBSD for example):
 
-    export AUTOCONF_VERSION=2.69
-    export AUTOMAKE_VERSION=1.15
+    export AUTOCONF_VERSION=2.72
+    export AUTOMAKE_VERSION=1.17
 
 * On Ubuntu Linux, installing the following packages installs all of the
   above prerequisites:
