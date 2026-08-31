@@ -11403,14 +11403,13 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
 -----------------------------------------------------------------*/
 int PrintAncStates_Cont (TreeNode *p, int division, int chain)
 {
-    int             c, k, i, n, clIndex;
-    CLFlt           *mDP, *vDP, *mUp, *vUp;
+    int             c, k, i;
+    CLFlt           *mDP, *vL, *vR, *mL, *mR, *mUp, *vUp, m_l, m_r;
     MrBFlt          m_d, v_d, m_u, v_u, m_f, v_f, avg, lmax, catLike, siteLike,
                     mFVals[MAX_RATE_CATS], lnCatL[MAX_RATE_CATS];
     char            *tempStr;
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
-    Tree            *t;
     
     tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
@@ -11421,11 +11420,15 @@ int PrintAncStates_Cont (TreeNode *p, int division, int chain)
 
     /* find model settings for this division */
     m = &modelSettings[division];
-    t = GetTree (m->brlens, chain, state[chain]);
 
     /* this node's own down-pass estimate (based on its descendants only) */
     mDP = m->ancStates[m->condLikeIndex[chain][p->index]];
-    vDP = m->bmVars[m->tiProbsIndex[chain][p->index]];
+
+    /* the stored variance also covers this node's own branch, so recompute the descendant-only part (cf. BMVar_Cont) */
+    vL = m->bmVars[m->tiProbsIndex[chain][p->left->index]];
+    vR = m->bmVars[m->tiProbsIndex[chain][p->right->index]];
+    mL = m->ancStates[m->condLikeIndex[chain][p->left->index]];
+    mR = m->ancStates[m->condLikeIndex[chain][p->right->index]];
 
     /* the "up message" computed by CondLikeUp_Cont: information from
        everywhere else in the tree, excluding this node's own subtree */
@@ -11443,8 +11446,18 @@ int PrintAncStates_Cont (TreeNode *p, int division, int chain)
             {
             i = k * (m->numChars) + c;
 
+            m_l = (p->left->left  == NULL) ? mL[c] : mL[i];
+            m_r = (p->right->left == NULL) ? mR[c] : mR[i];
+            if (IsMissingC(m_l) && IsMissingC(m_r))
+                v_d = 0.0;
+            else if (IsMissingC(m_l))
+                v_d = vR[i];
+            else if (IsMissingC(m_r))
+                v_d = vL[i];
+            else
+                v_d = (vL[i] * vR[i]) / (vL[i] + vR[i]);
+
             m_d = mDP[i];
-            v_d = vDP[i];
             m_u = mUp[i];
             v_u = vUp[i];
 
@@ -11475,24 +11488,7 @@ int PrintAncStates_Cont (TreeNode *p, int division, int chain)
             }
         else
             {
-            for (k=0; k<m->numRateCats; k++)
-                {
-                lnCatL[k] = 0.0;  // log likelihood of category k
-                for (n=0; n<t->nIntNodes; n++)
-                    {
-                    p = t->intDownPass[n];
-                    clIndex = m->condLikeIndex[chain][p->index];
-                    i = k * (m->numChars) + c;
-                    lnCatL[k] += m->condLikes[clIndex][i];
-                    }
-                }
-
-            lmax = lnCatL[0];
-            for (k=1; k<m->numRateCats; k++)
-                {
-                if (lmax < lnCatL[k])
-                    lmax = lnCatL[k];
-                }
+            lmax = CatLnLike_Cont (division, chain, c, lnCatL);
 
             avg = siteLike = 0.0;
             for (k=0; k<m->numRateCats; k++)
@@ -12757,8 +12753,9 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
 -------------------------------------------------------------------*/
 int PrintSiteRates_Cont (TreeNode *p, int division, int chain)
 {
-    int             c;
-    CLFlt           *siteRates;
+    int             c, k;
+    MrBFlt          baseRate, *catRate, lmax, catLike, siteLike, siteRate,
+                    lnCatL[MAX_RATE_CATS];
     char            *tempStr;
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
@@ -12772,14 +12769,25 @@ int PrintSiteRates_Cont (TreeNode *p, int division, int chain)
 
     /* find model settings for this division */
     m = &modelSettings[division];
+
+    baseRate = GetRate (division, chain);
+    catRate  = GetParamSubVals (m->shape, chain, state[chain]);
     
-    /* find the site rates already calculated */
-    siteRates = m->condLikes[m->condLikeIndex[0][0]];
-    
-    /* print the site rates */
+    /* print the posterior mean rate of each character */
     for (c=0; c<m->numChars; c++)
         {
-        SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(siteRates[c]));
+        lmax = CatLnLike_Cont (division, chain, c, lnCatL);
+
+        siteRate = siteLike = 0.0;
+        for (k=0; k<m->numRateCats; k++)
+            {
+            catLike = exp(lnCatL[k] - lmax);
+            siteLike += catLike;
+            siteRate += catLike * catRate[k];
+            }
+        siteRate *= baseRate / siteLike;
+
+        SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(siteRate));
         if (AddToPrintString (tempStr) == ERROR) return (ERROR);
         }
     
