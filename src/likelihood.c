@@ -374,14 +374,16 @@ int CondLikeUp_Cont (TreeNode *p, int division, int chain)
 
     if (p->anc->anc == NULL)
         {
-        mAnchor = m->ancStates[m->condLikeIndex[chain][p->anc->index]];
+        /* the root of a rooted tree carries no observation and has no cond like array */
+        mAnchor = (tree->isRooted == YES) ? NULL :
+                    m->ancStates[m->condLikeIndex[chain][p->anc->index]];
 
         for (k=0; k<m->numRateCats; k++)
             {
             for (c=0; c<m->numChars; c++)
                 {
                 i = k * (m->numChars) + c;
-                if (tree->isRooted == YES || IsMissingC(mAnchor[c]))
+                if (mAnchor == NULL || IsMissingC(mAnchor[c]))
                     {
                     mUp[i] = (CLFlt) INT_MAX;
                     vUp[i] = 0.0;
@@ -8067,6 +8069,46 @@ int Likelihood_Cont_Debug (TreeNode *p, int division, int chain, MrBFlt *lnL, in
     return NO_ERROR;
 }
 
+
+/*------------------------------------------------------------------
+|
+|   CatLnLike_Cont: sum, for each rate category, the contrast log
+|      likelihoods of character c stored in the internal nodes;
+|      returns the largest of them (for numerical stability)
+|
+-------------------------------------------------------------------*/
+MrBFlt CatLnLike_Cont (int division, int chain, int c, MrBFlt *lnCatL)
+{
+    int         k, n;
+    MrBFlt      lmax;
+    CLFlt       *lnL;
+    ModelInfo   *m;
+    Tree        *t;
+    TreeNode    *q;
+
+    m = &modelSettings[division];
+    t = GetTree(m->brlens, chain, state[chain]);
+
+    for (k=0; k<m->numRateCats; k++)
+        lnCatL[k] = 0.0;
+
+    for (n=0; n<t->nIntNodes; n++)
+        {
+        q   = t->intDownPass[n];
+        lnL = m->condLikes[m->condLikeIndex[chain][q->index]];
+        for (k=0; k<m->numRateCats; k++)
+            lnCatL[k] += lnL[k * (m->numChars) + c];
+        }
+
+    lmax = lnCatL[0];
+    for (k=1; k<m->numRateCats; k++)
+        if (lmax < lnCatL[k])
+            lmax = lnCatL[k];
+
+    return lmax;
+}
+
+
 /*------------------------------------------------------------------
 |
 |   Likelihood_Cont: likelihood for continuous traits   //chi
@@ -8080,14 +8122,11 @@ int Likelihood_Cont_Debug (TreeNode *p, int division, int chain, MrBFlt *lnL, in
 -------------------------------------------------------------------*/
 int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats)
 {
-    int         i, k, c, n, clIndex;
-    MrBFlt      *catRate, baseRate, lmax, catLike, siteLike, lnCatL[MAX_RATE_CATS];
-    CLFlt       *siteRates;
+    int         k, c;
+    MrBFlt      lmax, siteLike, lnCatL[MAX_RATE_CATS];
     ModelInfo   *m;
-    Tree        *t;
     
     m = &modelSettings[division];
-    t = GetTree(m->brlens,chain,state[chain]);
 
     *lnL = 0.0;
 
@@ -8095,53 +8134,16 @@ int Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whic
        the internal nodes, we just need to sum them up */
     for (c=0; c<m->numChars; c++)
         {
+        lmax = CatLnLike_Cont (division, chain, c, lnCatL);
+
         if (m->numRateCats == 1)
+            *lnL += lnCatL[0];
+        else  // average over the rate categories
             {
-            for (n=0; n<t->nIntNodes; n++)
-                {
-                p = t->intDownPass[n];
-                clIndex = m->condLikeIndex[chain][p->index];
-                *lnL += m->condLikes[clIndex][c];
-                }
-            }
-        else  // account for rate variation across characters
-            {
-            siteRates = m->condLikes[m->condLikeIndex[0][0]];
-            baseRate = GetRate(division, chain);
-            catRate = GetParamSubVals (m->shape, chain, state[chain]);
-            
+            siteLike = 0.0;
             for (k=0; k<m->numRateCats; k++)
-                {
-                lnCatL[k] = 0.0;  // log likelihood of category k
-                for (n=0; n<t->nIntNodes; n++)
-                    {
-                    p = t->intDownPass[n];
-                    clIndex = m->condLikeIndex[chain][p->index];
-                    i = k * (m->numChars) + c;
-                    lnCatL[k] += m->condLikes[clIndex][i];
-                    }
-                }
-            
-            lmax = lnCatL[0];
-            for (k=1; k<m->numRateCats; k++)
-                {
-                if (lmax < lnCatL[k])
-                    lmax = lnCatL[k];
-                }  // for numerical stability
-            
-            siteLike = siteRates[c] = 0.0;
-            for (k=0; k<m->numRateCats; k++)
-                {
-                catLike = exp(lnCatL[k] - lmax);
-                siteLike += catLike;
-                siteRates[c] += (CLFlt) (catLike * catRate[k]);
-                }
-            
-            /* average over the rate categories */
+                siteLike += exp(lnCatL[k] - lmax);
             *lnL += log(siteLike) + lmax - log(m->numRateCats);
-           
-            /* also calculate and store the site rates */
-            siteRates[c] *= (CLFlt) (baseRate / siteLike);
             }
         }
     

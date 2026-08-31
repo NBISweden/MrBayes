@@ -49,6 +49,7 @@ void      FlipSiteScalerSpace (ModelInfo *m, int chain);
 void      FlipTiProbsSpace (ModelInfo *m, int chain, int nodeIndex);
 
 int       IsMissingC (CLFlt value);
+MrBFlt    CatLnLike_Cont (int division, int chain, int c, MrBFlt *lnCatL);
 
 int       CondLikeDown_Cont (TreeNode *p, int division, int chain);
 int       CondLikeRoot_Cont (TreeNode *p, int division, int chain);

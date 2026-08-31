@@ -3825,11 +3825,23 @@ int DoLsetParm (char *parmName, char *tkn)
                             if (!strcmp(tempStr, "Adgamma") && (modelParams[i].dataType != DNA && modelParams[i].dataType != RNA && modelParams[i].dataType != PROTEIN))
                                 {
                                 /* we won't apply an adgamma model to anything but DNA, RNA, or PROTEIN data */
+                                if (nApplied == 0 && numCurrentDivisions == 1)
+                                    MrBayesPrint ("%s   Rates = %s unchanged ", spacer, modelParams[i].ratesModel);
+                                else
+                                    MrBayesPrint ("%s   Rates = %s unchanged for partition %d ", spacer, modelParams[i].ratesModel, i+1);
+                                MrBayesPrint ("because dataType is not DNA, RNA or PROTEIN\n");
                                 }
                             else if ((!strcmp(tempStr, "Propinv") || !strcmp(tempStr, "Invgamma")) &&
                                      (modelParams[i].dataType == STANDARD || modelParams[i].dataType == RESTRICTION || modelParams[i].dataType == CONTINUOUS))
                                 {
-                                /* we will not apply pinvar to standard or restriction site data */
+                                /* we will not apply pinvar to standard, restriction or continuous data */
+                                if (nApplied == 0 && numCurrentDivisions == 1)
+                                    MrBayesPrint ("%s   Rates = %s unchanged ", spacer, modelParams[i].ratesModel);
+                                else
+                                    MrBayesPrint ("%s   Rates = %s unchanged for partition %d ", spacer, modelParams[i].ratesModel, i+1);
+                                MrBayesPrint ("because the proportion of invariable sites does not apply to %s data\n",
+                                              modelParams[i].dataType == STANDARD ? "STANDARD" :
+                                              (modelParams[i].dataType == RESTRICTION ? "RESTRICTION" : "CONTINUOUS"));
                                 }
                             else
                                 {
@@ -6236,7 +6248,8 @@ int DoPrsetParm (char *parmName, char *tkn)
                         {
                         if ((activeParts[i] == YES || nApplied == 0) &&
                             (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA || modelParams[i].dataType == PROTEIN ||
-                             modelParams[i].dataType == RESTRICTION || modelParams[i].dataType == STANDARD))
+                             modelParams[i].dataType == RESTRICTION || modelParams[i].dataType == STANDARD ||
+                             modelParams[i].dataType == CONTINUOUS))
                             {
                             strcpy(modelParams[i].shapePr, tempStr);
                             flag = 1;
@@ -6245,7 +6258,8 @@ int DoPrsetParm (char *parmName, char *tkn)
                     if (flag == 0)
                         {
                         MrBayesPrint ("%s   Warning: %s can be set only for partition containing data of at least one of following type:\n", spacer, parmName);
-                        MrBayesPrint ("%s       DNA, RNA, PROTEIN, RESTRICTION, STANDARD. Currently there is no active partition with such data.\n", spacer);
+                        MrBayesPrint ("%s       DNA, RNA, PROTEIN, RESTRICTION, STANDARD, CONTINUOUS. \n", spacer);
+                        MrBayesPrint ("%s       Currently there is no active partition with such data.\n", spacer);
                         return (ERROR);
                         }
                     }
@@ -6269,7 +6283,8 @@ int DoPrsetParm (char *parmName, char *tkn)
                     {
                     if ((activeParts[i] == YES || nApplied == 0) &&
                         (modelParams[i].dataType == DNA || modelParams[i].dataType == RNA || modelParams[i].dataType == PROTEIN ||
-                         modelParams[i].dataType == RESTRICTION || modelParams[i].dataType == STANDARD))
+                         modelParams[i].dataType == RESTRICTION || modelParams[i].dataType == STANDARD ||
+                         modelParams[i].dataType == CONTINUOUS))
                         {
                         if (!strcmp(modelParams[i].shapePr,"Uniform"))
                             {
@@ -6368,7 +6383,7 @@ int DoPrsetParm (char *parmName, char *tkn)
                     if (flag == 0)
                         {
                         MrBayesPrint ("%s   Warning: %s can be set only for partition containing data of at least one of following type:\n", spacer, parmName);
-                        MrBayesPrint ("%s            DNA, RNA, PROTEIN. Currently there is no active partition with such data.\n", spacer);
+                        MrBayesPrint ("%s       DNA, RNA, PROTEIN. Currently there is no active partition with such data.\n", spacer);
                         return (ERROR);
                         }
                     }
@@ -6955,9 +6970,8 @@ int DoPrsetParm (char *parmName, char *tkn)
                             }
                         if (flag == 0)
                             {
-                            MrBayesPrint ("%s   Warning: %s can be set only for partition containing data", spacer, parmName);
-                            MrBayesPrint ("  of at least one of the following type: STANDARD, RESTRICTION.");
-                            MrBayesPrint ("Currently there is no active partition with such data. ");
+                            MrBayesPrint ("%s   Warning: %s can be set only for partition containing data of at least one of following type:\n", spacer, parmName);
+                            MrBayesPrint ("%s       STANDARD, RESTRICTION. Currently there is no active partition with such data.\n", spacer);
                             return (ERROR);
                             }
                         }
