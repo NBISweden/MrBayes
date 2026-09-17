@@ -3453,4 +3453,3 @@ AS_IF([test "$am_cv_xargs_n_works" = yes], [am__xargs_n='xargs -n'], [dnl
 AC_SUBST(am__xargs_n)
 ])
 
-m4_include([autotools/ax_reset_header_cache.m4])

@@ -1,6 +1,6 @@
 /* src/config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Define if you want to enable Beagle */
+/* Define if Beagle support is enabled */
 #undef BEAGLE_ENABLED
 
 /* Define to enable Beagle v3.1 extensions */

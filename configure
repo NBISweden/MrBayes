@@ -1442,11 +1442,11 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-mpi              Build with MPI parallelization support [default=no]
   --with-readline         Build with the Readline library [default=check]
-  --with-beagle[=PATH]    Build with the Beagle library [default=no]. The PATH
-                          argument should be the prefix path where Beagle was
-                          installed, e.g. $HOME/local, /opt/local etc. The
-                          paths /usr/local and /usr are checked if no path is
-                          specified.
+  --with-beagle[=PATH]    Build with the Beagle library [default=no]. The
+                          optional PATH argument should be the prefix path
+                          where Beagle was installed, e.g. $HOME/local,
+                          /opt/local etc. The paths /usr/local and /usr are
+                          checked if no path is specified.
 
 Some influential environment variables:
   PKG_CONFIG  path to pkg-config utility
@@ -5754,175 +5754,240 @@ fi
 
 
 # Check for the Beagle library.
+#
+# Strategy:
+#   - Honor user-supplied BEAGLE_CFLAGS/BEAGLE_LIBS if present.
+#   - Otherwise probe for Beagle by trying to compile and link a test
+#     program using either the prefix given with --with-beagle=PATH, or
+#     /usr/local and /usr if no path was given.
+#   - If no specific prefix was given and prefix-based probing fails,
+#     fall back to pkg-config.
+#
+# We assume the headers are installed in
+#   $beagle_prefix/include/libhmsbeagle-1
+# and the library in
+#   $beagle_prefix/lib
 
-# Strategy:  Use AC_CHECK_LIB + AC_CHECK_HEADER to look for the library
-# and headers with the given prefix, or in /usr/local followed by /usr
-# if no prefix path was given, and if that fails use PKG_CHECK_MODULES
-# (and trust its result).
+beagle_found=no
+beagle_pkg_name=hmsbeagle-1
 
-# Note: We assume that Beagle's top-level include directory is located under
-# include/libhmsbeagle-1 and nowhere else.
-
-ac_header= ac_cache=
-for ac_item in $ac_header_c_list
-do
-  if test $ac_cache; then
-    ac_fn_c_check_header_compile "$LINENO" $ac_header ac_cv_header_$ac_cache "$ac_includes_default"
-    if eval test \"x\$ac_cv_header_$ac_cache\" = xyes; then
-      printf "%s\n" "#define $ac_item 1" >> confdefs.h
-    fi
-    ac_header= ac_cache=
-  elif test $ac_header; then
-    ac_cache=$ac_item
-  else
-    ac_header=$ac_item
-  fi
-done
-
-
-
-
-
-
-
-
-if test $ac_cv_header_stdlib_h = yes && test $ac_cv_header_string_h = yes
+if test "x$with_beagle" != xno
 then :
 
-printf "%s\n" "#define STDC_HEADERS 1" >>confdefs.h
 
-fi
-if test "x$with_beagle" != "xno"
+  # Respect explicit user overrides first.
+  if test -n "$BEAGLE_CFLAGS" || test -n "$BEAGLE_LIBS"
 then :
 
-    old_cppflags="$CPPFLAGS"
-    old_ldflags="$LDFLAGS"
-    old_ldlibs="$LDLIBS"
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: using user-supplied BEAGLE_CFLAGS/BEAGLE_LIBS" >&5
+printf "%s\n" "$as_me: using user-supplied BEAGLE_CFLAGS/BEAGLE_LIBS" >&6;}
+    beagle_found=yes
 
-    beagle_pkg_name="hmsbeagle-1"
-    beagle_subinc="include/lib$beagle_pkg_name"
-    beagle_sublib="lib"
-
-    if test -n "$BEAGLE_CFLAGS" || test -n "$BEAGLE_LIBS"
-then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Using the supplied values of BEAGLE_CFLAGS and BEAGLE_LIBS" >&5
-printf "%s\n" "$as_me: Using the supplied values of BEAGLE_CFLAGS and BEAGLE_LIBS" >&6;}
-         beagle_found="yes"
 else case e in #(
-  e) if test -d "$with_beagle"
-then :
-  beagle_prefix_list="$with_beagle"
-else case e in #(
-  e) beagle_prefix_list="/usr/local /usr" ;;
+  e)
+
+    # No user-supplied flags: start from empty.
+    BEAGLE_CFLAGS=
+    BEAGLE_LIBS=
+
+    # Try direct probing by prefix.
+    old_CPPFLAGS=$CPPFLAGS
+    old_LDFLAGS=$LDFLAGS
+    old_LIBS=$LIBS
+
+    case $with_beagle in #(
+  yes|check) :
+    beagle_prefixes="/usr/local /usr" ;; #(
+  *) :
+    beagle_prefixes="$with_beagle" ;; #(
+  *) :
+     ;;
 esac
-fi ;;
-esac
-fi
 
-    for beagle_prefix in $beagle_prefix_list; do
+    for beagle_prefix in $beagle_prefixes; do
+      BEAGLE_CFLAGS="-I$beagle_prefix/include/libhmsbeagle-1"
+      BEAGLE_LIBS="-L$beagle_prefix/lib -Wl,-rpath,$beagle_prefix/lib -lhmsbeagle"
 
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Trying to locate Beagle ($beagle_pkg_name) in '$beagle_prefix'" >&5
-printf "%s\n" "$as_me: Trying to locate Beagle ($beagle_pkg_name) in '$beagle_prefix'" >&6;}
+      CPPFLAGS="$old_CPPFLAGS $BEAGLE_CFLAGS"
+      LDFLAGS="$old_LDFLAGS"
+      LIBS="$BEAGLE_LIBS $old_LIBS"
 
-        CPPFLAGS="-I$beagle_prefix/$beagle_subinc"
-        LDFLAGS="-L$beagle_prefix/$beagle_sublib -Wl,-rpath,$beagle_prefix/$beagle_sublib"
-        LDLIBS="-lhmsbeagle"
-
-        ac_fn_c_check_header_compile "$LINENO" "libhmsbeagle/beagle.h" "ac_cv_header_libhmsbeagle_beagle_h" "$ac_includes_default"
-if test "x$ac_cv_header_libhmsbeagle_beagle_h" = xyes
-then :
-  BEAGLE_CFLAGS=$CPPFLAGS
-
-fi
-
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for beagleCreateInstance in -lhmsbeagle" >&5
-printf %s "checking for beagleCreateInstance in -lhmsbeagle... " >&6; }
-if test ${ac_cv_lib_hmsbeagle_beagleCreateInstance+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) ac_check_lib_save_LIBS=$LIBS
-LIBS="-lhmsbeagle  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether Beagle works under $beagle_prefix" >&5
+printf "%s\n" "$as_me: checking whether Beagle works under $beagle_prefix" >&6;}
+      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.
-   The 'extern "C"' is for builds by C++ compilers;
-   although this is not generally supported in C code supporting it here
-   has little cost and some practical benefit (sr 110532).  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char beagleCreateInstance (void);
+#include <libhmsbeagle/beagle.h>
 int
 main (void)
 {
-return beagleCreateInstance ();
+(void) beagleCreateInstance;
+
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"
 then :
-  ac_cv_lib_hmsbeagle_beagleCreateInstance=yes
+  beagle_found=yes; break
 else case e in #(
-  e) ac_cv_lib_hmsbeagle_beagleCreateInstance=no ;;
+  e) BEAGLE_CFLAGS=; BEAGLE_LIBS=
+       ;;
 esac
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam \
     conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS ;;
-esac
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_hmsbeagle_beagleCreateInstance" >&5
-printf "%s\n" "$ac_cv_lib_hmsbeagle_beagleCreateInstance" >&6; }
-if test "x$ac_cv_lib_hmsbeagle_beagleCreateInstance" = xyes
-then :
-  BEAGLE_LIBS="$LDFLAGS $LDLIBS"
-
-fi
-
-
-        CPPFLAGS="$old_cppflags"
-        LDFLAGS="$old_ldflags"
-        LDLIBS="$old_ldlibs"
-
-        if test -n "$BEAGLE_CFLAGS" && test -n "$BEAGLE_LIBS"
-then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Found Beagle in '$beagle_prefix'" >&5
-printf "%s\n" "$as_me: Found Beagle in '$beagle_prefix'" >&6;}
-             beagle_found="yes"
-fi
-
-        if test "x$beagle_found" = "xyes"
-then :
-  break
-else case e in #(
-  e) { BEAGLE_LIBS=; unset BEAGLE_LIBS;}
-               { BEAGLE_CFLAGS=; unset BEAGLE_CFLAGS;}
-
-    for ax_var in libhmsbeagle_beagle_h
-do :
-
-                as_ax_Var=`printf "%s\n" "ac_cv_header_${ax_var}" | sed "$as_sed_sh"`
-
-        { eval $as_ax_Var=; unset $as_ax_Var;}
-
-
-done
- ;;
-esac
-fi
     done
 
-    if test "x$beagle_found" != "xyes"
+    CPPFLAGS=$old_CPPFLAGS
+    LDFLAGS=$old_LDFLAGS
+    LIBS=$old_LIBS
+
+    # Fallback to pkg-config only for --with-beagle or --with-beagle=check.
+    if test "x$beagle_found" != xyes
 then :
 
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Failed to locate Beagle, falling back on pkg-config" >&5
-printf "%s\n" "$as_me: WARNING: Failed to locate Beagle, falling back on pkg-config" >&2;}
+      case $with_beagle in #(
+  yes|check) :
 
+          BEAGLE_CFLAGS=
+          BEAGLE_LIBS=
+
+
+
+
+
+
+
+if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
+	if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
+set dummy ${ac_tool_prefix}pkg-config; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_path_PKG_CONFIG+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) case $PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_path_PKG_CONFIG="$as_dir$ac_word$ac_exec_ext"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac ;;
+esac
+fi
+PKG_CONFIG=$ac_cv_path_PKG_CONFIG
+if test -n "$PKG_CONFIG"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PKG_CONFIG" >&5
+printf "%s\n" "$PKG_CONFIG" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_path_PKG_CONFIG"; then
+  ac_pt_PKG_CONFIG=$PKG_CONFIG
+  # Extract the first word of "pkg-config", so it can be a program name with args.
+set dummy pkg-config; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_path_ac_pt_PKG_CONFIG+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) case $ac_pt_PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_ac_pt_PKG_CONFIG="$ac_pt_PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_path_ac_pt_PKG_CONFIG="$as_dir$ac_word$ac_exec_ext"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac ;;
+esac
+fi
+ac_pt_PKG_CONFIG=$ac_cv_path_ac_pt_PKG_CONFIG
+if test -n "$ac_pt_PKG_CONFIG"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_pt_PKG_CONFIG" >&5
+printf "%s\n" "$ac_pt_PKG_CONFIG" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+  if test "x$ac_pt_PKG_CONFIG" = x; then
+    PKG_CONFIG=""
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+printf "%s\n" "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    PKG_CONFIG=$ac_pt_PKG_CONFIG
+  fi
+else
+  PKG_CONFIG="$ac_cv_path_PKG_CONFIG"
+fi
+
+fi
+if test -n "$PKG_CONFIG"; then
+	_pkg_min_version=0.9.0
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking pkg-config is at least version $_pkg_min_version" >&5
+printf %s "checking pkg-config is at least version $_pkg_min_version... " >&6; }
+	if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
+		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+	else
+		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+		PKG_CONFIG=""
+	fi
+fi
+          if test -n "$PKG_CONFIG"
+then :
+
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: trying pkg-config fallback for $beagle_pkg_name" >&5
+printf "%s\n" "$as_me: trying pkg-config fallback for $beagle_pkg_name" >&6;}
 
 pkg_failed=no
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $beagle_pkg_name" >&5
@@ -5982,104 +6047,139 @@ fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$BEAGLE_PKG_ERRORS" >&5
 
-	beagle_found="no"
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: pkg-config did not find $beagle_pkg_name" >&5
+printf "%s\n" "$as_me: pkg-config did not find $beagle_pkg_name" >&6;}
 elif test $pkg_failed = untried; then
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-	beagle_found="no"
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: pkg-config did not find $beagle_pkg_name" >&5
+printf "%s\n" "$as_me: pkg-config did not find $beagle_pkg_name" >&6;}
 else
 	BEAGLE_CFLAGS=$pkg_cv_BEAGLE_CFLAGS
 	BEAGLE_LIBS=$pkg_cv_BEAGLE_LIBS
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
-	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: Found Beagle with pkg-config" >&5
-printf "%s\n" "$as_me: Found Beagle with pkg-config" >&6;}
-                 beagle_found="yes"
-                 # Augument the BEAGLE_LIBS value with -Wl,-rpath,...
-                BEAGLE_LIBS="-Wl,-rpath,$(pkg-config --libs-only-L $beagle_pkg_name | sed 's/-L//') $BEAGLE_LIBS"
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: pkg-config found $beagle_pkg_name" >&5
+printf "%s\n" "$as_me: pkg-config found $beagle_pkg_name" >&6;}
+               beagle_libdir=`$PKG_CONFIG --libs-only-L "$beagle_pkg_name" | sed -n 's/^-L//p'`
+               if test -n "$beagle_libdir"
+then :
+
+                 BEAGLE_LIBS="-Wl,-rpath,$beagle_libdir $BEAGLE_LIBS"
+
+fi
+               beagle_found=yes
 fi
 
 fi
-    if test "x$beagle_found" != "xyes"
-then :
-  if test "x$with_beagle" != "xcheck"
-then :
-  as_fn_error $? "--with-beagle was given, but test for Beagle failed" "$LINENO" 5
+         ;; #(
+  *) :
+
+          { printf "%s\n" "$as_me:${as_lineno-$LINENO}: not using pkg-config fallback because a specific Beagle prefix was given" >&5
+printf "%s\n" "$as_me: not using pkg-config fallback because a specific Beagle prefix was given" >&6;}
+         ;; #(
+  *) :
+     ;;
+esac
 
 fi
-else case e in #(
-  e)
+   ;;
+esac
+fi
+
+  if test "x$beagle_found" = xyes
+then :
+
 
 printf "%s\n" "#define BEAGLE_ENABLED 1" >>confdefs.h
 
-            # Test whether we should enable Beagle3 support.
-            old_ldflags=$LDFLAGS
-            LDFLAGS="$BEAGLE_LIBS"
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for beagleSetCPUThreadCount in -lhmsbeagle" >&5
-printf %s "checking for beagleSetCPUThreadCount in -lhmsbeagle... " >&6; }
-if test ${ac_cv_lib_hmsbeagle_beagleSetCPUThreadCount+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) ac_check_lib_save_LIBS=$LIBS
-LIBS="-lhmsbeagle  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
 
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.
-   The 'extern "C"' is for builds by C++ compilers;
-   although this is not generally supported in C code supporting it here
-   has little cost and some practical benefit (sr 110532).  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char beagleSetCPUThreadCount (void);
+    # Feature test for Beagle v3.1+.
+    old_CPPFLAGS=$CPPFLAGS
+    old_LIBS=$LIBS
+
+    CPPFLAGS="$CPPFLAGS $BEAGLE_CFLAGS"
+    LIBS="$BEAGLE_LIBS $LIBS"
+
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <libhmsbeagle/beagle.h>
 int
 main (void)
 {
-return beagleSetCPUThreadCount ();
+(void) beagleSetCPUThreadCount;
+
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"
 then :
-  ac_cv_lib_hmsbeagle_beagleSetCPUThreadCount=yes
-else case e in #(
-  e) ac_cv_lib_hmsbeagle_beagleSetCPUThreadCount=no ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS ;;
-esac
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_hmsbeagle_beagleSetCPUThreadCount" >&5
-printf "%s\n" "$ac_cv_lib_hmsbeagle_beagleSetCPUThreadCount" >&6; }
-if test "x$ac_cv_lib_hmsbeagle_beagleSetCPUThreadCount" = xyes
-then :
 
 printf "%s\n" "#define BEAGLE_V3_ENABLED 1" >>confdefs.h
 
-                BEAGLE_CFLAGS="$BEAGLE_CFLAGS -pthread"
+       BEAGLE_CFLAGS="$BEAGLE_CFLAGS -pthread"
 fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
 
-            LDFLAGS=$old_ldflags
-            { old_ldflags=; unset old_ldflags;}
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Using BEAGLE_CFLAGS=\"$BEAGLE_CFLAGS\"" >&5
-printf "%s\n" "$as_me: Using BEAGLE_CFLAGS=\"$BEAGLE_CFLAGS\"" >&6;}
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Using BEAGLE_LIBS=\"$BEAGLE_LIBS\"" >&5
-printf "%s\n" "$as_me: Using BEAGLE_LIBS=\"$BEAGLE_LIBS\"" >&6;}
-         ;;
+    CPPFLAGS=$old_CPPFLAGS
+    LIBS=$old_LIBS
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: using BEAGLE_CFLAGS=\"$BEAGLE_CFLAGS\"" >&5
+printf "%s\n" "$as_me: using BEAGLE_CFLAGS=\"$BEAGLE_CFLAGS\"" >&6;}
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: using BEAGLE_LIBS=\"$BEAGLE_LIBS\"" >&5
+printf "%s\n" "$as_me: using BEAGLE_LIBS=\"$BEAGLE_LIBS\"" >&6;}
+
+else case e in #(
+  e)
+    if test "x$with_beagle" != xcheck
+then :
+
+      as_fn_error $? "--with-beagle was given, but Beagle could not be found" "$LINENO" 5
+
+fi
+   ;;
 esac
 fi
 
 fi
+
+
+
+
 # Check for readline, but only if we don't have MPI, because apparently
 # it won't work.
 
+ac_header= ac_cache=
+for ac_item in $ac_header_c_list
+do
+  if test $ac_cache; then
+    ac_fn_c_check_header_compile "$LINENO" $ac_header ac_cv_header_$ac_cache "$ac_includes_default"
+    if eval test \"x\$ac_cv_header_$ac_cache\" = xyes; then
+      printf "%s\n" "#define $ac_item 1" >> confdefs.h
+    fi
+    ac_header= ac_cache=
+  elif test $ac_header; then
+    ac_cache=$ac_item
+  else
+    ac_header=$ac_item
+  fi
+done
+
+
+
+
+
+
+
+
+if test $ac_cv_header_stdlib_h = yes && test $ac_cv_header_string_h = yes
+then :
+
+printf "%s\n" "#define STDC_HEADERS 1" >>confdefs.h
+
+fi
 if test "x$use_mpi" = "xno"
 then :
   if test "x$with_readline" != "xno"
