@@ -1,5 +1,5 @@
-#ifndef __LIKELIHOOD_H__
-#define __LIKELIHOOD_H__
+#ifndef LIKELIHOOD_H_
+#define LIKELIHOOD_H_
 
 //#define TIMING_ANALIZ
 #if defined (TIMING_ANALIZ)
@@ -38,6 +38,22 @@
 #define TC                          13
 #define TG                          14
 #define TT                          15
+
+
+void      CopySiteScalers (ModelInfo *m, int chain);
+void      ResetSiteScalers (ModelInfo *m, int chain);
+void      FlipCijkSpace (ModelInfo *m, int chain);
+void      FlipCondLikeSpace (ModelInfo *m, int chain, int nodeIndex);
+void      FlipNodeScalerSpace (ModelInfo *m, int chain, int nodeIndex);
+void      FlipSiteScalerSpace (ModelInfo *m, int chain);
+void      FlipTiProbsSpace (ModelInfo *m, int chain, int nodeIndex);
+
+int       IsMissingC (CLFlt value);
+MrBFlt    CatLnLike_Cont (int division, int chain, int c, MrBFlt *lnCatL);
+
+int       CondLikeDown_Cont (TreeNode *p, int division, int chain);
+int       CondLikeRoot_Cont (TreeNode *p, int division, int chain);
+int       CondLikeUp_Cont (TreeNode *p, int division, int chain);
 
 int       CondLikeDown_Bin (TreeNode *p, int division, int chain);
 #if defined (SSE_ENABLED)
@@ -143,6 +159,7 @@ int       Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int
 int       Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
 #endif
 int       Likelihood_Std (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
+int       Likelihood_Cont (TreeNode *p, int division, int chain, MrBFlt *lnL, int whichSitePats);
 int       TiProbs_Fels (TreeNode *p, int division, int chain);
 int       TiProbs_Gen (TreeNode *p, int division, int chain);
 int       TiProbs_GenCov (TreeNode *p, int division, int chain);
@@ -151,4 +168,4 @@ int       TiProbs_JukesCantor (TreeNode *p, int division, int chain);
 int       TiProbs_Std (TreeNode *p, int division, int chain);
 int       TiProbs_Res (TreeNode *p, int division, int chain);
 
-#endif  /* __LIKELIHOOD_H__ */
+#endif  /* LIKELIHOOD_H_ */

@@ -1,5 +1,5 @@
-#ifndef __MBBEAGLE_H__
-#define __MBBEAGLE_H__
+#ifndef MBBEAGLE_H_
+#define MBBEAGLE_H_
 
 void   BeaglePrintResources (void);
 void   BeaglePrintFlags (long inFlags);
@@ -36,5 +36,4 @@ int    TreeLikelihood_BeagleMultiPartition (int* divisions, int divisionCount, i
 
 //extern char *beagleGetVersion (void);
 
-#endif  /* __MBBEAGLE_H__ */
-
+#endif  /* MBBEAGLE_H_ */

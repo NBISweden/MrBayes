@@ -1,7 +1,7 @@
 /*
  *  MrBayes 3
  *
- *  (c) 2002-2013
+ *  (c) 2002-2023
  *
  *  John P. Huelsenbeck
  *  Dept. Integrative Biology
@@ -53,14 +53,23 @@
 #    include <readline/readline.h>
 #  elif defined(HAVE_READLINE_H)
 #    include <readline.h>
-#  endif /* !defined(HAVE_READLINE_H) */
-#endif /* HAVE_LIBREADLINE */
+#  else
+#    /* Library available, but header files are not. */
+#    /* This typically happens on Linux where libraries may be split
+#       into runtime and development packages. See Github Issue #182. */
+#    undef HAVE_LIBREADLINE
+#    undef HAVE_READLINE_HISTORY
+#  endif
+# endif /* HAVE_LIBREADLINE */
+
 #ifdef HAVE_READLINE_HISTORY
 #  if defined(HAVE_READLINE_HISTORY_H)
 #    include <readline/history.h>
 #  elif defined(HAVE_HISTORY_H)
 #    include <history.h>
-#  endif /* defined(HAVE_READLINE_HISTORY_H) */
+#  else
+#    undef HAVE_READLINE_HISTORY
+#  endif
 #endif /* HAVE_READLINE_HISTORY */
 
 #ifdef HAVE_LIBREADLINE
@@ -79,7 +88,7 @@ BitsLong    bitsLongWithAllBitsSet;      /* BitsLong with all bits set, for bit 
 ModelParams defaultModel;                /* Default model; vals set in InitializeMrBayes  */
 int         defTaxa;                     /* flag for whether number of taxa is known      */
 int         defChars;                    /* flag for whether number of chars is known     */
-int         defMatrix;                   /* flag for whether matrix is successfull read   */
+int         defMatrix;                   /* flag for whether matrix is successful read    */
 int         defPartition;                /* flag for whether character partition is read  */
 int         defPairs;                    /* flag for whether pairs are read               */
 Doublet     doublet[16];                 /* holds information on states for doublets      */
@@ -142,7 +151,7 @@ int main (int argc, char *argv[])
         {
         lastError = GetLastError();
         GetConsoleScreenBufferInfo(scbh, &csbi);
-        sprintf(poltmp, "\nlastError = %d", lastError);
+        sprintf(poltmp, "\nlastError = %ld", lastError);
         // printf (poltmp);
         }
 #   endif
@@ -187,7 +196,10 @@ int main (int argc, char *argv[])
     
 #   ifdef HAVE_LIBREADLINE
     rl_attempted_completion_function = readline_completion;
-#   endif
+#   ifdef HAVE_READLINE_HISTORY
+    using_history();
+#   endif /* HAVE_READLINE_HISTORY */
+#   endif /* HAVE_LIBREADLINE */
     /* Set up parameter table. */
     SetUpParms ();
     
@@ -261,7 +273,7 @@ int CommandLine (int argc, char **argv)
             break;
         case 'v': /* version */
                   /* Display the same information that is displayed by the
-                   * "Version" interactive command and terminate succesfully */
+                   * "Version" interactive command and terminate successfully */
             puts("MrBayes, Bayesian Analysis of Phylogeny\n");
             printf("Version:   %s\n", VERSION_NUMBER);
             fputs("Features: ", stdout);
@@ -397,9 +409,11 @@ int CommandLine (int argc, char **argv)
             cmdStrP = readline("MrBayes > ");
             if (cmdStrP!=NULL) 
                     {
-                    strncpy (cmdStr,cmdStrP,CMD_STRING_LENGTH - 2);
+                    strncpy (cmdStr, cmdStrP, CMD_STRING_LENGTH - 2);
+#                   ifdef HAVE_READLINE_HISTORY
                     if (*cmdStrP) 
                         add_history (cmdStrP);
+#                   endif /* HAVE_READLINE_HISTORY */
                     free (cmdStrP);
                     }
             else /* fall through to if (feof(stdin))..*/
@@ -603,7 +617,7 @@ int InitializeMrBayes (void)
  *
  * */
 
-    tryToUseBEAGLE = YES;                             /* try to use the BEAGLE library if not Win (NO untill SSE single prec. works) */
+    tryToUseBEAGLE = YES;                             /* try to use the BEAGLE library if not Win (NO until SSE single prec. works) */
 
 #       endif
     beagleScalingScheme = MB_BEAGLE_SCALE_DYNAMIC;   /* use BEAGLE dynamic scaling                     */
@@ -670,6 +684,7 @@ int InitializeMrBayes (void)
         defaultModel.aaModelPrProbs[i] = 0.0;
     strcpy(defaultModel.aaModel, "Poisson");            /* amino acid model                             */
     strcpy(defaultModel.parsModel, "No");               /* do not use parsimony model                   */
+    strcpy(defaultModel.statefreqModel, "Stationary");  /* use stationary model                         */ //SK
     strcpy(defaultModel.geneticCode, "Universal");      /* genetic code                                 */
     strcpy(defaultModel.ploidy, "Diploid");             /* ploidy level                                 */
     strcpy(defaultModel.omegaVar, "Equal");             /* omega variation                              */
@@ -694,6 +709,11 @@ int InitializeMrBayes (void)
         }
     defaultModel.revMatSymDir = 1.0;                    /* default prior for GTR mixed model            */
     strcpy (defaultModel.aaRevMatPr, "Dirichlet");      /* prior for GTR model (proteins)               */
+
+    /* Prior for state frequencies at the root.  Not really necessary,
+     * as statefreqModel is set to "Stationary" by default" */  //SK
+    strcpy(defaultModel.rootFreqPr, "Dirichlet");       /* prior for root freq (not really necessary)   */
+
     for (i=0; i<190; i++)
         {
         defaultModel.aaRevMatFix[i] = 1.0;
@@ -755,9 +775,9 @@ int InitializeMrBayes (void)
     defaultModel.pInvarUni[0] = 0.0;
     defaultModel.pInvarUni[1] = 1.0;
     strcpy(defaultModel.adGammaCorPr, "Uniform");       /* prior for correlation param of adGamma model */
-    defaultModel.corrFix = 0.0;
-    defaultModel.corrUni[0] = -1.0;
-    defaultModel.corrUni[1] = 1.0;
+    defaultModel.adgCorrFix = 0.0;
+    defaultModel.adgCorrUni[0] = -1.0;
+    defaultModel.adgCorrUni[1] = 1.0;
     strcpy(defaultModel.covSwitchPr, "Uniform");        /* prior for switching rates of covarion model  */
     defaultModel.covswitchFix[0] = 1.0;
     defaultModel.covswitchFix[1] = 1.0;
@@ -769,17 +789,16 @@ int InitializeMrBayes (void)
     defaultModel.symBetaUni[0] = 0.0;
     defaultModel.symBetaUni[1] = 20.0;
     defaultModel.symBetaExp = 2;
-    strcpy(defaultModel.brownCorPr, "Fixed");           /* prior on correlation of brownian model       */
+    strcpy(defaultModel.brownCorrPr, "Fixed");          /* prior on correlation of brownian model       */
     defaultModel.brownCorrFix = 0.0;
     defaultModel.brownCorrUni[0] = -1.0;
     defaultModel.brownCorrUni[1] = 1.0;
-    strcpy(defaultModel.brownScalesPr, "Gammamean");    /* prior on scales of brownian model            */
-    defaultModel.brownScalesFix = 10.0;
-    defaultModel.brownScalesUni[0] = 0.0;
-    defaultModel.brownScalesUni[1] = 100.0;
-    defaultModel.brownScalesGamma[0] = 1.0;
-    defaultModel.brownScalesGamma[1] = 10.0;
-    defaultModel.brownScalesGammaMean = 10.0;
+    strcpy(defaultModel.brownScalePr, "Fixed");        /* prior on scales of brownian model            */
+    defaultModel.brownScaleFix = 1.0;
+    defaultModel.brownScaleUni[0] = 0.0;
+    defaultModel.brownScaleUni[1] = 100.0;
+    defaultModel.brownScaleGamma[0] = 1.0;
+    defaultModel.brownScaleGamma[1] = 1.0;
     strcpy(defaultModel.topologyPr, "Uniform");         /* prior for tree topology                      */
     defaultModel.topologyFix = -1;                      /* user tree index to use for fixed topology    */
     defaultModel.activeConstraints = NULL;              /* which constraints are active                 */
@@ -823,13 +842,15 @@ int InitializeMrBayes (void)
     defaultModel.speciationUni[1] = 1000.0;
     defaultModel.speciationExp = 10.0;
     strcpy(defaultModel.extinctionPr, "Beta");          /* prior on extinction rate (turnover)          */
-    defaultModel.extinctionFix = 0.9;
+    defaultModel.extinctionFix = 0.5;
     defaultModel.extinctionBeta[0] = 1;
     defaultModel.extinctionBeta[1] = 1;
+    defaultModel.extinctionExp = 10.0;
     strcpy(defaultModel.fossilizationPr, "Beta");       /* prior on fossilization rate (sampling proportion) */
     defaultModel.fossilizationFix = 0.1;
     defaultModel.fossilizationBeta[0] = 1;
     defaultModel.fossilizationBeta[1] = 1;
+    defaultModel.fossilizationExp = 10.0;
     strcpy(defaultModel.sampleStrat, "Random");         /* taxon sampling strategy                      */
     defaultModel.sampleProb = 1.0;                      /* extant taxon sampling fraction               */
     defaultModel.birthRateShiftNum = 0;                 /* number of birth rate shifts                  */
@@ -861,21 +882,31 @@ int InitializeMrBayes (void)
     defaultModel.cppRateFix = 1.0;
     strcpy(defaultModel.cppMultDevPr, "Fixed");         /* prior on standard dev. of lognormal of rate multipliers of CPP rel clock */
     defaultModel.cppMultDevFix = 0.4;
-    strcpy(defaultModel.tk02varPr, "Exponential");      /* prior on nu parameter for BM rel clock     */
+    strcpy(defaultModel.tk02varPr, "Exponential");      /* prior on variance parameter for TK02 rel clock */
     defaultModel.tk02varExp = 1.0;
     defaultModel.tk02varFix = 1.0;
     defaultModel.tk02varUni[0] = 0.0;
-    defaultModel.tk02varUni[1] = 5.0;
-    strcpy(defaultModel.igrvarPr, "Exponential");       /* prior on variance increase parameter for IGR rel clock */
-    defaultModel.igrvarExp = 10.0;
-    defaultModel.igrvarFix = 0.1;
+    defaultModel.tk02varUni[1] = 10.0;
+    strcpy(defaultModel.wnvarPr, "Exponential");        /* prior on variance parameter for WN rel clock */
+    defaultModel.wnvarExp = 10.0;
+    defaultModel.wnvarFix = 0.1;
+    defaultModel.wnvarUni[0] = 0.0;
+    defaultModel.wnvarUni[1] = 10.0;
+    strcpy(defaultModel.igrvarPr, "Exponential");       /* prior on variance parameter for IGR rel clock */
+    defaultModel.igrvarExp = 1.0;
+    defaultModel.igrvarFix = 1.0;
     defaultModel.igrvarUni[0] = 0.0;
-    defaultModel.igrvarUni[1] = 0.5;
-    strcpy(defaultModel.mixedvarPr, "Exponential");     /* prior on var parameter for mixed rel clock */
-    defaultModel.mixedvarExp = 10.0;
-    defaultModel.mixedvarFix = 0.1;
+    defaultModel.igrvarUni[1] = 10.0;
+    strcpy(defaultModel.ilnvarPr, "Exponential");       /* prior on variance parameter for ILN rel clock */
+    defaultModel.ilnvarExp = 1.0;
+    defaultModel.ilnvarFix = 1.0;
+    defaultModel.ilnvarUni[0] = 0.0;
+    defaultModel.ilnvarUni[1] = 10.0;
+    strcpy(defaultModel.mixedvarPr, "Exponential");     /* prior on var parameter for IGR & ILN mixed clock */
+    defaultModel.mixedvarExp = 1.0;
+    defaultModel.mixedvarFix = 1.0;
     defaultModel.mixedvarUni[0] = 0.0;
-    defaultModel.mixedvarUni[1] = 5.0;
+    defaultModel.mixedvarUni[1] = 10.0;
     strcpy(defaultModel.ratePr, "Fixed");               /* prior on rate for a partition              */
     defaultModel.ratePrDir = 1.0;
     strcpy(defaultModel.generatePr, "Fixed");           /* prior on rate for a gene (multispecies coalescent) */
@@ -1014,7 +1045,7 @@ int ReinitializeMrBayes (void)
     chainParams.calcPbf = NO;                        /* should we calculate the pseudo-BF?            */
     chainParams.pbfInitBurnin = 100000;              /* initial burnin for pseudo BF                  */
     chainParams.pbfSampleFreq = 10;                  /* sample frequency for pseudo BF                */
-    chainParams.pbfSampleTime = 2000;                /* how many cycles to calcualate site prob.      */
+    chainParams.pbfSampleTime = 2000;                /* how many cycles to calculate site prob.       */
     chainParams.pbfSampleBurnin = 2000;              /* burnin period for each site for pseudo BF     */
     chainParams.userDefinedTemps = NO;               /* should we use the users temperatures?         */
     for (i=0; i<MAX_CHAINS; i++)
@@ -1029,9 +1060,9 @@ int ReinitializeMrBayes (void)
     chainParams.orderTaxa = NO;                      /* should taxa be ordered in output trees?       */
     chainParams.append = NO;                         /* append to previous analysis?                  */
     chainParams.autotune = YES;                      /* autotune?                                     */
-    chainParams.tuneFreq = 100;                      /* autotuning frequency                          */
+    chainParams.tuneFreq = 1000;                     /* autotuning frequency                          */
     chainParams.checkPoint = YES;                    /* should we checkpoint the run?                 */
-    chainParams.checkFreq = 2000;                    /* check-pointing frequency                      */
+    chainParams.checkFreq = 1000;                    /* check-pointing frequency                      */
     chainParams.diagnStat = AVGSTDDEV;               /* mcmc diagnostic to use                        */
 
     /* sumt parameters */
@@ -1064,9 +1095,9 @@ int ReinitializeMrBayes (void)
     sumssParams.allRuns = YES;                       /* should data for all runs be printed (yes/no)? */
     sumssParams.stepToPlot = 0;                      /* Which step to plot in the step plot, 0 means burnin */
     sumssParams.askForMorePlots = YES;               /* Should user be asked to plot for different discardfraction (y/n)?  */
-    sumssParams.discardFraction = 0.8;               /* Proportion of samples discarded when ploting step plot.*/
+    sumssParams.discardFraction = 0.8;               /* Proportion of samples discarded when plotting step plot.*/
     sumssParams.smoothing = 0;                       /* An integer indicating number of neighbors to average over
-                                                        when dooing smoothing of curvs on plots */
+                                                        when doing smoothing of curves on plots */
     /* comparetree parameters */
     strcpy(comptreeParams.comptFileName1, "temp.t"); /* input name for comparetree command            */
     strcpy(comptreeParams.comptFileName2, "temp.t"); /* input name for comparetree command            */

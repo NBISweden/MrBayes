@@ -1,13 +1,24 @@
 Release Note
 
-After v3.2.7  (not yet released)
-  * Move to semantic versioning scheme (see https://semver.org/).
-    Release numbers are MAJOR.MINOR.PATCH where a new MAJOR release
-    number means backward incompatible changes were made, a new MINOR
-    number means backward compatible features were added, and a new
-    PATCH number means backward compatible bugfixes to the C code were
-    made.  We may or may not use transient suffixes like "a", "b",
-    "-alpha", "-beta" and "-rcN" as well at times.
+v3.2.8 (Sep 18 2026)
+  * Use latexmk to build the PDF documentation, if avaliable.
+  * Support MCMC chains longer than 2E9 generations.
+  * Support discrete characters up to 24 states (0-9,A-N
+    for both unordered and ordered characters).
+  * Support continuous characters with missing states (Brownian motion model).
+  * Support serially-sampled tips in the coalescent prior.
+  * Support independent lognormal (ILN) and independent gamma (IGR) clocks.
+  * Support model averaging (rjMCMC) between ILN and IGR relaxed clock models.
+  * Renamed the white noise relaxed clock model to WN.
+  * Updated the parameterization in the TK02 model.
+  * Updated help messages for the FBD model and parameters.
+  * Bug fix to the sigma (sd_log) in lnorm rate variation across sites.
+  * Bug fix to multi-partition Beagle code.
+  * Bug fix to directional state frequency models.
+  * Bug fix to erroneous printing of header alpha_symdir.
+  * Bug fix to setting popsizepr and growthpr for protein data.
+  * Bug fix to setting ratepr for single partition.
+  * Better detection of Beagle library in "configure" script.
 
 v3.2.7a (Mar 06 2019): hotfix
   * PDF manual re-generated from already updated LaTeX sources.
@@ -25,7 +36,7 @@ v3.2.7 (Feb 13 2019)
 
 v3.2.6 (Nov 25 2015)
   * Add invertebrate mt, Echinoderm and Euplotid codes [lset code=invermt].
-  * Fix a bug of updating brls in tree-stretch move.
+  * Fix a bug of updating branch lengths in tree-stretch move.
   * Correct the proposal ratio in the add/delete branch move.
   * Add more coding options for restriction site chars.
 

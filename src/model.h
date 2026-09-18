@@ -1,5 +1,5 @@
-#ifndef __MODEL_H__
-#define __MODEL_H__
+#ifndef MODEL_H_
+#define MODEL_H_
 
 int     AreDoublesEqual (MrBFlt x, MrBFlt y, MrBFlt tol);
 int     ChangeNumRuns (int from, int to);
@@ -55,6 +55,6 @@ int     Unlink (void);
 int     UpdateClockRate (MrBFlt clockRate, int chain);
 int     UpdateCppEvolLengths (Param *param, TreeNode *p, int chain);
 int     UpdateTK02EvolLengths (Param *param, Tree *t, int chain);
-int     UpdateIgrBrachLengths (Param *param, Tree *t, int chain);
+int     UpdateIndBrachLengths (Param *param, Tree *t, int chain);
 
-#endif  /* __MODEL_H__ */
+#endif  /* MODEL_H_ */

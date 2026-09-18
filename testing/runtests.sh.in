@@ -1,0 +1,161 @@
+#!/bin/sh
+
+if [ "$#" -ne 1 ]; then
+	cat <<-END_USAGE
+	Usage:
+
+	    $0 path-to-NEX-file
+
+	END_USAGE
+	exit 1
+fi
+
+nex_file=$1
+
+# We're doing 7 tests:
+# One setup test, one run tests, five result tests
+
+echo 1..7
+t=0	# current test number
+
+ok () {
+	printf 'ok %d - %s\n' "$t" "$m"
+}
+
+fail () {
+	printf 'not ok %d - %s\n' "$t" "$m"
+}
+
+xfail () {
+	printf 'not ok %d - %s # TODO (expected to sometimes fail)\n' "$t" "$m"
+}
+
+error () {
+	fail
+	printf 'Bail out! %s\n' "$1"
+	exit 1
+}
+
+case "@TESTS_USE_MPI@" in
+	yes)
+		set -- mpirun -np 2 -H localhost:2 "@abs_top_builddir@/src/mb"
+		;;
+	no)
+		set -- "@abs_top_builddir@/src/mb"
+		;;
+	*)
+		echo 'Do not know whether to use MPI or not' >&2
+		exit 1
+esac
+
+tmpdir=$(mktemp -d ./${nex_file##*/}.XXXXXXXX)
+
+t=$(( t + 1 )); m='Setup'
+if	cp "@top_srcdir@/examples/primates.nex" "$tmpdir" && 
+	cp "$nex_file" "$tmpdir"
+then ok; else error 'Could not copy needed files...'; fi
+
+trap 'rm -rf "$tmpdir"' EXIT TERM INT
+
+pathname=${nex_file##*/}
+
+t=$(( t + 1 )); m='Ran MrBayes'
+if	(cd "$tmpdir" && "$@" "$pathname") >"$tmpdir/$pathname.out"
+then ok; else error 'Could not create output...'; fi
+
+t=$(( t + 1 )); m='Analysis completed'
+# Analysis completed in N seconds
+# ... should occur once (N is integer).
+awk '
+/Analysis completed in [[:digit:]]+ seconds/ {
+	count++
+}
+END {
+	if (count != 1) {
+		printf "Did find expected text (count = %d != 1)\n", count
+		err = 1
+	}
+	exit err
+}' "$tmpdir/$pathname".out
+if [ "$?" -eq 0 ]; then ok; else fail; fi
+
+t=$(( t + 1 )); m='Cold state likelihood in range [-5715,-5700]'
+# Likelihood of best state for "cold" chain of run 1 was N
+# ... should occur once, with N in the range [-5715,-5700] (N is a "simple" float).
+awk '
+/Likelihood of best state for "cold" chain of run 1 was [-[:digit:]]+\.[[:digit:]]+/ {
+	count++
+	if ($NF < -5715 || $NF > -5700) {
+		printf "%g not in range [-5715,-5700] on line %d\n", $NF, NR
+		err = 1
+	}
+}
+END {
+	if (count != 1) {
+		printf "Did find expected text (count = %d != 1)\n", count
+		err = 1
+	}
+	exit err
+}' "$tmpdir/$pathname".out
+if [ "$?" -eq 0 ]; then ok; else xfail; fi
+
+t=$(( t + 1 )); m='TL{all} in range [0.95,1.2]'
+# There should be one line with "TL{all}" in the first field.
+# The value in the last field on that lines should be in the range [0.95,1.2].
+awk '
+$1 == "TL{all}" {
+	count++
+	if ($NF < 0.95 || $NF > 1.2) {
+		printf "%g not in range [0.95,1.2] on line %d\n", $NF, NR
+		err = 1
+	}
+}
+END {
+	if (count != 1) {
+		printf "Did find expected text (count = %d != 1)\n", count
+		err = 1
+	}
+	exit err
+}' "$tmpdir/$pathname".out
+if [ "$?" -eq 0 ]; then ok; else xfail; fi
+
+t=$(( t + 1 )); m='Avg. stdv. of split freqs. < 0.05'
+# Average standard deviation of split frequencies = N
+# ... should occur one times, where N is a "simple" float.
+# N should be below 0.05.
+awk '
+/Average standard deviation of split frequencies = [[:digit:]]+\.[[:digit:]]+/ {
+	count++
+	if ($NF >= 0.05) {
+		printf "%g not below 0.05 on line %d\n", $NF, NR
+		err = 1
+	}
+}
+END {
+	if (count != 1) {
+		printf "Did find expected text (count = %d != 1)\n", count
+		err = 1
+	}
+	exit err
+}' "$tmpdir/$pathname".out
+if [ "$?" -eq 0 ]; then ok; else xfail; fi
+
+t=$(( t + 1 )); m='Avg. PSRF in range [0.95,1.2]'
+# Average PSRF for parameter values (excluding NA and >10.0) = N
+# ... should occur once and N (a "simple" float) should lie in the range [0.95,1.2].
+awk '
+/Average PSRF for parameter values \(excluding NA and >10.0\) = [[:digit:]]+\.[[:digit:]]+/ {
+	count++
+	if ($NF < 0.95 || $NF > 1.2) {
+		printf "%g not in range [0.95,1.2] on line %d\n", $NF, NR
+		err = 1
+	}
+}
+END {
+	if (count != 1) {
+		printf "Did find expected text (count = %d != 2)\n", count
+		err = 1
+	}
+	exit err
+}' "$tmpdir/$pathname".out
+if [ "$?" -eq 0 ]; then ok; else xfail; fi

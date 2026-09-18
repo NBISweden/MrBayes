@@ -18,17 +18,16 @@ Build instructions, very very short version (would install MrBayes as
 Current repository directory layout:
 
     .
-    ├── am-*           : Files relating to the build system
+    ├── autotools      : Files relating to the build system
     ├── doc
-    │   ├── manual     : The manual
-    │   └── tutorial   : A tutorial
+    │   └── manual     : The manual
     ├── examples       : Example input data sets
     └── src            : C source code
 
 
-The web site is available at
+The MrBayes web site is available at
 
-    http://NBISweden.github.io/MrBayes/
+    http://mrbayes.net/
 
 
 Historical releases are tagged with "v3.2.0" (etc.) from release 3.2.0

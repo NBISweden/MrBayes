@@ -1,5 +1,5 @@
-#ifndef __UTILS_H__
-#define __UTILS_H__
+#ifndef UTILS_H_
+#define UTILS_H_
 
 /* M_PI and M_PI_2 not part of standard C */
 #ifndef M_PI
@@ -30,11 +30,7 @@ typedef struct
     Stat;
 
 
-/* For explanantion why the following two macros exists, see
- * http://stackoverflow.com/questions/38569628/calling-a-free-wrapper-dereferencing-type-punned-pointer-will-break-strict-al
- */
-
-#define SAFEFREE(ptr) (ptr = SafeFree(ptr))
+#define SAFEFREE(ptr)        (ptr = SafeFree(ptr))
 #define ALIGNEDSAFEFREE(ptr) (ptr = AlignedSafeFree(ptr))
 
 int      AddBitfield (BitsLong ***list, int listLen, int *set, int setLen);
@@ -47,9 +43,9 @@ int      Bit (int n, BitsLong *p);
 void     ClearBit (int i, BitsLong *bits);
 void     ClearBits (BitsLong *bits, int nLongs);
 void     CopyBits (BitsLong *dest, BitsLong *source, int nLongs);
-int      CopyResults (FILE *toFile, char *fromFileName, int lastGen);
+int      CopyResults (FILE *toFile, char *fromFileName, long long lastGen);
 int      CopyProcessSsFile (FILE *toFile, char *fromFileName, int lastStep, MrBFlt *marginalLnLSS, MrBFlt *splitfreqSS);
-int      CopyTreeResults (FILE *toFile, char *fromFileName, int lastGen, int *treeNum);
+int      CopyTreeResults (FILE *toFile, char *fromFileName, long long lastGen, int *treeNum);
 int      FirstTaxonInPartition (BitsLong *partition, int length);
 long     FirstTree (FILE *fp, char *lineBuf, int longestLine);
 int      Flip01 (int x);
@@ -69,6 +65,7 @@ int      IsSectionEmpty (BitsLong *bitField1, BitsLong *bitField2, int length);
 int      IsUnionEqThird (BitsLong *bitField1, BitsLong *bitField2, BitsLong *bitField3, int length);
 long     LastBlock (FILE *fp, char *lineBuf, int longestLine);
 int      LineTermType (FILE *fp);
+MrBFlt   LnDirichlet (MrBFlt *alphai, MrBFlt *xi, int lengthi);
 int      LongestLine (FILE *fp);
 void     LowerUpperMedian (MrBFlt *vals, int nVals, MrBFlt *lower, MrBFlt *upper, MrBFlt *median);
 void     LowerUpperMedianHPD (MrBFlt *vals, int nVals, MrBFlt *lower, MrBFlt *upper, MrBFlt *median);
@@ -97,7 +94,8 @@ char    *SafeStrcpy (char **target, const char *source);
 void     SetBit (int i, BitsLong *bits);
 void     SortInts (int *item, int *assoc, int count, int descendingOrder);
 void     SortInts2 (int *item, int *assoc, int left, int right, int descendingOrder);
-void     SortMrBFlt (MrBFlt *item, int left, int right);
+void     SortMrBFlt_Asc (MrBFlt *item, int left, int right);
+void     SortMrBFlt_Des (MrBFlt *item, int left, int right);
 int      StrCmpCaseInsensitiveLen (const char *s, const char *t, size_t len);
 int      StrCmpCaseInsensitive (char *s, char *t);
 void     StripComments (char *s);
@@ -264,10 +262,11 @@ MrBFlt    LnProbRatioTruncatedNormal_Param_Trunc_Mean_Sd (MrBFlt newX, MrBFlt ol
 MrBFlt    LnProbRatioUniform (MrBFlt newX, MrBFlt oldX, MrBFlt *params);
 MrBFlt    LnProbGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x);
 MrBFlt    LnProbTruncGamma (MrBFlt alpha, MrBFlt beta, MrBFlt x, MrBFlt min, MrBFlt max);
-MrBFlt    LnProbLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt x);
-MrBFlt    LnRatioLogNormal (MrBFlt exp, MrBFlt sd, MrBFlt xNew, MrBFlt xOld);
-MrBFlt    LnProbTK02LogNormal (MrBFlt mean, MrBFlt var, MrBFlt x);
-MrBFlt    LnRatioTK02LogNormal (MrBFlt exp, MrBFlt sd, MrBFlt xNew, MrBFlt xOld);
+MrBFlt    LnProbLogNormal (MrBFlt mu, MrBFlt sigma, MrBFlt x);
+MrBFlt    LnProbLogNormal_Mean_LogVar (MrBFlt mean, MrBFlt sigma2, MrBFlt x);
+MrBFlt    LnProbLogNormal_Mean_Var (MrBFlt mean, MrBFlt var, MrBFlt x);
+MrBFlt    LnProbNormal (MrBFlt mu, MrBFlt sigma, MrBFlt x);
+MrBFlt    LnRatioLogNormal (MrBFlt mu, MrBFlt sigma, MrBFlt xNew, MrBFlt xOld);
 MrBFlt    LogNormalRandomVariable (MrBFlt mean, MrBFlt var, RandLong *seed);
 MrBFlt    MaximumValue (MrBFlt x, MrBFlt y);
 MrBFlt    MinimumValue (MrBFlt x, MrBFlt y);
@@ -286,4 +285,4 @@ MrBFlt    LogNormalPoint (MrBFlt x, MrBFlt mu, MrBFlt sigma);
 /* qsort utility function */
 int       cmpMrBFlt(const void *a, const void *b);
 
-#endif  /* __UTILS_H__ */
+#endif  /* UTILS_H_ */

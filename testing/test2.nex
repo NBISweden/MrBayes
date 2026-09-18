@@ -1,0 +1,14 @@
+#NEXUS
+[Test 2. Mixed model with partitions. IGR-clock model.]
+begin mrbayes;
+    set autoclose=yes nowarnings=yes;
+    execute "primates.nex";
+    partition test = 2: 1-400, 401-.;
+    set partition=test;
+    lset nst=mixed rates=invgamma;
+    unlink statefr=(all) revmat=(all) pinvar=(all) shape=(all);
+    prset brlenspr=clock:uniform clockratepr=exp(1) clockvarpr=igr;
+    mcmc ng=20000;
+    sump;
+    sumt;
+end;

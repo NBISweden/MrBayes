@@ -1,12 +1,73 @@
-MrBayes pre-3.2.7 (development, not-yet-3.2.7 version)
-========================================================================
+MrBayes 3.2.8
 
-Make a shallow clone of the repository:
+This document describes how to install the most recent release of
+MrBayes using Homebrew on macOS, Linux, or on Window subsystem for
+Linux (WSL).  It also describes how to build the development sources of
+MrBayes from the GitHub repository sources.
+
+
+========================================================================
+Installing MrBayes on macOS using Homebrew
+------------------------------------------------------------------------
+
+MrBayes is available for macOS through the Homebrew package manager.
+See https://brew.sh/ for general information about Homebrew and for
+Homebrew installation instructions.
+
+On a macOS system with Homebrew, MrBayes may be installed through the
+following two commands in a terminal:
+
+    brew tap brewsci/bio
+    brew install mrbayes
+
+The first command adds the "brewsci/bio" repository to your Homebrew
+system. This is a Homebrew repository that contains various software
+related to bioinformatics. Once the repository is available, you install
+MrBayes with the second command above.
+
+This will install MrBayes with support for the Beagle library.  If you
+need additional MPI support, use
+
+    brew install mrbayes --with-open-mpi
+
+This will likely download the neccesary Homebrew packages for building
+MrBayes with MPI support and then proceed to automatically build and
+install it on your macOS system (this may take a bit of time).
+
+
+========================================================================
+Installing MrBayes on Linux or WSL using Homebrew ("Linuxbrew")
+------------------------------------------------------------------------
+
+The instructions for installing MrBayes on Linux systems are identical
+to those for installing MrBayes on macOS.  It relies on Homebrow
+being available on the Linux system where it's being installed.
+Installing Homebrew on Linux is a matter of following the instructions
+at https://docs.brew.sh/Homebrew-on-Linux
+
+We have found that the pre-compiled binaries may not work on all systems
+and that you may get an "Illegal instruction (core dumped)" error when
+you try starting MrBayes.  In that case, install the MrBayes package
+from sources instead.  This can still be done through Homebrew like
+this:
+
+    brew reinstall -s mrbayes
+
+Likewise, you may possibly want to compile the Beagle library locally,
+
+    brew reinstall -s beagle
+
+
+========================================================================
+Installing MrBayes from the GitHub sources on Unix
+------------------------------------------------------------------------
+
+Make a shallow clone of the MrBayes repository:
 
     git clone --depth=1 https://github.com/NBISweden/MrBayes.git
 
-(a shallow clone requires less than 30 Mb of disk space, a full clone
-requires about 205 Mb)
+(a shallow clone requires about 27 MB of disk space, a full clone
+requires about 77 MB)
 
 
 Building MrBayes using the supplied "configure" script:
@@ -33,9 +94,8 @@ compile and optionally install MrBayes:
     make
 
   Note that if "pdflatex" or "bibtex" could not be found by the
-  "configure" script, the PDF documentation in doc/manual and
-  doc/tutorial will not be rebuilt, even if the PDF documents are
-  outdated or missing.
+  "configure" script, the PDF documentation in doc/manual will not
+  be rebuilt, even if the PDF documents are outdated or missing.
 
 * Install it on the system (optional).  This will install
   the executable "mb" in /usr/local/bin, the documentation
@@ -76,10 +136,10 @@ and/or any of the "Makefile.am" files and then want to regenerate the
 "configure" script and associated files, there are some prerequisites
 that need to be in place:
 
-* Make sure Automake 1.15 (http://www.gnu.org/software/automake/)
+* Make sure Automake 1.17 (http://www.gnu.org/software/automake/)
   is installed.
 
-* Make sure Autoconf 2.69 (http://www.gnu.org/software/autoconf/)
+* Make sure Autoconf 2.72 (http://www.gnu.org/software/autoconf/)
   is installed.
 
 The "configure.ac" script uses the "pkg-config" tool for detection
@@ -96,8 +156,8 @@ architecture-dependent compiler flags.  Therefore,
 * On some systems that uses metaauto for wrapping multiple versions of
   the GNU autotools (OpenBSD for example):
 
-    export AUTOCONF_VERSION=2.69
-    export AUTOMAKE_VERSION=1.15
+    export AUTOCONF_VERSION=2.72
+    export AUTOMAKE_VERSION=1.17
 
 * On Ubuntu Linux, installing the following packages installs all of the
   above prerequisites:
@@ -109,7 +169,7 @@ architecture-dependent compiler flags.  Therefore,
 
   These may be installed through
 
-    sudo apt-get install automake autoconf pkg-config autoconf-archive
+    sudo apt install automake autoconf pkg-config autoconf-archive
 
 When all the prerequisites are in place:
 
@@ -124,32 +184,23 @@ Disabling the SSE, AVX and FMA code paths
 ------------------------------------------------------------------------
 
 MrBayes will use SSE, AVX and FMA instructions to speed up computations
-on CPUs that support these instruction sets, if the compiler supports
-it.  These code paths are however optional, and if you suspect a bug in
-part of this code, you may use "--disable-sse", "--disable-avx" and/or
-"--disable-fma" to disable it when running the "configure" script.
+on CPUs that support these instruction sets, if the compiler and build
+architecture supports it.  These code paths are however optional, and
+if you suspect a bug in part of this code, you may use "--disable-sse",
+"--disable-avx" and/or "--disable-fma" to disable it when running the
+"configure" script.
 
-Note however, that disabling SSE will also disable AVX and FMA, and
-disabling AVX will also disable FMA.
-
-Note also that disabling these accelerated code paths will not remove
-the "-msse" (etc.) compiler flags.  These compiler flags affects what
-instructions the compiler is allowed to generate, not what code path is
-chosen for compilation.
+Note that disabling SSE will also disable AVX and FMA, and disabling AVX
+will also disable FMA.
 
 
 Picking up the Beagle library:
 ------------------------------------------------------------------------
 
-MrBayes uses the Beagle library
+If configured using "--with-beagle", MrBayes uses the Beagle library
 (https://github.com/beagle-dev/beagle-lib) if it is available.  It will
 make use of release 3.1.2 of Beagle but should also work with release
 2.1.3 of the library.
-
-Assuming Beagle was compiled and installed in a standard location, it
-will be picked up by the "configure" script automatically.  If it isn't
-found, or the "configure" script is run with "--without-beagle", Beagle
-will not be used.
 
 If Beagle is installed in a non-default location, there are three ways
 of telling the "configure" script how to find it:
@@ -189,7 +240,8 @@ It's assumed that the Beagle library is being installed in the default
 location, under "/usr/local". Note that the Beagle Java library is not
 needed by MrBayes.
 
-    git clone --depth=1 https://github.com/beagle-dev/beagle-lib.git
+    git clone --branch=v3.1.2 --depth=1 \
+	'https://github.com/beagle-dev/beagle-lib.git'
     cd beagle-lib
 
     ./autogen.sh

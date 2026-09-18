@@ -1,16 +1,16 @@
-#ifndef __BEST_H__
-#define __BEST_H__
+#ifndef BEST_H_
+#define BEST_H_
 
-/**************** typedefs used by Fredrik's code, derived from BEST code *******************/
+/* typedefs used by Fredrik's code, derived from BEST code */
 
 /* struct for constraints (similar to Distance in BEST code, except
-   that a bitfield is used to hold info on the taxon pair)           */
+   that a bitfield is used to hold info on the taxon pair)  */
 typedef struct {
     double      depth;
     BitsLong*   pairSet;
 } Depth;
 
-/**************** Declaration of functions that are called from MrBayes **************/
+/* Declaration of functions that are called from MrBayes */
 void    AllocateBestChainVariables (void);
 int     FillSpeciesTreeParams (RandLong* seed, int from, int to);
 void    FreeBestChainVariables (void);
@@ -26,4 +26,4 @@ void    ShowUpperTriangMatrix (double *values, int squareSize);
 
 /* NOTE: To add and set up more move functions, a struct needs to be added to SetUpMoveTypes in model.c */
 
-#endif  /* __BEST_H__ */
+#endif  /* BEST_H_ */

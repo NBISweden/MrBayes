@@ -42,3 +42,5 @@ cscope.out
 # private file
 local.env
 build
+.vscode
+
