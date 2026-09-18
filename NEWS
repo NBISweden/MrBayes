@@ -1,13 +1,6 @@
 Release Note
 
-v3.2.8 (Aug 18 2026)
-  * Move to semantic versioning scheme (see https://semver.org/).
-    Release numbers are MAJOR.MINOR.PATCH where a new MAJOR release
-    number means backward incompatible changes were made, a new MINOR
-    number means backward compatible features were added, and a new
-    PATCH number means backward compatible bugfixes to the C code were
-    made.  We may or may not use transient suffixes like "a", "b",
-    "-alpha", "-beta" and "-rcN" as well at times.
+v3.2.8 (Sep 18 2026)
   * Use latexmk to build the PDF documentation, if avaliable.
   * Support MCMC chains longer than 2E9 generations.
   * Support discrete characters up to 24 states (0-9,A-N
@@ -25,6 +18,7 @@ v3.2.8 (Aug 18 2026)
   * Bug fix to erroneous printing of header alpha_symdir.
   * Bug fix to setting popsizepr and growthpr for protein data.
   * Bug fix to setting ratepr for single partition.
+  * Better detection of Beagle library in "configure" script.
 
 v3.2.7a (Mar 06 2019): hotfix
   * PDF manual re-generated from already updated LaTeX sources.
