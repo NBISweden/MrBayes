@@ -1,4 +1,7 @@
 Release Note
+v3.2.9 ()
+  * Correct the proposal ratio in the NodeSlider move for non-clock tree.
+    (The bug was introduced in v3.2.4 by mistake.)
 
 v3.2.8 (Sep 18 2026)
   * Use latexmk to build the PDF documentation, if avaliable.
@@ -49,7 +52,6 @@ v3.2.5 (Apr 8 2015)
   * Other minor bug fixes and improvements.
 
 v3.2.4 (Jan 27 2015)
-  * Correct the proposal ratio in the node slider move for non-clock tree.
   * Fix reporting ancestral states under GTR+I+G model.
   * Fix the sliding window in the move of updating omega in codon model.
   * Fix the likelihood and proposal ratio of NaN in the multi-species
