@@ -14,25 +14,12 @@ MrBayes is available for macOS through the Homebrew package manager.
 See https://brew.sh/ for general information about Homebrew and for
 Homebrew installation instructions.
 
-On a macOS system with Homebrew, MrBayes may be installed through the
-following two commands in a terminal:
+On a macOS system with Homebrew, MrBayes may be installed with:
 
-    brew tap brewsci/bio
     brew install mrbayes
 
-The first command adds the "brewsci/bio" repository to your Homebrew
-system. This is a Homebrew repository that contains various software
-related to bioinformatics. Once the repository is available, you install
-MrBayes with the second command above.
-
-This will install MrBayes with support for the Beagle library.  If you
-need additional MPI support, use
-
-    brew install mrbayes --with-open-mpi
-
-This will likely download the neccesary Homebrew packages for building
-MrBayes with MPI support and then proceed to automatically build and
-install it on your macOS system (this may take a bit of time).
+The Homebrew package is built with MPI support. The executable is called
+"mb".
 
 
 ========================================================================
@@ -52,10 +39,6 @@ from sources instead.  This can still be done through Homebrew like
 this:
 
     brew reinstall -s mrbayes
-
-Likewise, you may possibly want to compile the Beagle library locally,
-
-    brew reinstall -s beagle
 
 
 ========================================================================
