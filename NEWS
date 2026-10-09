@@ -1,5 +1,5 @@
 Release Note
-v3.2.9 ()
+v3.2.9 (Oct 9 2026)
   * Correct the proposal ratio in the NodeSlider move for non-clock tree.
     (The bug was introduced in v3.2.4 by mistake.)
 
