@@ -10060,116 +10060,6 @@ int DoPrsetParm (char *parmName, char *tkn)
             else
                 return (ERROR);
             }
-        /* set Brownscalepr (brownScalePr) *************************************************/
-        else if (!strcmp(parmName, "Brownscalepr"))
-            {
-            if (expecting == Expecting(EQUALSIGN))
-                expecting = Expecting(ALPHA);
-            else if (expecting == Expecting(ALPHA))
-                {
-                if (IsArgValid(tkn, tempStr) == NO_ERROR)
-                    {
-                    nApplied = NumActiveParts ();
-                    flag = 0;
-                    for (i=0; i<numCurrentDivisions; i++)
-                        {
-                        if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType == CONTINUOUS)
-                            {
-                            strcpy(modelParams[i].brownScalePr, tempStr);
-                            flag = 1;
-                            }
-                        }
-                    if (flag == 0)
-                            {
-                            MrBayesPrint ("%s   Warning: %s can be set only for partition containing CONTINUOUS data.\
-                            Currently there is no active partition with such data. ", spacer, parmName);
-                            return (ERROR);
-                            }
-                    }
-                else
-                    {
-                    MrBayesPrint ("%s   Invalid Brownscalepr argument\n", spacer);
-                    return (ERROR);
-                    }
-                expecting  = Expecting(LEFTPAR);
-                for (i=0; i<numCurrentDivisions; i++)
-                    numVars[i] = 0;
-                }
-            else if (expecting == Expecting(LEFTPAR))
-                {
-                expecting  = Expecting(NUMBER);
-                }
-            else if (expecting == Expecting(NUMBER))
-                {
-                nApplied = NumActiveParts ();
-                for (i=0; i<numCurrentDivisions; i++)
-                    {
-                    if ((activeParts[i] == YES || nApplied == 0) && modelParams[i].dataType == CONTINUOUS)
-                        {
-                        if (!strcmp(modelParams[i].brownScalePr,"Uniform"))
-                            {
-                            sscanf (tkn, "%lf", &tempD);
-                            modelParams[i].brownScaleUni[numVars[i]++] = tempD;
-                            if (numVars[i] == 1)
-                                expecting  = Expecting(COMMA);
-                            else
-                                {
-                                if (modelParams[i].brownScaleUni[0] <= 0.0)
-                                    {
-                                    MrBayesPrint ("%s   Lower value for uniform should be greater than 0.0\n", spacer);
-                                    return (ERROR);
-                                    }
-                                if (modelParams[i].brownScaleUni[0] >= modelParams[i].brownScaleUni[1])
-                                    {
-                                    MrBayesPrint ("%s   Lower value for uniform should be greater than upper value\n", spacer);
-                                    return (ERROR);
-                                    }
-                                if (nApplied == 0 && numCurrentDivisions == 1)
-                                    MrBayesPrint ("%s   Setting Brownscalepr to Uniform(%1.2lf,%1.2lf)\n", spacer, modelParams[i].brownScaleUni[0], modelParams[i].brownScaleUni[1]);
-                                else
-                                    MrBayesPrint ("%s   Setting Brownscalepr to Uniform(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].brownScaleUni[0], modelParams[i].brownScaleUni[1], i+1);
-                                expecting  = Expecting(RIGHTPAR);
-                                }
-                            }
-                        else if (!strcmp(modelParams[i].brownScalePr,"Gamma"))
-                            {
-                            sscanf (tkn, "%lf", &tempD);
-                            modelParams[i].brownScaleGamma[numVars[i]++] = tempD;
-                            if (numVars[i] == 1)
-                                expecting  = Expecting(COMMA);
-                            else
-                                {
-                                if (nApplied == 0 && numCurrentDivisions == 1)
-                                    MrBayesPrint ("%s   Setting Brownscalepr to Gamma(%1.2lf,%1.2lf)\n", spacer, modelParams[i].brownScaleGamma[0], modelParams[i].brownScaleGamma[1]);
-                                else
-                                    MrBayesPrint ("%s   Setting Brownscalepr to Gamma(%1.2lf,%1.2lf) for partition %d\n", spacer, modelParams[i].brownScaleGamma[0], modelParams[i].brownScaleGamma[1], i+1);
-                                expecting  = Expecting(RIGHTPAR);
-                                }
-                            }
-                        else if (!strcmp(modelParams[i].brownScalePr,"Fixed"))
-                            {
-                            sscanf (tkn, "%lf", &tempD);
-                            modelParams[i].brownScaleFix = tempD;
-                            if (nApplied == 0 && numCurrentDivisions == 1)
-                                MrBayesPrint ("%s   Setting Brownscalepr to Fixed(%1.2lf)\n", spacer, modelParams[i].brownScaleFix);
-                            else
-                                MrBayesPrint ("%s   Setting Brownscalepr to Fixed(%1.2lf) for partition %d\n", spacer, modelParams[i].brownScaleFix, i+1);
-                            expecting  = Expecting(RIGHTPAR);
-                            }
-                        }
-                    }
-                }
-            else if (expecting == Expecting(COMMA))
-                {
-                expecting  = Expecting(NUMBER);
-                }
-            else if (expecting == Expecting(RIGHTPAR))
-                {
-                expecting = Expecting(PARAMETER) | Expecting(SEMICOLON);
-                }
-            else
-                return (ERROR);
-            }
 
         else
             return (ERROR);
@@ -12022,16 +11912,6 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                     value[0] = mp->brownCorrFix;
                 else
                     value[0] = 0.0;
-                }
-            else if (p->paramType == P_BMSIGMA)
-                {
-                /* Fill in sigma parameter for brownian motion **********************************************************/
-                if (p->paramId == BMSIGMA_FIX)
-                    value[0] = mp->brownScaleFix;
-                else if (p->paramId == BMSIGMA_UNI)
-                    value[0] = RandomNumber(seed) * (mp->brownScaleUni[1] - mp->brownScaleUni[0]) + mp->brownScaleUni[0];
-                else if (p->paramId == BMSIGMA_GAMMA)
-                    value[0] = mp->brownScaleGamma[0] / mp->brownScaleGamma[1];
                 }
             else if (p->paramType == P_AAMODEL)
                 {
@@ -15334,47 +15214,6 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
         /* Check to see if the correlation parameters are inapplicable for either partition. */
         if ((*isApplic1) == NO || (*isApplic2) == NO)
             isSame = NO; /* if the correlation parameters are inapplicable for either partition, then the parameter cannot be the same */
-        }
-    else if (whichParam == P_BMSIGMA)
-        {
-        /* Check the sigma parameter for brownian motion 1 and 2. */
-        
-        /* Check that the data are either CONTINUOUS for partitions 1 and 2 */
-        // if (modelParams[part1].dataType != CONTINUOUS)
-            *isApplic1 = NO; /* the sigma parameter does not make sense for part1 */
-        // if (modelParams[part2].dataType != CONTINUOUS)
-            *isApplic2 = NO; /* the sigma parameter does not make sense for part2 */
-            
-        /* Now, check that the data are the same. */
-        if (modelParams[part1].dataType != modelParams[part2].dataType)
-            isSame = NO; /* data are not both continuous */
-
-        /* Check the priors for both partitions. */
-        if (!strcmp(modelParams[part1].brownScalePr,"Uniform") && !strcmp(modelParams[part2].brownScalePr,"Uniform"))
-            {
-            if (AreDoublesEqual (modelParams[part1].brownScaleUni[0], modelParams[part2].brownScaleUni[0], (MrBFlt) 0.00001) == NO)
-                isSame = NO;
-            if (AreDoublesEqual (modelParams[part1].brownScaleUni[1], modelParams[part2].brownScaleUni[1], (MrBFlt) 0.00001) == NO)
-                isSame = NO;
-            }
-        else if (!strcmp(modelParams[part1].brownScalePr,"Fixed") && !strcmp(modelParams[part2].brownScalePr,"Fixed"))
-            {
-            if (AreDoublesEqual (modelParams[part1].brownScaleFix, modelParams[part2].brownScaleFix, (MrBFlt) 0.00001) == NO)
-                isSame = NO;
-            }
-        else if (!strcmp(modelParams[part1].brownScalePr,"Gamma") && !strcmp(modelParams[part2].brownScalePr,"Gamma"))
-            {
-            if (AreDoublesEqual (modelParams[part1].brownScaleGamma[0], modelParams[part2].brownScaleGamma[0], (MrBFlt) 0.00001) == NO)
-                isSame = NO;
-            if (AreDoublesEqual (modelParams[part1].brownScaleGamma[1], modelParams[part2].brownScaleGamma[1], (MrBFlt) 0.00001) == NO)
-                isSame = NO;
-            }
-        else
-            isSame = NO; /* the priors are not the same, so we cannot set the parameter to be equal for both partitions */
-
-        /* Check to see if the sigma parameters are inapplicable for either partition. */
-        if ((*isApplic1) == NO || (*isApplic2) == NO)
-            isSame = NO; /* if the sigma parameters are inapplicable for either partition, then the parameter cannot be the same */
         }
     else if (whichParam == P_CPPRATE)
         {
@@ -20577,53 +20416,6 @@ int SetModelParams (void)
             SafeStrcat (&p->paramHeader, "BM_corr");
             SafeStrcat (&p->paramHeader, partString);
             }
-        else if (j == P_BMSIGMA)
-            {
-            /* Set up sigma parameter for brownian motion */
-            p->paramType = P_BMSIGMA;
-            p->nValues = 1;
-            p->nSubValues = 0;
-            p->min = 1E-6;
-            p->max = POS_INFINITY;
-            for (i=0; i<numCurrentDivisions; i++)
-                if (isPartTouched[i] == YES)
-                    modelSettings[i].brownSigma = p;
-
-            p->paramTypeName = "Browian sigma";
-            SafeStrcat(&p->name, "BM_sigma");
-            SafeStrcat(&p->name, partString);
-
-            /* find the parameter x prior type */
-            if (!strcmp(mp->brownScalePr,"Uniform"))
-                {
-                p->paramId = BMSIGMA_UNI;
-                p->priorParams = mp->brownScaleUni;
-                p->min = mp->brownScaleUni[0];
-                p->max = mp->brownScaleUni[1];
-                p->LnPriorRatio = &LnProbRatioUniform;
-                p->LnPriorProb = &LnPriorProbUniform;
-                }
-            else if (!strcmp(mp->brownScalePr,"Gamma"))
-                {
-                p->paramId = BMSIGMA_GAMMA;
-                p->priorParams = mp->brownScaleGamma;
-                p->LnPriorRatio = &LnProbRatioGamma;
-                p->LnPriorProb = &LnPriorProbGamma;
-                }
-            else
-                {
-                p->paramId = BMSIGMA_FIX;
-                p->priorParams = &mp->brownScaleFix;
-                p->min = p->max = mp->brownScaleFix;
-                p->LnPriorRatio = &LnProbRatioFix;
-                p->LnPriorProb = &LnPriorProbFix;
-                }
-
-            if (p->paramId != BMSIGMA_FIX)
-                p->printParam = YES;
-            SafeStrcat (&p->paramHeader, "BM_sigma");
-            SafeStrcat (&p->paramHeader, partString);
-            }
         else if (j == P_AAMODEL)
             {
             /* Set up aamodel ***************************************************************************************/
@@ -21751,26 +21543,6 @@ void SetUpMoveTypes (void)
     mt->parsimonyBased = NO;
     mt->level = STANDARD_USER;
     mt->Autotune = &AutotuneSlider;
-    mt->targetRate = 0.25;
-
-    // Move_BMsigma
-    mt = &moveTypes[i++];
-    mt->name = "Multiplier";
-    mt->shortName = "Multiplier";
-    mt->tuningName[0] = "Multiplier tuning parameter";
-    mt->shortTuningName[0] = "lambda";
-    mt->applicableTo[0] = BMSIGMA_UNI;
-    mt->applicableTo[1] = BMSIGMA_GAMMA;
-    mt->nApplicable = 2;
-    mt->moveFxn = &Move_BMsigma;
-    mt->relProposalProb = 1.0;
-    mt->numTuningParams = 1;
-    mt->tuningParam[0] = 2.0 * log (1.5);
-    mt->minimum[0] = 0.0001;
-    mt->maximum[0] = 20.0;
-    mt->parsimonyBased = NO;
-    mt->level = STANDARD_USER;
-    mt->Autotune = &AutotuneMultiplier;
     mt->targetRate = 0.25; */
 
     /* Move_ClockRate_M */
@@ -24585,10 +24357,6 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
             {
             MrBayesPrint ("%s      Brownian corr.    ", spacer);
             }
-        else if (j == P_BMSIGMA)
-            {
-            MrBayesPrint ("%s      Brownian sigma    ", spacer);
-            }
         else if (j == P_CPPRATE)
             {
             MrBayesPrint ("%s      Cpprate           ", spacer);
@@ -25145,15 +24913,6 @@ int ShowParameters (int showStartVals, int showMoves, int showAllAvailable)
                 MrBayesPrint ("%s            Prior      = Uniform(%1.2lf,%1.2lf)\n", spacer, mp->brownCorrUni[0], mp->brownCorrUni[1]);
             else
                 MrBayesPrint ("%s            Prior      = Fixed(%1.2lf)\n", spacer, mp->brownCorrFix);
-            }
-        else if (j == P_BMSIGMA)
-            {
-            if (!strcmp(mp->brownScalePr,"Uniform"))
-                MrBayesPrint ("%s            Prior      = Uniform(%1.2lf,%1.2lf)\n", spacer, mp->brownScaleUni[0], mp->brownScaleUni[1]);
-            else if (!strcmp(mp->brownScalePr,"Gamma"))
-                MrBayesPrint ("%s            Prior      = Gamma(%1.2lf,%1.2lf)\n", spacer, mp->brownScaleGamma[0], mp->brownScaleGamma[1]);
-            else
-                MrBayesPrint ("%s            Prior      = Fixed(%1.2lf)\n", spacer, mp->brownScaleFix);
             }
         else if (j == P_CPPRATE)
             {

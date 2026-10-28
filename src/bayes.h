@@ -430,7 +430,7 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define UNLINKED                1
 
 /*paramType*/
-#define NUM_LINKED              36
+#define NUM_LINKED              35
 #define P_TRATIO                0
 #define P_REVMAT                1
 #define P_OMEGA                 2
@@ -448,25 +448,24 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 #define P_POPSIZE               14
 #define P_AAMODEL               15
 #define P_BMCORR                16
-#define P_BMSIGMA               17
-#define P_GROWTH                18
-#define P_CPPMULTDEV            19
-#define P_CPPRATE               20
-#define P_CPPEVENTS             21
-#define P_TK02VAR               22
-#define P_TK02BRANCHRATES       23
-#define P_IGRVAR                24
-#define P_IGRBRANCHRATES        25
-#define P_ILNVAR                26
-#define P_ILNBRANCHRATES        27
-#define P_CLOCKRATE             28
-#define P_SPECIESTREE           29
-#define P_GENETREERATE          30
-#define P_MIXTURE_RATES         31
-#define P_MIXEDVAR              32
-#define P_MIXEDBRCHRATES        33
-#define P_WNVAR                 34
-#define P_WNBRANCHRATES         35
+#define P_GROWTH                17
+#define P_CPPMULTDEV            18
+#define P_CPPRATE               19
+#define P_CPPEVENTS             20
+#define P_TK02VAR               21
+#define P_TK02BRANCHRATES       22
+#define P_IGRVAR                23
+#define P_IGRBRANCHRATES        24
+#define P_ILNVAR                25
+#define P_ILNBRANCHRATES        26
+#define P_CLOCKRATE             27
+#define P_SPECIESTREE           28
+#define P_GENETREERATE          29
+#define P_MIXTURE_RATES         30
+#define P_MIXEDVAR              31
+#define P_MIXEDBRCHRATES        32
+#define P_WNVAR                 33
+#define P_WNBRANCHRATES         34
 /* NOTE: If you add another parameter, change NUM_LINKED */
 
 // #define CPPm                 0       /* CPP rate multipliers */
@@ -885,11 +884,8 @@ typedef struct param
 #define TOPOLOGY_RNCL_FIXED             163
 #define BMCORR_UNI                      164
 #define BMCORR_FIX                      165
-#define BMSIGMA_UNI                     166
-#define BMSIGMA_GAMMA                   167
-#define BMSIGMA_FIX                     168
-#define EXTRATE_EXP                     169
-#define FOSLRATE_EXP                    170
+#define EXTRATE_EXP                     166
+#define FOSLRATE_EXP                    167
 
 #if defined (BEAGLE_ENABLED)
 #define MB_BEAGLE_SCALE_ALWAYS          0
@@ -1092,10 +1088,6 @@ typedef struct model
     char        brownCorrPr[100];      /* prior for correlation of Brownian model       */
     MrBFlt      brownCorrFix;
     MrBFlt      brownCorrUni[2];
-    char        brownScalePr[100];     /* prior for scale (sigma) of Brownian model     */
-    MrBFlt      brownScaleFix;
-    MrBFlt      brownScaleUni[2];
-    MrBFlt      brownScaleGamma[2];
 
     char        topologyPr[100];       /* prior for tree topology                       */
     int         topologyFix;           /* user tree index for fixed topology            */
@@ -1304,7 +1296,6 @@ typedef struct modelinfo
     Param       *mixedBrchRates;            /* ptr to branch rates for mixed relaxed clock */
     Param       *clockRate;                 /* ptr to clock rate parameter              */
     Param       *brownCorr;                 /* ptr to Brownian motion correlation parameter */
-    Param       *brownSigma;                /* ptr to Brownian motion scale parameter   */
 
     /* Information about characters and transformations */
     int         numChars;                   /* number of compressed characters          */

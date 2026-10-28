@@ -8372,17 +8372,6 @@ MrBFlt LogPrior (int chain)
                 lnPrior += log(1.0) - log(mp->brownCorrUni[1] - mp->brownCorrUni[0]);
                 }
             }
-        else if (p->paramType == P_BMSIGMA)
-            {
-            if (p->paramId == BMSIGMA_UNI)
-                {
-                lnPrior += log(1.0) - log(mp->brownScaleUni[1] - mp->brownScaleUni[0]);
-                }
-            else if (p->paramId == BMSIGMA_GAMMA)
-                {
-                lnPrior += LnProbGamma(mp->brownScaleGamma[0], mp->brownScaleGamma[1], st[0]);
-                }
-            }
         else if (p->paramType == P_CPPRATE)
             {
             /* rate (lambda) of comp poisson process of relaxed clock */
@@ -9024,8 +9013,8 @@ int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR,
         if (mp->fossilSamplingNum > 0 && mp->fossilSamplingTime[i3] > t_sl[i] +BRLENS_MIN/2)
             i3++;
 
-        if (!strcmp(mp->extinctionPr, "Exponential") || !strcmp(mp->fossilizationPr, "Exponential"))
-            { // direct lambda,mu,psi parameterization
+        if (!strcmp(mp->extinctionPr, "Exponential") && !strcmp(mp->fossilizationPr, "Exponential"))
+            { // direct lambda,mu,psi parameterization (this is just a hack for now)
             lambda[i] = sR[i1];
             mu[i]     = eR[i2];
             psi[i]    = fR[i3];
