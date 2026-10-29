@@ -1164,11 +1164,11 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
            r|                 r|
      
        1. Pich a fossil among those with brl = 0 (prob = 1/k)
-       2. Propose brl from a uniform(0, ?) distribution
+       2. Propose brl from a uniform distribution, or, if q is the root, from an exponential distribution
      */
     
-    int    i, j, k, mFossil, kFossil;
-    MrBFlt minDepth, maxDepth, newLength, clockRate, x, oldQLength, oldRLength,
+    int    i, j, k, mFossil, kFossil, isRoot;
+    MrBFlt minDepth, maxDepth, newLength, clockRate, x, oldQLength, oldRLength, expRate=0.0,
            *brlens=NULL, nu=0.0, var=0.0, *rate=NULL;
     TreeNode    *p=NULL, *q=NULL, *r;
     Tree        *t;
@@ -1231,15 +1231,16 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
         r = q->left;
 
     /* determine lower and upper bound of forward move, abort if impossible */
+    isRoot = (q->anc->anc == NULL) ? YES : NO;
     minDepth = p->nodeDepth + BRLENS_MIN;
-    if (q->anc->anc == NULL)
+    if (isRoot == YES)
         maxDepth = TREEHEIGHT_MAX;
     else
         maxDepth = q->anc->nodeDepth - BRLENS_MIN;
     
     if (q->isDated == YES)
         calibrationPtr = q->calibration;
-    else if (q->anc->anc == NULL)  // q is root but not dated
+    else if (isRoot == YES)  // q is root but not dated
         calibrationPtr = &mp->treeAgePr;
     
     if (calibrationPtr != NULL)
@@ -1264,7 +1265,20 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     // oldDepth = q->nodeDepth;
     
     /* propose the branch length leading to the fossil */
-    newLength = (RandomNumber(seed)) * (maxDepth - minDepth);
+    if (isRoot == YES)
+        {
+        /* the root age may have no upper bound, so draw the root depth from an exponential
+           distribution offset at minDepth, with mean 0.1 times the fossil depth */
+        expRate = 10.0 / p->nodeDepth;
+        newLength = BRLENS_MIN - log(RandomNumber(seed)) / expRate;
+        if (p->nodeDepth + newLength > maxDepth)
+            {
+            abortMove = YES;
+            return (NO_ERROR);
+            }
+        }
+    else
+        newLength = BRLENS_MIN + (RandomNumber(seed)) * (maxDepth - minDepth);
     
     /* adjust brls and depths, set flags for update of trans probs */
     p->length   = newLength;
@@ -1304,8 +1318,11 @@ int Move_AddBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     /* note that we assume here that the relative proposal probabilities are the same for the add move and the delete move */
     (*lnProposalRatio) = log(kFossil) - log(mFossil +1);
     
-    /* add the Jacobian term */
-    (*lnProposalRatio) += log((maxDepth - minDepth) / clockRate);
+    /* divide by the proposal density of the new branch length, measured in time units */
+    if (isRoot == YES)
+        (*lnProposalRatio) -= log(expRate * clockRate) - expRate * (newLength - BRLENS_MIN);
+    else
+        (*lnProposalRatio) -= log(clockRate / (maxDepth - minDepth));
             
     /* adjust proposal and prior ratio for relaxed clock models */
     for (i=0; i<param->nSubParams; i++)
@@ -1438,8 +1455,8 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
        2. Set brl = 0
      */
     
-    int    i, j, k, mFossil, kFossil;
-    MrBFlt minDepth, maxDepth, clockRate, x, oldPLength, oldQLength, oldRLength,
+    int    i, j, k, mFossil, kFossil, isRoot;
+    MrBFlt minDepth, maxDepth, clockRate, x, oldPLength, oldQLength, oldRLength, expRate=0.0,
            *brlens=NULL, nu=0.0, var=0.0, *rate=NULL;
     TreeNode    *p=NULL, *q=NULL, *r;
     Tree        *t;
@@ -1502,15 +1519,16 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
         r = q->left;
 
     /* determine lower and upper bound of backward move, abort if impossible */
+    isRoot = (q->anc->anc == NULL) ? YES : NO;
     minDepth = p->nodeDepth + BRLENS_MIN;
-    if (q->anc->anc == NULL)
+    if (isRoot == YES)
         maxDepth = TREEHEIGHT_MAX;
     else
         maxDepth = q->anc->nodeDepth - BRLENS_MIN;
     
     if (q->isDated == YES)
         calibrationPtr = q->calibration;
-    else if (q->anc->anc == NULL)  // q is root but not dated
+    else if (isRoot == YES)  // q is root but not dated
         calibrationPtr = &mp->treeAgePr;
     
     if (calibrationPtr != NULL)
@@ -1525,6 +1543,11 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
         }
     if (r->nodeDepth > p->nodeDepth -BRLENS_MIN || minDepth >= maxDepth)
         {  /* the sister node (another fossil) is older than the current fossil */
+        abortMove = YES;
+        return (NO_ERROR);
+        }
+    if (q->nodeDepth < minDepth || q->nodeDepth > maxDepth)
+        {  /* the forward move could not have proposed this depth */
         abortMove = YES;
         return (NO_ERROR);
         }
@@ -1574,8 +1597,14 @@ int Move_DelBranch (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRati
     /* note that we assume that the add and del move have the same relative proposal prob */
     (*lnProposalRatio) = log(mFossil) - log(kFossil +1);
 
-    /* add the Jacobian term */
-    (*lnProposalRatio) -= log((maxDepth - minDepth) / clockRate);
+    /* multiply by the proposal density of the reverse move, measured in time units */
+    if (isRoot == YES)
+        {
+        expRate = 10.0 / p->nodeDepth;
+        (*lnProposalRatio) += log(expRate * clockRate) - expRate * (oldPLength - BRLENS_MIN);
+        }
+    else
+        (*lnProposalRatio) += log(clockRate / (maxDepth - minDepth));
 
     /* adjust proposal and prior ratio for relaxed clock models */
     for (i=0; i<param->nSubParams; i++)
