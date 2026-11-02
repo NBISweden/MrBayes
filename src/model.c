@@ -20188,7 +20188,7 @@ int SetModelParams (void)
                 }
             else for (i = 0; i < p->nValues; i++)
                 {
-                SafeSprintf(&tempStr, &tempStrSize, "\tnet_speciation_%d", i+1);
+                SafeSprintf(&tempStr, &tempStrSize, "%snet_speciation_%d", (i == 0) ? "" : "\t", i+1);
                 SafeStrcat (&p->paramHeader, tempStr);
                 SafeStrcat (&p->paramHeader, partString);
                 }
@@ -20230,7 +20230,7 @@ int SetModelParams (void)
                 }
             else for (i = 0; i < p->nValues; i++)
                 {
-                SafeSprintf(&tempStr, &tempStrSize, "\trelative_extinction_%d", i+1);
+                SafeSprintf(&tempStr, &tempStrSize, "%srelative_extinction_%d", (i == 0) ? "" : "\t", i+1);
                 SafeStrcat (&p->paramHeader, tempStr);
                 SafeStrcat (&p->paramHeader, partString);
                 }
@@ -20269,7 +20269,7 @@ int SetModelParams (void)
                 }
             else for (i = 0; i < p->nValues; i++)
                 {
-                SafeSprintf(&tempStr, &tempStrSize, "\trelative_fossilization_%d", i+1);
+                SafeSprintf(&tempStr, &tempStrSize, "%srelative_fossilization_%d", (i == 0) ? "" : "\t", i+1);
                 SafeStrcat (&p->paramHeader, tempStr);
                 SafeStrcat (&p->paramHeader, partString);
                 }
