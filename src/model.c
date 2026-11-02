@@ -15827,7 +15827,7 @@ int IsModelSame (int whichParam, int part1, int part2, int *isApplic1, int *isAp
 
 int LargestMovableSubtree(Param *treeParam)
 {
-    int         i, j, k, a, nLongsNeeded, numPartitions, largestSubtree;
+    int         i, j, k, l, a, nLongsNeeded, numPartitions, largestSubtree;
     BitsLong    **constraintPartition, *subtreePartition, *testPartition, *mask;
     ModelParams *mp;
     int         foundAllSpeciesPartition;
@@ -15880,6 +15880,13 @@ int LargestMovableSubtree(Param *treeParam)
         if (k == 0 || k == 1)
             continue;
         
+        /* skip partition if it duplicates an earlier constraint */
+        for (j=0; j<numPartitions; j++)
+            if (AreBitfieldsEqual(constraintPartition[j], constraintPartition[numPartitions], nLongsNeeded) == YES)
+                break;
+        if (j < numPartitions)
+            continue;
+        
         /* record if we hit an all-species partition */
         if (k == numLocalTaxa)
             foundAllSpeciesPartition = YES;
@@ -15909,20 +15916,26 @@ int LargestMovableSubtree(Param *treeParam)
         k = 0;
         for (j=0; j<numPartitions; j++)
             {
-            if (j==i)
+            if (j == i || IsPartNested(constraintPartition[j], constraintPartition[i], nLongsNeeded) == NO)
                 continue;
-            if (IsPartNested(constraintPartition[j], constraintPartition[i], nLongsNeeded))
+            /* only count clades directly nested in partition i, not those inside another nested clade */
+            for (l=0; l<numPartitions; l++)
                 {
-                k++;    /* add one for clade we are removing from subtreePartition */
-                CopyBits (testPartition, constraintPartition[j], nLongsNeeded);
-                FlipBits (testPartition, nLongsNeeded, mask);
-                for (k=0; k<nLongsNeeded; k++)
-                    subtreePartition[k] = subtreePartition[k] & testPartition[k];
+                if (l != i && l != j && IsPartNested(constraintPartition[j], constraintPartition[l], nLongsNeeded) == YES
+                                     && IsPartNested(constraintPartition[l], constraintPartition[i], nLongsNeeded) == YES)
+                    break;
                 }
+            if (l < numPartitions)
+                continue;
+            k++;    /* add one for clade we are removing from subtreePartition */
+            CopyBits (testPartition, constraintPartition[j], nLongsNeeded);
+            FlipBits (testPartition, nLongsNeeded, mask);
+            for (l=0; l<nLongsNeeded; l++)
+                subtreePartition[l] &= testPartition[l];
             }
         k += NumBits (subtreePartition, nLongsNeeded);  /* add remaining free tips in subtreePartition */
-        /* add calculation root if an unrooted tree and we are dealing with the root partition */
-        if (strcmp(mp->brlensPr,"Clock") != 0 && NumBits (constraintPartition[i], nLongsNeeded) == numLocalTaxa - 1)
+        /* in an unrooted tree, a constrained clade is also connected to the rest of the tree through its stem */
+        if (strcmp(mp->brlensPr,"Clock") != 0 && NumBits (constraintPartition[i], nLongsNeeded) < numLocalTaxa)
             k++;
         if (k > largestSubtree)
             largestSubtree = k;
