@@ -8487,8 +8487,8 @@ MrBFlt LogPrior (int chain)
             for (i=0; i<t->nNodes-2; i++)
                 {
                 branch = t->allDownPass[i];
-                if (branch->length > 0.0)  // not ancestral fossil
-                    lnPrior += LnProbLogNormal_Mean_Var (1.0, nu, st[branch->index]);
+                /* ancestral fossils keep their rates as well */
+                lnPrior += LnProbLogNormal_Mean_Var (1.0, nu, st[branch->index]);
                 }   // both mean and variance are on the natural scale
             }
         else if (p->paramType == P_IGRVAR)
@@ -8514,8 +8514,8 @@ MrBFlt LogPrior (int chain)
             for (i=0; i<t->nNodes-2; i++)
                 {
                 branch = t->allDownPass[i];
-                if (branch->length > 0.0)  // not ancestral fossil
-                    lnPrior += LnProbGamma (1.0/var, 1.0/var, st[branch->index]);
+                /* ancestral fossils keep their rates as well */
+                lnPrior += LnProbGamma (1.0/var, 1.0/var, st[branch->index]);
                 }
             }
         else if (p->paramType == P_MIXEDVAR)

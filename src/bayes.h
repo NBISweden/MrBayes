@@ -320,8 +320,6 @@ typedef float CLFlt;        /* single-precision float used for cond likes (CLFlt
 /* BRLENS_MIN must be bigger than TIME_MIN */
 #define TIME_MIN                1.0E-11f
 #define TIME_MAX                100.0f
-#define RELBRLENS_MIN           0.00000001f  // 1E-8f
-#define RELBRLENS_MAX           100.0f
 #define KAPPA_MIN               0.001f
 #define KAPPA_MAX               1000.0f
 #define RATE_MIN                0.000001f

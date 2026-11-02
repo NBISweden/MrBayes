@@ -101,7 +101,6 @@ void    ElTran (int dim, int low, int high, MrBFlt **a, int *interchanged, MrBFl
 void    Exchange (int j, int k, int l, int m, int n, MrBFlt **a, MrBFlt *scale);
 MrBFlt  Factorial (int x);
 void    ForwardSubstitutionRow (int dim, MrBFlt **L, MrBFlt *b);
-MrBFlt  GammaRandomVariable (MrBFlt a, MrBFlt b, RandLong *seed);
 void    GaussianElimination (int dim, MrBFlt **a, MrBFlt **bMat, MrBFlt **xMat);
 int     Hqr2 (int dim, int low, int high, MrBFlt **h, MrBFlt *wr, MrBFlt *wi, MrBFlt **z);
 MrBFlt  IncompleteBetaFunction (MrBFlt alpha, MrBFlt beta, MrBFlt x);

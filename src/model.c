@@ -20555,7 +20555,7 @@ int SetModelParams (void)
             p->paramType = P_TK02BRANCHRATES;
             p->nValues = 2*numLocalTaxa;     /* use to hold the branch rates; we need one rate for the root */
             p->nSubValues = 2*numLocalTaxa;  /* use to hold the effective branch lengths */
-            p->min = RATE_MIN;
+            p->min = POS_MIN;
             p->max = RATE_MAX;
             for (i=0; i<numCurrentDivisions; i++)
                 if (isPartTouched[i] == YES)
@@ -20609,7 +20609,7 @@ int SetModelParams (void)
             p->paramType = P_WNBRANCHRATES;
             p->nValues = 2*numLocalTaxa;     /* use to hold the branch rates; we need one rate for the root */
             p->nSubValues = 2*numLocalTaxa;  /* use to hold the effective branch lengths */
-            p->min = RATE_MIN;
+            p->min = POS_MIN;
             p->max = RATE_MAX;
             for (i=0; i<numCurrentDivisions; i++)
                 if (isPartTouched[i] == YES)
@@ -20663,7 +20663,7 @@ int SetModelParams (void)
             p->paramType = P_IGRBRANCHRATES;
             p->nValues = 2*numLocalTaxa;     /* use to hold the branch rates; we need one rate for the root */
             p->nSubValues = 2*numLocalTaxa;  /* use to hold the effective branch lengths */
-            p->min = RATE_MIN;
+            p->min = POS_MIN;
             p->max = RATE_MAX;
             for (i=0; i<numCurrentDivisions; i++)
                 if (isPartTouched[i] == YES)
@@ -20717,7 +20717,7 @@ int SetModelParams (void)
             p->paramType = P_ILNBRANCHRATES;
             p->nValues = 2*numLocalTaxa;     /* use to hold the branch rates; we need one rate for the root */
             p->nSubValues = 2*numLocalTaxa;  /* use to hold the effective branch lengths */
-            p->min = RATE_MIN;
+            p->min = POS_MIN;
             p->max = RATE_MAX;
             for (i=0; i<numCurrentDivisions; i++)
                 if (isPartTouched[i] == YES)
@@ -20772,7 +20772,7 @@ int SetModelParams (void)
             p->nValues = 2*numLocalTaxa;     /* use to hold the branch rates; we need one rate for the root */
             p->nSubValues = 2*numLocalTaxa;  /* use to hold the effective branch lengths */
             p->nIntValues = 1;               /* use to hold the model indicator: IGR or ILN */
-            p->min = RATE_MIN;
+            p->min = POS_MIN;
             p->max = RATE_MAX;
             for (i=0; i<numCurrentDivisions; i++)
                 if (isPartTouched[i] == YES)
