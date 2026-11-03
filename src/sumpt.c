@@ -1903,7 +1903,7 @@ int ExamineSumpFile (char *fileName, SumpFileInfo *fileInfo, char ***headerNames
 errorExit:
 
     free(s);
-    fclose(fp);
+    SafeFclose(&fp);
     return (ERROR);
 }
 
@@ -6796,6 +6796,7 @@ int ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char **treeName
     if (lineTerm != LINETERM_MAC && lineTerm != LINETERM_DOS && lineTerm != LINETERM_UNIX)
         {
         MrBayesPrint ("%s   Unknown line termination for file  \"%s\"\n", spacer, fileName);
+        SafeFclose (&fp);
         return ERROR;
         }
 
@@ -6808,6 +6809,7 @@ int ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char **treeName
     if (!s)
         {
         MrBayesPrint ("%s   Problem allocating string for examining file \"%s\"\n", spacer, fileName);
+        SafeFclose (&fp);
         return (ERROR);
         }
 
@@ -6825,6 +6827,7 @@ int ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char **treeName
     if ((fp = OpenTextFileR(fileName))==NULL)
         {
         MrBayesPrint ("%s   Could not read file \"%s\" in text mode \n", spacer, fileName);
+        free (s);
         return (ERROR);
         }
 
@@ -6962,10 +6965,12 @@ int ExamineSumtFile (char *fileName, SumtFileInfo *sumtFileInfo, char **treeName
         goto errorExit;
         }
     free (s);
+    SafeFclose (&fp);
     return (NO_ERROR);
 
 errorExit:
     free (s);
+    SafeFclose (&fp);
     return (ERROR);
 }
 

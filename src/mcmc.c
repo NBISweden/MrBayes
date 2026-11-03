@@ -2461,12 +2461,13 @@ int DoMcmc (void)
         MrBayesPrint ("%s   Getting values from previous run\n", spacer);
         strcpy(inputFileName, chainParams.chainFileName);
         strcat(inputFileName, ".ckp");
-        if (OpenTextFileR(inputFileName) == NULL)
+        if ((tempFile = OpenTextFileR(inputFileName)) == NULL)
             {
             MrBayesPrint ("%s   Could not find the checkpoint file '%s'.\n", spacer, inputFileName);
             MrBayesPrint ("%s   Make sure it is in the working directory.\n", spacer);
             goto errorExit;
             }
+        fclose (tempFile);
 
         if (DoExecute () == ERROR)
             goto errorExit;
@@ -2510,6 +2511,7 @@ int DoMcmc (void)
                 {
                 MrBayesPrint ("%s   Error: Reading SsAcumulators from .ckp file fails.\n", spacer);
                 free(strBuf);
+                SafeFclose (&tempFile);
                 goto errorExit;
                 }
 
@@ -2520,6 +2522,7 @@ int DoMcmc (void)
                     {
                     MrBayesPrint ("%s   Error: Not enough values in SsAcumulators comment of .ckp file.   \n", spacer);
                     free(strBuf);
+                    SafeFclose (&tempFile);
                     goto errorExit;
                     }
                     
@@ -2531,6 +2534,7 @@ int DoMcmc (void)
                       
             free(strBuf);
             }
+        SafeFclose (&tempFile);
 #   if defined (MPI_ENABLED)
         }
         MPI_Bcast (&numPreviousGen, 1, MPI_LONG_LONG, 0, MPI_COMM_WORLD);

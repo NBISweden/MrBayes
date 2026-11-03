@@ -3575,7 +3575,7 @@ int DoExecute (void)
     char        *s;
     FILE        *fp;
     CmdType     *oldCommandPtr;
-    char        *oldTokenP, oldToken[CMD_STRING_LENGTH];
+    char        *oldTokenP, oldToken[CMD_STRING_LENGTH], *oldCmdStr, exeFileName[100];
 #   if defined (MPI_ENABLED)
     int         sumErrors;
 #   endif
@@ -3590,9 +3590,11 @@ int DoExecute (void)
     else
         MrBayesPrint ("%s   Executing file \"%s\"\n", spacer, inputFileName);
 
-    /* Save old command ptr, token pointer and token */
+    /* save file name (a nested execute may overwrite inputFileName), old command ptr, token pointer and token */
+    strcpy(exeFileName, inputFileName);
     oldCommandPtr = commandPtr;
     oldTokenP     = tokenP;
+    oldCmdStr     = cmdStr;
     strcpy(oldToken, token);
 
     /* open binary file */
@@ -3777,6 +3779,9 @@ int DoExecute (void)
         strcpy (spacer, "");
 
     commandPtr = oldCommandPtr;
+    tokenP     = oldTokenP;
+    cmdStr     = oldCmdStr;
+    strcpy(token, oldToken);
 
     return (NO_ERROR);
     
@@ -3795,6 +3800,7 @@ int DoExecute (void)
 
         commandPtr = oldCommandPtr;
         tokenP     = oldTokenP;
+        cmdStr     = oldCmdStr;
         strcpy(token, oldToken);
 
         return (NO_ERROR_QUIT);
@@ -3809,8 +3815,8 @@ int DoExecute (void)
         if (fp)
             {
             MrBayesPrint ("%s   The error occurred when reading char. %d-%d on line %d\n", spacer,
-                (size_t)(tokenP-s)-strlen(token)+1, (size_t)(tokenP-s), cmdLine);
-            MrBayesPrint ("%s      in the file '%s'\n", spacer, inputFileName);
+                (int)(tokenP-s)-(int)strlen(token)+1, (int)(tokenP-s), cmdLine);
+            MrBayesPrint ("%s      in the file '%s'\n", spacer, exeFileName);
             }
         if (s)
             free (s);
@@ -3847,6 +3853,7 @@ int DoExecute (void)
         /* restore state of globals */
         commandPtr = oldCommandPtr;
         tokenP = oldTokenP;
+        cmdStr = oldCmdStr;
         strcpy(token, oldToken);
 
         return (ERROR);
