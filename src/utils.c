@@ -11730,16 +11730,9 @@ int Hqr2 (int dim, int low, int high, MrBFlt **h, MrBFlt *wr, MrBFlt *wi, MrBFlt
                         if (fabs(wi[i])<ETA) /* changed to remove goto statement */
                             {
                             t = w;
-                            if (fabs(t)<ETA)  /* changed to remove goto statement */
-                                {
-                                tst1 = norm;
-                                t = tst1;
-                                do  {
-                                    t *= .01;
-                                    tst2 = norm + t;
-                                    }
-                                    while (tst2 > tst1);
-                                }           
+                            /* Avoid dividing rounding noise by a nearly zero denominator. */
+                            if (fabs(t) < DBL_EPSILON * norm)
+                                t = (t < 0.0 ? -DBL_EPSILON * norm : DBL_EPSILON * norm);
                             h[i][en] = -r / t;
                             }
                         else
