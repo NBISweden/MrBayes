@@ -16157,7 +16157,7 @@ int Move_Statefreqs (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRat
     m = &modelSettings[param->relParts[0]];
 
     /* get the values we need */
-    nStates = m->numModelStates;
+    nStates = m->numStates;
     priorAlpha = GetParamVals(param, chain, state[chain]);
     newPi = GetParamSubVals (param, chain, state[chain]);
     oldPi = GetParamSubVals (param, chain, state[chain] ^ 1);
@@ -16246,7 +16246,7 @@ int Move_Statefreqs_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnP
     m = &modelSettings[param->relParts[0]];
 
     /* get the values we need */
-    nStates = m->numModelStates;
+    nStates = m->numStates;
     priorAlpha = GetParamVals(param, chain, state[chain]);
     newPi = GetParamSubVals (param, chain, state[chain]);
     oldPi = GetParamSubVals (param, chain, state[chain] ^ 1);
