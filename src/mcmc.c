@@ -7969,7 +7969,7 @@ MrBFlt LogPrior (int chain)
             else if (strcmp(mp->statefreqModel,"Stationary") != 0)
                 {
                 /* now for directional evolution: first process states */
-                nStates = m->numModelStates;
+                nStates = m->numStates;
                 if (p->paramId == DIRPI_DIRxDIR || p->paramId == DIRPI_DIRxFIXED || p->paramId == DIRPI_MIX)
                     {
                     lnPrior += LnDirichlet(st, sst, nStates);
@@ -12589,9 +12589,9 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
     if (m->dataType == RESTRICTION)
         {
         if (!strcmp(mp->statefreqModel,"Directional"))
-            bs += m->numModelStates;
-        else if (!strcmp(mp->statefreqModel,"Mixed") && bs[m->numModelStates] != NOT_APPLICABLE)
-            bs += m->numModelStates;
+            bs += m->numStates;
+        else if (!strcmp(mp->statefreqModel,"Mixed") && bs[m->numStates] != NOT_APPLICABLE)
+            bs += m->numStates;
         }
 
     /* if covarion model, adjust base frequencies */
@@ -13339,7 +13339,7 @@ int PrintStates (long long curGen, int coldId)
                 }
             if (!strcmp(mp->statefreqModel, "Mixed")) //SK
                 {
-                if (sst[m->numModelStates] == NOT_APPLICABLE)
+                if (sst[m->numStates] == NOT_APPLICABLE)
                     modelIndex = 0;
                 else
                     modelIndex = 1;

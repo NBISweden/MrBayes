@@ -7566,12 +7566,12 @@ int Likelihood_Res (TreeNode *p, int division, int chain, MrBFlt *lnL, int which
     bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
     if (!strcmp(mp->statefreqModel,"Directional"))
         {
-        bs += m->numModelStates;
+        bs += m->numStates;
         }
     else if (!strcmp(mp->statefreqModel,"Mixed"))
         {
-        if (bs[m->numModelStates] != NOT_APPLICABLE)
-            bs += m->numModelStates;
+        if (bs[m->numStates] != NOT_APPLICABLE)
+            bs += m->numStates;
         }
 
     /* find category frequencies */
@@ -7675,12 +7675,12 @@ int Likelihood_Res_SSE (TreeNode *p, int division, int chain, MrBFlt *lnL, int w
     bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
     if (!strcmp(mp->statefreqModel,"Directional"))
         {
-        bs += m->numModelStates;
+        bs += m->numStates;
         }
     else if (!strcmp(mp->statefreqModel,"Mixed"))
         {
-        if (bs[m->numModelStates] != NOT_APPLICABLE)
-            bs += m->numModelStates;
+        if (bs[m->numStates] != NOT_APPLICABLE)
+            bs += m->numStates;
         }
 
     mA = _mm_set1_ps ((CLFlt)(bs[0]));

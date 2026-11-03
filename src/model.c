@@ -19643,7 +19643,7 @@ int SetModelParams (void)
                                 {
                                 MrBayesPrint ("%s   Error in SetModelParams: unknown setting for Rootfreqpr\n", spacer); 
                                 }
-                            p->nValues = m->numModelStates  * 2; //SK: use whole nValues vector even if only one of the priors is Dirichlet, start OR root freqs
+                            p->nValues = mp->nStates * 2; //SK: use whole nValues vector even if only one of the priors is Dirichlet, start OR root freqs
                             }
                         else if (!strcmp(mp->stateFreqPr, "Fixed"))
                             {
@@ -22967,6 +22967,8 @@ void SetUpMoveTypes (void)
     mt->name = "RJ between stationary and directional model";
     mt->shortName = "RJ_Stat-Dir";
     mt->paramName = "Statefrmod";
+    mt->tuningName[0] = "Dirichlet parameter";
+    mt->shortTuningName[0] = "alpha";
     mt->applicableTo[0] = DIRPI_MIX;
     mt->nApplicable = 1;
     mt->moveFxn = &Move_Statefreqs_SplitMerge;

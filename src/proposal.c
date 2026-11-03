@@ -16332,7 +16332,7 @@ int Move_StatefreqsRoot (Param *param, int chain, RandLong *seed, MrBFlt *lnPrio
     m = &modelSettings[param->relParts[0]];
     
 	/* get the values we need */
-	nStates = m->numModelStates;
+	nStates = m->numStates;
         
     /* get pointers to root frequencies */
     priorAlpha = GetParamVals(param, chain, state[chain]) +nStates;
@@ -16415,7 +16415,7 @@ int Move_StatefreqsRoot_Slider (Param *param, int chain, RandLong *seed, MrBFlt 
     m = &modelSettings[param->relParts[0]];    
     
 	/* get the values we need */
-	nStates = m->numModelStates;
+	nStates = m->numStates;
 	priorAlpha = GetParamVals(param, chain, state[chain]) + nStates;
 	newPi = GetParamSubVals (param, chain, state[chain]) + nStates;
 	oldPi = GetParamSubVals (param, chain, state[chain] ^ 1) + nStates;
@@ -16506,7 +16506,7 @@ int Move_Statefreqs_SplitMerge (Param *param, int chain, RandLong *seed, MrBFlt 
 	m = &modelSettings[param->relParts[0]];
     
 	/* get the values and pointers we need */
-	nStates = m->numModelStates;
+	nStates = m->numStates;
     
     /* get pointers to stationary and root frequencies */
     priorAlpha = GetParamVals(param, chain, state[chain]);
@@ -16606,7 +16606,7 @@ int Move_Statefreqs_SplitMerge (Param *param, int chain, RandLong *seed, MrBFlt 
 			isValid = YES;
 			for (i=0; i<nStates; i++)
 				{
-				if (newPi[i] < PI_MIN)
+				if (newPiRoot[i] < PI_MIN)
 					{
 					isValid = NO;
 					break;
@@ -16616,7 +16616,7 @@ int Move_Statefreqs_SplitMerge (Param *param, int chain, RandLong *seed, MrBFlt 
          
         /* get prior ratio */
         x = LnDirichlet(priorAlpha, newPi, nStates);
-        x += LnDirichlet(priorAlpha, newPiRoot, nStates);
+        x += LnDirichlet(priorAlphaRoot, newPiRoot, nStates);
         y = LnDirichlet(priorAlpha, oldPi, nStates);
         (*lnPriorRatio) = x - y;
             
