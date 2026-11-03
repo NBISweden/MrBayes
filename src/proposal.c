@@ -14817,6 +14817,11 @@ int Move_RateMult_Slider (Param *param, int chain, RandLong *seed, MrBFlt *lnPri
     /* reflect */
     min = DIR_MIN / sum;
     max = 1.0 - min;
+    if (min >= max)
+        {
+        abortMove = YES;
+        return (NO_ERROR);
+        }
     if (delta > max-min) /* we do it to avoid following long while loop in case if delta is high */
         delta = max-min;
 
