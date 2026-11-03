@@ -3272,10 +3272,9 @@ int ConTree (PartCtr **treeParts, int numTreeParts)
     /* we use a BitsLong variable set to one to escape dependence on interpretation of constant (signed?) int/long '1L' */
     bitsLongOne = 1;
     
-    /* check that we have at least three species */
-    if (sumtParams.numTaxa < 3)
+    if (sumtParams.numTaxa < 2)
         {
-        MrBayesPrint ("%s   Too few taxa included to show consensus trees\n", spacer);
+        MrBayesPrint ("%s   At least two taxa are required to show consensus trees\n", spacer);
         return ERROR;
         }
     
@@ -3357,7 +3356,7 @@ treeConstruction:
         part = treeParts[i];
 
         /* calculate frequency and test if time to quit */
-        if (t->nNodes > targetNode && numTerminalsEncountered == sumtParams.numTaxa)
+        if (t->nNodes > targetNode && numTerminalsEncountered == sumtParams.numTaxa && t->root->partitionIndex >= 0)
             break;
         freq = (MrBFlt)(part->totCount) / (MrBFlt)(sumtParams.numTreesSampled);
         if (freq < 0.50 && !strcmp(sumtParams.sumtConType, "Halfcompat"))
@@ -3521,7 +3520,7 @@ treeConstruction:
         else
             /* singleton partition */
             {
-            if (nBits == sumtParams.numTaxa - 1)
+            if (nBits == sumtParams.numTaxa - 1 && sumtParams.isRooted == NO)
                 j = localOutGroup;
             else
                 j = FirstTaxonInPartition(partition, sumtParams.BitsLongsNeeded); /* nbits == 1 */
@@ -5857,13 +5856,19 @@ int DoSumt (void)
                 goto errorExit;
             
             /* Exclude trivial splits when calculating average standard deviation of split frequencies. */
-            avgStdDev = sumStdDev / (numTreePartsToPrint-sumtParams.numTaxa-1);
+            if (numTreePartsToPrint > sumtParams.numTaxa + 1)
+                avgStdDev = sumStdDev / (numTreePartsToPrint-sumtParams.numTaxa-1);
+            else
+                avgStdDev = 0.0;
             avgPSRF   = sumPSRF / numPSRFSamples;
 
             if (sumtParams.numRuns > 1 && sumtParams.summary == YES)
                 {
                 MrBayesPrint ("%s   Summary statistics for partitions with frequency >= %1.2lf in at least one run:\n", spacer, sumtParams.minPartFreq);
-                MrBayesPrint ("%s       Average standard deviation of split frequencies = %1.6lf\n", spacer, avgStdDev);
+                if (numTreePartsToPrint > sumtParams.numTaxa + 1)
+                    MrBayesPrint ("%s       Average standard deviation of split frequencies = %1.6lf\n", spacer, avgStdDev);
+                else
+                    MrBayesPrint ("%s       Average standard deviation of split frequencies: NA (no informative splits)\n", spacer);
                 MrBayesPrint ("%s       Maximum standard deviation of split frequencies = %1.6lf\n", spacer, maxStdDev);
                 }
             if (sumtParams.brlensDef == YES && sumtParams.numRuns > 1 && sumtParams.summary == YES)

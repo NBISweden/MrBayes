@@ -21225,7 +21225,7 @@ int SetUpAnalysis (RandLong *seed)
 
     /* we are checking later to make sure no partition is without characters */
     SetLocalTaxa ();
-    if (numLocalTaxa <= 2)
+    if (numLocalTaxa < 2)
         {
         MrBayesPrint ("%s   There must be at least two included taxa, now there is %s\n", spacer,
             numLocalTaxa == 0 ? "none" : "only one");

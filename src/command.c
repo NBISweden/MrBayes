@@ -5236,7 +5236,12 @@ int DoMatrix (void)
     if (SetModelDefaults () == ERROR)
         return (ERROR);
 
-    if (SetUpAnalysis (&globalSeed) == ERROR)
+    if (numTaxa == 2)
+        {
+        MrBayesPrint ("%s   Two-taxon data requires a rooted tree model; deferring setup until model settings are read\n", spacer);
+        setUpAnalysisSuccess = NO;
+        }
+    else if (SetUpAnalysis (&globalSeed) == ERROR)
         return (ERROR);
 
     /* set default names for some output file names based on processed file */

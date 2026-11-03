@@ -1755,6 +1755,9 @@ void CalcPartFreqStats (PFNODE *p, STATS *stat)
     int     i, j, n, min;
     MrBFlt  f, sum, sumsq, stdev;
 
+    if (p == NULL)
+        return;
+
     n = chainParams.numRuns;
     min = (int)(chainParams.minPartFreq * stat->numSamples);
     if ((MrBFlt)min != chainParams.minPartFreq * stat->numSamples)
@@ -1861,7 +1864,10 @@ void CalcTopoConvDiagn (int numSamples)
     
         CalcPartFreqStats (partFreqTreeRoot[n], stat);
         
-        stat->avgStdDev = stat->sum / stat->numPartitions;
+        if (stat->numPartitions > 0.0)
+            stat->avgStdDev = stat->sum / stat->numPartitions;
+        else
+            stat->avgStdDev = 0.0;
         }
 }
 
@@ -1911,7 +1917,10 @@ void CalcTopoConvDiagn2 (int *nTrees)
     
         PartFreq (partFreqTreeRoot[n], stat, nTrees);
         
-        stat->avgStdDev = stat->sum / stat->numPartitions;
+        if (stat->numPartitions > 0.0)
+            stat->avgStdDev = stat->sum / stat->numPartitions;
+        else
+            stat->avgStdDev = 0.0;
         }
 }
 
@@ -16487,9 +16496,9 @@ int RunChain (RandLong *seed)
             MrBayesPrint ("%s   There must be at least four taxa in the analysis\n", spacer);
             return (ERROR);
             }
-        else if (i == numTrees && numLocalTaxa < 3)
+        else if (i == numTrees && numLocalTaxa < 2)
             {
-            MrBayesPrint ("%s   There must be at least three taxa in the analysis\n", spacer);
+            MrBayesPrint ("%s   There must be at least two taxa in the analysis\n", spacer);
             return (ERROR);
             }
         }

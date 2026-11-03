@@ -2633,7 +2633,13 @@ int BuildRandomUTopology (Tree *t, RandLong *seed)
     TreeNode    *p, *q, *r;
 
     nTips = t->nNodes - t->nIntNodes;
-    
+
+    if (nTips < 3)
+        {
+        MrBayesPrint ("%s   An unrooted topology requires at least three taxa\n", spacer);
+        return (ERROR);
+        }
+
     for (i=0; i<t->nNodes; i++)
         {
         p = &t->nodes[i];
