@@ -45,6 +45,7 @@ int     InitializeLinks (void);
 int     InitializeTreeCalibrations (Tree *t);
 int     Link (void);
 int     SetAARates (void);
+int     SetAamodelFrequencies (Param *param, int chain, int state);
 int     SetLocalTaxa (void);
 int     SetModelDefaults (void);
 int     SetMoves (void);

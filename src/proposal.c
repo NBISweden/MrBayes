@@ -79,11 +79,7 @@ int Move_Aamodel (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
         AAMODEL_BLOSUM          9 */
 
     int         i, oldM, newM;
-    MrBFlt      *bs, *subValue;
-    ModelParams *mp;
-    
-    /* get model params */
-    mp = &modelParams[param->relParts[0]];
+    MrBFlt      *subValue;
 
     subValue = GetParamSubVals(param, chain, state[chain]);
 
@@ -106,57 +102,8 @@ int Move_Aamodel (Param *param, int chain, RandLong *seed, MrBFlt *lnPriorRatio,
     *GetParamVals(param, chain, state[chain]) = (MrBFlt)newM;
     
     /* set amino acid frequencies */
-    bs = GetParamSubVals (modelSettings[param->relParts[0]].stateFreq, chain, state[chain]);
-    if (newM == AAMODEL_POISSON)
-        {
-        for (i=0; i<mp->nStates; i++)
-            bs[i] = 1.0 / 20.0;
-        }
-    else if (newM == AAMODEL_JONES)
-        {
-        for (i=0; i<mp->nStates; i++)
-            bs[i] = jonesPi[i];
-        }
-    else if (newM == AAMODEL_DAY)
-        {
-        for (i=0; i<mp->nStates; i++)
-            bs[i] = dayhoffPi[i];
-        }
-    else if (newM == AAMODEL_MTREV)
-        {
-        for (i=0; i<mp->nStates; i++)
-            bs[i] = mtrev24Pi[i];
-        }
-    else if (newM == AAMODEL_MTMAM)
-        {
-        for (i=0; i<mp->nStates; i++)
-            bs[i] = mtmamPi[i];
-        }
-    else if (newM == AAMODEL_WAG)
-        {
-        for (i=0; i<mp->nStates; i++)
-            bs[i] = wagPi[i];
-        }
-    else if (newM == AAMODEL_RTREV)
-        {
-        for (i=0; i<mp->nStates; i++)
-            bs[i] = rtrevPi[i];
-        }
-    else if (newM == AAMODEL_CPREV)
-        {
-        for (i=0; i<mp->nStates; i++)
-            bs[i] = cprevPi[i];
-        }
-    else if (newM == AAMODEL_VT)
-        {
-        for (i=0; i<mp->nStates; i++)
-            bs[i] = vtPi[i];
-        }
-    else if (newM == AAMODEL_BLOSUM)
-        {
-        for (i=0; i<mp->nStates; i++)
-            bs[i] = blosPi[i];
-        }
+    if (SetAamodelFrequencies (param, chain, state[chain]) == ERROR)
+        return (ERROR);
 
     /* Set update flags for all partitions that share this amino acid model. Note that the conditional
        likelihood update flags have been set before we even call this function. */

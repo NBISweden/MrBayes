@@ -11035,7 +11035,7 @@ int DoStartvalsParm (char *parmName, char *tkn)
                 }
             /* Post processing needed for some parameters */
             assert (param != NULL);  // param is non-NULL here
-            if (param->paramType == P_SHAPE || param->paramType == P_CORREL)
+            if (param->paramType == P_SHAPE || param->paramType == P_CORREL || param->paramType == P_AAMODEL)
                 {
                 for (i=0; i<chainParams.numRuns; i++)
                     {
@@ -11060,6 +11060,11 @@ int DoStartvalsParm (char *parmName, char *tkn)
                         else if (param->paramType == P_CORREL)
                             {
                             if (AutodGamma (subValue, value[0], (int)(sqrt(param->nSubValues) + 0.5)) == ERROR)
+                                return (ERROR);
+                            }
+                        else if (param->paramType == P_AAMODEL)
+                            {
+                            if (SetAamodelFrequencies (param, i*chainParams.numChains+j, 0) == ERROR)
                                 return (ERROR);
                             }
                         }
@@ -11362,7 +11367,7 @@ int DoShowParams (void)
 int FillNormalParams (RandLong *seed, int fromChain, int toChain)
 {
     int         i, j, k, chn, tempInt, *intValue;
-    MrBFlt      *bs, *value, *subValue, scaler;
+    MrBFlt      *value, *subValue, scaler;
     Tree        *tree;
     Param       *p;
     ModelInfo   *m;
@@ -11934,58 +11939,8 @@ int FillNormalParams (RandLong *seed, int fromChain, int toChain)
                     tempInt = (int)(RandomNumber(seed) * 10);
                     value[0] = tempInt;
                     
-                    /* we need to make certain that the aa frequencies are filled in correctly */
-                    bs = GetParamSubVals (m->stateFreq, chn, 0);
-                    if (tempInt == AAMODEL_POISSON)
-                        {
-                        for (i=0; i<mp->nStates; i++)
-                            bs[i] =  (1.0 / 20.0);
-                        }
-                    else if (tempInt == AAMODEL_JONES)
-                        {
-                        for (i=0; i<mp->nStates; i++)
-                            bs[i] = jonesPi[i];
-                        }
-                    else if (tempInt == AAMODEL_DAY)
-                        {
-                        for (i=0; i<mp->nStates; i++)
-                            bs[i] = dayhoffPi[i];
-                        }
-                    else if (tempInt == AAMODEL_MTREV)
-                        {
-                        for (i=0; i<mp->nStates; i++)
-                            bs[i] = mtrev24Pi[i];
-                        }
-                    else if (tempInt == AAMODEL_MTMAM)
-                        {
-                        for (i=0; i<mp->nStates; i++)
-                            bs[i] = mtmamPi[i];
-                        }
-                    else if (tempInt == AAMODEL_WAG)
-                        {
-                        for (i=0; i<mp->nStates; i++)
-                            bs[i] = wagPi[i];
-                        }
-                    else if (tempInt == AAMODEL_RTREV)
-                        {
-                        for (i=0; i<mp->nStates; i++)
-                            bs[i] = rtrevPi[i];
-                        }
-                    else if (tempInt == AAMODEL_CPREV)
-                        {
-                        for (i=0; i<mp->nStates; i++)
-                            bs[i] = cprevPi[i];
-                        }
-                    else if (tempInt == AAMODEL_VT)
-                        {
-                        for (i=0; i<mp->nStates; i++)
-                            bs[i] = vtPi[i];
-                        }
-                    else if (tempInt == AAMODEL_BLOSUM)
-                        {
-                        for (i=0; i<mp->nStates; i++)
-                            bs[i] = blosPi[i];
-                        }
+                    if (SetAamodelFrequencies (p, chn, 0) == ERROR)
+                        return (ERROR);
 
                     for (i=0; i<p->nSubValues; i++)
                         {
@@ -16665,6 +16620,42 @@ int ProcessStdChars (RandLong *seed)
     
     FillStdStateFreqs (0 , numGlobalChains, seed);
 
+    return (NO_ERROR);
+}
+
+
+int SetAamodelFrequencies (Param *param, int chain, int state)
+{
+    int    i, j, model;
+    MrBFlt value, *bs, *freqs=NULL;
+
+    value = *GetParamVals (param, chain, state);
+    if (!isfinite(value) || value < AAMODEL_POISSON || value > AAMODEL_LG || value != floor(value))
+        {
+        MrBayesPrint ("%s   ERROR: Invalid amino acid model index %.8g\n", spacer, value);
+        return (ERROR);
+        }
+    model = (int)value;
+    switch (model)
+        {
+        case AAMODEL_POISSON: break;
+        case AAMODEL_JONES:   freqs = jonesPi;   break;
+        case AAMODEL_DAY:     freqs = dayhoffPi; break;
+        case AAMODEL_MTREV:   freqs = mtrev24Pi; break;
+        case AAMODEL_MTMAM:   freqs = mtmamPi;   break;
+        case AAMODEL_WAG:     freqs = wagPi;     break;
+        case AAMODEL_RTREV:   freqs = rtrevPi;   break;
+        case AAMODEL_CPREV:   freqs = cprevPi;   break;
+        case AAMODEL_VT:      freqs = vtPi;      break;
+        case AAMODEL_BLOSUM:  freqs = blosPi;    break;
+        case AAMODEL_LG:      freqs = lgPi;      break;
+        }
+    for (i=0; i<param->nRelParts; i++)
+        {
+        bs = GetParamSubVals (modelSettings[param->relParts[i]].stateFreq, chain, state);
+        for (j=0; j<20; j++)
+            bs[j] = (model == AAMODEL_POISSON ? 1.0 / 20.0 : freqs[j]);
+        }
     return (NO_ERROR);
 }
 
