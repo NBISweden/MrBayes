@@ -16567,7 +16567,11 @@ int ProcessStdChars (RandLong *seed)
                             origCharPos = origChar[m->compCharStart + c];
                             for (ts=0; ts<m->nStates[c]; ts++)
                                 {
-                                sprintf (piHeader, "\tpi_%d(%d)", origCharPos+1, ts);
+                                /* no leading tab if alpha_symdir is not printed (fixed hyperprior) */
+                                if (p->paramHeader == NULL || p->paramHeader[0] == '\0')
+                                    sprintf (piHeader, "pi_%d(%d)", origCharPos+1, ts);
+                                else
+                                    sprintf (piHeader, "\tpi_%d(%d)", origCharPos+1, ts);
                                 SafeStrcat(&p->paramHeader, piHeader);
                                 }
                             index++;
