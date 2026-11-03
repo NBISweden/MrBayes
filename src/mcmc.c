@@ -9013,7 +9013,7 @@ int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR,
         if (mp->fossilSamplingNum > 0 && mp->fossilSamplingTime[i3] > t_sl[i] +BRLENS_MIN/2)
             i3++;
 
-        if (!strcmp(mp->extinctionPr, "Exponential") && !strcmp(mp->fossilizationPr, "Exponential"))
+        if (!strcmp(mp->extinctionPr, "Exponential") || !strcmp(mp->fossilizationPr, "Exponential"))
             { // direct lambda,mu,psi parameterization (this is just a hack for now)
             lambda[i] = sR[i1];
             mu[i]     = eR[i2];
