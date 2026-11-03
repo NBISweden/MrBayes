@@ -177,7 +177,7 @@ int AddDummyChars (void)
 {
     int         i, j, k, d, numIncompatible, numDeleted, oldRowSize,
                 newRowSize, numDummyChars, newColumn, newChar, oldColumn, oldChar, 
-                isCompat, *tempChar, numIncompatibleChars;
+                isCompat, *tempChar, numIncompatibleChars, *newCharPos, *newColPos;
     BitsLong    *tempMatrix, bitsLongOne=1;
     CLFlt       *tempSitesOfPat;
     ModelInfo   *m;
@@ -189,6 +189,8 @@ int AddDummyChars (void)
     tempMatrix = NULL;
     tempSitesOfPat = NULL;
     tempChar = NULL;
+    newCharPos = NULL;
+    newColPos = NULL;
 
     /* check how many dummy characters needed in total */
     numDummyChars = 0;  // numStdChars = 0;
@@ -244,11 +246,16 @@ int AddDummyChars (void)
     tempMatrix = (BitsLong *) SafeCalloc (numLocalTaxa * newRowSize, sizeof(BitsLong));
     tempSitesOfPat = (CLFlt *) SafeCalloc (numCompressedChars, sizeof(CLFlt));
     tempChar = (int *) SafeCalloc (compMatrixRowSize, sizeof(int));
-    if (!tempMatrix || !tempSitesOfPat || !tempChar)
+    /* old to new compressed char and column positions; -1 if dropped */
+    newCharPos = (int *) SafeMalloc (oldRowSize * sizeof(int));
+    newColPos = (int *) SafeMalloc (oldRowSize * sizeof(int));
+    if (!tempMatrix || !tempSitesOfPat || !tempChar || !newCharPos || !newColPos)
         {
         MrBayesPrint ("%s   Problem allocating temporary variables in AddDummyChars\n", spacer);
         goto errorExit;
         }
+    for (i=0; i<oldRowSize; i++)
+        newCharPos[i] = newColPos[i] = -1;
 
     /* initialize indices */
     oldChar = newChar = newColumn = numDeleted = 0;
@@ -321,8 +328,8 @@ int AddDummyChars (void)
                 matrix.column = oldColumn;
                 /* set up charinfo struct */
                 cinfo.dType = mp->dataType;
-                cinfo.cType = charInfo[origChar[oldChar]].ctype;
-                cinfo.nStates = charInfo[origChar[oldChar]].numStates;
+                cinfo.cType = charInfo[origChar[oldColumn]].ctype;
+                cinfo.nStates = charInfo[origChar[oldColumn]].numStates;
                 CheckCharCodingType(&matrix, &cinfo);
 
                 if (mp->coding & VARIABLE)
@@ -369,8 +376,8 @@ int AddDummyChars (void)
                 for (i=0; i<numLocalTaxa; i++)
                     tempMatrix[pos(i,newColumn,newRowSize)] = compMatrix[pos(i,oldColumn,oldRowSize)];
                 /* set indices */
-                compCharPos[origChar[oldColumn]] = newChar;
-                compColPos[origChar[oldColumn]] = newColumn;
+                newCharPos[oldChar] = newChar;
+                newColPos[oldColumn] = newColumn;
                 tempSitesOfPat[newChar] = numSitesOfPat[oldChar];
                 tempChar[newColumn] = origChar[oldColumn];
                 newColumn++;
@@ -407,6 +414,18 @@ int AddDummyChars (void)
         m->compMatrixStart = newColumn - m->nCharsPerSite * m->numChars;
 
         }   /* next division */
+
+    /* update all original chars, including those sharing a pattern; dropped chars get -1 */
+    for (i=0; i<numChar; i++)
+        {
+        if (charInfo[i].isExcluded == YES)
+            continue;
+        compCharPos[i] = newCharPos[compCharPos[i]];
+        compColPos[i] = newColPos[compColPos[i]];
+        }
+    free (newCharPos);
+    free (newColPos);
+    newCharPos = newColPos = NULL;
 
     /* compress matrix if necessary */
     if (numDeleted > 0)
@@ -450,6 +469,10 @@ int AddDummyChars (void)
             free (tempSitesOfPat);
         if (tempChar)
             free (tempChar);
+        if (newCharPos)
+            free (newCharPos);
+        if (newColPos)
+            free (newColPos);
 
         return ERROR;   
 }

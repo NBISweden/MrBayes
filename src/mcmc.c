@@ -10889,7 +10889,7 @@ int PrintAncStates_Bin (TreeNode *p, int division, int chain)
     /* print the resulting conditional likelihoods cycling over uncompressed chars */
     for (c=0; c<numChar; c++)
         {
-        if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != division+1)
+        if (charInfo[c].isExcluded == YES || compCharPos[c] < 0 || partitionId[c][partitionNum] != division+1)
             continue;
         i = compCharPos[c] - m->compCharStart;
         cL = m->ancStateCondLikes + (i*2);
@@ -11365,7 +11365,7 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
     /* print the resulting conditional likelihoods cycling over uncompressed chars */
     for (c=0; c<numChar; c++)
         {
-        if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != division+1)
+        if (charInfo[c].isExcluded == YES || compCharPos[c] < 0 || partitionId[c][partitionNum] != division+1)
             continue;
         
         k = compCharPos[c] - m->compCharStart;
@@ -12523,12 +12523,12 @@ int PrintParsMatrix (void)
 -------------------------------------------------------------------*/
 int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
 {
-    int             c, j, k, nStates, hasPInvar;
+    int             c, j, k, nStates, hasPInvar, maxSiteId;
     MrBFlt          freq, siteLike, invLike, catLike, pInvar=0.0, *bs,
                     *catRate, baseRate;
     MrBFlt          s01, s10, probOn, probOff, *swr, covBF[40];
     CLFlt           *lnScaler, *clP, *siteRates, *clInvar=NULL;
-    char            *tempStr;
+    char            *tempStr, *printedSite=NULL;
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
     
@@ -12541,6 +12541,20 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
 
     /* find model settings and nStates, pInvar, invar cond likes */
     m = &modelSettings[division];
+    if (m->nCharsPerSite > 1)
+        {
+        /* original sites have distinct IDs even when they share a compressed pattern */
+        maxSiteId = 0;
+        for (c=0; c<numChar; c++)
+            if (partitionId[c][partitionNum] == division+1 && charInfo[c].charId > maxSiteId)
+                maxSiteId = charInfo[c].charId;
+        printedSite = (char *) SafeCalloc ((size_t)maxSiteId + 1, sizeof(char));
+        if (!printedSite)
+            {
+            MrBayesPrint ("%s   Problem allocating printedSite in PrintSiteRates_Gen\n", spacer);
+            goto errorExit;
+            }
+        }
     nStates = m->numModelStates;
     if (m->pInvar == NULL)
         {
@@ -12651,15 +12665,24 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
     /* print the resulting site rates cycling over uncompressed chars */
     for (c=0; c<numChar; c++)
         {
-        if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != division+1)
+        if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != division+1 ||
+            compCharPos[c] < 0 || (printedSite && printedSite[charInfo[c].charId] == YES))
             continue;
         j = compCharPos[c] - m->compCharStart;
         SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(siteRates[j]));
-        if (AddToPrintString (tempStr) == ERROR) return (ERROR);
+        if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+        if (printedSite)
+            printedSite[charInfo[c].charId] = YES;
         }
 
+    free (printedSite);
     free (tempStr);
     return NO_ERROR;
+
+    errorExit:
+        free (printedSite);
+        free (tempStr);
+        return ERROR;
 }
 
 
@@ -12743,7 +12766,7 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
     /* print the resulting site rates cycling over uncompressed chars */
     for (c=0; c<numChar; c++)
         {
-        if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != division+1)
+        if (charInfo[c].isExcluded == YES || compCharPos[c] < 0 || partitionId[c][partitionNum] != division+1)
             continue;
         j = compCharPos[c] - m->compCharStart;
         SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(siteRates[j]));
@@ -12953,17 +12976,16 @@ int PrintStates (long long curGen, int coldId)
             for (i=0; i<numChar; i++)
                 printedChar[i] = NO;
     
-            for (i=0; i<numChar; i++)
-                { 
-                if (charInfo[i].isExcluded == YES)
-                    continue;
-                if (printedChar[i] == YES)
-                    continue;
-                d = partitionId[i][partitionNum] - 1;
+            for (d=0; d<numCurrentDivisions; d++)
+                {
                 m = &modelSettings[d];
-
-                if (m->printSiteRates == YES)
+                if (m->printSiteRates != YES)
+                    continue;
+                for (i=0; i<numChar; i++)
                     {
+                    if (partitionId[i][partitionNum] != d+1 || charInfo[i].isExcluded == YES ||
+                        compCharPos[i] < 0 || printedChar[i] == YES)
+                        continue;
                     if (m->nCharsPerSite == 1)
                         {
                         SafeSprintf (&tempStr, &tempStrSize, "\tr(%d)", i+1);
@@ -12971,20 +12993,26 @@ int PrintStates (long long curGen, int coldId)
                         }
                     else
                         {
-                        origAlignmentChars[0] = i;
+                        origAlignmentChars[0] = i+1;
                         k = 1;
                         for (j=i+1; j<numChar; j++)
                             {
-                            if (compCharPos[i] == compCharPos[j])
+                            if (charInfo[i].charId == charInfo[j].charId)
                                 {
-                                if (k > m->nCharsPerSite)
-                                    return (ERROR);
-                                origAlignmentChars[k++] = j;
+                                if (k >= m->nCharsPerSite)
+                                    {
+                                    MrBayesPrint ("%s   Too many columns for site rate at character %d\n", spacer, i+1);
+                                    goto errorExit;
+                                    }
+                                origAlignmentChars[k++] = j+1;
                                 printedChar[j] = YES;
                                 }
                             }
                         if (k != m->nCharsPerSite)
-                            return (ERROR);
+                            {
+                            MrBayesPrint ("%s   Too few columns for site rate at character %d\n", spacer, i+1);
+                            goto errorExit;
+                            }
                         SafeSprintf (&tempStr, &tempStrSize, "\tr(%d,", origAlignmentChars[0]);
                         if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                         for (j=1; j<k-1; j++)
@@ -13018,6 +13046,8 @@ int PrintStates (long long curGen, int coldId)
             for (i=0; i<numChar; i++)
                 {
                 compressedCharPosition = compCharPos[i];
+                if (compressedCharPosition < 0)
+                    continue;
                 if (!(posSelProbs[compressedCharPosition] < 0.0) && printedChar[i] == NO && charInfo[i].isExcluded == NO)
                     {
                     for (j=k=0; j<numChar; j++)
@@ -13055,6 +13085,8 @@ int PrintStates (long long curGen, int coldId)
             for (i=0; i<numChar; i++)
                 {
                 compressedCharPosition = compCharPos[i];
+                if (compressedCharPosition < 0)
+                    continue;
                 if (posSelProbs[compressedCharPosition] >= 0.0 && printedChar[i] == NO && charInfo[i].isExcluded == NO)
                     {
                     for (j=k=0; j<numChar; j++)
@@ -13089,7 +13121,7 @@ int PrintStates (long long curGen, int coldId)
                         continue;
                     for (j=0; j<numChar; j++)
                         {
-                        if (partitionId[j][partitionNum] - 1 != d || charInfo[j].isExcluded == YES || printedChar[j] == YES)
+                        if (partitionId[j][partitionNum] - 1 != d || charInfo[j].isExcluded == YES || compCharPos[j] < 0 || printedChar[j] == YES)
                             continue;
                         if (mp->dataType == CONTINUOUS)
                             {
@@ -13416,7 +13448,8 @@ int PrintStates (long long curGen, int coldId)
                 {
                 tree = GetTree (m->brlens, coldId, state[coldId]);
                 node = tree->root->left;
-                m->PrintSiteRates (node, d, coldId);
+                if (m->PrintSiteRates (node, d, coldId) == ERROR)
+                    goto errorExit;
                 }
             }
         }
@@ -13446,6 +13479,8 @@ int PrintStates (long long curGen, int coldId)
         for (i=0; i<numChar; i++)
             {
             compressedCharPosition = compCharPos[i];
+            if (compressedCharPosition < 0)
+                continue;
             if (!(posSelProbs[compressedCharPosition] < 0.0) && printedChar[i] == NO && charInfo[i].isExcluded == NO)
                 {
                 for (j=k=0; j<numChar; j++)
@@ -13488,6 +13523,8 @@ int PrintStates (long long curGen, int coldId)
         for (i=0; i<numChar; i++)
             {
             compressedCharPosition = compCharPos[i];
+            if (compressedCharPosition < 0)
+                continue;
             if (posSelProbs[compressedCharPosition] >= 0.0 && printedChar[i] == NO && charInfo[i].isExcluded == NO)
                 {
                 for (j=k=0; j<numChar; j++)
