@@ -12670,9 +12670,9 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
 -------------------------------------------------------------------*/
 int PrintSiteRates_Std (TreeNode *p, int division, int chain)
 {
-    int             c, j, k, nStates;
-    MrBFlt          siteLike, catLike, *bs, *catRate, baseRate;
-    CLFlt           *clP, *siteRates;
+    int             b, c, j, k, nBetaCats, nStates, numReps;
+    MrBFlt          siteLike, siteRate, catLike, *bs, *bsBase, *catRate, baseRate;
+    CLFlt           *clPtr, **clP, *siteRates;
     char            *tempStr;
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
@@ -12687,14 +12687,28 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
     /* find model settings */
     m = &modelSettings[division];
 
-    /* find conditional likelihood pointer */
-    clP = m->condLikes[m->condLikeIndex[chain][p->index]];
+    /* conditional likelihoods are stored in one block per rate category (see CondLikeDown_Std) */
+    numReps = 0;
+    for (c=0; c<m->numChars; c++)
+        {
+        if (m->nStates[c] == 2)
+            numReps += m->numBetaCats * 2;
+        else
+            numReps += m->nStates[c];
+        }
+    clPtr = m->condLikes[m->condLikeIndex[chain][p->index]];
+    clP   = m->clP;
+    for (k=0; k<m->numRateCats; k++)
+        {
+        clP[k] = clPtr;
+        clPtr += numReps;
+        }
     
     /* use scratch space for root node for temporary calculations */
     siteRates = m->condLikes[m->condLikeScratchIndex[p->index]];
     
     /* find base frequencies */
-    bs = GetParamStdStateFreqs (m->stateFreq, chain, state[chain]);
+    bsBase = GetParamStdStateFreqs (m->stateFreq, chain, state[chain]);
 
     /* get rate multiplier */
     baseRate = GetRate (division, chain);
@@ -12705,19 +12719,25 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
     /* loop over characters */
     for (c=0; c<m->numChars; c++)
         {
-        siteLike = 0.0;
-        siteRates[c] = 0.0;
+        siteLike = siteRate = 0.0;
         nStates = m->nStates[c];
-        for (k=0; k<m->numRateCats; k++)
+        nBetaCats = (nStates == 2) ? m->numBetaCats : 1;
+        bs = bsBase + m->bsIndex[c];
+        for (b=0; b<nBetaCats; b++)
             {
-            catLike = 0.0;
-            for (j=0; j<nStates; j++)
-                catLike += (*(clP++)) * bs[j];
-            siteRates[c] += (CLFlt) (catLike * catRate[k]);
-            siteLike += catLike;
+            for (k=0; k<m->numRateCats; k++)
+                {
+                catLike = 0.0;
+                for (j=0; j<nStates; j++)
+                    catLike += clP[k][j] * bs[j];
+                siteRate += catLike * catRate[k];
+                siteLike += catLike;
+                clP[k] += nStates;
+                }
+            bs += nStates;
             }
         /* category frequencies and site scaler cancel out */
-        siteRates[c] *= (CLFlt) (baseRate / siteLike);
+        siteRates[c] = (CLFlt) (baseRate * siteRate / siteLike);
         }
         
     /* print the resulting site rates cycling over uncompressed chars */
