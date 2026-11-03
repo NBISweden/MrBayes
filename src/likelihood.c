@@ -5108,7 +5108,10 @@ int CondLikeUp_Gen (TreeNode *p, int division, int chain)
                     sum = 0.0;
                     for (i=0; i<nStates; i++)
                         sum += tiP[j++]*clDP[i];
-                    if (sum != 0.0) condLikeUp[a] = clFA[a] / sum;
+                    if (sum == 0.0)
+                        condLikeUp[a] = 0.0;    /* the downpass conditional likelihood can underflow to zero */
+                    else
+                        condLikeUp[a] = clFA[a] / sum;
                     }
                     
                 for (a=j=0; a<nStates; a++)
