@@ -9170,7 +9170,7 @@ int GetTotalRateShifts (Model *mp, MrBFlt *shiftTimes)
         for (j = 0; j < sLen; j++)
             if (fabs(mp->birthRateShiftTime[i] - shiftTimes[j]) <= BRLENS_MIN/2)
                 break;
-        if (fabs(mp->birthRateShiftTime[i] - shiftTimes[j]) > BRLENS_MIN/2)
+        if (j == sLen)
             shiftTimes[sTotal++] = mp->birthRateShiftTime[i];
         }
     sLen = sTotal;
@@ -9179,7 +9179,7 @@ int GetTotalRateShifts (Model *mp, MrBFlt *shiftTimes)
         for (j = 0; j < sLen; j++)
             if (fabs(mp->deathRateShiftTime[i] - shiftTimes[j]) <= BRLENS_MIN/2)
                 break;
-        if (fabs(mp->deathRateShiftTime[i] - shiftTimes[j]) > BRLENS_MIN/2)
+        if (j == sLen)
             shiftTimes[sTotal++] = mp->deathRateShiftTime[i];
         }
     
