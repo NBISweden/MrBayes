@@ -12527,10 +12527,11 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
     MrBFlt          freq, siteLike, invLike, catLike, pInvar=0.0, *bs,
                     *catRate, baseRate;
     MrBFlt          s01, s10, probOn, probOff, *swr, covBF[40];
-    CLFlt           *lnScaler, *clP, *siteRates, *clInvar=NULL;
+    CLFlt           *lnScaler, *clPtr, **clP, *siteRates, *clInvar=NULL;
     char            *tempStr, *printedSite=NULL;
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
+    ModelParams     *mp;
     
     tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
@@ -12541,6 +12542,7 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
 
     /* find model settings and nStates, pInvar, invar cond likes */
     m = &modelSettings[division];
+    mp = &modelParams[division];
     if (m->nCharsPerSite > 1)
         {
         /* original sites have distinct IDs even when they share a compressed pattern */
@@ -12567,8 +12569,14 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
         clInvar = m->invCondLikes;
         }
 
-    /* find conditional likelihood pointer */
-    clP = m->condLikes[m->condLikeIndex[chain][p->index]];
+    /* conditional likelihoods are stored in one block per rate category (see Likelihood_Gen) */
+    clPtr = m->condLikes[m->condLikeIndex[chain][p->index]];
+    clP = m->clP;
+    for (k=0; k<m->numRateCats; k++)
+        {
+        clP[k] = clPtr;
+        clPtr += m->numChars * nStates;
+        }
     
     /* use scratch space for root node for temporary calculations */
     siteRates = m->condLikes[m->condLikeScratchIndex[p->index]];
@@ -12576,8 +12584,15 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
     /* find site scaler */
     lnScaler = m->scalers[m->siteScalerIndex[chain]];
     
-    /* find base frequencies */
+    /* find base frequencies; restriction data use root frequencies under directional models (see Likelihood_Res) */
     bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
+    if (m->dataType == RESTRICTION)
+        {
+        if (!strcmp(mp->statefreqModel,"Directional"))
+            bs += m->numModelStates;
+        else if (!strcmp(mp->statefreqModel,"Mixed") && bs[m->numModelStates] != NOT_APPLICABLE)
+            bs += m->numModelStates;
+        }
 
     /* if covarion model, adjust base frequencies */
     if (m->switchRates != NULL)
@@ -12613,8 +12628,11 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
     if (hasPInvar == YES)
         baseRate /= (1.0 - pInvar);
         
-    /* get category rates */
-    catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    /* get category rates from the shape or mixture parameter */
+    if (m->shape != NULL)
+        catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    else
+        catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
 
     /* loop over characters */
     if (hasPInvar == NO)
@@ -12628,7 +12646,7 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
                 {
                 catLike = 0.0;
                 for (j=0; j<nStates; j++)
-                    catLike += (*(clP++)) * bs[j];
+                    catLike += (*(clP[k]++)) * bs[j];
                 siteRates[c] += (CLFlt) (catLike * catRate[k]);
                 siteLike += catLike;
                 }
@@ -12647,7 +12665,7 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
                 {
                 catLike = 0.0;
                 for (j=0; j<nStates; j++)
-                    catLike += (*(clP++)) * bs[j];
+                    catLike += (*(clP[k]++)) * bs[j];
                 siteRates[c] += (CLFlt) (catLike * catRate[k]);
                 siteLike += catLike;
                 }
@@ -12736,8 +12754,11 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
     /* get rate multiplier */
     baseRate = GetRate (division, chain);
     
-    /* get category rates */
-    catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    /* get category rates from the shape or mixture parameter */
+    if (m->shape != NULL)
+        catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    else
+        catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
 
     /* loop over characters */
     for (c=0; c<m->numChars; c++)

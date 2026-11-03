@@ -1399,11 +1399,13 @@ int TreeTiProbs_Beagle (Tree *t, int division, int chain)
     if (m->pInvar != NULL)
         baseRate /= (1.0 - (*GetParamVals(m->pInvar, chain, state[chain])));
         
-    /* get category rates for gamma */
-    if (m->shape == NULL)
-        catRate = &theRate;
-    else
+    /* get category rates for gamma or rate mixture */
+    if (m->shape != NULL)
         catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    else if (m->mixtureRates != NULL)
+        catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
+    else
+        catRate = &theRate;
     
     /* get effective category rates */
     for (k=0; k<m->numRateCats; k++)
@@ -2049,11 +2051,13 @@ int TreeTiProbs_BeagleMultiPartition (int* divisions, int divisionCount, int cha
         if (m->pInvar != NULL)
             baseRate /= (1.0 - (*GetParamVals(m->pInvar, chain, state[chain])));
             
-        /* get category rates for gamma */
-        if (m->shape == NULL)
-            catRate = &theRate;
-        else
+        /* get category rates for gamma or rate mixture */
+        if (m->shape != NULL)
             catRate = GetParamSubVals (m->shape, chain, state[chain]);
+        else if (m->mixtureRates != NULL)
+            catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
+        else
+            catRate = &theRate;
         
         /* get effective category rates */
         for (k=0; k<m->numRateCats; k++)
