@@ -67,6 +67,7 @@ void    PrintNode (char **s, int *len, TreeNode *p, int isRooted);
 void    ResetPolyNode (PolyNode *p);
 void    ResetTreeNode (TreeNode *p);
 void    SetNodeDepths (Tree *t);
+void    SetUserTreeAges (Tree *t, MrBFlt clockRate);
 
 void    AddTwoMatrices (int dim, MrBFlt **a, MrBFlt **b, MrBFlt **result);
 void    BackSubstitutionRow (int dim, MrBFlt **u, MrBFlt *b);
@@ -3667,37 +3668,22 @@ void UpdateTreeWithClockrate (Tree *t, MrBFlt clockRate)
     int i;
     TreeNode *p;
 
-    if (t->fromUserTree == NO)
+    if (t->fromUserTree == YES)
         {
-        /*Set nodeDepth*/
-        for (i=0; i<t->nNodes; i++)
-            {
-            p = t->allDownPass[i];
-            p->nodeDepth = p->age * clockRate;
-            }
-
-        /* calculate branch lengths */
-        for (i=0; i<t->nNodes; i++)
-            {
-            p = t->allDownPass[i];
-            if (p->anc != NULL)
-                {
-                if (p->anc->anc != NULL)
-                    {
-                    p->length = p->anc->nodeDepth - p->nodeDepth;
-                    }
-                else
-                    p->length = 0.0; //not a problem for root node. 
-                }
-            }
+        SetUserTreeAges (t, clockRate);
+        return;
         }
-    else
+
+    for (i=0; i<t->nNodes; i++)
         {
-        for (i=0; i<t->nNodes-1; i++)
-            {
-            p = t->allDownPass[i];
-            p->age = p->nodeDepth / clockRate;
-            }
+        p = t->allDownPass[i];
+        p->nodeDepth = p->age * clockRate;
+        }
+
+    for (i=0; i<t->nNodes-1; i++)
+        {
+        p = t->allDownPass[i];
+        p->length = (p->anc->anc == NULL ? 0.0 : p->anc->nodeDepth - p->nodeDepth);
         }
 }
 
@@ -4494,15 +4480,14 @@ int GetRandomEmbeddedSubtree (Tree *t, int nTerminals, RandLong *seed, int *nEmb
         
 /*-----------------------------------------------------------------------------
 |
-| IsCalibratedClockSatisfied: This routine SETS (not just checks as name suggested) calibrated clock tree nodes age, depth. based on branch lengths
-|     and checks that user defined brlens satisfy the specified calibration(s) up to tolerance tol
-| TODO: clock rate is divided here and used to set ages but clockrate parameter is not updated here (make sure that it does not produce inconsistency)
+|   IsCalibratedClockSatisfied: Find the clock-rate interval allowed by user
+|      branch lengths and calibrations, without changing node ages or depths.
 |
 |------------------------------------------------------------------------------*/
-int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRate , MrBFlt tol)
+int IsCalibratedClockSatisfied (Tree *t, MrBFlt *minClockRate, MrBFlt *maxClockRate, MrBFlt tol)
 {
     int             i, j, maxRateConstrained, minRateConstrained, isViolated;
-    MrBFlt          f, maxHeight, minRate=0, maxRate=0, ageToAdd, *x, *y, clockRate;
+    MrBFlt          f, maxHeight, minRate=0, maxRate=0, *x, *y, *depth;
     TreeNode        *p, *q, *r, *s;
 
     /* By default assume the tree does not have allowed range of clockrate */
@@ -4512,7 +4497,7 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
     if (t->isRooted == NO)
         return (NO);
         
-    x = (MrBFlt *) SafeCalloc (2*t->nNodes, sizeof (MrBFlt));
+    x = (MrBFlt *) SafeCalloc (3*t->nNodes, sizeof (MrBFlt));
     if (x == NULL)
         {
         MrBayesPrint ("%s   Out of memory in IsCalibratedClockSatisfied\n", spacer);
@@ -4520,13 +4505,12 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
         return (NO);
         }
     y = x + t->nNodes;
+    depth = y + t->nNodes;
 
-    /* reset node depth and age, and set minimum (x) and maximum (y) age of each node */
+    /* minimum (x) and maximum (y) age of each node */
     for (i=0; i<t->nNodes; i++)
         {
         p = t->allDownPass[i];
-        p->age = -1.0;
-        p->nodeDepth = -1.0;
         if (p->isDated == YES)
             {
             assert (p->calibration->prior != unconstrained);
@@ -4542,13 +4526,12 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
         }
 
     /* calculate node heights in branch length units */
-    /* node depth will be set from the root for now  */
     p = t->root->left;
-    p->nodeDepth = 0.0;
+    depth[p->index] = 0.0;
     for (i=t->nNodes-3; i>=0; i--)
         {
         p = t->allDownPass[i];
-        p->nodeDepth = p->anc->nodeDepth + p->length;
+        depth[p->index] = depth[p->anc->index] + p->length;
         }
 
     /* find maximum height of tree */   
@@ -4558,9 +4541,9 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
         p = t->allDownPass[i];
         if (p->left == NULL && p->right == NULL)
             {
-            if (p->nodeDepth > maxHeight)
+            if (depth[p->index] > maxHeight)
                 {
-                maxHeight = p->nodeDepth;
+                maxHeight = depth[p->index];
                 }
             }
         }
@@ -4569,7 +4552,7 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
     for (i=0; i<t->nNodes-1; i++)
         {
         p = t->allDownPass[i];
-        p->nodeDepth = maxHeight - p->nodeDepth;
+        depth[p->index] = maxHeight - depth[p->index];
         }
 
     /* check potentially constraining calibrations */
@@ -4587,7 +4570,7 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
             q = t->allDownPass[j];
             if (x[q->index] < 0.0 && y[q->index] < 0.0)
                 continue;
-            if (p->nodeDepth == q->nodeDepth) // because clock rate could be as low as possible we can not take approximate equality. 
+            if (depth[p->index] == depth[q->index]) // because clock rate could be as low as possible we can not take approximate equality.
                 {
                 /* same depth so they must share a possible age */
                 if ((x[p->index] != -1.0 && y[q->index] != -1.0 && AreDoublesEqual (x[p->index], y[q->index], tol) == NO && x[p->index] > y[q->index]) ||
@@ -4599,7 +4582,7 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
                 }
             else
                 {
-                if (p->nodeDepth > q->nodeDepth)
+                if (depth[p->index] > depth[q->index])
                     {
                     r = p;
                     s = q;
@@ -4611,10 +4594,10 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
                     }
                 if (x[r->index] >= 0.0 && y[s->index] >= 0.0)
                     {
-                    f = (r->nodeDepth - s->nodeDepth) / (x[r->index] - y[s->index]);
+                    f = (depth[r->index] - depth[s->index]) / (x[r->index] - y[s->index]);
                     if (f <= 0.0 || x[r->index] == y[s->index])
                         {
-                        if (AreDoublesEqual (r->nodeDepth, s->nodeDepth, tol*0.1) == YES)
+                        if (AreDoublesEqual (depth[r->index], depth[s->index], tol*0.1) == YES)
                             continue;
                         if ((r->calibration != NULL && r->calibration->prior != fixed) ||
                             (s->calibration != NULL && s->calibration->prior != fixed))
@@ -4632,10 +4615,10 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
                     }
                 if (y[r->index] >= 0.0 && x[s->index] >= 0.0)
                     {
-                    f = (r->nodeDepth - s->nodeDepth) / (y[r->index] - x[s->index]);
+                    f = (depth[r->index] - depth[s->index]) / (y[r->index] - x[s->index]);
                     if (f <= 0.0 || y[r->index] == x[s->index])
                         {
-                        if (AreDoublesEqual (r->nodeDepth, s->nodeDepth, tol*0.1) == YES)
+                        if (AreDoublesEqual (depth[r->index], depth[s->index], tol*0.1) == YES)
                             continue;
                         isViolated = YES;
                         break;
@@ -4686,46 +4669,7 @@ int IsCalibratedClockSatisfied (Tree *t,MrBFlt *minClockRate,MrBFlt *maxClockRat
         return (NO);
         }
 
-    /* date all nodes based on a suitable rate */
-    if (minRateConstrained == YES)
-        clockRate = minRate;
-    else if (maxRateConstrained == YES)
-        clockRate = 0.5 * maxRate;
-    else
-        clockRate = 1.0;
-    for (i=0; i<t->nNodes-1; i++)
-        {
-        p = t->allDownPass[i];
-        p->age = p->nodeDepth / clockRate;
-        }
-
-    /* check if there is an age to add (I guess this is here because when max rate is close to minrate and we have numerical precision inaccuracy) */
-    ageToAdd = 0.0;
-    for (i=0; i<t->nNodes-1; i++)
-        {
-        p = t->allDownPass[i];
-        if (x[p->index] > 0.0 && x[p->index] > p->age)
-            {
-            f = x[p->index] - p->age;
-            if (f > ageToAdd)
-                ageToAdd = f;
-            }
-        }
-    
-    /* add extra length if any */
-    if (AreDoublesEqual (ageToAdd, 0.0, 0.00000001) == NO)
-        {
-        for (i=0; i<t->nNodes-1; i++)
-            {
-            p = t->allDownPass[i];
-            p->age += ageToAdd;
-            }
-        }
-
     free (x);
-
-    /* reset node depths to ensure that non-dated tips have node depth 0.0 */
-    SetNodeDepths(t);
 
     return (YES);
 }
@@ -7320,6 +7264,100 @@ void SetNodeDepths (Tree *t)
 }
 
 
+/*-----------------------------------------------------------------------------
+|
+|   RestoreNodeDepths: Set node depths of a rooted tree from its branch lengths
+|      and tip calibrations, keeping the given root depth if all tips are dated
+|      (e.g. a fossil-only tree that does not reach the present). Tips that are
+|      not dated stay exactly at depth 0. Tip calibrations must be set.
+|
+|------------------------------------------------------------------------------*/
+void RestoreNodeDepths (Tree *t, MrBFlt rootDepth)
+{
+    int         i;
+    MrBFlt      offset;
+    TreeNode    *p;
+
+    SetNodeDepths (t);
+
+    for (i=0; i<t->nNodes-1; i++)
+        {
+        p = t->allDownPass[i];
+        if (p->left == NULL && p->calibration == NULL)
+            return;
+        }
+
+    offset = rootDepth - t->root->left->nodeDepth;
+    for (i=0; i<t->nNodes-1; i++)
+        t->allDownPass[i]->nodeDepth += offset;
+}
+
+
+/*-----------------------------------------------------------------------------
+|
+|   SetUserTreeAges: Set node depths and ages of a calibrated clock tree whose
+|      branch lengths come from a user tree, using the given clock rate. If no
+|      tip is constrained to the present, the tree is moved back in time by the
+|      smallest amount needed to satisfy the minimum calibration ages (e.g. when
+|      all tips are fossils) and, if possible, the minimum tree age.
+|
+|------------------------------------------------------------------------------*/
+void SetUserTreeAges (Tree *t, MrBFlt clockRate)
+{
+    int             i;
+    MrBFlt          age, minOffset, maxOffset, offset, rootOffset;
+    TreeNode        *p;
+    ModelParams     *mp;
+
+    mp = &modelParams[t->relParts[0]];
+
+    SetNodeDepths (t);
+
+    minOffset = rootOffset = 0.0;
+    maxOffset = POS_INFINITY;
+    for (i=0; i<t->nNodes-1; i++)
+        {
+        p = t->allDownPass[i];
+        age = p->nodeDepth / clockRate;
+        if (p->isDated == YES)
+            {
+            if (p->calibration->min - age > minOffset)
+                minOffset = p->calibration->min - age;
+            if (p->calibration->max - age < maxOffset)
+                maxOffset = p->calibration->max - age;
+            }
+        else if (p->left == NULL && p->right == NULL)
+            {
+            if (-age < maxOffset)
+                maxOffset = -age;
+            }
+        else if (p->anc->anc == NULL && (!strcmp(mp->clockPr, "Uniform") ||
+                                         !strcmp(mp->clockPr, "Birthdeath") ||
+                                         !strcmp(mp->clockPr, "Fossilization")))
+            rootOffset = mp->treeAgePr.min - age;
+        }
+
+    /* the offset interval can only be empty because of rounding */
+    offset = minOffset;
+    if (offset > maxOffset)
+        offset = (maxOffset > 0.0 ? maxOffset : 0.0);
+    if (rootOffset > offset && rootOffset + 1E-9 * mp->treeAgePr.min <= maxOffset)
+        {
+        /* stay slightly above the minimum tree age to avoid rounding below it */
+        offset = rootOffset + 1E-9 * mp->treeAgePr.min;
+        }
+    if (AreDoublesEqual (offset, 0.0, 0.00000001) == YES)
+        offset = 0.0;
+
+    for (i=0; i<t->nNodes-1; i++)
+        {
+        p = t->allDownPass[i];
+        p->nodeDepth += offset * clockRate;
+        p->age = p->nodeDepth / clockRate;
+        }
+}
+
+
 /* Set ages of a clock tree according to depth and clockrate. Check that resulting ages are consistent with calibration.
 |  return YES if tree is age consistent, No otherwise.
 */
@@ -7973,20 +8011,23 @@ int StoreRTree (Tree *t, int *order, MrBFlt *brlens)
 |   StoreRTreeWithIndices: This routine will break a rooted
 |      tree into an array of ints describing the structure
 |      of the tree and the interior node indices, and an array
-|      of doubles storing the branch lengths. The tree will be
-|      destroyed in the process (the node pointers,
+|      of doubles storing the branch lengths (indexed by node
+|      index; the root slot stores the root node depth).
+|      The tree will be destroyed in the process (the node pointers,
 |      that is). However, the tree is not deleted.
 |
 --------------------------------------------------------*/
 int StoreRTreeWithIndices (Tree *t, int *order, MrBFlt *brlens)
 {
     int         i, j, k, numTaxa;
+    MrBFlt      rootNodeDepth;
     TreeNode    *p, *q;
 
     extern void ShowNodes (TreeNode *p, int indent, int isRooted);
 
     /* find number of taxa */
     numTaxa = t->nNodes - t->nIntNodes - 1;
+    rootNodeDepth = t->root->left->nodeDepth;
 
     /* first get the terminal taxon positions and store
        them in the order array. */
@@ -8063,6 +8104,7 @@ int StoreRTreeWithIndices (Tree *t, int *order, MrBFlt *brlens)
     order[k] = p->index;
     brlens[p->left->index] = p->left->length;
     brlens[p->right->index] = p->right->length;
+    brlens[t->nNodes - 1] = rootNodeDepth;
 
     return (NO_ERROR);
 }

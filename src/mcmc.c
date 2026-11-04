@@ -171,7 +171,7 @@ MrBFlt    LnP0Subsample (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt f);
 MrBFlt    LnP1 (MrBFlt t, MrBFlt l, MrBFlt m);
 MrBFlt    LnP1Subsample (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt f);
 MrBFlt    LnP0_fossil (MrBFlt t, MrBFlt lambda, MrBFlt mu, MrBFlt psi, MrBFlt c1, MrBFlt c2);
-MrBFlt    LnP1_fossil (MrBFlt t, MrBFlt rho, MrBFlt c1, MrBFlt c2);
+MrBFlt    LnP1_fossil (MrBFlt t, MrBFlt c1, MrBFlt c2);
 MrBFlt    LnQi_fossil (MrBFlt t, MrBFlt *t_f, int sl, MrBFlt *c1, MrBFlt *c2);
 MrBFlt    LnPi_fossil (MrBFlt t, MrBFlt *t_f, int sl, MrBFlt *c1, MrBFlt *c2, MrBFlt *lambda, MrBFlt *mu, MrBFlt *psi);
 int       NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain);
@@ -8237,6 +8237,7 @@ MrBFlt LogPrior (int chain)
                     if (LnFossilizationPriorPr (t, clockRate, &x, sR, eR, fR, sF, sS) == ERROR)
                         {
                         MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
+                        return NEG_INFINITY;
                         }
                     lnPrior += x;   /* Note that x is assigned an appropriate value in the call to LnFossilizationPriorPr above */
                     }
@@ -8915,8 +8916,9 @@ MrBFlt LnP0_fossil (MrBFlt t, MrBFlt lambda, MrBFlt mu, MrBFlt psi, MrBFlt c1, M
 
 /* probability that an individual alive at time t before today has
    precisely one sampled extant descendant and no sampled extinct descendant
+   excluding the extant sampling fraction
  */
-MrBFlt LnP1_fossil (MrBFlt t, MrBFlt rho, MrBFlt c1, MrBFlt c2)
+MrBFlt LnP1_fossil (MrBFlt t, MrBFlt c1, MrBFlt c2)
 {
     MrBFlt other;
     
@@ -8924,7 +8926,7 @@ MrBFlt LnP1_fossil (MrBFlt t, MrBFlt rho, MrBFlt c1, MrBFlt c2)
     // c2 = (-lambda + mu + 2*lambda*rho + psi) / c1;
     other = 2.0 * (1- c2*c2) * exp(-c1 *t) + pow(1-c2, 2) * exp(-2 *c1 *t) + pow(1+c2, 2);
     
-    return log(4.0) + log(rho) - c1 *t - log(other);
+    return log(4.0) - c1 *t - log(other);
 }
 
 
@@ -9126,20 +9128,21 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         if (p->left != NULL && p->right != NULL)  // internal
             {
             if (p != t->root->left)
-                (*prob) += log(lambda) + LnP1_fossil(x, rho, c1, c2);
+                (*prob) += log(lambda) + LnP1_fossil(x, c1, c2);
             }
         else if (p->left == NULL && p->right == NULL)  // tip
             {
             if (p->nodeDepth > 0.0)
                 {
-                (*prob) += log(psi) - LnP1_fossil(x, rho, c1, c2);
+                (*prob) += log(psi) - LnP1_fossil(x, c1, c2);
                 // m++;
                 }
-            // else n++;
+            else
+                (*prob) += log(rho);
             }
         }
 
-    (*prob) += 2.0 * LnP1_fossil(tmrca, rho, c1, c2);
+    (*prob) += 2.0 * LnP1_fossil(tmrca, c1, c2);
 
     /* condition on sampling at least one individual in both subtrees leading to the root */
     (*prob) -= 2.0 * log(1 - exp(LnP0_fossil(tmrca, lambda, mu, psi, c1, c2)));
@@ -14958,7 +14961,7 @@ int ReassembleParamVals (int *curId)
                 {
                 tree = GetTreeFromIndex(j,0,0);
                 orderLen = 2*tree->nIntNodes - 1;
-                nBrlens = tree->nNodes - 1;
+                nBrlens = tree->nNodes - 1 + (tree->isRooted == YES);
                 if (proc_id == 0)
                     {
                     tree = GetTreeFromIndex(j,i,state[i]);
@@ -14994,6 +14997,8 @@ int ReassembleParamVals (int *curId)
                        consider, like constraints and calibrations; tree names are OK on proc 0 */
                     InitializeTreeCalibrations(tree);
                     CheckSetConstraints(tree);
+                    if (tree->isRooted == YES)
+                        RestoreNodeDepths(tree, brlens[tree->nNodes-1]);
                     SetDatedNodeAges(modelSettings[tree->relParts[0]].brlens, i, state[i]);
                     }
                 else if (proc_id == proc)
@@ -15353,7 +15358,7 @@ int RedistributeParamVals (void)
                 {
                 tree = GetTreeFromIndex(j,0,0);
                 orderLen = 2*tree->nIntNodes - 1;
-                nBrlens = tree->nNodes - 1;
+                nBrlens = tree->nNodes - 1 + (tree->isRooted == YES);
                 if (proc_id == 0)
                     {
                     tree = GetTreeFromIndex(j,i,0);
@@ -15417,6 +15422,8 @@ int RedistributeParamVals (void)
                        consider, like names, constraints and calibrations */
                     InitializeTreeCalibrations(tree);
                     CheckSetConstraints(tree);
+                    if (tree->isRooted == YES)
+                        RestoreNodeDepths(tree, brlens[tree->nNodes-1]);
                     SetDatedNodeAges(modelSettings[tree->relParts[0]].brlens, i-lower, 0);
                     strcpy(tree->name, GetTreeFromIndex(j, i, 0)->name);
                     tree = GetTreeFromIndex(j,i-lower,1);
