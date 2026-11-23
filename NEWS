@@ -1,6 +1,23 @@
 Release Note
-v3.2.9 ()
-  * Correct the proposal ratio in the NodeSlider move for non-clock tree.
+
+v3.2.10 (Nov 23 2026)
+  * Support CPP relaxed clock model under the FBD prior;
+    correct sampled-ancestor handling in several related moves.
+  * Restore topology moves disabled incorrectly by topological constraints.
+  * Fix BEAGLE likelihoods for rate mixture and prevent chain corruption
+    when dynamic rescaling retries after underflow.
+  * Prevent an infinite loop in rate-multiplier slider proposal.
+  * Fix covarion state-frequency proposal and stationary/directional
+    state-frequency model jump.
+  * Keep amino-acid frequencies synchronized when initializing or restoring
+    mixed-model values.
+  * Correct site-rate reporting for standard data, directional restriction
+    model and rate mixture. Keep per-site output aligned.
+  * Close tree and checkpoint files after summaries and appended runs,
+    allowing files to be renamed later in the same session.
+
+v3.2.9 (Oct 9 2026)
+  * Correct the proposal ratio in NodeSlider for non-clock trees.
     (The bug was introduced in v3.2.4 by mistake.)
 
 v3.2.8 (Sep 18 2026)

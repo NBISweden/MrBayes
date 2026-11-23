@@ -517,12 +517,17 @@ void LaunchBEAGLELogLikeForDivision(int chain, int d, ModelInfo* m, Tree* tree, 
                 {
                 if (rescaleFreqNew > 1)
                     {
-                    /* Swap back scalers which were swapped in TreeCondLikes_Beagle_Rescale_All() */
+                    /* Swap back scalers and cond like space which were swapped in TreeCondLikes_Beagle_Rescale_All().
+                       Cond likes of nodes with (p->upDateCl == NO) must be flipped back as well, otherwise the next
+                       call to TreeCondLikes_Beagle_Rescale_All() flips them a second time and overwrites the cond likes
+                       of the current state, which corrupts the chain if the move is rejected */
                     for (i=0; i<tree->nIntNodes; i++)
                         {
                         p = tree->intDownPass[i];
                         if (isScalerNode[p->index] == YES)
                             FlipNodeScalerSpace (m, chain, p->index);
+                        if (p->upDateCl == NO)
+                            FlipCondLikeSpace (m, chain, p->index);
                         }
                     rescaleFreqNew -= rescaleFreqNew >> 3; /* <== we cut up to 12,5% of rescaleFreq */
                     rescaleFreqNew--;                      /* we cut extra 1 of rescaleFreq */
@@ -1394,11 +1399,13 @@ int TreeTiProbs_Beagle (Tree *t, int division, int chain)
     if (m->pInvar != NULL)
         baseRate /= (1.0 - (*GetParamVals(m->pInvar, chain, state[chain])));
         
-    /* get category rates for gamma */
-    if (m->shape == NULL)
-        catRate = &theRate;
-    else
+    /* get category rates for gamma or rate mixture */
+    if (m->shape != NULL)
         catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    else if (m->mixtureRates != NULL)
+        catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
+    else
+        catRate = &theRate;
     
     /* get effective category rates */
     for (k=0; k<m->numRateCats; k++)
@@ -1928,12 +1935,15 @@ void LaunchBEAGLELogLikeMultiPartition(int* divisions, int divisionCount, int ch
 
                         if (m->rescaleFreqNew > 1)
                             {
-                            /* Swap back scalers which were swapped in TreeCondLikes_Beagle_Rescale_All() */
+                            /* Swap back scalers and cond like space which were swapped in
+                               TreeCondLikes_BeagleMultiPartition_Rescale_All(); see LaunchBEAGLELogLikeForDivision() */
                             for (i=0; i<tree->nIntNodes; i++)
                                 {
                                 p = tree->intDownPass[i];
                                 if (isScalerNode[p->index] == YES)
                                     FlipNodeScalerSpace (m, chain, p->index);
+                                if (p->upDateCl == NO)
+                                    FlipCondLikeSpace (m, chain, p->index);
                                 }
                             m->rescaleFreqNew -= m->rescaleFreqNew >> 3; /* <== we cut up to 12,5% of rescaleFreq */
                             m->rescaleFreqNew--;                      /* we cut extra 1 of rescaleFreq */
@@ -2041,11 +2051,13 @@ int TreeTiProbs_BeagleMultiPartition (int* divisions, int divisionCount, int cha
         if (m->pInvar != NULL)
             baseRate /= (1.0 - (*GetParamVals(m->pInvar, chain, state[chain])));
             
-        /* get category rates for gamma */
-        if (m->shape == NULL)
-            catRate = &theRate;
-        else
+        /* get category rates for gamma or rate mixture */
+        if (m->shape != NULL)
             catRate = GetParamSubVals (m->shape, chain, state[chain]);
+        else if (m->mixtureRates != NULL)
+            catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
+        else
+            catRate = &theRate;
         
         /* get effective category rates */
         for (k=0; k<m->numRateCats; k++)

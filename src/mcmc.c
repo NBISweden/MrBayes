@@ -171,7 +171,7 @@ MrBFlt    LnP0Subsample (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt f);
 MrBFlt    LnP1 (MrBFlt t, MrBFlt l, MrBFlt m);
 MrBFlt    LnP1Subsample (MrBFlt t, MrBFlt l, MrBFlt m, MrBFlt f);
 MrBFlt    LnP0_fossil (MrBFlt t, MrBFlt lambda, MrBFlt mu, MrBFlt psi, MrBFlt c1, MrBFlt c2);
-MrBFlt    LnP1_fossil (MrBFlt t, MrBFlt rho, MrBFlt c1, MrBFlt c2);
+MrBFlt    LnP1_fossil (MrBFlt t, MrBFlt c1, MrBFlt c2);
 MrBFlt    LnQi_fossil (MrBFlt t, MrBFlt *t_f, int sl, MrBFlt *c1, MrBFlt *c2);
 MrBFlt    LnPi_fossil (MrBFlt t, MrBFlt *t_f, int sl, MrBFlt *c1, MrBFlt *c2, MrBFlt *lambda, MrBFlt *mu, MrBFlt *psi);
 int       NewtonRaphsonBrlen (Tree *t, TreeNode *p, int chain);
@@ -1755,6 +1755,9 @@ void CalcPartFreqStats (PFNODE *p, STATS *stat)
     int     i, j, n, min;
     MrBFlt  f, sum, sumsq, stdev;
 
+    if (p == NULL)
+        return;
+
     n = chainParams.numRuns;
     min = (int)(chainParams.minPartFreq * stat->numSamples);
     if ((MrBFlt)min != chainParams.minPartFreq * stat->numSamples)
@@ -1861,7 +1864,10 @@ void CalcTopoConvDiagn (int numSamples)
     
         CalcPartFreqStats (partFreqTreeRoot[n], stat);
         
-        stat->avgStdDev = stat->sum / stat->numPartitions;
+        if (stat->numPartitions > 0.0)
+            stat->avgStdDev = stat->sum / stat->numPartitions;
+        else
+            stat->avgStdDev = 0.0;
         }
 }
 
@@ -1911,7 +1917,10 @@ void CalcTopoConvDiagn2 (int *nTrees)
     
         PartFreq (partFreqTreeRoot[n], stat, nTrees);
         
-        stat->avgStdDev = stat->sum / stat->numPartitions;
+        if (stat->numPartitions > 0.0)
+            stat->avgStdDev = stat->sum / stat->numPartitions;
+        else
+            stat->avgStdDev = 0.0;
         }
 }
 
@@ -2461,12 +2470,13 @@ int DoMcmc (void)
         MrBayesPrint ("%s   Getting values from previous run\n", spacer);
         strcpy(inputFileName, chainParams.chainFileName);
         strcat(inputFileName, ".ckp");
-        if (OpenTextFileR(inputFileName) == NULL)
+        if ((tempFile = OpenTextFileR(inputFileName)) == NULL)
             {
             MrBayesPrint ("%s   Could not find the checkpoint file '%s'.\n", spacer, inputFileName);
             MrBayesPrint ("%s   Make sure it is in the working directory.\n", spacer);
             goto errorExit;
             }
+        fclose (tempFile);
 
         if (DoExecute () == ERROR)
             goto errorExit;
@@ -2510,6 +2520,7 @@ int DoMcmc (void)
                 {
                 MrBayesPrint ("%s   Error: Reading SsAcumulators from .ckp file fails.\n", spacer);
                 free(strBuf);
+                SafeFclose (&tempFile);
                 goto errorExit;
                 }
 
@@ -2520,6 +2531,7 @@ int DoMcmc (void)
                     {
                     MrBayesPrint ("%s   Error: Not enough values in SsAcumulators comment of .ckp file.   \n", spacer);
                     free(strBuf);
+                    SafeFclose (&tempFile);
                     goto errorExit;
                     }
                     
@@ -2531,6 +2543,7 @@ int DoMcmc (void)
                       
             free(strBuf);
             }
+        SafeFclose (&tempFile);
 #   if defined (MPI_ENABLED)
         }
         MPI_Bcast (&numPreviousGen, 1, MPI_LONG_LONG, 0, MPI_COMM_WORLD);
@@ -7969,7 +7982,7 @@ MrBFlt LogPrior (int chain)
             else if (strcmp(mp->statefreqModel,"Stationary") != 0)
                 {
                 /* now for directional evolution: first process states */
-                nStates = m->numModelStates;
+                nStates = m->numStates;
                 if (p->paramId == DIRPI_DIRxDIR || p->paramId == DIRPI_DIRxFIXED || p->paramId == DIRPI_MIX)
                     {
                     lnPrior += LnDirichlet(st, sst, nStates);
@@ -8224,6 +8237,7 @@ MrBFlt LogPrior (int chain)
                     if (LnFossilizationPriorPr (t, clockRate, &x, sR, eR, fR, sF, sS) == ERROR)
                         {
                         MrBayesPrint ("%s   Problem calculating prior for fossilized birth-death process\n", spacer);
+                        return NEG_INFINITY;
                         }
                     lnPrior += x;   /* Note that x is assigned an appropriate value in the call to LnFossilizationPriorPr above */
                     }
@@ -8372,17 +8386,6 @@ MrBFlt LogPrior (int chain)
                 lnPrior += log(1.0) - log(mp->brownCorrUni[1] - mp->brownCorrUni[0]);
                 }
             }
-        else if (p->paramType == P_BMSIGMA)
-            {
-            if (p->paramId == BMSIGMA_UNI)
-                {
-                lnPrior += log(1.0) - log(mp->brownScaleUni[1] - mp->brownScaleUni[0]);
-                }
-            else if (p->paramId == BMSIGMA_GAMMA)
-                {
-                lnPrior += LnProbGamma(mp->brownScaleGamma[0], mp->brownScaleGamma[1], st[0]);
-                }
-            }
         else if (p->paramType == P_CPPRATE)
             {
             /* rate (lambda) of comp poisson process of relaxed clock */
@@ -8498,8 +8501,8 @@ MrBFlt LogPrior (int chain)
             for (i=0; i<t->nNodes-2; i++)
                 {
                 branch = t->allDownPass[i];
-                if (branch->length > 0.0)  // not ancestral fossil
-                    lnPrior += LnProbLogNormal_Mean_Var (1.0, nu, st[branch->index]);
+                /* ancestral fossils keep their rates as well */
+                lnPrior += LnProbLogNormal_Mean_Var (1.0, nu, st[branch->index]);
                 }   // both mean and variance are on the natural scale
             }
         else if (p->paramType == P_IGRVAR)
@@ -8525,8 +8528,8 @@ MrBFlt LogPrior (int chain)
             for (i=0; i<t->nNodes-2; i++)
                 {
                 branch = t->allDownPass[i];
-                if (branch->length > 0.0)  // not ancestral fossil
-                    lnPrior += LnProbGamma (1.0/var, 1.0/var, st[branch->index]);
+                /* ancestral fossils keep their rates as well */
+                lnPrior += LnProbGamma (1.0/var, 1.0/var, st[branch->index]);
                 }
             }
         else if (p->paramType == P_MIXEDVAR)
@@ -8913,8 +8916,9 @@ MrBFlt LnP0_fossil (MrBFlt t, MrBFlt lambda, MrBFlt mu, MrBFlt psi, MrBFlt c1, M
 
 /* probability that an individual alive at time t before today has
    precisely one sampled extant descendant and no sampled extinct descendant
+   excluding the extant sampling fraction
  */
-MrBFlt LnP1_fossil (MrBFlt t, MrBFlt rho, MrBFlt c1, MrBFlt c2)
+MrBFlt LnP1_fossil (MrBFlt t, MrBFlt c1, MrBFlt c2)
 {
     MrBFlt other;
     
@@ -8922,7 +8926,7 @@ MrBFlt LnP1_fossil (MrBFlt t, MrBFlt rho, MrBFlt c1, MrBFlt c2)
     // c2 = (-lambda + mu + 2*lambda*rho + psi) / c1;
     other = 2.0 * (1- c2*c2) * exp(-c1 *t) + pow(1-c2, 2) * exp(-2 *c1 *t) + pow(1+c2, 2);
     
-    return log(4.0) + log(rho) - c1 *t - log(other);
+    return log(4.0) - c1 *t - log(other);
 }
 
 
@@ -9025,7 +9029,7 @@ int LnFossilizationPriorPr (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFlt *sR,
             i3++;
 
         if (!strcmp(mp->extinctionPr, "Exponential") || !strcmp(mp->fossilizationPr, "Exponential"))
-            { // direct lambda,mu,psi parameterization
+            { // direct lambda,mu,psi parameterization (this is just a hack for now)
             lambda[i] = sR[i1];
             mu[i]     = eR[i2];
             psi[i]    = fR[i3];
@@ -9124,20 +9128,21 @@ int LnFossilizedBDPriorFossilTip (Tree *t, MrBFlt clockRate, MrBFlt *prob, MrBFl
         if (p->left != NULL && p->right != NULL)  // internal
             {
             if (p != t->root->left)
-                (*prob) += log(lambda) + LnP1_fossil(x, rho, c1, c2);
+                (*prob) += log(lambda) + LnP1_fossil(x, c1, c2);
             }
         else if (p->left == NULL && p->right == NULL)  // tip
             {
             if (p->nodeDepth > 0.0)
                 {
-                (*prob) += log(psi) - LnP1_fossil(x, rho, c1, c2);
+                (*prob) += log(psi) - LnP1_fossil(x, c1, c2);
                 // m++;
                 }
-            // else n++;
+            else
+                (*prob) += log(rho);
             }
         }
 
-    (*prob) += 2.0 * LnP1_fossil(tmrca, rho, c1, c2);
+    (*prob) += 2.0 * LnP1_fossil(tmrca, c1, c2);
 
     /* condition on sampling at least one individual in both subtrees leading to the root */
     (*prob) -= 2.0 * log(1 - exp(LnP0_fossil(tmrca, lambda, mu, psi, c1, c2)));
@@ -9168,7 +9173,7 @@ int GetTotalRateShifts (Model *mp, MrBFlt *shiftTimes)
         for (j = 0; j < sLen; j++)
             if (fabs(mp->birthRateShiftTime[i] - shiftTimes[j]) <= BRLENS_MIN/2)
                 break;
-        if (fabs(mp->birthRateShiftTime[i] - shiftTimes[j]) > BRLENS_MIN/2)
+        if (j == sLen)
             shiftTimes[sTotal++] = mp->birthRateShiftTime[i];
         }
     sLen = sTotal;
@@ -9177,7 +9182,7 @@ int GetTotalRateShifts (Model *mp, MrBFlt *shiftTimes)
         for (j = 0; j < sLen; j++)
             if (fabs(mp->deathRateShiftTime[i] - shiftTimes[j]) <= BRLENS_MIN/2)
                 break;
-        if (fabs(mp->deathRateShiftTime[i] - shiftTimes[j]) > BRLENS_MIN/2)
+        if (j == sLen)
             shiftTimes[sTotal++] = mp->deathRateShiftTime[i];
         }
     
@@ -10900,7 +10905,7 @@ int PrintAncStates_Bin (TreeNode *p, int division, int chain)
     /* print the resulting conditional likelihoods cycling over uncompressed chars */
     for (c=0; c<numChar; c++)
         {
-        if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != division+1)
+        if (charInfo[c].isExcluded == YES || compCharPos[c] < 0 || partitionId[c][partitionNum] != division+1)
             continue;
         i = compCharPos[c] - m->compCharStart;
         cL = m->ancStateCondLikes + (i*2);
@@ -11376,7 +11381,7 @@ int PrintAncStates_Std (TreeNode *p, int division, int chain)
     /* print the resulting conditional likelihoods cycling over uncompressed chars */
     for (c=0; c<numChar; c++)
         {
-        if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != division+1)
+        if (charInfo[c].isExcluded == YES || compCharPos[c] < 0 || partitionId[c][partitionNum] != division+1)
             continue;
         
         k = compCharPos[c] - m->compCharStart;
@@ -12534,14 +12539,15 @@ int PrintParsMatrix (void)
 -------------------------------------------------------------------*/
 int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
 {
-    int             c, j, k, nStates, hasPInvar;
+    int             c, j, k, nStates, hasPInvar, maxSiteId;
     MrBFlt          freq, siteLike, invLike, catLike, pInvar=0.0, *bs,
                     *catRate, baseRate;
     MrBFlt          s01, s10, probOn, probOff, *swr, covBF[40];
-    CLFlt           *lnScaler, *clP, *siteRates, *clInvar=NULL;
-    char            *tempStr;
+    CLFlt           *lnScaler, *clPtr, **clP, *siteRates, *clInvar=NULL;
+    char            *tempStr, *printedSite=NULL;
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
+    ModelParams     *mp;
     
     tempStr = (char *) SafeMalloc((size_t)tempStrSize * sizeof(char));
     if (!tempStr)
@@ -12552,6 +12558,21 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
 
     /* find model settings and nStates, pInvar, invar cond likes */
     m = &modelSettings[division];
+    mp = &modelParams[division];
+    if (m->nCharsPerSite > 1)
+        {
+        /* original sites have distinct IDs even when they share a compressed pattern */
+        maxSiteId = 0;
+        for (c=0; c<numChar; c++)
+            if (partitionId[c][partitionNum] == division+1 && charInfo[c].charId > maxSiteId)
+                maxSiteId = charInfo[c].charId;
+        printedSite = (char *) SafeCalloc ((size_t)maxSiteId + 1, sizeof(char));
+        if (!printedSite)
+            {
+            MrBayesPrint ("%s   Problem allocating printedSite in PrintSiteRates_Gen\n", spacer);
+            goto errorExit;
+            }
+        }
     nStates = m->numModelStates;
     if (m->pInvar == NULL)
         {
@@ -12564,8 +12585,14 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
         clInvar = m->invCondLikes;
         }
 
-    /* find conditional likelihood pointer */
-    clP = m->condLikes[m->condLikeIndex[chain][p->index]];
+    /* conditional likelihoods are stored in one block per rate category (see Likelihood_Gen) */
+    clPtr = m->condLikes[m->condLikeIndex[chain][p->index]];
+    clP = m->clP;
+    for (k=0; k<m->numRateCats; k++)
+        {
+        clP[k] = clPtr;
+        clPtr += m->numChars * nStates;
+        }
     
     /* use scratch space for root node for temporary calculations */
     siteRates = m->condLikes[m->condLikeScratchIndex[p->index]];
@@ -12573,8 +12600,15 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
     /* find site scaler */
     lnScaler = m->scalers[m->siteScalerIndex[chain]];
     
-    /* find base frequencies */
+    /* find base frequencies; restriction data use root frequencies under directional models (see Likelihood_Res) */
     bs = GetParamSubVals (m->stateFreq, chain, state[chain]);
+    if (m->dataType == RESTRICTION)
+        {
+        if (!strcmp(mp->statefreqModel,"Directional"))
+            bs += m->numStates;
+        else if (!strcmp(mp->statefreqModel,"Mixed") && bs[m->numStates] != NOT_APPLICABLE)
+            bs += m->numStates;
+        }
 
     /* if covarion model, adjust base frequencies */
     if (m->switchRates != NULL)
@@ -12610,8 +12644,11 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
     if (hasPInvar == YES)
         baseRate /= (1.0 - pInvar);
         
-    /* get category rates */
-    catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    /* get category rates from the shape or mixture parameter */
+    if (m->shape != NULL)
+        catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    else
+        catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
 
     /* loop over characters */
     if (hasPInvar == NO)
@@ -12625,7 +12662,7 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
                 {
                 catLike = 0.0;
                 for (j=0; j<nStates; j++)
-                    catLike += (*(clP++)) * bs[j];
+                    catLike += (*(clP[k]++)) * bs[j];
                 siteRates[c] += (CLFlt) (catLike * catRate[k]);
                 siteLike += catLike;
                 }
@@ -12644,7 +12681,7 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
                 {
                 catLike = 0.0;
                 for (j=0; j<nStates; j++)
-                    catLike += (*(clP++)) * bs[j];
+                    catLike += (*(clP[k]++)) * bs[j];
                 siteRates[c] += (CLFlt) (catLike * catRate[k]);
                 siteLike += catLike;
                 }
@@ -12662,15 +12699,24 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
     /* print the resulting site rates cycling over uncompressed chars */
     for (c=0; c<numChar; c++)
         {
-        if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != division+1)
+        if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != division+1 ||
+            compCharPos[c] < 0 || (printedSite && printedSite[charInfo[c].charId] == YES))
             continue;
         j = compCharPos[c] - m->compCharStart;
         SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(siteRates[j]));
-        if (AddToPrintString (tempStr) == ERROR) return (ERROR);
+        if (AddToPrintString (tempStr) == ERROR) goto errorExit;
+        if (printedSite)
+            printedSite[charInfo[c].charId] = YES;
         }
 
+    free (printedSite);
     free (tempStr);
     return NO_ERROR;
+
+    errorExit:
+        free (printedSite);
+        free (tempStr);
+        return ERROR;
 }
 
 
@@ -12681,9 +12727,9 @@ int PrintSiteRates_Gen (TreeNode *p, int division, int chain)
 -------------------------------------------------------------------*/
 int PrintSiteRates_Std (TreeNode *p, int division, int chain)
 {
-    int             c, j, k, nStates;
-    MrBFlt          siteLike, catLike, *bs, *catRate, baseRate;
-    CLFlt           *clP, *siteRates;
+    int             b, c, j, k, nBetaCats, nStates, numReps;
+    MrBFlt          siteLike, siteRate, catLike, *bs, *bsBase, *catRate, baseRate;
+    CLFlt           *clPtr, **clP, *siteRates;
     char            *tempStr;
     int             tempStrSize = TEMPSTRSIZE;
     ModelInfo       *m;
@@ -12698,43 +12744,66 @@ int PrintSiteRates_Std (TreeNode *p, int division, int chain)
     /* find model settings */
     m = &modelSettings[division];
 
-    /* find conditional likelihood pointer */
-    clP = m->condLikes[m->condLikeIndex[chain][p->index]];
+    /* conditional likelihoods are stored in one block per rate category (see CondLikeDown_Std) */
+    numReps = 0;
+    for (c=0; c<m->numChars; c++)
+        {
+        if (m->nStates[c] == 2)
+            numReps += m->numBetaCats * 2;
+        else
+            numReps += m->nStates[c];
+        }
+    clPtr = m->condLikes[m->condLikeIndex[chain][p->index]];
+    clP   = m->clP;
+    for (k=0; k<m->numRateCats; k++)
+        {
+        clP[k] = clPtr;
+        clPtr += numReps;
+        }
     
     /* use scratch space for root node for temporary calculations */
     siteRates = m->condLikes[m->condLikeScratchIndex[p->index]];
     
     /* find base frequencies */
-    bs = GetParamStdStateFreqs (m->stateFreq, chain, state[chain]);
+    bsBase = GetParamStdStateFreqs (m->stateFreq, chain, state[chain]);
 
     /* get rate multiplier */
     baseRate = GetRate (division, chain);
     
-    /* get category rates */
-    catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    /* get category rates from the shape or mixture parameter */
+    if (m->shape != NULL)
+        catRate = GetParamSubVals (m->shape, chain, state[chain]);
+    else
+        catRate = GetParamSubVals (m->mixtureRates, chain, state[chain]);
 
     /* loop over characters */
     for (c=0; c<m->numChars; c++)
         {
-        siteLike = 0.0;
-        siteRates[c] = 0.0;
+        siteLike = siteRate = 0.0;
         nStates = m->nStates[c];
-        for (k=0; k<m->numRateCats; k++)
+        nBetaCats = (nStates == 2) ? m->numBetaCats : 1;
+        bs = bsBase + m->bsIndex[c];
+        for (b=0; b<nBetaCats; b++)
             {
-            catLike = 0.0;
-            for (j=0; j<nStates; j++)
-                catLike += (*(clP++)) * bs[j];
-            siteRates[c] += (CLFlt) (catLike * catRate[k]);
-            siteLike += catLike;
+            for (k=0; k<m->numRateCats; k++)
+                {
+                catLike = 0.0;
+                for (j=0; j<nStates; j++)
+                    catLike += clP[k][j] * bs[j];
+                siteRate += catLike * catRate[k];
+                siteLike += catLike;
+                clP[k] += nStates;
+                }
+            bs += nStates;
             }
         /* category frequencies and site scaler cancel out */
-        siteRates[c] *= (CLFlt) (baseRate / siteLike);
+        siteRates[c] = (CLFlt) (baseRate * siteRate / siteLike);
         }
         
     /* print the resulting site rates cycling over uncompressed chars */
     for (c=0; c<numChar; c++)
         {
-        if (charInfo[c].isExcluded == YES || partitionId[c][partitionNum] != division+1)
+        if (charInfo[c].isExcluded == YES || compCharPos[c] < 0 || partitionId[c][partitionNum] != division+1)
             continue;
         j = compCharPos[c] - m->compCharStart;
         SafeSprintf (&tempStr, &tempStrSize, "\t%s", MbPrintNum(siteRates[j]));
@@ -12944,17 +13013,16 @@ int PrintStates (long long curGen, int coldId)
             for (i=0; i<numChar; i++)
                 printedChar[i] = NO;
     
-            for (i=0; i<numChar; i++)
-                { 
-                if (charInfo[i].isExcluded == YES)
-                    continue;
-                if (printedChar[i] == YES)
-                    continue;
-                d = partitionId[i][partitionNum] - 1;
+            for (d=0; d<numCurrentDivisions; d++)
+                {
                 m = &modelSettings[d];
-
-                if (m->printSiteRates == YES)
+                if (m->printSiteRates != YES)
+                    continue;
+                for (i=0; i<numChar; i++)
                     {
+                    if (partitionId[i][partitionNum] != d+1 || charInfo[i].isExcluded == YES ||
+                        compCharPos[i] < 0 || printedChar[i] == YES)
+                        continue;
                     if (m->nCharsPerSite == 1)
                         {
                         SafeSprintf (&tempStr, &tempStrSize, "\tr(%d)", i+1);
@@ -12962,20 +13030,26 @@ int PrintStates (long long curGen, int coldId)
                         }
                     else
                         {
-                        origAlignmentChars[0] = i;
+                        origAlignmentChars[0] = i+1;
                         k = 1;
                         for (j=i+1; j<numChar; j++)
                             {
-                            if (compCharPos[i] == compCharPos[j])
+                            if (charInfo[i].charId == charInfo[j].charId)
                                 {
-                                if (k > m->nCharsPerSite)
-                                    return (ERROR);
-                                origAlignmentChars[k++] = j;
+                                if (k >= m->nCharsPerSite)
+                                    {
+                                    MrBayesPrint ("%s   Too many columns for site rate at character %d\n", spacer, i+1);
+                                    goto errorExit;
+                                    }
+                                origAlignmentChars[k++] = j+1;
                                 printedChar[j] = YES;
                                 }
                             }
                         if (k != m->nCharsPerSite)
-                            return (ERROR);
+                            {
+                            MrBayesPrint ("%s   Too few columns for site rate at character %d\n", spacer, i+1);
+                            goto errorExit;
+                            }
                         SafeSprintf (&tempStr, &tempStrSize, "\tr(%d,", origAlignmentChars[0]);
                         if (AddToPrintString (tempStr) == ERROR) goto errorExit;
                         for (j=1; j<k-1; j++)
@@ -13009,6 +13083,8 @@ int PrintStates (long long curGen, int coldId)
             for (i=0; i<numChar; i++)
                 {
                 compressedCharPosition = compCharPos[i];
+                if (compressedCharPosition < 0)
+                    continue;
                 if (!(posSelProbs[compressedCharPosition] < 0.0) && printedChar[i] == NO && charInfo[i].isExcluded == NO)
                     {
                     for (j=k=0; j<numChar; j++)
@@ -13046,6 +13122,8 @@ int PrintStates (long long curGen, int coldId)
             for (i=0; i<numChar; i++)
                 {
                 compressedCharPosition = compCharPos[i];
+                if (compressedCharPosition < 0)
+                    continue;
                 if (posSelProbs[compressedCharPosition] >= 0.0 && printedChar[i] == NO && charInfo[i].isExcluded == NO)
                     {
                     for (j=k=0; j<numChar; j++)
@@ -13080,7 +13158,7 @@ int PrintStates (long long curGen, int coldId)
                         continue;
                     for (j=0; j<numChar; j++)
                         {
-                        if (partitionId[j][partitionNum] - 1 != d || charInfo[j].isExcluded == YES || printedChar[j] == YES)
+                        if (partitionId[j][partitionNum] - 1 != d || charInfo[j].isExcluded == YES || compCharPos[j] < 0 || printedChar[j] == YES)
                             continue;
                         if (mp->dataType == CONTINUOUS)
                             {
@@ -13277,7 +13355,7 @@ int PrintStates (long long curGen, int coldId)
                 }
             if (!strcmp(mp->statefreqModel, "Mixed")) //SK
                 {
-                if (sst[m->numModelStates] == NOT_APPLICABLE)
+                if (sst[m->numStates] == NOT_APPLICABLE)
                     modelIndex = 0;
                 else
                     modelIndex = 1;
@@ -13407,7 +13485,8 @@ int PrintStates (long long curGen, int coldId)
                 {
                 tree = GetTree (m->brlens, coldId, state[coldId]);
                 node = tree->root->left;
-                m->PrintSiteRates (node, d, coldId);
+                if (m->PrintSiteRates (node, d, coldId) == ERROR)
+                    goto errorExit;
                 }
             }
         }
@@ -13437,6 +13516,8 @@ int PrintStates (long long curGen, int coldId)
         for (i=0; i<numChar; i++)
             {
             compressedCharPosition = compCharPos[i];
+            if (compressedCharPosition < 0)
+                continue;
             if (!(posSelProbs[compressedCharPosition] < 0.0) && printedChar[i] == NO && charInfo[i].isExcluded == NO)
                 {
                 for (j=k=0; j<numChar; j++)
@@ -13479,6 +13560,8 @@ int PrintStates (long long curGen, int coldId)
         for (i=0; i<numChar; i++)
             {
             compressedCharPosition = compCharPos[i];
+            if (compressedCharPosition < 0)
+                continue;
             if (posSelProbs[compressedCharPosition] >= 0.0 && printedChar[i] == NO && charInfo[i].isExcluded == NO)
                 {
                 for (j=k=0; j<numChar; j++)
@@ -14878,7 +14961,7 @@ int ReassembleParamVals (int *curId)
                 {
                 tree = GetTreeFromIndex(j,0,0);
                 orderLen = 2*tree->nIntNodes - 1;
-                nBrlens = tree->nNodes - 1;
+                nBrlens = tree->nNodes - 1 + (tree->isRooted == YES);
                 if (proc_id == 0)
                     {
                     tree = GetTreeFromIndex(j,i,state[i]);
@@ -14914,6 +14997,8 @@ int ReassembleParamVals (int *curId)
                        consider, like constraints and calibrations; tree names are OK on proc 0 */
                     InitializeTreeCalibrations(tree);
                     CheckSetConstraints(tree);
+                    if (tree->isRooted == YES)
+                        RestoreNodeDepths(tree, brlens[tree->nNodes-1]);
                     SetDatedNodeAges(modelSettings[tree->relParts[0]].brlens, i, state[i]);
                     }
                 else if (proc_id == proc)
@@ -15273,7 +15358,7 @@ int RedistributeParamVals (void)
                 {
                 tree = GetTreeFromIndex(j,0,0);
                 orderLen = 2*tree->nIntNodes - 1;
-                nBrlens = tree->nNodes - 1;
+                nBrlens = tree->nNodes - 1 + (tree->isRooted == YES);
                 if (proc_id == 0)
                     {
                     tree = GetTreeFromIndex(j,i,0);
@@ -15337,6 +15422,8 @@ int RedistributeParamVals (void)
                        consider, like names, constraints and calibrations */
                     InitializeTreeCalibrations(tree);
                     CheckSetConstraints(tree);
+                    if (tree->isRooted == YES)
+                        RestoreNodeDepths(tree, brlens[tree->nNodes-1]);
                     SetDatedNodeAges(modelSettings[tree->relParts[0]].brlens, i-lower, 0);
                     strcpy(tree->name, GetTreeFromIndex(j, i, 0)->name);
                     tree = GetTreeFromIndex(j,i-lower,1);
@@ -16416,9 +16503,9 @@ int RunChain (RandLong *seed)
             MrBayesPrint ("%s   There must be at least four taxa in the analysis\n", spacer);
             return (ERROR);
             }
-        else if (i == numTrees && numLocalTaxa < 3)
+        else if (i == numTrees && numLocalTaxa < 2)
             {
-            MrBayesPrint ("%s   There must be at least three taxa in the analysis\n", spacer);
+            MrBayesPrint ("%s   There must be at least two taxa in the analysis\n", spacer);
             return (ERROR);
             }
         }

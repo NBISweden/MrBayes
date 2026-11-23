@@ -3088,6 +3088,27 @@ you to actually start the analysis.
 Another total-evidence dating tutorial using the Hymenoptera data (truncated) is provided by Zhang
 (\url{https://arxiv.org/abs/1603.05707}). It uses the fossilized birth-death model
 \citep{Stadler:2010fn,Heath:2014hn,Zhang:2016kf} as a tree prior.
+
+In the fossilized birth-death model, piecewise-constant rate shifts are specified after the
+\texttt{samplestrat} value. The three optional shift schedules are given in the order of relative
+fossil-sampling rate (\textit{s}), net diversification rate (\textit{d}), and turnover
+(\textit{r}). Each schedule consists of the number of shifts followed by that many positive shift
+times in descending order. For example:
+
+\begin{Verbatim}
+prset samplestrat=diversity 2: 66 23;
+\end{Verbatim}
+
+This specifies two shifts in \textit{s} and keeps \textit{d} and \textit{r} constant. To shift all
+three rates at the same times, specify a schedule for each:
+
+\begin{Verbatim}
+prset samplestrat=diversity 2: 66 23, 2: 66 23, 2: 66 23;
+\end{Verbatim}
+
+The shift times are not followed by fossil-sampling proportions, they are fixed to zero in this
+implementation. Extant sampling is specified separately with \texttt{sampleprob}.
+
 %%%% JN: The current hymfossil.nex have the fossilized BD prior instead of "the relaxed clock model
 %%%% JN: in the same way as the total-evidence analysis"!
 

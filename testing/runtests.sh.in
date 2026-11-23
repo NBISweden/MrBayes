@@ -64,10 +64,10 @@ if	(cd "$tmpdir" && "$@" "$pathname") >"$tmpdir/$pathname.out"
 then ok; else error 'Could not create output...'; fi
 
 t=$(( t + 1 )); m='Analysis completed'
-# Analysis completed in N seconds
-# ... should occur once (N is integer).
+# Analysis completed in any elapsed-time format printed by MrBayes
+# ... should occur once.
 awk '
-/Analysis completed in [[:digit:]]+ seconds/ {
+/Analysis completed in (([[:digit:]]+ hours )?([[:digit:]]+ mins )?[[:digit:]]+ seconds|(less than )?1 second)$/ {
 	count++
 }
 END {
