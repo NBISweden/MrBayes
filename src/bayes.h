@@ -6,7 +6,7 @@
 #   define VERSION_NUMBER  PACKAGE_VERSION
 #else  /* some defaults that would otherwise be guessed by configure */
 #   define PACKAGE_NAME "MrBayes"
-#   define PACKAGE_VERSION "3.2.10_dev"
+#   define PACKAGE_VERSION "3.2.10"
 #   define HOST_CPU "ARM64"
 #   define VERSION_NUMBER  PACKAGE_VERSION
 #   undef  HAVE_LIBREADLINE

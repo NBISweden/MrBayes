@@ -1,4 +1,4 @@
-MrBayes 3.2.9
+MrBayes 3.2.10
 
 This document describes how to install the most recent release of
 MrBayes using Homebrew on macOS, Linux, or on Window subsystem for
@@ -49,11 +49,11 @@ Installing MrBayes from the GitHub sources on Unix
 
 Make a shallow clone of the MrBayes repository:
 
-    git clone --revision=v3.2.9 --depth=1 https://github.com/NBISweden/MrBayes.git
+    git clone --revision=v3.2.10 --depth=1 https://github.com/NBISweden/MrBayes.git
 
 ... or download the compressed tar archive from
 
-    https://github.com/NBISweden/MrBayes/releases/download/v3.2.9/mrbayes-3.2.9.tar.gz
+    https://github.com/NBISweden/MrBayes/releases/download/v3.2.10/mrbayes-3.2.10.tar.gz
 
 ... and unpack it.
 

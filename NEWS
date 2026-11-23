@@ -1,6 +1,6 @@
 Release Note
 
-v3.2.10 (unreleased)
+v3.2.10 (Nov 23 2026)
   * Support CPP relaxed clock model under the FBD prior;
     correct sampled-ancestor handling in several related moves.
   * Restore topology moves disabled incorrectly by topological constraints.
